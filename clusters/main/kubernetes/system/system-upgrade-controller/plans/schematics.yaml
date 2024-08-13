@@ -4,4 +4,5 @@ metadata:
   name: schematics
   namespace: system-upgrade
 data:
-REPLACEWITHSCHEMATICMAP
+
+  192.168.20.111: dc2c29fc8374161b858245a14658779154bf11aa9c23a04813fa8f298fcd0bfc
