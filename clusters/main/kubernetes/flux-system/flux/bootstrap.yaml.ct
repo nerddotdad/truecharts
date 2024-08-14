@@ -59,4 +59,4 @@ patches:
     patch: |
       - op: replace
         path: /metadata/name
-        value: flux-view-flux-system  - flux.yaml
+        value: flux-view-flux-system
