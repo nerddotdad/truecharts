@@ -30,7 +30,7 @@ nodes:
         size: <= 1500GB
       networkInterfaces:
         # suffix is the adapter mac adres.
-        - interface: eno1
+        - interface: enp3s0
           addresses:
             - ${MASTER1IP_CIDR}
           routes:
