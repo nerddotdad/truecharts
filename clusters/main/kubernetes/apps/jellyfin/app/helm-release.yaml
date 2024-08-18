@@ -1,0 +1,10 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.zinn.ca/helm.toolkit.fluxcd.io/helmrelease_v2beta1.json
+apiVersion: source.toolkit.fluxcd.io/v2
+kind: OCIRepository
+metadata:
+  name: jellyfin
+  namespace: media
+spec:
+  interval: 15m
+  url: https://ghcr.io/jellyfin/jellyfin

@@ -4,3 +4,4 @@ resources:
   - kubeapps/ks.yaml
   - kubernetes-dashboard/ks.yaml
   - cloudflare
+  - jellyfin/ks.yaml
