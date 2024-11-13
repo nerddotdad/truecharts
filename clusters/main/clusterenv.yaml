@@ -1,20 +1,40 @@
-## The Following are required by ClusterTool and CANNOT be removed
-# DHCP for this network should allow addresses between .50-.110 to allow for some cluster growth
-# Ensure VIP is different from all master IPs (static DHCP address)
-VIP: 192.168.30.50
-# Defines the MasterNode IP (static DHCP address)
-MASTER1IP: 192.168.30.90
-# Defines the gateway for all nodes
-GATEWAY: 192.168.30.1
-# Defines the ip range metallb is allowed to use
-METALLB_RANGE: 192.168.30.111-192.168.30.119
-# Sets the Kubernetes Dashboard IP. Has to be within METALLB_RANGE and not in use
-DASHBOARD_IP: 192.168.30.111
-# Sets the KubeApps IP. Has to be within METALLB_RANGE and not in use
-KUBEAPPS_IP: 192.168.30.112
-# Used to automatically generate a sshkey-pair for FluxCD
-# Has to start with ssh://
-GITHUB_REPOSITORY: ssh://git@github.com/itzteajay-glitch/truecharts.git
-# DO NOT ALTER
-PODNET: 172.16.0.0/16
-SVCNET: 172.17.0.0/16
+#ENC[AES256_GCM,data:EgBGyGXyzKmrmYmJQUs6eUhOY2+0zzcdu5XbqMHkcTDozpy1bl6c2WKVcZ/P5/+qArcDVCuJ0pHISbQ6Sr1kAkk=,iv:s80+ZnG6jcOulR0pXYUzgKjwJm82ZkL6iXYDkbR/MNw=,tag:go+BCA9u7DmjIGX6l/3kgA==,type:comment]
+#ENC[AES256_GCM,data:EPqE9CmpYAI5BdTeVXVTU3ZaHgFHAb/9EUH56zDJjjGsQ78Z7/5he7kxgiIDCd6Uq+xZETpDOYajJqb3ARUOlTfoyBJSWpuDKxaT0Ghv0BvKMR2flG7fZIhctPC0Yt4=,iv:JBDTyzA4F3u5M3cz68egx7Ao60y31lvabKQ5Gka3kWA=,tag:BrSRlgmZ053HitNtSRKeEQ==,type:comment]
+#ENC[AES256_GCM,data:L3mDz6A8DIbnLMr4+aQLwgwHB/4XuR/8f/t+HoDZg2C0cVVHLc8mcVOBfoqi3ZX90qrWhENaxXKRdDx3kubEtoU3,iv:dhSF1dVTG7WtJhT7rU7e2uh5SsxUjazh0gH8gVX9FPg=,tag:amoyud9nr+e/kdzxTcL3Vw==,type:comment]
+VIP: ENC[AES256_GCM,data:1zT/bT6FbW071ujPJQ==,iv:kOHnpEcFagNLxj8uotpI6DFOxofSiRcKpgwnxYMmehE=,tag:Z/pmMHM8yDQSswKKrkFOqw==,type:str]
+#ENC[AES256_GCM,data:yvplcMhCUmpuYhEnPMJ5N3SlTMNt+BUH9mAFxCQmX1mriH+5v0qp7Ob2xKCg6e+G,iv:XsK75CKdZEETnx20wFsCNZGFiSqCCrESEld5ngGs9+k=,tag:3Y83fpUmfDh7OH4uDgSKJw==,type:comment]
+MASTER1IP: ENC[AES256_GCM,data:CVoxyVajN2nN9KUCkA==,iv:hW8EKBr2mOQAotSikDzz1nEh0NmwNFdwplgMfjb8th0=,tag:/gVXqFcsHaqMTu2jnoYPEw==,type:str]
+#ENC[AES256_GCM,data:PChLyfyqCQ6Ibqkl7ihTClG97i/IjjHZ09EH3pq81tt1DA==,iv:fPwWa3lzxT0H5Zk32uWW2cQtVr84on5DFnZq4UTNBdU=,tag:6PCPqPdg8Q1PXf0OPdZ53g==,type:comment]
+GATEWAY: ENC[AES256_GCM,data:oLwI9VrjXC8jDDNq,iv:AWemsQ7Afrg6E4BZ2ERYMZXg7bXiwagKWwnRQ6uhJ9I=,tag:73U/LjkhUezSnWOQHNy/IQ==,type:str]
+#ENC[AES256_GCM,data:52+d7Ebp1paWzM3frUDUinaKuyzcFrbbRJmMDApCaLRhdy/9irXjSaglBxos8MU=,iv:PDuuxQQKEvf+mxaiIl21xUNNbk5pLhuzWqiD0tJh+Cc=,tag:QrAe8h6Q8gp9HGIyAFrnDg==,type:comment]
+METALLB_RANGE: ENC[AES256_GCM,data:+jKaSeqh/nYcZjmxoAe+HIF0KpU+I9BnUeAZQmE=,iv:0Q7t5pFLAcoNEte8KJaLwgoANkTE7949UAy4QQtiRbE=,tag:B8xov3RZU0ZQGFpWeihOsw==,type:str]
+#ENC[AES256_GCM,data:Vg9+UqhK3ZusBPhyf3dQrBNK8fkDrgTuEk29r7hWeX8gL9RQCyifv7YfrMbwodB4Qs38UOUR+Q4u1Ga8gVj/3+IqmZpStpklym9Q0waAIGk=,iv:v3Tg0iTfxi4D3atVx4fF8suDpMovdDhBLrJdbuG3mec=,tag:ncMpD7a2/WUPOuMyTNl3pQ==,type:comment]
+DASHBOARD_IP: ENC[AES256_GCM,data:bCPa/tQswqA51z4Punk=,iv:yMwq5zhr1lMmyEZB5MYQFUhJgREOtXGGD4B3ME8XXmg=,tag:wSHRDkQociXNlyZGtMMPzQ==,type:str]
+#ENC[AES256_GCM,data:BQqWZnW3RhaESSO1mOGQ5YrpbUF5S7dbtn3TCkg01MqPOON6wVPEYRpyPmpubhstYS3YP7vAwbZAY4shn2EAVJQXqyE=,iv:JIsgUeexIqh9b91q6+ZlF+WGh8wER37I7y9DAAiQimg=,tag:mYCD3170XfESJo65TlekDg==,type:comment]
+KUBEAPPS_IP: ENC[AES256_GCM,data:6dpEKur8wD8i2TSuyAw=,iv:22rHM9VvGDJmkgELz+/cN18AOruCDDMYDdTvnKmTDF4=,tag:rHQO2K2y3MYCm3IaSEAeww==,type:str]
+#ENC[AES256_GCM,data:WJb9abLLyv+n9dXFHhRia3fd/BNLpTMVOfjAa6J1ATjJdCCnF42cpMYMbxHqkUhrUFIHJ1Ua4x4=,iv:/CtdDXf/rqY5iKn32xKaco9qwfMYcWAst2a/PPMce9I=,tag:qKjEyaffE1WAv91OaKtxzg==,type:comment]
+#ENC[AES256_GCM,data:3pMHzhs1a/oNSrN2OAhWFDlKVxnnytCquw==,iv:Me+dQL/UPEx8+3zEMs7Cova/ur8HBWinSmOmopYCQs8=,tag:x4Gzx9lziE45xKbFS9PKKQ==,type:comment]
+GITHUB_REPOSITORY: ENC[AES256_GCM,data:jUZXYN2qg0vI+kUeb8BQA4xaAQCfVFbJ1zlJxV5U+TuQ1G/glAgKMVgjJJZifLGD3aq8TQ==,iv:3eol5EOp7Ie8Wczqw1D6Z5z0/DPwPP41n50tNsNPQPo=,tag:ES7WrP7U4W8IcFpjq+woUQ==,type:str]
+#ENC[AES256_GCM,data:kaxx/ubKXH8xzGl7jQ==,iv:JgIAtDa8ct9ohcZ5wrTU0qSJXpXp9Vhi74lF9ZhAJWw=,tag:K4ZYiIhXjB+H3pnkv2xkfQ==,type:comment]
+PODNET: ENC[AES256_GCM,data:e8SbEtgBoLI2PGCuvA==,iv:iW2z3rkfqhC7BWCIX69+j1revmBy2B6HzQPYe18Qsmk=,tag:yZvh/m7fYqZfKRpKSqCFxQ==,type:str]
+SVCNET: ENC[AES256_GCM,data:TdSx9S/WFz9oDcQd8w==,iv:2q0R+hwj11wGk0lJ+CmF2TtYjNTA7odPw/DZc24LEak=,tag:bPVlRUYMjrTWTd3WyuLX/g==,type:str]
+sops:
+    shamir_threshold: 3
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1l8p8vhf8m5tmfkrkr24phx4wf4uglqvwxu5x958xnpfae34qgpqqs6l9qw
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBNL2w4UXVoMlFGYjVHejFw
+            WkQyallWMXJ0T3ZKRExmM3FIQnJpY0JpMUhrCktMcldWeWJXQ0d5a2g0RDBONDdW
+            ZGE3dGhndUFad2ZYM0RHY2w4R2NCeDAKLS0tIExKaFJaVkdvTkMwdWtHdW5uVHZR
+            enJmNnV0TnRSVEdmRy8zKzA3SHlqamMKnZTWG0GsegrBce85XutPb/TWQ2FAfhKf
+            HB3e2zCHS58L42bouBxxt215aqV1TbPBDQqBMZWFvFADo+K/2TpRrA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-11-13T18:40:34Z"
+    mac: ENC[AES256_GCM,data:ZFwNj0GsyKdI2XuUXK9XBMcZMEQRs1TBd+5U02WBWYo7mmJGid7R/eKE6fRYYg3+9k1iR8mR8FuUYtSVFQKh/S3xmEF2CLFfLNTsKmPDOcJnaCulyyc8E73FilnzSFugjFW/UXtUfWHop8O1bchGdeajV1TSc0AlyrC2WJwNvgc=,iv:Ns8C4ByMDcEy9HhroYIi/TkgulKfxkxdy0LRO4nHXRc=,tag:Un4YymyfNfIskWYMz0+lqQ==,type:str]
+    pgp: []
+    version: 3.9.1
