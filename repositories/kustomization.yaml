@@ -6,3 +6,4 @@ resources:
   - ./git
   - ./helm
   - ./oci
+  - ./entries

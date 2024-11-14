@@ -4,3 +4,4 @@ metadata:
     name: kubernetes-dashboard
     labels:
         pod-security.kubernetes.io/enforce: privileged
+        topolvm.io/webhook: ignore

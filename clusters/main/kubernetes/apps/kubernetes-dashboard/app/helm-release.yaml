@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: kubernetes-dashboard
-      version: 1.2.2
+      version: 1.10.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -17,6 +17,8 @@ spec:
       interval: 15m
   timeout: 20m
   maxHistory: 3
+  driftDetection:
+    mode: warn
   install:
     createNamespace: true
     remediation:

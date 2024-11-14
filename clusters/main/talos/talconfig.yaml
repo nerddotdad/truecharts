@@ -1,13 +1,15 @@
 clusterName: ${CLUSTERNAME}
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.7.5
+talosVersion: v1.8.2
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
-kubernetesVersion: v1.30.2
+kubernetesVersion: v1.31.2
 endpoint: https://${VIP}:6443
 allowSchedulingOnControlPlanes: true
 additionalMachineCertSans:
+    - 127.0.0.1
     - ${VIP}
 additionalApiServerCertSans:
+    - 127.0.0.1
     - ${VIP}
 # Warning: Also used in Cilium CNI values!
 clusterPodNets:
@@ -17,7 +19,7 @@ clusterSvcNets:
 cniConfig:
     name: none
 patches:
-    - '@./clusters/${CLUSTERNAME}/talos/patches/all.yaml'
+    - '@./patches/all.yaml'
 nodes:
     # We would adivce to always stick to a "k8s-something-1" style naming scheme
     - hostname: k8s-control-1
@@ -27,10 +29,10 @@ nodes:
         - 1.1.1.1
         - 8.8.8.8
       installDiskSelector:
-        size: <= 1500GB
+        size: <= 1600GB
       networkInterfaces:
         # suffix is the adapter mac adres.
-        - interface: eth1
+        - interface: eth0
           addresses:
             - ${MASTER1IP_CIDR}
           routes:
@@ -40,41 +42,80 @@ nodes:
             ip: ${VIP}
 controlPlane:
     patches:
-        - '@./clusters/${CLUSTERNAME}/talos/patches/controlplane.yaml'
-        - '@./clusters/${CLUSTERNAME}/talos/patches/sopssecret.yaml'
-        - '@./clusters/${CLUSTERNAME}/talos/patches/manifests.yaml'
-        # - '@./patches/nvidia.yaml'
+        - '@./patches/controlplane.yaml'
+    kernelModules:
+     - name: nvme_tcp
+     - name: vfio_pci
+     - name: uio_pci_generic
     schematic:
         customization:
             extraKernelArgs:
                 - net.ifnames=0
             systemExtensions:
                 officialExtensions:
+                    - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
                     - siderolabs/qemu-guest-agent
-                    # Enable where needed
-                    # - siderolabs/amd-ucode
-                    # - siderolabs/bnx2-bnx2x
-                    # - siderolabs/drbd
-                    # - siderolabs/gasket-driver
-                    # - siderolabs/i915-ucode
-                    # - siderolabs/intel-ucode
-                    # - siderolabs/thunderbolt
+    machineFiles:
+    - content: |
+        [plugins."io.containerd.grpc.v1.cri"]
+          enable_unprivileged_ports = true
+          enable_unprivileged_icmp = true
+        [plugins."io.containerd.grpc.v1.cri".containerd]
+          discard_unpacked_layers = false
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+          discard_unpacked_layers = false
+      permissions: 0
+      path: /etc/cri/conf.d/20-customization.part
+      op: create
+    - content: |
+        [ NFSMount_Global_Options ]
+        nfsvers=4.2
+        hard=True
+        noatime=True
+        nodiratime=True
+        rsize=131072
+        wsize=131072
+        nconnect=8
+      permissions: 420
+      path: /etc/nfsmount.conf
+      op: overwrite
+
 worker:
     patches:
-        - '@./clusters/${CLUSTERNAME}/talos/patches/worker.yaml'
-        # - '@./patches/nvidia.yaml'
+        - '@./patches/worker.yaml'
+    kernelModules:
+     - name: nvme_tcp
+     - name: vfio_pci
+     - name: uio_pci_generic
     schematic:
         customization:
             systemExtensions:
                 officialExtensions:
-                    # Enable where needed
-                    # - siderolabs/amd-ucode
-                    # - siderolabs/bnx2-bnx2x
+                    - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
                     - siderolabs/qemu-guest-agent
-                    # - siderolabs/drbd
-                    # - siderolabs/gasket-driver
-                    # - siderolabs/i915-ucode
-                    # - siderolabs/intel-ucode
-                    # - siderolabs/thunderbolt
+    machineFiles:
+    - content: |
+        [plugins."io.containerd.grpc.v1.cri"]
+          enable_unprivileged_ports = true
+          enable_unprivileged_icmp = true
+        [plugins."io.containerd.grpc.v1.cri".containerd]
+          discard_unpacked_layers = false
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+          discard_unpacked_layers = false
+      permissions: 0
+      path: /etc/cri/conf.d/20-customization.part
+      op: create
+    - content: |
+        [ NFSMount_Global_Options ]
+        nfsvers=4.2
+        hard=True
+        noatime=True
+        nodiratime=True
+        rsize=131072
+        wsize=131072
+        nconnect=8
+      permissions: 420
+      path: /etc/nfsmount.conf
+      op: overwrite

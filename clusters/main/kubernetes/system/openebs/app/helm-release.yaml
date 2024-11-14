@@ -10,10 +10,10 @@ spec:
         spec:
 
             chart: openebs
-            version: 8.0.0
+            version: 4.1.1
             sourceRef:
                 kind: HelmRepository
-                name: truecharts
+                name: openebs
                 namespace: flux-system
     install:
         createNamespace: true
@@ -24,4 +24,22 @@ spec:
         crds: CreateReplace
         remediation:
             retries: 3
-    values: {}
+    values:
+      openebs-crds:
+        csi:
+          volumeSnapshots:
+            enabled: false
+            keep: false
+
+      engines:
+        local:
+          # The lvm-localpv backend contains a duplicate of snapshot controller which will cause conflicts
+          lvm:
+            enabled: false
+          # The ZFS backend contains a duplicate of snapshot controller which will cause conflicts
+          zfs:
+            enabled: false
+        replicated:
+          # The Mayastor backend contains a duplicate of snapshot controller which will cause conflicts
+          mayastor:
+            enabled: false
