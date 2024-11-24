@@ -4,11 +4,11 @@ metadata:
   name: jellyfin
   namespace: media  # Ensure this namespace exists or create it
 spec:
-  interval: 5m
+  interval: 1m
   chart:
     spec:
       chart: jellyfin
-      version: 11.6.1  # Replace with the desired version
+      version: 20.3.5  # Replace with the desired version
       sourceRef:
         kind: HelmRepository
         name: truecharts
