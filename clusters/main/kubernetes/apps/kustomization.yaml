@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - kubernetes-dashboard/ks.yaml
   - media
-  - podinfo
+  - podinfo/ks.yaml
