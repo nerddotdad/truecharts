@@ -4,3 +4,4 @@ resources:
   - kubernetes-dashboard/ks.yaml
   - media
   - podinfo/ks.yaml
+  - jellyfin/ks.yaml
