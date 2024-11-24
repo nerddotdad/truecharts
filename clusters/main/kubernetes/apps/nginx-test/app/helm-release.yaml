@@ -4,6 +4,7 @@ metadata:
   name: nginx-simple
   namespace: testing
 spec:
+  interval: 2m
   releaseName: nginx
   chart:
     spec:
