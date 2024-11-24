@@ -6,7 +6,7 @@ metadata:
   name: cluster
   namespace: flux-system
 spec:
-  interval: 2m
+  interval: 30m
   url: ssh://git@github.com/itzteajay-glitch/truecharts.git
   ref:
     branch: main
