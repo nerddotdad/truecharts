@@ -4,4 +4,4 @@ metadata:
   name: bitnami
   namespace: flux-system
 spec:
-  url: https://charts.bitnami.com/bitnami
+  url: oci://registry-1.docker.io/bitnamicharts
