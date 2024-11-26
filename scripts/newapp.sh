@@ -18,31 +18,40 @@ do
             echo "Chart not found on $train train."
         else
             echo "Chart found on $train train."
-            latestVersion=$(curl -s https://raw.githubusercontent.com/truecharts/public/refs/heads/master/charts/${train}/je${chart}llyfin/Chart.yaml | grep ^version:)
-            echo "Found ${version}"
+            latestVersion=$(curl -s https://raw.githubusercontent.com/truecharts/public/refs/heads/master/charts/${train}/${chart}/Chart.yaml | grep ^version:)
+            echo "Found ${latestVersion}"
             chartSearch=False
         fi
     done
 done
 
-cp kubernetes-dashboard ${chart}
+cp -r kubernetes-dashboard ${chart}
 cd ${chart}
 rm ks.yaml
 cd app
 rm kustomization.yaml
 
-sed -i -e "s/version: 1.10.1/"${version}"/g" helm-release.yaml
+sed -i -e "s/version: 1.10.1/"${latestVersion}"/g" helm-release.yaml
 sed -i -e "s/name: kubernetes-dashboard/name: "${chart}"/g" helm-release.yaml
 sed -i -e "s/namespace: kubernetes-dashboard/namespace: "${namespace}"/g" helm-release.yaml
 sed -i -e 's/loadBalancerIP: ${DASHBOARD_IP}/loadBalancerIP: YOUR IP HERE/g' helm-release.yaml
 
-echo "verify your edits..."
-nano helm-release.yaml
+cat helm-release.yaml
+echo "please ensure you update the loadbalancer IP..."
+sleep 10
+read -p "does this look correct? (y/ctrl+c to quit)" helmVerify
+if [ $helmVerify != "y" ]
+then
+    nano helm-release.yaml
+fi
 
 sed -i -e "s/name: kubernetes-dashboard/name: "${namespace}"/g" namespace.yaml
-echo "verify your edits..."
-nano namespace.yaml
-
+cat namespace.yaml
+read -p "does this look correct? (y/ctrl+c to quit)" namespaceVerify
+if [ $namespaceVerify != "y" ]
+then
+    nano namespace.yaml
+fi
 
 cd ~/truecharts
 clustertool genconfig
