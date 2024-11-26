@@ -31,9 +31,10 @@ rm ks.yaml
 cd app
 rm kustomization.yaml
 
-sed -i -e "s/version: 1.10.1/"${latestVersion}"/g" helm-release.yaml
-sed -i -e "s/name: kubernetes-dashboard/name: "${chart}"/g" helm-release.yaml
-sed -i -e "s/namespace: kubernetes-dashboard/namespace: "${namespace}"/g" helm-release.yaml
+sed -i -e "s/name: kubernetes-dashboard/name: ${chart}/g" helm-release.yaml
+sed -i -e "s/namespace: kubernetes-dashboard/namespace: ${namespace}/g" helm-release.yaml
+sed -i -e "s/chart: kubernetes-dashboard/chart: ${chart}/g" helm-release.yaml
+sed -i -e "s/version: 1.10.1/${latestVersion}/g" helm-release.yaml
 sed -i -e 's/loadBalancerIP: ${DASHBOARD_IP}/loadBalancerIP: YOUR IP HERE/g' helm-release.yaml
 
 cat helm-release.yaml
