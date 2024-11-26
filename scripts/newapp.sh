@@ -4,22 +4,20 @@ chartSearch=True
 
 cd ~/truecharts/clusters/main/kubernetes/apps
 
-read -p "Enter new chart name: " chart
-read -p "Enter the namespace you'd like to put this chart in: " namespace
-
-while [ $chartSearch == True ]
-do
+while true; do
+    read -p "Enter new chart name: " chart
+    read -p "Enter the namespace you'd like to put this chart in: " namespace
     for train in incubator library premium stable system
     do
         chartSearch=$(curl -s -o /dev/null -w "%{http_code}" --head https://truecharts.org/charts/${train}/${chart}/)
         if [ $chartSearch == 404 ]
         then
-            echo "Chart not found on $train train."
+            echo "Chart not found on $train train. Please ensure the chart name exists in truecharts."
         else
             echo "Chart found on $train train."
             latestVersion=$(curl -s https://raw.githubusercontent.com/truecharts/public/refs/heads/master/charts/${train}/${chart}/Chart.yaml | grep ^version:)
             echo "Found ${latestVersion}"
-            chartSearch=False
+            break
         fi
     done
 done
@@ -57,9 +55,9 @@ case $yn in
     sed -i '/^            port: 80$/s/^/#/' helm-release.yaml
     break
     ;;
-	* ) echo invalid response;;
-esac
-
+	* ) echo invalid response
+    ;;
+    esac
 done
 
 cat helm-release.yaml
@@ -79,10 +77,27 @@ fi
 
 cd ~/truecharts
 clustertool genconfig
-clustertool encrypt
-git add -A && git commit
-git push
-clustertool decrypt
 
-flux reconcile source git cluster -n flux-system
-flux get kustomizations --watch
+while true; do
+
+read -p "Would you like to push your config to git? (y/n) " yn
+
+case $yn in 
+	[yY] )
+        clustertool encrypt
+        git add -A && git commit
+        git push
+        clustertool decrypt
+
+        flux reconcile source git cluster -n flux-system
+        flux get kustomizations --watch
+	break
+    ;;
+	[nN] )
+        echo "Ok the app should exist... go check the apps directory to ensure it looks good."
+    break
+    ;;
+	* ) echo invalid response
+    ;;
+    esac
+done
