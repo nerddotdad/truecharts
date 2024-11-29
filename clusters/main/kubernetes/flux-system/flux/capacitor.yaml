@@ -34,31 +34,21 @@ values:
       ports:
         main:
           port: 80
-  ingress:
-    main:
-      enabled: true
-      primary: true
-      required: false
-      expandObjectName: false
-      labels:
-        key: value
-      annotations:
-        key: value
-      ingressClassName: ""
-      targetSelector:
-        main: main
-      hosts:
-        - host: capacitor.hoth.systems
-          paths:
-            - path: /
-              pathType: Prefix
-              overrideService:
-                name: main
-                port: 80
-      tls:
-        - hosts:
-            - capacitor.hoth.systems
-          certificateIssuer: "domain-0-le-prod"
+    ingress:
+      main:
+        enabled: true
+        integrations:
+          traefik:
+            enabled: true
+        tls:
+          - hosts:
+            - capacitor.${DOMAIN_0}
+            clusterIssuer: domain-0-wildcard
+        hosts: 
+          - host: capacitor.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
       integrations:
         certManager:
           enabled: true
