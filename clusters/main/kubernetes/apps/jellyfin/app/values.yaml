@@ -17,7 +17,7 @@ values:
                   secretName: jellyfin-tls
             integrations:
                 certManager:
-                    enabled: ENC[AES256_GCM,data:twSH3Gg=,iv:dYnURUOgffONlR5an4Kf4AwZ6ASkHmZiaIpvuKHqIO4=,tag:bksBXM1+1LlSMN1wH8mS7Q==,type:bool]
+                    enabled: ENC[AES256_GCM,data:1y4VZ8s=,iv:D7Jzytm/APNzMvMkUBPaCAUS9CYAO5XDU99LoHFVh7Q=,tag:TzuTf8z4a56M62sWDe2mfA==,type:bool]
                     certificateIssuer: ""
                 homepage:
                     enabled: false
@@ -29,9 +29,9 @@ values:
                         type: ""
                         url: ""
                         custom:
-                            key: ENC[AES256_GCM,data:f30uK34=,iv:lMhlYE1wDYibRadcQLhP1BDxjiyUi8nK8O08GG7+yHg=,tag:05VsFwLr2qZT7bm1J5ijfA==,type:str]
+                            key: ENC[AES256_GCM,data:NSkLMIU=,iv:T9OZohB9rh+5LSSSqzrRIwUZXFFj/foVCWCD0aORHq4=,tag:XAzxPsfcNuj2ZG4GQilZ2Q==,type:str]
                         customkv:
-                            - key: ENC[AES256_GCM,data:vc2DTIRk758=,iv:TRazgBdO9kJpZV2c5InQlC2n/UaKwfGcoL+19y+zSqU=,tag:N7rYGdlHLhB2uIjsmSOk2Q==,type:str]
+                            - key: ENC[AES256_GCM,data:4sZA2RxteUU=,iv:/GC4rw7Q5jL2LTAbMyNM1wKhN71VRBUVZaoeIf0D4uY=,tag:N7FgiZ8MpwnyPDOdwzw06g==,type:str]
 sops:
     shamir_threshold: 3
     kms: []
@@ -42,14 +42,14 @@ sops:
         - recipient: age19eflpg9n7449y963agj40wcze693pvwu80a2umdd5h573fzjpsrqkwfrs7
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBqNExFWSs0TUc1SWRDdFZP
-            L04vYm1UOC8xMkp1L3RUQlkwWVpjNmJ5N3p3CnhJY1pTYVdUeGVybzJYV1RTZDRX
-            S1Z4TWlBTWRGOXIxU0dzL0lXWTE2bFkKLS0tIEY5MGJaM0dFaEorNjFxNnhJOGlU
-            T2lJWlIxakM5U0NKb0VweWsvMzZrVjAKXcQ5bWg5ihuQQa/uVqZPh4bkmeAx4Wen
-            JcGcphLxgkoB65J7HoD7rk9M/c4tENHbg6aIxAsAaRKrGFAcngVLCg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBxT0k1SC9vYU9Zdm80ZXVr
+            ODNoRUVLQ3NSV0hESHF1b3J5bUpiaEMyVkZJCkgyckQ4K1REck1jNU5FVk9JMW93
+            K0JObi9xVGl6Y29Yc2Jic1lnMENRUHcKLS0tIHQ1ZFZMaUdaSU9SUyt0TWJCaHN3
+            NldsQ0wzMWRzS3JCNVBQVWhJWThBelEK7adSITSNJsc6hmPsXCr01EQvoQDXSPiu
+            Nz7Ybi9N4Mh/39VrBHQDWs2O11hKrOxUmSUiaWSNjjwEobfDfzo/qw==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-11-29T05:01:16Z"
-    mac: ENC[AES256_GCM,data:upnOvoKcGDc8I7SKUEf0nPSMCfTScV+RoQANnuxFAabV9xDgdYInT66ZmrueRjDBWn8D2bI3scMah8Ba+eEq0ngPrX/k4wNn6lBeFdIUtKHhGsB0rXQidDNjJCiGoEPPWYZ87OASOVJoGwX2VL1dnFbTWTr2hkaBmQdX7ZWzC0c=,iv:HzkHMMaFhTQY/Fko9dUrftDEk5/19/dz5ynZYSXR+Mc=,tag:ilKOTK622l9OnFBarsT2ig==,type:str]
+    lastmodified: "2024-11-29T05:02:01Z"
+    mac: ENC[AES256_GCM,data:UGs+0QGs0gLrqjl9YCc5n0evExt93Fv/gTkG4V8VGXwQPiwb6Tx3DdOIqN+j3/7tg995wYbziAFx25V6/v425PblHG89zpdMikejohUgop7BgSvDmiASezODXOY6mq0G7qrfxYFNzfUB5mYjxCHNvzGsm2D8AkHw1H29UnmsQ60=,iv:CRbbwRIekrAnLN7F1XNVVksjRrmpxqWpIQAtkBMFvL0=,tag:IxXYdR39b2YWmosRf3LLhQ==,type:str]
     pgp: []
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.9.1
