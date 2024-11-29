@@ -27,36 +27,66 @@ spec:
     kind: OCIRepository
     name: capacitor
 values:
-    service:
+  service:
+    main:
+      type: LoadBalancer
+      loadBalancerIP: 192.168.30.215
+      ports:
         main:
-            type: LoadBalancer
-            loadBalancerIP: 192.168.30.215
-            ports:
-                main:
-                    port: 80
-    ingress:
-        main:
-            enabled: true
-            hosts:
-                - host: capacitor.hoth.systems
-            tls:
-                - hosts:
-                    - capacitor.hoth.systems
-                  secretName: capacitor-tls
-            integrations:
-                certManager:
-                    enabled: false
-                    certificateIssuer: "cloudflare"
-                homepage:
-                    enabled: false
-                    name: ""
-                    description: ""
-                    group: ""
-                    icon: ""
-                    widget:
-                        type: ""
-                        url: ""
-                        custom:
-                            key: value
-                        customkv:
-                            - key: some key
+          port: 80
+  ingress:
+    main:
+      enabled: true
+      primary: true
+      required: false
+      expandObjectName: false
+      labels:
+        key: value
+      annotations:
+        key: value
+      ingressClassName: ""
+      targetSelector:
+        main: main
+      hosts:
+        - host: capacitor.local
+          paths:
+            - path: /
+              pathType: Prefix
+              overrideService:
+                name: main
+                port: 80
+      tls:
+        - hosts:
+            - capacitor.local
+          certificateIssuer: "clusterissuer"
+      integrations:
+        certManager:
+          enabled: false
+          certificateIssuer: ""
+        traefik:
+          enabled: true
+          entrypoints:
+            - websecure
+          enableFixedMiddlewares: true
+          forceTLS: true
+          allowCors: false
+          fixedMiddlewares:
+            - name: chain-basic
+              namespace: ""
+          middlewares:
+            - name: my-middleware
+              namespace: ""
+        homepage:
+          enabled: false
+          name: ""
+          description: ""
+          group: ""
+          icon: ""
+          widget:
+            type: ""
+            url: ""
+            custom:
+              key: value
+            customkv:
+              - key: some key
+                value: some value
