@@ -2,6 +2,8 @@
 # building this to help me with basic tasks in my cluster
 chartSearch=True
 
+git clone $YOUR_TRUECHARTS_REPO
+
 cd ~/truecharts/clusters/main/kubernetes/apps
 
 while true; do

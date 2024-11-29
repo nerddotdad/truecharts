@@ -1,0 +1,55 @@
+values:
+    service:
+        main:
+            type: LoadBalancer
+            loadBalancerIP: 192.168.30.216
+            ports:
+                main:
+                    port: 80
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: jellyfin.hoth.systems
+            tls:
+                - hosts:
+                    - jellyfin.hoth.systems
+                  secretName: jellyfin-tls
+            integrations:
+                certManager:
+                    enabled: ENC[AES256_GCM,data:36c7+KM=,iv:sYA+7Pc8qwjl+UbNUcN/Rr8qCFYg/yyf3NxlIoFfdow=,tag:x8JzYxVuUrsKc4IURWAkiQ==,type:bool]
+                    certificateIssuer: ""
+                homepage:
+                    enabled: false
+                    name: ""
+                    description: ""
+                    group: ""
+                    icon: ""
+                    widget:
+                        type: ""
+                        url: ""
+                        custom:
+                            key: ENC[AES256_GCM,data:KeRGO4Y=,iv:lIdbwRWmbfESHuQuCTqEbHxUKol0ZLAbWXCd1iJ0RqM=,tag:RVjanxQ0yM/4k94Ug8GBew==,type:str]
+                        customkv:
+                            - key: ENC[AES256_GCM,data:s2vv3LY8bdo=,iv:lMuE4r4w8x3AFS/585bM7wbegfflCTl/w1zXAyxWcR8=,tag:dZhPUFkJXNgkrViSY0CPUw==,type:str]
+sops:
+    shamir_threshold: 3
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age19eflpg9n7449y963agj40wcze693pvwu80a2umdd5h573fzjpsrqkwfrs7
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAvUzF3N3N4REtwYndUS0FC
+            NEcrZ3lFZFg2NmVtZmozRGdIV25YQWUzV0dRCkhVNmxUc2NabjIwOW1OTkMzZnNk
+            QmYrbUhyVkd1TnZHM1FJd0RGY0xaZzQKLS0tIHZYZW44MUFhTHJkZmFQb3lFQmhZ
+            K3hpZE9kQ0grNk1CVHBCSDh2a1l2RW8KrdWdKzpvr2ACgy4t3ctjLh7YiUTbXxAH
+            jFUXBqPVU1x8E6BVNfFXmZqCCXfvPmLEp2keEEa5VqTL/eFZMNP/ig==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-11-29T04:53:24Z"
+    mac: ENC[AES256_GCM,data:EL/7rDc/FpTZbV0k+jV79HvV8WJMgYJDw3AutiffGATbfWtPna9DjGcAz47WsjkbmTgfrRpFeHUg51XKMdKPoMCvmv5jV4Z01siTVoL8ftjibnKvTwFv2NQk4XRB4ytW6q3tXqlqpGw1ap05fiVJpOgmNGHvrp301Gipxz0rcHs=,iv:N6Tqvh+E2NsbgfW5Q3eU/S0roIrRXIG00qB734kFi4s=,tag:04UhwalIgkxZYaksfvLgCQ==,type:str]
+    pgp: []
+    encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
+    version: 3.9.1
