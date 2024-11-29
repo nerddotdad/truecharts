@@ -48,7 +48,7 @@ values:
             integrations:
                 certManager:
                     enabled: false
-                    certificateIssuer: ""
+                    certificateIssuer: "cloudflare"
                 homepage:
                     enabled: false
                     name: ""

@@ -26,3 +26,37 @@ spec:
   sourceRef:
     kind: OCIRepository
     name: capacitor
+values:
+    service:
+        main:
+            type: LoadBalancer
+            loadBalancerIP: 192.168.30.215
+            ports:
+                main:
+                    port: 80
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: capacitor.hoth.systems
+            tls:
+                - hosts:
+                    - capacitor.hoth.systems
+                  secretName: capacitor-tls
+            integrations:
+                certManager:
+                    enabled: false
+                    certificateIssuer: "cloudflare"
+                homepage:
+                    enabled: false
+                    name: ""
+                    description: ""
+                    group: ""
+                    icon: ""
+                    widget:
+                        type: ""
+                        url: ""
+                        custom:
+                            key: value
+                        customkv:
+                            - key: some key
