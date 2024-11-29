@@ -28,3 +28,37 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+values:
+    service:
+        main:
+            type: LoadBalancer
+            loadBalancerIP: 192.168.30.216
+            ports:
+                main:
+                    port: 80
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: jellyfin.hoth.systems
+            tls:
+                - hosts:
+                    - jellyfin.hoth.systems
+                  secretName: jellyfin-tls
+            integrations:
+                certManager:
+                    enabled: false
+                    certificateIssuer: ""
+                homepage:
+                    enabled: false
+                    name: ""
+                    description: ""
+                    group: ""
+                    icon: ""
+                    widget:
+                        type: ""
+                        url: ""
+                        custom:
+                            key: value
+                        customkv:
+                            - key: some key
