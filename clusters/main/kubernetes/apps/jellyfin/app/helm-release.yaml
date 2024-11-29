@@ -64,20 +64,20 @@ spec:
             fixedMiddlewares:
               - name: chain-basic
                 namespace: ""
-            middlewares:
-              - name: my-middleware
-                namespace: ""
-          homepage:
-            enabled: false
-            name: ""
-            description: ""
-            group: ""
-            icon: ""
-            widget:
-              type: ""
-              url: ""
-              custom:
-                key: value
-              customkv:
-                - key: some key
-                  value: some value
+          #   middlewares:
+          #     - name: my-middleware
+          #       namespace: ""
+          # homepage:
+          #   enabled: false
+          #   name: ""
+          #   description: ""
+          #   group: ""
+          #   icon: ""
+          #   widget:
+          #     type: ""
+          #     url: ""
+          #     custom:
+          #       key: value
+          #     customkv:
+          #       - key: some key
+          #         value: some value
