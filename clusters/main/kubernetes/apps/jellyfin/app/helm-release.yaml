@@ -32,33 +32,53 @@ values:
   service:
     main:
       type: LoadBalancer
-      loadBalancerIP: 192.168.30.216
+      loadBalancerIP: 192.168.30.215
       ports:
         main:
           port: 80
-  ingress:
-    main:
-      enabled: true
-      hosts:
-        - host: jellyfin.hoth.systems
-      tls:
-        - hosts:
-            - jellyfin.hoth.systems
-          secretName: jellyfin-tls
+    ingress:
+      main:
+        enabled: true
+        integrations:
+          traefik:
+            enabled: true
+        tls:
+          - hosts:
+            - jellyfin.${DOMAIN_0}
+            clusterIssuer: domain-0-wildcard
+        hosts: 
+          - host: jellyfin.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
       integrations:
         certManager:
+          enabled: true
+          certificateIssuer: "domain-0-le-prod"
+        traefik:
+          enabled: true
+          entrypoints:
+            - websecure
+          enableFixedMiddlewares: true
+          forceTLS: true
+          allowCors: false
+          fixedMiddlewares:
+            - name: chain-basic
+              namespace: ""
+          middlewares:
+            - name: my-middleware
+              namespace: ""
+        homepage:
           enabled: false
-          certificateIssuer: "cloudflare"
-          homepage:
-            enabled: false
-            name: ""
-            description: ""
-            group: ""
-            icon: ""
-            widget:
-              type: ""
-              url: ""
-              custom:
-                key: value
-              customkv:
-                - key: some key
+          name: ""
+          description: ""
+          group: ""
+          icon: ""
+          widget:
+            type: ""
+            url: ""
+            custom:
+              key: value
+            customkv:
+              - key: some key
+                value: some value
