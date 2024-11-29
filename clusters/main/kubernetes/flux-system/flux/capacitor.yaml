@@ -57,12 +57,12 @@ values:
                 port: 80
       tls:
         - hosts:
-            - ccapacitor.hoth.systems
-          certificateIssuer: "clusterissuer"
+            - capacitor.hoth.systems
+          certificateIssuer: "cloudflare"
       integrations:
         certManager:
           enabled: true
-          certificateIssuer: ""
+          certificateIssuer: "cloudflare"
         traefik:
           enabled: true
           entrypoints:
