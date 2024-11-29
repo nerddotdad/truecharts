@@ -58,11 +58,11 @@ values:
       tls:
         - hosts:
             - capacitor.hoth.systems
-          certificateIssuer: "cloudflare"
+          certificateIssuer: "domain-0-le-prod"
       integrations:
         certManager:
           enabled: true
-          certificateIssuer: "cloudflare"
+          certificateIssuer: "domain-0-le-prod"
         traefik:
           enabled: true
           entrypoints:
