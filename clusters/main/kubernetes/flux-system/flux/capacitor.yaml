@@ -48,7 +48,7 @@ values:
       targetSelector:
         main: main
       hosts:
-        - host: capacitor.local
+        - host: capacitor.hoth.systems
           paths:
             - path: /
               pathType: Prefix
@@ -57,11 +57,11 @@ values:
                 port: 80
       tls:
         - hosts:
-            - capacitor.local
+            - ccapacitor.hoth.systems
           certificateIssuer: "clusterissuer"
       integrations:
         certManager:
-          enabled: false
+          enabled: true
           certificateIssuer: ""
         traefik:
           enabled: true
