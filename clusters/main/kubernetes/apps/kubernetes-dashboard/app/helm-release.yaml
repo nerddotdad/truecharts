@@ -33,7 +33,23 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${DASHBOARD_IP}
-        ports:
-          main:
-            port: 80
+        loadBalancerIP: ${KUBEDASH_IP}
+        # ports:
+        #   main:
+        #     port: 80
+    ingress:
+      main:
+        enabled: true
+        hosts: 
+          - host: kubedash.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure

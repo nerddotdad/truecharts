@@ -1,14 +1,15 @@
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: librespeed
-  namespace: testing
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
 spec:
   interval: 15m
   chart:
     spec:
-      chart: librespeed
-      version: 15.3.2
+      chart: kubernetes-dashboard
+      version: 1.10.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -32,12 +33,15 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${LIBRESPEED_IP}
+        loadBalancerIP: ${DASHBOARD_IP}
+        # ports:
+        #   main:
+        #     port: 80
     ingress:
       main:
         enabled: true
         hosts: 
-          - host: speedtest.${DOMAIN_0}
+          - host: kubedash.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix

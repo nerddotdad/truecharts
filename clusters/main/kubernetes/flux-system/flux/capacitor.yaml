@@ -9,6 +9,27 @@ spec:
   url: oci://ghcr.io/gimlet-io/capacitor-manifests
   ref:
     semver: ">=0.1.0"
+  values:
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${CAPACITOR_IP}
+    ingress:
+      main:
+        enabled: true
+        hosts: 
+          - host: speedtest.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
