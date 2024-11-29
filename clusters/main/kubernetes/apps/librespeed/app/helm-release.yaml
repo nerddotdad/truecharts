@@ -33,6 +33,19 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: 192.168.30.214
-        ports:
-          main:
-            port: 80
+    ingress:
+      main:
+        enabled: true
+        hosts: 
+          - host: speedtest.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
