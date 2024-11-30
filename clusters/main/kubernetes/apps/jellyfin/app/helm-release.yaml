@@ -34,11 +34,10 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${JELLYFIN_IP}
     persistence:
-      media:
+      media-test:
         enabled: true
         type: nfs
         path: /mnt/hhd-hc-primary/media/data
-        server: 192.168.30.49
     ingress:
       main:
         enabled: true
