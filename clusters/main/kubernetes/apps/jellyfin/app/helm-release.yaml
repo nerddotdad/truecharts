@@ -37,8 +37,8 @@ spec:
       media-test:
         enabled: true
         type: nfs
-        path: /media
-        mountPath: /mnt/hhd-hc-primary/media/data
+        mountPath: /media
+        path: /mnt/hhd-hc-primary/media/data
         server: 192.168.30.49
     ingress:
       main:
