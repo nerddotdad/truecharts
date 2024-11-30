@@ -61,7 +61,7 @@ spec:
       shows:
         enabled: true
         type: nfs
-        mountPath: /movies
+        mountPath: /shows
         path: /mnt/hhd-hc-primary/media/data/media/shows
         server: 192.168.30.49
     ingress:
