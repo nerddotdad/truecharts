@@ -35,11 +35,11 @@ spec:
         loadBalancerIP: ${JELLYFIN_IP}
     persistence:
       config:
-        # enabled: true
-        # type: nfs
-        # mountPath: /config
-        # path: /mnt/Applications/apps-configs/jellyfin/config
-        # server: 192.168.30.49
+        enabled: true
+        type: nfs
+        mountPath: /config
+        path: /mnt/Applications/apps-configs/jellyfin/config
+        server: 192.168.30.49
       transcode:
         enabled: true
         type: nfs
@@ -50,7 +50,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /family-media
-        path: /mnt/Applications/apps-configs/jellyfin/photoprism-original
+        path: /mnt/hhd-hc-primary/media/photoprism-original
         server: 192.168.30.49
       movies:
         enabled: true
