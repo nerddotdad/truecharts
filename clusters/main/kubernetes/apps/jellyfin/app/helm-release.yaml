@@ -32,7 +32,7 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: 192.168.30.215
+        loadBalancerIP: ${JELLYFIN_IP}
     persistence:
       media:
         enabled: true
@@ -42,7 +42,6 @@ spec:
     ingress:
       main:
         enabled: true
-        existingClaim: medianfs
         hosts: 
           - host: jellyfin.${DOMAIN_0}
             paths:

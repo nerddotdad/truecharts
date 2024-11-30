@@ -33,7 +33,7 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${KUBEDASH_IP}
+        loadBalancerIP: ${DASHBOARD_IP}
         # ports:
         #   main:
         #     port: 80
