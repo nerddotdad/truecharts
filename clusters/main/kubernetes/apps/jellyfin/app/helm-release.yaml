@@ -34,12 +34,36 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${JELLYFIN_IP}
     persistence:
-      media-test:
+      config:
         enabled: true
         type: nfs
-        mountPath: /Media
-        path: /mnt/hhd-hc-primary/media/data
-        server: 192.168.30.49
+        mountPath: /config
+        path: /mnt/Applications/apps-configs/jellyfin/config
+        server: ${SERVER_NFS_IP}
+      transcode:
+        enabled: true
+        type: nfs
+        mountPath: /transcode
+        path: /mnt/Applications/apps-configs/jellyfin/transcode
+        server: ${SERVER_NFS_IP}
+      family-media:
+        enabled: true
+        type: nfs
+        mountPath: /family-media
+        path: /mnt/Applications/apps-configs/jellyfin/photoprism-original
+        server: ${SERVER_NFS_IP}
+      movies:
+        enabled: true
+        type: nfs
+        mountPath: /movies
+        path: /mnt/hhd-hc-primary/media/data/media/movies
+        server: ${SERVER_NFS_IP}
+      shows:
+        enabled: true
+        type: nfs
+        mountPath: /movies
+        path: /mnt/hhd-hc-primary/media/data/media/shows
+        server: ${SERVER_NFS_IP}
     ingress:
       main:
         enabled: true
