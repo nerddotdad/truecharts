@@ -37,6 +37,7 @@ spec:
       media-test:
         enabled: true
         type: nfs
+        path: /media
         mountPath: /mnt/hhd-hc-primary/media/data
     ingress:
       main:
