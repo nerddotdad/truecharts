@@ -33,6 +33,12 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: 192.168.30.215
+    persistence:
+      nfs-vol:
+        enabled: true
+        type: nfs
+        path: /mnt/hhd-hc-primary/media/data
+        server: 192.168.30.49
     ingress:
       main:
         enabled: true
