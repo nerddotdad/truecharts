@@ -39,31 +39,31 @@ spec:
         type: nfs
         mountPath: /config
         path: /mnt/Applications/apps-configs/jellyfin/config
-        server: ${SERVER_NFS_IP}
+        server: 192.168.30.49
       transcode:
         enabled: true
         type: nfs
         mountPath: /transcode
         path: /mnt/Applications/apps-configs/jellyfin/transcode
-        server: ${SERVER_NFS_IP}
+        server: 192.168.30.49
       family-media:
         enabled: true
         type: nfs
         mountPath: /family-media
         path: /mnt/Applications/apps-configs/jellyfin/photoprism-original
-        server: ${SERVER_NFS_IP}
+        server: 192.168.30.49
       movies:
         enabled: true
         type: nfs
         mountPath: /movies
         path: /mnt/hhd-hc-primary/media/data/media/movies
-        server: ${SERVER_NFS_IP}
+        server: 192.168.30.49
       shows:
         enabled: true
         type: nfs
         mountPath: /movies
         path: /mnt/hhd-hc-primary/media/data/media/shows
-        server: ${SERVER_NFS_IP}
+        server: 192.168.30.49
     ingress:
       main:
         enabled: true
