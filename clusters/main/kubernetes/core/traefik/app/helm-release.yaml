@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: 30.0.4
+      version: 30.0.3
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -38,19 +38,3 @@ spec:
     service:
       tcp:
         loadBalancerIP: ${TRAEFIK_IP}
-    ingress:
-      main:
-        enabled: true
-        hosts: 
-          - host: traefik.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-          traefik:
-            enabled: true
-            entrypoints:
-              - websecure
