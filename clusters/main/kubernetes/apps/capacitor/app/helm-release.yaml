@@ -10,26 +10,42 @@ spec:
       chart: ghcr.io/gimlet-io/capacitor-manifests
       sourceRef:
         kind: OCIRepository
+        namespace: flux-system
         name: capacitor
       version: ">=0.1.0"
-    values:
-      service:
-        main:
-          type: LoadBalancer
-          loadBalancerIP: ${CAPACITOR_IP}
-      ingress:
-        main:
-          enabled: true
-          hosts: 
-            - host: capacitor.${DOMAIN_0}
-              paths:
-                - path: /
-                  pathType: Prefix
-          integrations:
-            certManager:
-              enabled: true
-              certificateIssuer: "domain-0-le-prod"
-            traefik:
-              enabled: true
-              entrypoints:
-                - websecure
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${CAPACITOR_IP}
+    ingress:
+      main:
+        enabled: true
+        hosts: 
+          - host: capacitor.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
