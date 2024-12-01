@@ -80,3 +80,12 @@ spec:
             enabled: true
             entrypoints:
               - websecure
+          homepage:
+            enabled: false
+            name: "Jellyfin"
+            description: "This is a jellyfin instance"
+            group: "Media"
+            icon: ""
+            widget:
+              type: "jellyfin"
+              url: "https://jellyfin.hoth.systems"
