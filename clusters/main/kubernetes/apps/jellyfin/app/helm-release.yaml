@@ -81,7 +81,7 @@ spec:
             entrypoints:
               - websecure
           homepage:
-            enabled: false
+            enabled: true
             name: "Jellyfin"
             description: "This is a jellyfin instance"
             group: "Media"
