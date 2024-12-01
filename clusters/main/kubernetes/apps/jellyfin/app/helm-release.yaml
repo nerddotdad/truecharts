@@ -34,12 +34,12 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${JELLYFIN_IP}
     persistence:
-      config:
-        enabled: true
-        type: nfs
-        mountPath: /config
-        path: /mnt/Applications/apps-configs/jellyfin/config
-        server: 192.168.30.49
+      # config:
+      #   enabled: true
+      #   type: nfs
+      #   mountPath: /config
+      #   path: /mnt/Applications/apps-configs/jellyfin/config
+      #   server: 192.168.30.49
       transcode:
         enabled: true
         type: nfs
