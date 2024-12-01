@@ -7,10 +7,9 @@ spec:
   interval: 1h
   chart:
     spec:
-      chart: ghcr.io/gimlet-io/capacitor-manifests
+      chart: capacitor-manifests
       sourceRef:
-        kind: OCIRepository
-        namespace: flux-system
+        kind: HelmRepository
         name: capacitor
       version: ">=0.1.0"
       interval: 15m
