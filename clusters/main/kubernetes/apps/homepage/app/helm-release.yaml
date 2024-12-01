@@ -33,7 +33,7 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${DASHBOARD_IP}
+        loadBalancerIP: ${HOMEPAGE_IP:}
         # ports:
         #   main:
         #     port: 80
@@ -41,7 +41,7 @@ spec:
       main:
         enabled: true
         hosts: 
-          - host: kubedash.${DOMAIN_0}
+          - host: homepage.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
