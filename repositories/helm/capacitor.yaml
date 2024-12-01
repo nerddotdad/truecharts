@@ -1,8 +1,0 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
-metadata:
-  name: capacitor
-  namespace: flux-system
-spec:
-  interval: 12h
-  url: oci://ghcr.io/gimlet-io/capacitor-manifests
