@@ -33,10 +33,7 @@ spec:
     service:
       main:
         type: LoadBalancer
-        loadBalancerIP: ${HOMEPAGE_IP:}
-        # ports:
-        #   main:
-        #     port: 80
+        loadBalancerIP: ${HOMEPAGE_IP}
     ingress:
       main:
         enabled: true
