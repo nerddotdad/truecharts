@@ -67,7 +67,7 @@ spec:
     ingress:
       main:
         enabled: true
-        hosts: 
+        hosts:
           - host: jellyfin.${DOMAIN_0}
             paths:
               - path: /
