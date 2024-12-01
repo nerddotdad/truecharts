@@ -5,3 +5,4 @@ resources:
   - kubernetes-dashboard/ks.yaml
   - librespeed/ks.yaml
   - sonarr/ks.yaml
+  - homepage/ks.yaml
