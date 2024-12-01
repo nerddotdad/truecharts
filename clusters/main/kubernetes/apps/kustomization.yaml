@@ -6,3 +6,4 @@ resources:
   - librespeed/ks.yaml
   - sonarr/ks.yaml
   - homepage/ks.yaml
+  - capacitor/ks.yaml
