@@ -8,7 +8,6 @@ spec:
     releaseName: longhorn
     chart:
         spec:
-
             chart: longhorn
             version: 1.7.2
             sourceRef:
@@ -41,18 +40,18 @@ spec:
             # Increase to 3 for a multi-node cluster
             defaultClassReplicaCount: 1
         ingress:
-          main:
-            enabled: true
-            hosts: 
-              - host: longhorn.${DOMAIN_0}
-                paths:
-                  - path: /
-                    pathType: Prefix
-            integrations:
-              certManager:
+            main:
                 enabled: true
-                certificateIssuer: "domain-0-le-prod"
-              traefik:
-                enabled: true
-                entrypoints:
-                  - websecure
+                hosts:
+                    - host: longhorn.${DOMAIN_0}
+                      paths:
+                          - path: /
+                            pathType: Prefix
+                integrations:
+                    certManager:
+                        enabled: true
+                        certificateIssuer: "domain-0-le-prod"
+                    traefik:
+                        enabled: true
+                        entrypoints:
+                            - websecure
