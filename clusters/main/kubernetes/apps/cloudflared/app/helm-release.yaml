@@ -29,6 +29,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+    portal:
+      open:
+        enabled: true
     image:
       repository: docker.io/cloudflare/cloudflared
       pullPolicy: IfNotPresent
@@ -51,12 +60,3 @@ spec:
                 - run
               env:
                 TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
-    service:
-      main:
-        enabled: true
-        ports:
-          main:
-            enabled: true
-    portal:
-      open:
-        enabled: true
