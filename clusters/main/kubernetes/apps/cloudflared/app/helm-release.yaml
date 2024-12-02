@@ -53,10 +53,10 @@ spec:
                 TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
     service:
       main:
-        enabled: false
+        enabled: true
         ports:
           main:
-            enabled: false
+            enabled: true
     portal:
       open:
-        enabled: false
+        enabled: true
