@@ -34,6 +34,9 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${DASHBOARD_IP}
+        ports:
+          main:
+            port: 80
     ingress:
       main:
         enabled: true
