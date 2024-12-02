@@ -33,6 +33,13 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${JELLYFIN_IP}
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                JELLYFIN_PublishedServerUrl: jellyfin.${DOMAIN_0}
     persistence:
       # config:
       #   enabled: true
