@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: immich
-  namespace: media
+  namespace: family-media
 spec:
   interval: 15m
   chart:
@@ -224,9 +224,9 @@ spec:
             enabled: true
             name: "Immich"
             description: "Immich Instance"
-            group: "Media"
+            group: "Family Media"
             icon: ""
             widget:
               type: "Immich"
               url: "https://immich.hoth.systems"
-              version: 2
+              version: 1
