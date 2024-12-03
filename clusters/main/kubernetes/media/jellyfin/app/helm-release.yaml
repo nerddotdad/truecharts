@@ -32,11 +32,11 @@ spec:
     credentials:
       cloudflare_r2:
           type: s3
-          url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com
+          url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
           bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-jellyfin
-          accessKey: ${CLOUDFLARE_R2_KEY_ID}
-          secretKey: ${CLOUDFLARE_R2_ACESS_KEY}
-          encrKey: ${CLOUDFLARE_R2_ENCRKEY}
+          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
+          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
+          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
         config:
             volsync:
