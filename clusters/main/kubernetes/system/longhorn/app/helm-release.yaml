@@ -8,7 +8,6 @@ spec:
     releaseName: longhorn
     chart:
         spec:
-
             chart: longhorn
             version: 1.7.2
             sourceRef:
@@ -25,14 +24,39 @@ spec:
         remediation:
             retries: 3
     values:
-      defaultSettings:
-        # Increase to 3 for a multi-node cluster
-        defaultReplicaCount: 1
-        # Overprovisioning might be needed when using volsync
-        storageOverProvisioningPercentage: 100000
-        # v2DataEngine: true
-      persistence:
-        # Set to false to pick another CSI as default
-        defaultClass: true
-        # Increase to 3 for a multi-node cluster
-        defaultClassReplicaCount: 1
+        defaultSettings:
+            # Increase to 3 for a multi-node cluster
+            defaultReplicaCount: 1
+            # Overprovisioning might be needed when using volsync
+            storageOverProvisioningPercentage: 100000
+            # v2DataEngine: true
+        persistence:
+            # Set to false to pick another CSI as default
+            defaultClass: true
+            # Increase to 3 for a multi-node cluster
+            defaultClassReplicaCount: 1
+        ingress:
+            main:
+                enabled: true
+                hosts:
+                    - host: longhorn.${DOMAIN_0}
+                      paths:
+                        - path: /
+                          pathType: Prefix
+                integrations:
+                    certManager:
+                        enabled: true
+                        certificateIssuer: domain-0-le-prod
+                    traefik:
+                        enabled: true
+                        entrypoints:
+                            - websecure
+                    homepage:
+                        enabled: true
+                        name: Longhorn
+                        description: This is a Longhorn instance
+                        group: Storage
+                        icon: ""
+                        widget:
+                            type: longhorn
+                            url: https://longhorn.hoth.systems

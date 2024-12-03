@@ -3,8 +3,8 @@ credentials:
         type: s3
         url: s3.us-east-005.backblazeb2.com
         bucket: hoth-systems-truecharts
-        accessKey: ENC[AES256_GCM,data:ma7DSlUIIesZQ2IpkqB6CSlN9w==,iv:ia+cAESWcnDfA4TnzsuSVg5qAlklhISTN+HsBnJ50KU=,tag:ubYzX4sOH3stb58Lr6Otww==,type:str]
-        secretKey: ENC[AES256_GCM,data:FX+jQ/Xjg6ZPaRfUfAB9l9VL6w==,iv:SBrPHmbiK0s66hM+HaBARGuRsJFQNPKa+cdWwSfNdDs=,tag:gXD8kVk+fhqHAG6j6YdlCg==,type:str]
+        accessKey: ENC[AES256_GCM,data:7V7o1zCdjSGa0qh6WnkXYiAMvQ==,iv:O8BmzyeQJSNdiqSrRpp4ar9J76kqHXa72wsuDvSR4CQ=,tag:ekLFcB1dBOQlCwfK2I397A==,type:str]
+        secretKey: ENC[AES256_GCM,data:2FMufnp2p2z99ShU6ZYwoXePOg==,iv:AfUojr0e30iUupyE6eF1qH1lBvXxWlXM/xrj/+Yc2WA=,tag:To6YzS1hEkXDKcyg4crvig==,type:str]
 service:
     main:
         type: LoadBalancer
@@ -63,8 +63,8 @@ ingress:
                   pathType: Prefix
         integrations:
             certManager:
-                enabled: ENC[AES256_GCM,data:kG12ZA==,iv:Qzxsg96gNYMUfVcSuMl7gfWf77/Q9e/ktp+EZrHzPyQ=,tag:idTIvw58azpSwvYbsXca8w==,type:bool]
-                certificateIssuer: ENC[AES256_GCM,data:38JQA4eq3SimGiHPNTIB0Q==,iv:fww+Z/t9RfVPuSwfPlFWjqfg2oSsamxRR11VYpKm7Fc=,tag:yBDnWEBygaJEvvam5L1zRg==,type:str]
+                enabled: ENC[AES256_GCM,data:xgLZAw==,iv:wbrWf+8JbaiFK0GalumAEzMolZQ6J4XqTeCIssnWodY=,tag:sETbMAq8UogtZmJNzo8few==,type:bool]
+                certificateIssuer: ENC[AES256_GCM,data:d4JxSmdeMpFp1Z7LKFpJ7Q==,iv:oB5ucw5eTrbtkgVmqimyyBcu/zTS67UlND5dAWFw7n0=,tag:Q+2Yrhpd0kMdgOT4BcUeCg==,type:str]
             traefik:
                 enabled: true
                 entrypoints:
@@ -76,8 +76,8 @@ ingress:
                 group: Media
                 icon: ""
                 widget:
-                    type: ENC[AES256_GCM,data:jIwQ4ksqu5w=,iv:PjwEf/yyjPVanqvZ8r5EnKBavEyYDy/VHAa46HXSMzA=,tag:/aaftT1r3DLljzdh/60zHA==,type:str]
-                    url: ENC[AES256_GCM,data:czNg9l04WioiA71sfCdArfwd5oPbV97CpbjqE7Q=,iv:yjrjDx2DtHEpYAHFT0puoYiQaAcLF1qPMR2x7Knabw4=,tag:eGA9LcXjc9nk8+2r5az9Lw==,type:str]
+                    type: ENC[AES256_GCM,data:sOp3u7A8UKI=,iv:tSLLUxaHxzBwvtBsDh9Y/E4qiMEJU/l9uUJIMPvFi7o=,tag:zHaV7YdgHh8NB8uu1zT8YA==,type:str]
+                    url: ENC[AES256_GCM,data:XM4vrWtDy5o7p8dhvsteUi1FdWN7g2OL0J7zlZU=,iv:Bu9HC5M2YWsdf96Koa8HDjNK5iBIbCTuTRR2ss8PDow=,tag:vy6mi83dJTj/zcpOML+/MQ==,type:str]
 sops:
     shamir_threshold: 3
     kms: []
@@ -88,14 +88,14 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB3b3FzRE5NV0o1RHJGRFRt
-            YXBtMENKYXkwd2NMS2dpQjhBU0J0QWsvbmhJCi84UjJoVW9ibW85RVZDYlVnekpT
-            aHIyaC9sTUNId2RmVEFqWm5FK0h6L0kKLS0tIEdsb0sxbVhLcGlaVFlYYmVrYm1w
-            WDRzOXA2Y0x2RmUrcmdxQStQTkdGUnMK5SL0PUINUlI5+4Td3Re6eGBaj9rTjR8e
-            tBK6UtVrvC84Wg3nL6BAoUsPosIbHR9pnCEufmQT7yHh109RC4zKtg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA5WnVOWUV6ZUZWLzJCeHps
+            RzFhV0FTREZGcHZEVW5QcHBSWEl6K1p2aWlVCk5iTktJOUllTmJVbnpZZm45NkFu
+            OG9HY2xCTHppVmpPMHdFWkkya1draHcKLS0tIG42RmxmeHNza0IyTUFsSjk5MGdv
+            UGhqUTJaek1zYmpMUDFBUlBiUkhjcWMK4MaUtG6pU/N4r8TpW0fN7evhezeGN1Q7
+            Us9in7E7Ez0NBY7gbzIBB7Z7txSYFuVPr9BU0Km06kwH0JFWZBh7gA==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-12-03T18:46:26Z"
-    mac: ENC[AES256_GCM,data:4PSLFx/E+FDkrrS+43fjN4UpPFq6VzpK01VLfYEz+Y3SolkuUs7mShjQY0gkt+5wv06BprqjvpGY1IVoXEx9uoo2t4nwwAVeTxUQPxp/vy8IxR4TJSZ8eJ0frgr60MWV2+wIl4JEroIZUMWQ3ECNXjVcOck9X7Gp2Cri5ah1kJc=,iv:Px6mm1YfQzL9tsy/9j20R1o0rA0iqZFxVw05UezeQHM=,tag:Fr0Eg/jPsPU7v5tQrZk23A==,type:str]
+    lastmodified: "2024-12-03T19:10:20Z"
+    mac: ENC[AES256_GCM,data:OSKVe61rmXJVWWVKJ2cU+RKgxLNVTbUh3ZLgble3btJLCjJivShUJ+SzM2JqJ/G7vea91d7VqbsztKrOAS8BO/Oz0O8kntj+PMeGCjArOiBlhheLMyUNt2K8fzHU2AOaX28fnfnyaeZaK5aJ/Ru9FmElYJ56672FPaUcm6x/Y08=,iv:gplZwewyYBchxOT5eUzzfQLKSif4UUvip5NZaKXWmmQ=,tag:5jHDa+roXvpxGgnolhw7Xg==,type:str]
     pgp: []
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.9.1
