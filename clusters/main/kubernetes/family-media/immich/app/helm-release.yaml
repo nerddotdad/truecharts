@@ -53,10 +53,10 @@ spec:
         runAsUser: 0
         runAsGroup: 0
 
-    # immich:
-    #   enable_ml: false
-    #   mlImageType: mlImage
-    #   log_level: log
+    immich:
+      enable_ml: false
+      mlImageType: mlImage
+      log_level: log
 
     service:
       main:
@@ -67,44 +67,44 @@ spec:
             port: 10323
             protocol: http
             targetSelector: main
-      # microservices:
-      #   enabled: false
-      #   type: ClusterIP
-      #   targetSelector: microservices
-      #   ports:
-      #     microservices:
-      #       enabled: true
-      #       primary: true
-      #       port: 10004
-      #       protocol: http
-      #       targetSelector: microservices
-      # machinelearning:
-      #   enabled: false
-      #   type: ClusterIP
-      #   targetSelector: machinelearning
-      #   ports:
-      #     machinelearning:
-      #       enabled: true
-      #       primary: true
-      #       port: 10003
-      #       protocol: http
-      #       targetSelector: machinelearning
+      microservices:
+        enabled: false
+        type: ClusterIP
+        targetSelector: microservices
+        ports:
+          microservices:
+            enabled: true
+            primary: true
+            port: 10004
+            protocol: http
+            targetSelector: microservices
+      machinelearning:
+        enabled: false
+        type: ClusterIP
+        targetSelector: machinelearning
+        ports:
+          machinelearning:
+            enabled: true
+            primary: true
+            port: 10003
+            protocol: http
+            targetSelector: machinelearning
 
-    # persistence:
-    #   mlcache:
-    #     enabled: true
-    #     type: emptyDir
-    #     targetSelector:
-    #       machinelearning:
-    #         machinelearning:
-    #           mountPath: /mlcache
-    #   microcache:
-    #     enabled: true
-    #     type: emptyDir
-    #     targetSelector:
-    #       microservices:
-    #         microservices:
-    #           mountPath: /microcache
+    persistence:
+      mlcache:
+        enabled: true
+        type: emptyDir
+        targetSelector:
+          machinelearning:
+            machinelearning:
+              mountPath: /mlcache
+      microcache:
+        enabled: true
+        type: emptyDir
+        targetSelector:
+          microservices:
+            microservices:
+              mountPath: /microcache
       library:
         enabled: true
         type: nfs
