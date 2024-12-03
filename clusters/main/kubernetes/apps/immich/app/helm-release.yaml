@@ -70,28 +70,28 @@ spec:
             port: 10323
             protocol: http
             targetSelector: main
-      microservices:
-        enabled: false
-        type: ClusterIP
-        targetSelector: microservices
-        ports:
-          microservices:
-            enabled: true
-            primary: true
-            port: 10004
-            protocol: http
-            targetSelector: microservices
-      machinelearning:
-        enabled: false
-        type: ClusterIP
-        targetSelector: machinelearning
-        ports:
-          machinelearning:
-            enabled: true
-            primary: true
-            port: 10003
-            protocol: http
-            targetSelector: machinelearning
+      # microservices:
+      #   enabled: false
+      #   type: ClusterIP
+      #   targetSelector: microservices
+      #   ports:
+      #     microservices:
+      #       enabled: true
+      #       primary: true
+      #       port: 10004
+      #       protocol: http
+      #       targetSelector: microservices
+      # machinelearning:
+      #   enabled: false
+      #   type: ClusterIP
+      #   targetSelector: machinelearning
+      #   ports:
+      #     machinelearning:
+      #       enabled: true
+      #       primary: true
+      #       port: 10003
+      #       protocol: http
+      #       targetSelector: machinelearning
 
     persistence:
       mlcache:
