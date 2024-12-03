@@ -76,7 +76,7 @@ spec:
         targetSelector: microservices
         ports:
           microservices:
-            enabled: true
+            enabled: false
             primary: true
             port: 10004
             protocol: http
@@ -87,7 +87,7 @@ spec:
         targetSelector: machinelearning
         ports:
           machinelearning:
-            enabled: true
+            enabled: false
             primary: true
             port: 10003
             protocol: http
