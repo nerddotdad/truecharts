@@ -33,17 +33,14 @@ spec:
       repository: ghcr.io/immich-app/immich-server
       tag: v1.121.0@sha256:851c02f28891f1854c5b5762ee8d2e254e2de528cfe3627b2fbcb37a7f108ff3
       pullPolicy: IfNotPresent
-
     mlImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
       tag: v1.121.0@sha256:1b8494bb9fe2194f2dc72c4d6b0104e16718f50e8772d54ade57909770816ad1
-
     mlCudaImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
       tag: v1.121.0-cuda@sha256:c10ebb0bd206e17cd24dc9e65390fad2f9ef9c636889759b3bff35f82b0e351c
-
     mlOpenvinoImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
@@ -57,7 +54,7 @@ spec:
         runAsGroup: 0
 
     immich:
-      enable_ml: true
+      enable_ml: false
       mlImageType: mlImage
       log_level: log
 
