@@ -49,12 +49,12 @@ spec:
       pullPolicy: IfNotPresent
       tag: v1.121.0-openvino@sha256:d5ed294419b11cb5eb746bb47628ade057a38d27031be89ab83866a74712bae6
 
-    securityContext:
-      container:
-        readOnlyRootFilesystem: false
-        runAsNonRoot: false
-        runAsUser: 0
-        runAsGroup: 0
+    # securityContext:
+    #   container:
+    #     readOnlyRootFilesystem: false
+    #     runAsNonRoot: false
+    #     runAsUser: 0
+    #     runAsGroup: 0
 
     immich:
       enable_ml: true
