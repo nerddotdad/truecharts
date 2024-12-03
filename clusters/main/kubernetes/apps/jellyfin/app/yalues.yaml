@@ -1,0 +1,77 @@
+credentials:
+  mys3:
+    type: s3
+    url: "s3.us-east-005.backblazeb2.com"
+    bucket: "hoth-systems-truecharts"
+    accessKey: "${B2_KEY}"
+    secretKey: "${B2_SECRET}"
+service:
+  main:
+    type: LoadBalancer
+    loadBalancerIP: ${JELLYFIN_IP}
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          env:
+            JELLYFIN_PublishedServerUrl: jellyfin.${DOMAIN_0}
+persistence:
+  config:
+    volsync:
+      - name: config
+        type: restic
+        credentials: mys3_credentials
+        dest:
+          enabled: true
+        src:
+          enabled: true
+  transcode:
+    enabled: true
+    type: nfs
+    mountPath: /transcode
+    path: /mnt/Applications/apps-configs/jellyfin/transcode
+    server: 192.168.30.49
+  family-media:
+    enabled: true
+    type: nfs
+    mountPath: /family-media
+    path: /mnt/hhd-hc-primary/media/photoprism-original
+    server: 192.168.30.49
+  movies:
+    enabled: true
+    type: nfs
+    mountPath: /movies
+    path: /mnt/hhd-hc-primary/media/data/media/movies
+    server: 192.168.30.49
+  shows:
+    enabled: true
+    type: nfs
+    mountPath: /shows
+    path: /mnt/hhd-hc-primary/media/data/media/shows
+    server: 192.168.30.49
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: jellyfin.${DOMAIN_0}
+        paths:
+          - path: /
+            pathType: Prefix
+    integrations:
+      certManager:
+        enabled: true
+        certificateIssuer: "domain-0-le-prod"
+      traefik:
+        enabled: true
+        entrypoints:
+          - websecure
+      homepage:
+        enabled: true
+        name: "Jellyfin"
+        description: "This is a jellyfin instance"
+        group: "Media"
+        icon: ""
+        widget:
+          type: "jellyfin"
+          url: "https://jellyfin.hoth.systems"
