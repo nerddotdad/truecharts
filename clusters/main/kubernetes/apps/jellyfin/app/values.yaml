@@ -1,0 +1,98 @@
+credentials:
+    mys3:
+        type: s3
+        url: s3.us-east-005.backblazeb2.com
+        bucket: hoth-systems-truecharts
+        accessKey: ENC[AES256_GCM,data:ESTmJRMyaLPo,iv:Ou3wgZcH2zbl4WeKo9DQm7aU+ZLtLqY5f3t4M2J4PUg=,tag:Dw9QkWtp+JZsNpk3TEMUaA==,type:str]
+        secretKey: ENC[AES256_GCM,data:AKi68yYC4EcsPulv,iv:TbFbK5bj1aFjw1p3MEeUi1NRTR1JmVOxp0w52Ae7lqE=,tag:OYphVaf7RyG+bVht2TP2Eg==,type:str]
+service:
+    main:
+        type: LoadBalancer
+        loadBalancerIP: ${JELLYFIN_IP}
+workload:
+    main:
+        podSpec:
+            containers:
+                main:
+                    env:
+                        JELLYFIN_PublishedServerUrl: jellyfin.${DOMAIN_0}
+persistence:
+    config:
+        volsync:
+            - name: config
+              type: restic
+              credentials: mys3_credentials
+              dest:
+                enabled: true
+              src:
+                enabled: true
+    transcode:
+        enabled: true
+        type: nfs
+        mountPath: /transcode
+        path: /mnt/Applications/apps-configs/jellyfin/transcode
+        server: 192.168.30.49
+    family-media:
+        enabled: true
+        type: nfs
+        mountPath: /family-media
+        path: /mnt/hhd-hc-primary/media/photoprism-original
+        server: 192.168.30.49
+    movies:
+        enabled: true
+        type: nfs
+        mountPath: /movies
+        path: /mnt/hhd-hc-primary/media/data/media/movies
+        server: 192.168.30.49
+    shows:
+        enabled: true
+        type: nfs
+        mountPath: /shows
+        path: /mnt/hhd-hc-primary/media/data/media/shows
+        server: 192.168.30.49
+ingress:
+    main:
+        enabled: true
+        hosts:
+            - host: jellyfin.${DOMAIN_0}
+              paths:
+                - path: /
+                  pathType: Prefix
+        integrations:
+            certManager:
+                enabled: ENC[AES256_GCM,data:TH1wug==,iv:vmsgR3Lp8VW86+lhTZfmHHa6miek809RHdrfEGyUl4o=,tag:8wQY7gzBq+4OgQJcOaXkUw==,type:bool]
+                certificateIssuer: ENC[AES256_GCM,data:MAJBzXML8ch0fx1NhMMLKQ==,iv:i7qxkLH+3x8KoqE7kWgfyxSFew+effBMf95UgTaONf8=,tag:QUAtE8bkLKvWblXESXa/hg==,type:str]
+            traefik:
+                enabled: true
+                entrypoints:
+                    - websecure
+            homepage:
+                enabled: true
+                name: Jellyfin
+                description: This is a jellyfin instance
+                group: Media
+                icon: ""
+                widget:
+                    type: ENC[AES256_GCM,data:FnAZdi/aEfw=,iv:+ZPtmowvgYJBQAwQ4Y+Dt6BUTPncwFp+q/5XrSKiMEI=,tag:MFZQl2PoF1LIGrYeT7FryQ==,type:str]
+                    url: ENC[AES256_GCM,data:u1+OOBapVV+AgeWmYFTD47z1gatkYTKsoIGVC3k=,iv:UJTOHpuY2bZPPFSLjgmjssKNSuuszMOT6Ekl+dYPA6U=,tag:6JRd/N49GUbEzPA/OUZx3g==,type:str]
+sops:
+    shamir_threshold: 3
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB6UW9RaTk2ayt4ZjBUakFG
+            UG4rZ3V3aUFaTjJ1ZkhPVzgxWlp2anF2dGpBCmppTWp0eDZndkQvbWVDSk5pcWdD
+            R0NQTml5ZzVGbGVnSGdxNjNYUDErRUEKLS0tIFZhSW4zSWIxbEliVFY2L0hjZE93
+            VWp6YjdBRjFsZDdVamN4QmVFeEJNYVUKZLbbkStU06f56h6qG6TegBsbatc1Kj2r
+            rVO587nHgZVm3l2OtW4jrMS5N2EuGrW/vuBz9bP08XIKRch6Pq5w4A==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-12-03T17:55:38Z"
+    mac: ENC[AES256_GCM,data:kCqg9ljh//gxfR7RM0Cn2SQIkdTw8LzBwxaAcjxyID/FI94xzWvjo0Da7zBhBX8KsSw9I4vS/5s051D47/sahW5TZAdnRWyJfdPNkzImT2xSrFGvyyHMZs6JBkRIrToNfjVpxPhNw7Ogf8hdRmQoFHesW+M3IunbQ+PMc5n1CGE=,iv:c22W9ZoVVAtowNhi6QV93pJXdwzgiIuHf0OPL9NY3LY=,tag:378RHrzec4asIcwaAOMSOg==,type:str]
+    pgp: []
+    encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
+    version: 3.9.1
