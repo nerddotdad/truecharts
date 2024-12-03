@@ -59,4 +59,4 @@ spec:
                         icon: ""
                         widget:
                             type: longhorn
-                            url: https://longhorn.hoth.systems
+                            url: https://longhorn.${DOMAIN_0}
