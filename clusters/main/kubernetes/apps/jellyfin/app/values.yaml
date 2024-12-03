@@ -3,8 +3,8 @@ credentials:
         type: s3
         url: s3.us-east-005.backblazeb2.com
         bucket: hoth-systems-truecharts
-        accessKey: ENC[AES256_GCM,data:aMJX4HNOp1ax,iv:UEaIgYpSBRJin2DVoCpOxPYVQn4oIn9SA09xqxbv/5M=,tag:fV9sEGDf7AP6A4p+2CI8Ww==,type:str]
-        secretKey: ENC[AES256_GCM,data:E/8MuNPdIUoFp7Kb,iv:RXMv/9IMoQLIFZT13MYdg2iRroP1xPlMlmzFq6VTjbc=,tag:vKFFbecDaIwqGy7JYaRWCw==,type:str]
+        accessKey: ENC[AES256_GCM,data:NtOsLDP625B33CGJ7nxDxxx5lw==,iv:drqzKApNUkikUTh7IJc+dx5o2W4/Tii1g70YKZLDgaI=,tag:tzrv3gvRDmBdQp8MrXTMyw==,type:str]
+        secretKey: ENC[AES256_GCM,data:Tq25wmaTWQgOdYdwn00Mu99IbA==,iv:VQRYDiZGBmxwHzWFNG+pfJbkmrIu2PzX4M8vbo/5whw=,tag:oahBD89Qcwbqs7tGbSgKSQ==,type:str]
 service:
     main:
         type: LoadBalancer
@@ -60,8 +60,8 @@ ingress:
                   pathType: Prefix
         integrations:
             certManager:
-                enabled: ENC[AES256_GCM,data:ifb0ww==,iv:qkE5c9okisXAw5og3Kde1JtsAOxrurdSlOIkmbjqQXY=,tag:+vJmxhD4CtzQ2aj/d/91sQ==,type:bool]
-                certificateIssuer: ENC[AES256_GCM,data:2mAxc9uC/TpP5Pgpd4/ZJw==,iv:au6TTorxzgSQQAowGE8QrR22pRHVfhVkOjPe93LpYMI=,tag:BIXLQQ129fbU/wRYkEqT6g==,type:str]
+                enabled: ENC[AES256_GCM,data:FTHx4g==,iv:bR3lDvhB0rYXIbP25m7+rAkNDyB0a+aTfaRUoACST3A=,tag:82A04sgzEULU6C839zetUw==,type:bool]
+                certificateIssuer: ENC[AES256_GCM,data:KxWMBWufWEQEgm2umdT9/w==,iv:faqNIm+7vmvoMbaejejALwUQiRo+3e4vRc7L8yoHsQ0=,tag:IpohhdKws2yJU/phPEKERQ==,type:str]
             traefik:
                 enabled: true
                 entrypoints:
@@ -73,8 +73,8 @@ ingress:
                 group: Media
                 icon: ""
                 widget:
-                    type: ENC[AES256_GCM,data:No1w0lm6gkk=,iv:wP/eZQYxB6ZU8LugZvAkk+S+ZxYi0nIRvlzT7evimm0=,tag:cjqEq/vCkuN8UckZ3Kb3aQ==,type:str]
-                    url: ENC[AES256_GCM,data:PGjq8r7IhevXXQIzvfJl9bhw6qPD8BLaCMYBWBg=,iv:VHgi3A2XfEoX+w/zkjQSZ7uWe9xdIi5FqatJGENET8s=,tag:KfZURQD54kl62SAx4y/Clw==,type:str]
+                    type: ENC[AES256_GCM,data:6I4Uc49QAyY=,iv:PtPZrsvYWz7IfD/VnSQ6O+hCFOwmT5O/F98fKPT4ReA=,tag:SpYdoPEWj0C5W8JsOUJQ8Q==,type:str]
+                    url: ENC[AES256_GCM,data:wOUShhZfwJb7GYZ5Bny/Gnytl286NF+I+2+S2sQ=,iv:ypRjZS4nazMYK1h4ttuxCdP2npEY03kDS6Q/MIELlCQ=,tag:AFmiPJLatjN5kCd0zmPsAw==,type:str]
 sops:
     shamir_threshold: 3
     kms: []
@@ -85,14 +85,14 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB5dXdwTkMxZGI4d1Z6UGdW
-            S2VoN2pERWU2QndSTEtqdGJUT0ZnWjgrYVRZCnNsanBOOWlzdWhsZG01WjNRNFlS
-            em9iL1VPajhTSHdHb0NCQzZPNDFaakkKLS0tIEdyRC9ESTNOeUp5a1hJQTdnaFBm
-            SVJsWG1SR1JjMUJPVVdqYUY1d2w5ZkUKkexx7PqLl8PO9aF/AUhFjJjWScEl03I6
-            CJ0fNSmHsWV/Ihgprq+blWdnMHOg/eeQl+JW7XKq/1g6m8FnlkM0oQ==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJZFRNOVl2cG4vRW1pS0VG
+            bUlUVDc0eUtRb041TmNleUt2WTkxNlJHOW53CnNUdXExMFBTZGtvcGVqSGpxZFpm
+            TGU1ZVlEek9uVjd5Skk2VjdSYmR0VG8KLS0tIElVM3BVajA2dnc3SDBLNmNKS1hs
+            OTByMmxmbWFrSUxEclpsTE1DT0p2ckEKDukiQTq+Fko0ObqgJbbqGbLYL10lqAax
+            sWqDeoKrc+RAyDSStraMFeG7jv0Xw3syYZlEIhlQOm9FSgHJGEBgSg==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-12-03T18:26:59Z"
-    mac: ENC[AES256_GCM,data:7OminiJKwUXotexvwh7mdLBmfK9PbGW1Wbm6Vc+1xBg95CS7WxKLfew/q+I3gpWMXEeI0JL0txKWqWenm5W12h75CkWVxj2Oy8RVFzvPqm71/Og1aNFDqegf2Nb2Bqsg4QaJtuo4w7FnIKo9sxcpeeR7UpXWJjTm5cpyiXsBzHc=,iv:5HctUnlcNQ2GGrsXDX8iaYFLerkc1cQD2v8w8O/QfiE=,tag:ePwN1iv5C3yLSULhYsPgMQ==,type:str]
+    lastmodified: "2024-12-03T18:42:15Z"
+    mac: ENC[AES256_GCM,data:IbTaIObOC3Qf5TbKRF0PZ8nphZCQXF4Po/+h8rG92UyWoDatO3c63Ke8dRQ3zQBirPgOMtbRG1FhXpN2fRcvYY5We81A7Jmsyl/JHV0q4YWC6QLuWdAleXGgID/OofELRNtCEuVDlGrpopOqvfuFDvNtAGfZgkNvGO4mS1Cgzks=,iv:CAcaVS18Ic46h8V3dPCtBxI0KNTuZ3kvQ6ev49AVxEM=,tag:j07CYenu3PjjmiFF8ku5+w==,type:str]
     pgp: []
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.9.1
