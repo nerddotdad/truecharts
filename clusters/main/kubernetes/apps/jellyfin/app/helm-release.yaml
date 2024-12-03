@@ -34,8 +34,8 @@ spec:
           type: s3
           url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com
           bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-jellyfin
-          accessKey: ${CLOUDFLARE_R2_AUTH_TOKEN}
-          secretKey: ${CLOUDFLARE_R2_ACESS_KEY}
+          accessKey: ${CLOUDFLARE_R2_ACESS_KEY:}
+          secretKey: ${CLOUDFLARE_R2_AUTH_TOKEN}
           encrKey: ${CLOUDFLARE_R2_ENCRKEY}
     persistence:
         config:
