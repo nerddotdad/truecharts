@@ -71,23 +71,23 @@ spec:
             protocol: http
             targetSelector: main
       microservices:
-        enabled: true
+        enabled: false
         type: ClusterIP
         targetSelector: microservices
         ports:
           microservices:
-            enabled: false
+            enabled: true
             primary: true
             port: 10004
             protocol: http
             targetSelector: microservices
       machinelearning:
-        enabled: true
+        enabled: false
         type: ClusterIP
         targetSelector: machinelearning
         ports:
           machinelearning:
-            enabled: false
+            enabled: true
             primary: true
             port: 10003
             protocol: http
