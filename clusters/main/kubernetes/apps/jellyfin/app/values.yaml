@@ -3,8 +3,8 @@ credentials:
         type: s3
         url: s3.us-east-005.backblazeb2.com
         bucket: hoth-systems-truecharts
-        accessKey: ENC[AES256_GCM,data:NtOsLDP625B33CGJ7nxDxxx5lw==,iv:drqzKApNUkikUTh7IJc+dx5o2W4/Tii1g70YKZLDgaI=,tag:tzrv3gvRDmBdQp8MrXTMyw==,type:str]
-        secretKey: ENC[AES256_GCM,data:Tq25wmaTWQgOdYdwn00Mu99IbA==,iv:VQRYDiZGBmxwHzWFNG+pfJbkmrIu2PzX4M8vbo/5whw=,tag:oahBD89Qcwbqs7tGbSgKSQ==,type:str]
+        accessKey: ENC[AES256_GCM,data:ma7DSlUIIesZQ2IpkqB6CSlN9w==,iv:ia+cAESWcnDfA4TnzsuSVg5qAlklhISTN+HsBnJ50KU=,tag:ubYzX4sOH3stb58Lr6Otww==,type:str]
+        secretKey: ENC[AES256_GCM,data:FX+jQ/Xjg6ZPaRfUfAB9l9VL6w==,iv:SBrPHmbiK0s66hM+HaBARGuRsJFQNPKa+cdWwSfNdDs=,tag:gXD8kVk+fhqHAG6j6YdlCg==,type:str]
 service:
     main:
         type: LoadBalancer
@@ -18,6 +18,9 @@ workload:
                         JELLYFIN_PublishedServerUrl: jellyfin.${DOMAIN_0}
 persistence:
     config:
+        enabled: true
+        type: pvc
+        mountPath: /config
         volsync:
             - name: config
               type: restic
@@ -60,8 +63,8 @@ ingress:
                   pathType: Prefix
         integrations:
             certManager:
-                enabled: ENC[AES256_GCM,data:FTHx4g==,iv:bR3lDvhB0rYXIbP25m7+rAkNDyB0a+aTfaRUoACST3A=,tag:82A04sgzEULU6C839zetUw==,type:bool]
-                certificateIssuer: ENC[AES256_GCM,data:KxWMBWufWEQEgm2umdT9/w==,iv:faqNIm+7vmvoMbaejejALwUQiRo+3e4vRc7L8yoHsQ0=,tag:IpohhdKws2yJU/phPEKERQ==,type:str]
+                enabled: ENC[AES256_GCM,data:kG12ZA==,iv:Qzxsg96gNYMUfVcSuMl7gfWf77/Q9e/ktp+EZrHzPyQ=,tag:idTIvw58azpSwvYbsXca8w==,type:bool]
+                certificateIssuer: ENC[AES256_GCM,data:38JQA4eq3SimGiHPNTIB0Q==,iv:fww+Z/t9RfVPuSwfPlFWjqfg2oSsamxRR11VYpKm7Fc=,tag:yBDnWEBygaJEvvam5L1zRg==,type:str]
             traefik:
                 enabled: true
                 entrypoints:
@@ -73,8 +76,8 @@ ingress:
                 group: Media
                 icon: ""
                 widget:
-                    type: ENC[AES256_GCM,data:6I4Uc49QAyY=,iv:PtPZrsvYWz7IfD/VnSQ6O+hCFOwmT5O/F98fKPT4ReA=,tag:SpYdoPEWj0C5W8JsOUJQ8Q==,type:str]
-                    url: ENC[AES256_GCM,data:wOUShhZfwJb7GYZ5Bny/Gnytl286NF+I+2+S2sQ=,iv:ypRjZS4nazMYK1h4ttuxCdP2npEY03kDS6Q/MIELlCQ=,tag:AFmiPJLatjN5kCd0zmPsAw==,type:str]
+                    type: ENC[AES256_GCM,data:jIwQ4ksqu5w=,iv:PjwEf/yyjPVanqvZ8r5EnKBavEyYDy/VHAa46HXSMzA=,tag:/aaftT1r3DLljzdh/60zHA==,type:str]
+                    url: ENC[AES256_GCM,data:czNg9l04WioiA71sfCdArfwd5oPbV97CpbjqE7Q=,iv:yjrjDx2DtHEpYAHFT0puoYiQaAcLF1qPMR2x7Knabw4=,tag:eGA9LcXjc9nk8+2r5az9Lw==,type:str]
 sops:
     shamir_threshold: 3
     kms: []
@@ -85,14 +88,14 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJZFRNOVl2cG4vRW1pS0VG
-            bUlUVDc0eUtRb041TmNleUt2WTkxNlJHOW53CnNUdXExMFBTZGtvcGVqSGpxZFpm
-            TGU1ZVlEek9uVjd5Skk2VjdSYmR0VG8KLS0tIElVM3BVajA2dnc3SDBLNmNKS1hs
-            OTByMmxmbWFrSUxEclpsTE1DT0p2ckEKDukiQTq+Fko0ObqgJbbqGbLYL10lqAax
-            sWqDeoKrc+RAyDSStraMFeG7jv0Xw3syYZlEIhlQOm9FSgHJGEBgSg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB3b3FzRE5NV0o1RHJGRFRt
+            YXBtMENKYXkwd2NMS2dpQjhBU0J0QWsvbmhJCi84UjJoVW9ibW85RVZDYlVnekpT
+            aHIyaC9sTUNId2RmVEFqWm5FK0h6L0kKLS0tIEdsb0sxbVhLcGlaVFlYYmVrYm1w
+            WDRzOXA2Y0x2RmUrcmdxQStQTkdGUnMK5SL0PUINUlI5+4Td3Re6eGBaj9rTjR8e
+            tBK6UtVrvC84Wg3nL6BAoUsPosIbHR9pnCEufmQT7yHh109RC4zKtg==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-12-03T18:42:15Z"
-    mac: ENC[AES256_GCM,data:IbTaIObOC3Qf5TbKRF0PZ8nphZCQXF4Po/+h8rG92UyWoDatO3c63Ke8dRQ3zQBirPgOMtbRG1FhXpN2fRcvYY5We81A7Jmsyl/JHV0q4YWC6QLuWdAleXGgID/OofELRNtCEuVDlGrpopOqvfuFDvNtAGfZgkNvGO4mS1Cgzks=,iv:CAcaVS18Ic46h8V3dPCtBxI0KNTuZ3kvQ6ev49AVxEM=,tag:j07CYenu3PjjmiFF8ku5+w==,type:str]
+    lastmodified: "2024-12-03T18:46:26Z"
+    mac: ENC[AES256_GCM,data:4PSLFx/E+FDkrrS+43fjN4UpPFq6VzpK01VLfYEz+Y3SolkuUs7mShjQY0gkt+5wv06BprqjvpGY1IVoXEx9uoo2t4nwwAVeTxUQPxp/vy8IxR4TJSZ8eJ0frgr60MWV2+wIl4JEroIZUMWQ3ECNXjVcOck9X7Gp2Cri5ah1kJc=,iv:Px6mm1YfQzL9tsy/9j20R1o0rA0iqZFxVw05UezeQHM=,tag:Fr0Eg/jPsPU7v5tQrZk23A==,type:str]
     pgp: []
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.9.1
