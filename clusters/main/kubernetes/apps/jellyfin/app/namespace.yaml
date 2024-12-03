@@ -4,3 +4,5 @@ metadata:
     name: media
     labels:
         topolvm.io/webhook: ignore
+    annotations:
+        volsync.backube/privileged-movers: "true"
