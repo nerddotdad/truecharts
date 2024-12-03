@@ -34,8 +34,8 @@ spec:
           type: s3
           url: 695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com
           bucket: hoth-truecharts-jellyfin
-          accessKey: ${CLOUDFLARE_R2_ACESS_KEY}
-          secretKey: ${CLOUDFLARE_R2_KEY_ID}
+          accessKey: ${CLOUDFLARE_R2_KEY_ID}
+          secretKey: ${CLOUDFLARE_R2_AUTH_TOKEN:}
           encrKey: ${CLOUDFLARE_R2_ENCRKEY}
     persistence:
         config:
