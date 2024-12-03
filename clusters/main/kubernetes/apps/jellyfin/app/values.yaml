@@ -1,10 +1,10 @@
 credentials:
-    mys3:
+    backblaze:
         type: s3
         url: s3.us-east-005.backblazeb2.com
         bucket: hoth-systems-truecharts
-        accessKey: ENC[AES256_GCM,data:zCpwatjFpG1B,iv:Nkn+9s8REqxag59n9Pv6pZgugzpO7lszd/jnd6cfQ7A=,tag:e6m8QPw2OtRk90NStz1RHQ==,type:str]
-        secretKey: ENC[AES256_GCM,data:USyQ2ze8HTAtya8I,iv:Kfph5U0ezBSuuNS016ZA8i3XwXJdCRYIdSrJHfCFQP4=,tag:ezLBjyf+IosFDcEmiTJSbg==,type:str]
+        accessKey: ENC[AES256_GCM,data:aMJX4HNOp1ax,iv:UEaIgYpSBRJin2DVoCpOxPYVQn4oIn9SA09xqxbv/5M=,tag:fV9sEGDf7AP6A4p+2CI8Ww==,type:str]
+        secretKey: ENC[AES256_GCM,data:E/8MuNPdIUoFp7Kb,iv:RXMv/9IMoQLIFZT13MYdg2iRroP1xPlMlmzFq6VTjbc=,tag:vKFFbecDaIwqGy7JYaRWCw==,type:str]
 service:
     main:
         type: LoadBalancer
@@ -21,7 +21,7 @@ persistence:
         volsync:
             - name: config
               type: restic
-              credentials: mys3_credentials
+              credentials: backblaze
               dest:
                 enabled: true
               src:
@@ -60,8 +60,8 @@ ingress:
                   pathType: Prefix
         integrations:
             certManager:
-                enabled: ENC[AES256_GCM,data:B5HReg==,iv:knIkGbIr+b8VbG8GqObMvSoIqhhIFDFvTXRu7zIVViA=,tag:yPXC7aBQcNB0aFbCvvqzAA==,type:bool]
-                certificateIssuer: ENC[AES256_GCM,data:/zkZwZOR134rm1LmBYAFzg==,iv:pJ4eV0evZIuZXMDZo6G9wMVidWcQ11dNOjQ+u8CTZ3o=,tag:GgZ9VJvXIxypYlKhkDkl5Q==,type:str]
+                enabled: ENC[AES256_GCM,data:ifb0ww==,iv:qkE5c9okisXAw5og3Kde1JtsAOxrurdSlOIkmbjqQXY=,tag:+vJmxhD4CtzQ2aj/d/91sQ==,type:bool]
+                certificateIssuer: ENC[AES256_GCM,data:2mAxc9uC/TpP5Pgpd4/ZJw==,iv:au6TTorxzgSQQAowGE8QrR22pRHVfhVkOjPe93LpYMI=,tag:BIXLQQ129fbU/wRYkEqT6g==,type:str]
             traefik:
                 enabled: true
                 entrypoints:
@@ -73,8 +73,8 @@ ingress:
                 group: Media
                 icon: ""
                 widget:
-                    type: ENC[AES256_GCM,data:BpRL3R3QeX8=,iv:9A3c3UmeQuaGOhiFiprZ8Jc38XWQ5YrYuRNeuWyBlrs=,tag:hnxaMRr+svicnuLxHSoGfQ==,type:str]
-                    url: ENC[AES256_GCM,data:Ld/HktDAFTHxl65mc4yDTCa/NSzIF/awPsGeSo0=,iv:BrMKucJTpLlCc4UCFOVF16zGW29ige5tpLhtwa0w5rQ=,tag:6dc5pKk/9sggP7qQJiI0aQ==,type:str]
+                    type: ENC[AES256_GCM,data:No1w0lm6gkk=,iv:wP/eZQYxB6ZU8LugZvAkk+S+ZxYi0nIRvlzT7evimm0=,tag:cjqEq/vCkuN8UckZ3Kb3aQ==,type:str]
+                    url: ENC[AES256_GCM,data:PGjq8r7IhevXXQIzvfJl9bhw6qPD8BLaCMYBWBg=,iv:VHgi3A2XfEoX+w/zkjQSZ7uWe9xdIi5FqatJGENET8s=,tag:KfZURQD54kl62SAx4y/Clw==,type:str]
 sops:
     shamir_threshold: 3
     kms: []
@@ -85,14 +85,14 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBvU2lrUEJzNHhPeWMzU1E1
-            NWs4eGlEVGc5UlVvUjBCSTVncTMzY1JtY2dnCnBEOUlvZ3RsR2dML21vNnhOenhJ
-            OGhXc1B4cVliMDNCRGZmUWNvUzg3cFEKLS0tIHZiS1ZxVzFUNHBwODI2bldOZjY0
-            R3VvL3I5MlAwZDNnTHdFcEw2RlAxdzgKXxLk6/pEU2dyvYgmKNaJry9qC9TWiwlA
-            N7Bgap5Bv1TbbYn7vhpiB4TdWA1OkIx24vWAPJA5H0WMtBex1UDXEA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB5dXdwTkMxZGI4d1Z6UGdW
+            S2VoN2pERWU2QndSTEtqdGJUT0ZnWjgrYVRZCnNsanBOOWlzdWhsZG01WjNRNFlS
+            em9iL1VPajhTSHdHb0NCQzZPNDFaakkKLS0tIEdyRC9ESTNOeUp5a1hJQTdnaFBm
+            SVJsWG1SR1JjMUJPVVdqYUY1d2w5ZkUKkexx7PqLl8PO9aF/AUhFjJjWScEl03I6
+            CJ0fNSmHsWV/Ihgprq+blWdnMHOg/eeQl+JW7XKq/1g6m8FnlkM0oQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-12-03T18:21:14Z"
-    mac: ENC[AES256_GCM,data:OhfYndBhzBYnKSUVHP0gK005Fj/4qu1Opfytt5ME8O7vYGYUKhWsOh1WTuDMBy/qCfS/PvtB/+LlBbKEOe86cNz4m881W9/o3in/HyjuIdZl4PChVTS1rx8Levkl5HN/0HZ8sMbGagfT8rkHUwPn0kf2eUOCbyOQ7ZQQgfOq86Y=,iv:2BSkI4sqsmHV2qkwpVq5ave8o4fjPIrMvcj97MPX+GA=,tag:kAN+idezjl293pfGmSI5gQ==,type:str]
+    lastmodified: "2024-12-03T18:26:59Z"
+    mac: ENC[AES256_GCM,data:7OminiJKwUXotexvwh7mdLBmfK9PbGW1Wbm6Vc+1xBg95CS7WxKLfew/q+I3gpWMXEeI0JL0txKWqWenm5W12h75CkWVxj2Oy8RVFzvPqm71/Og1aNFDqegf2Nb2Bqsg4QaJtuo4w7FnIKo9sxcpeeR7UpXWJjTm5cpyiXsBzHc=,iv:5HctUnlcNQ2GGrsXDX8iaYFLerkc1cQD2v8w8O/QfiE=,tag:ePwN1iv5C3yLSULhYsPgMQ==,type:str]
     pgp: []
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.9.1
