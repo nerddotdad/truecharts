@@ -7,3 +7,4 @@ resources:
   - librespeed/ks.yaml
   - sonarr/ks.yaml
   - immich/ks.yaml
+  - jellyfin/ks.yaml
