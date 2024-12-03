@@ -30,9 +30,9 @@ spec:
     keepHistory: false
   values:
     credentials:
-      backblaze:
+      cloudflare_r2:
           type: s3
-          url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com/hoth-truecharts
+          url: 695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com
           bucket: hoth-truecharts-jellyfin
           accessKey: ${CLOUDFLARE_R2_ACESS_KEY}
           secretKey: ${CLOUDFLARE_R2_KEY_ID}
@@ -42,7 +42,7 @@ spec:
             volsync:
                 - name: config
                   type: restic
-                  credentials: backblaze
+                  credentials: cloudflare_r2
                   dest:
                     enabled: true
                   src:
