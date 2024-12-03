@@ -32,10 +32,11 @@ spec:
     credentials:
       backblaze:
           type: s3
-          url: s3.us-east-005.backblazeb2.com
-          bucket: hoth-systems-truecharts
-          accessKey: ${BACKBLAZE_KEY_ID}
-          secretKey: ${BACKBLAZE_SECRET}
+          url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com/hoth-truecharts
+          bucket: hoth-truecharts-jellyfin
+          accessKey: ${CLOUDFLARE_R2_ACESS_KEY}
+          secretKey: ${CLOUDFLARE_R2_KEY_ID}
+          encrKey: ${CLOUDFLARE_R2_ENCRKEY}
     persistence:
         config:
             volsync:
