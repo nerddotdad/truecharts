@@ -31,13 +31,13 @@ spec:
   values:
     service:
       main:
-        enabled: true
+        enabled: false
         ports:
           main:
-            enabled: true
+            enabled: false
     portal:
       open:
-        enabled: true
+        enabled: false
     image:
       repository: docker.io/cloudflare/cloudflared
       pullPolicy: IfNotPresent
