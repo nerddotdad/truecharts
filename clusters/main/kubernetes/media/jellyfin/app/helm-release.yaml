@@ -77,14 +77,14 @@ spec:
         main:
             enabled: true
             hosts:
-                - host: jellyfin.${DOMAIN_0}
+                - host: jellyfin.${DOMAIN_1}
                   paths:
                     - path: /
                       pathType: Prefix
             integrations:
                 certManager:
                     enabled: true
-                    certificateIssuer: domain-0-le-prod
+                    certificateIssuer: domain-1-le-prod
                 traefik:
                     enabled: true
                     entrypoints:
@@ -97,4 +97,4 @@ spec:
                     icon: ""
                     widget:
                         type: jellyfin
-                        url: https://jellyfin.hoth.systems
+                        url: https://jellyfin.hoth.family
