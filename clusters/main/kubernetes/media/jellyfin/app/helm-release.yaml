@@ -98,3 +98,8 @@ spec:
                     widget:
                         type: jellyfin
                         url: https://jellyfin.hoth.family
+                        key: ${HP_JELLYFIN}
+                        enableBlocks: true
+                        enableNowPlaying: true
+                        enableUser: true
+                        expandOneStreemToTwoRows: false
