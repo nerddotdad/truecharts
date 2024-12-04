@@ -108,8 +108,8 @@ spec:
       library:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/library
-        path: /mnt/hhd-hc-primary/immich/library
+        mountPath: /usr/src/app/upload/library/
+        path: /mnt/hhd-hc-primary/immich/library/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
@@ -120,8 +120,8 @@ spec:
       uploads:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/upload
-        path: /mnt/hhd-hc-primary/immich/upload
+        mountPath: /usr/src/app/upload/upload/
+        path: /mnt/hhd-hc-primary/immich/upload/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
@@ -132,8 +132,8 @@ spec:
       backups:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/backups
-        path: /mnt/hhd-hc-primary/immich/backups
+        mountPath: /usr/src/app/upload/backups/
+        path: /mnt/hhd-hc-primary/immich/backups/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
@@ -144,8 +144,8 @@ spec:
       thumbs:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/thumbs
-        path: /mnt/hhd-hc-primary/immich/thumbs
+        mountPath: /usr/src/app/upload/thumbs/
+        path: /mnt/hhd-hc-primary/immich/thumbs/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
@@ -156,8 +156,8 @@ spec:
       profile:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/profile
-        path: /mnt/hhd-hc-primary/immich/profile
+        mountPath: /usr/src/app/upload/profile/
+        path: /mnt/hhd-hc-primary/immich/profile/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
@@ -168,8 +168,8 @@ spec:
       video:
         enabled: true
         type: nfs
-        mountPath: /usr/src/app/upload/encoded-video
-        path: /mnt/hhd-hc-primary/immich/encoded-video
+        mountPath: /usr/src/app/upload/encoded-video/
+        path: /mnt/hhd-hc-primary/immich/encoded-video/
         server: 192.168.30.49
         targetSelector:
           # Main pod/container is server
