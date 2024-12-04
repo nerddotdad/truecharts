@@ -97,7 +97,7 @@ spec:
                     icon: ""
                     widget:
                         type: jellyfin
-                        url: https://jellyfin.hoth.systems
+                        url: http://jellyfin.hoth.systems
                         key: ${HP_JELLYFIN}
                         enableBlocks: true
                         enableNowPlaying: true
