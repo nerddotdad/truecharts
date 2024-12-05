@@ -228,6 +228,6 @@ spec:
             icon: ""
             widget:
               type: "immich"
-              url: "https://immich.hoth.systems"
+              url: "https://immich.family-media.svc.cluster.local"
               key: ${HP_IMMICH}
               version: 2
