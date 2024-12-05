@@ -54,7 +54,7 @@ spec:
         runAsGroup: 0
 
     immich:
-      enable_ml: false
+      enable_ml: true
       mlImageType: mlImage
       log_level: log
 
@@ -68,7 +68,7 @@ spec:
             protocol: http
             targetSelector: main
       microservices:
-        enabled: false
+        enabled: true
         type: ClusterIP
         targetSelector: microservices
         ports:
@@ -79,7 +79,7 @@ spec:
             protocol: http
             targetSelector: microservices
       machinelearning:
-        enabled: false
+        enabled: true
         type: ClusterIP
         targetSelector: machinelearning
         ports:
