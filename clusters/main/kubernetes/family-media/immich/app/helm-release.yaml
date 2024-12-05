@@ -227,6 +227,6 @@ spec:
             group: "Family Media"
             widget:
               type: immich
-              url: https://immich.hoth.systems
+              url: immich.hoth.systems
               key: ${HP_IMMICH}
               version: 2
