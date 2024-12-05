@@ -99,9 +99,9 @@ spec:
             group: Media
             icon: ""
             widget:
-              type: jellyfin
-              url: jellyfin.hoth.systems
-              key: ${HP_JELLYFIN}
+              type: "jellyfin"
+              url: "jellyfin.hoth.systems"
+              key: "${HP_JELLYFIN}"
               enableBlocks: true # optional, defaults to false
               enableNowPlaying: true # optional, defaults to true
               enableUser: true # optional, defaults to false

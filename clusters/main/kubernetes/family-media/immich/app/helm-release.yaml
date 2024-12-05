@@ -226,7 +226,7 @@ spec:
             description: "Immich Instance"
             group: "Family Media"
             widget:
-              type: immich
-              url: immich.hoth.systems
-              key: ${HP_IMMICH}
+              type: "immich"
+              url: "immich.hoth.systems"
+              key: "${HP_IMMICH}"
               version: 2
