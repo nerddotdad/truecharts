@@ -100,7 +100,7 @@ spec:
             icon: ""
             widget:
               type: jellyfin
-              url: https://jellyfin.media.svc.cluster.local:8096
+              url: jellyfin.media:8096
               key: ${HP_JELLYFIN}
               enableBlocks: true # optional, defaults to false
               enableNowPlaying: true # optional, defaults to true
