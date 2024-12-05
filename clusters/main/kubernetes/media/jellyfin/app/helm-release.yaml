@@ -40,15 +40,15 @@ spec:
     persistence:
       config:
         volsync:
-        - name: config
-          type: restic
-          credentials: cloudflare_r2
-          dest:
-            enabled: true
-          src:
-            enabled: true
-            trigger:
-              schedlue: 30 0 * * *
+          - name: config
+            type: restic
+            credentials: cloudflare_r2
+            dest:
+              enabled: true
+            src:
+              enabled: true
+              trigger:
+                schedlue: 30 0 * * *
         transcode:
           enabled: true
           type: nfs
@@ -77,10 +77,10 @@ spec:
       main:
         enabled: true
         hosts:
-        - host: jellyfin.${DOMAIN_0}
-          paths:
-          - path: /
-            pathType: Prefix
+          - host: jellyfin.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
         integrations:
           certManager:
             enabled: true
@@ -88,7 +88,7 @@ spec:
           traefik:
             enabled: true
             entrypoints:
-            - websecure
+              - websecure
           homepage:
             enabled: true
             name: Jellyfin
