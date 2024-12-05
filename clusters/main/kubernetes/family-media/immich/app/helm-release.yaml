@@ -222,11 +222,12 @@ spec:
               - websecure
           homepage:
             enabled: true
-            name: "Immich"
+            name: "immich"
             description: "Immich Instance"
             group: "Family Media"
             icon: ""
             widget:
               type: "Immich"
               url: "https://immich.hoth.systems"
-              version: 1
+              key: ${HP_IMMICH}
+              version: 2
