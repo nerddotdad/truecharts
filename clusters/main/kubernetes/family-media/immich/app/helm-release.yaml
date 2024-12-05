@@ -225,9 +225,8 @@ spec:
             name: "Immich"
             description: "Immich Instance"
             group: "Family Media"
-            icon: ""
             widget:
-              type: "immich"
-              url: "https://immich.family-media.svc.cluster.local"
+              type: immich
+              url: https://immich.hoth.systems
               key: ${HP_IMMICH}
               version: 2
