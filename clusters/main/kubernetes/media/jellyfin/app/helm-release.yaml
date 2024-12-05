@@ -89,9 +89,6 @@ spec:
             enabled: true
             entrypoints:
             - websecure
-            middlewares:
-            - name: real-ip
-              namespace: traefik
           homepage:
             enabled: true
             name: Jellyfin
