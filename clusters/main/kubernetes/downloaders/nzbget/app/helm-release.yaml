@@ -107,6 +107,7 @@ spec:
         killSwitch: true
         excludedNetworks_IPv4:
           - "192.168.30.0/24"
+          - "192.168.20.0/24"
         exclusiveNetworks_IPv6: []
         env:
           VPN_SERVICE_PROVIDER: "private internet access"
