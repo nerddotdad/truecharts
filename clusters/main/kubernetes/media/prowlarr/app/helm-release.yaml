@@ -149,3 +149,28 @@ spec:
     portal:
       open:
         enabled: true
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: prowlarr.${DOMAIN_0}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+            integrations:
+                certManager:
+                    enabled: true
+                    certificateIssuer: domain-0-le-prod
+                traefik:
+                    enabled: true
+                    entrypoints:
+                        - websecure
+                homepage:
+                    enabled: true
+                    name: prowlarr
+                    description: This is a prowlarr instance
+                    group: Media
+                    icon: ""
+                    widget:
+                      type: prowlarr
+                      url: https://prowlarr.media.svc.cluster.local
