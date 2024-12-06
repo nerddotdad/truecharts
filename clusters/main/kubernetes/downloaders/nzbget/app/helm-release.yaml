@@ -4,17 +4,17 @@ metadata:
   name: nzbget
   namespace: downloaders
 spec:
-  # postRenderers:
-  #   - kustomize:
-  #       patches:
-  #         - target:
-  #             version: v1
-  #             kind: Deployment
-  #             name: nzbget
-  #           patch: |
-  #             - op: add
-  #               path: /spec/template/spec/containers/1/resources/limits/squat.ai~1tun
-  #               value: 1
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              kind: Deployment
+              name: nzbget
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/1/resources/limits/squat.ai~1tun
+                value: 1
   interval: 15m
   chart:
     spec:
@@ -98,20 +98,20 @@ spec:
                     widget:
                       type: nzbget
                       url: https://nzbget.downloaders.svc.cluster.local
-    # addons:
-    #   vpn:
-    #     type: gluetun
-    #     killSwitch: true
-    #     excludedNetworks_IPv4:
-    #       - "192.168.30.0/24"
-    #       - "192.168.20.0/24"
-    #     exclusiveNetworks_IPv6: []
-    #     env:
-    #       VPN_SERVICE_PROVIDER: "private internet access"
-    #       VPN_TYPE: "openvpn"
-    #       OPENVPN_USER: ${OPENVPN_USER}
-    #       OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
-    #       SERVER_REGIONS: "US California"
-    #       SERVER_HOSTNAMES: "us-california.privacy.network"
-    #       PRIVATE_INTERNET_ACCESS_OPENVPN_ENCRYPTION_PRESET: "normal"
-    #       OPENVPN_ENDPOINT_PORT: "1198"
+    addons:
+      vpn:
+        type: gluetun
+        killSwitch: true
+        excludedNetworks_IPv4:
+          - "192.168.30.0/24"
+          - "192.168.20.0/24"
+        exclusiveNetworks_IPv6: []
+        env:
+          VPN_SERVICE_PROVIDER: "private internet access"
+          VPN_TYPE: "openvpn"
+          OPENVPN_USER: ${OPENVPN_USER}
+          OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
+          SERVER_REGIONS: "US California"
+          SERVER_HOSTNAMES: "us-california.privacy.network"
+          PRIVATE_INTERNET_ACCESS_OPENVPN_ENCRYPTION_PRESET: "normal"
+          OPENVPN_ENDPOINT_PORT: "1198"
