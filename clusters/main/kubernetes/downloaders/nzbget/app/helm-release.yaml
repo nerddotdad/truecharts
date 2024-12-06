@@ -103,6 +103,6 @@ spec:
           OPENVPN_USER: "${OPEN_VPN_USER}"
           OPENVPN_PASSWORD: "${OPEN_VPN_PASS}"
           SERVER_REGIONS: "US California"
-          SERVER_CITIES: "us-california.privacy.network"
+          SERVER_HOSTNAMES: "us-california.privacy.network"
           PRIVATE_INTERNET_ACCESS_OPENVPN_ENCRYPTION_PRESET: "normal"
           VPN_ENDPOINT_PORT: "1198"
