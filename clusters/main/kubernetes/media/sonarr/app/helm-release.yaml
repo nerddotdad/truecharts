@@ -29,11 +29,56 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-#  values:
-#    service:
-#      main:
-#        type: LoadBalancer
-#        loadBalancerIP: ${DASHBOARD_IP}
-#        ports:
-#          main:
-#            port: 80
+  values:
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${DASHBOARD_IP}
+        ports:
+          main:
+            port: 80
+    credentials:
+      cloudflare_r2:
+          type: s3
+          url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com ## DO NOT TOUCH - THIS IS WORKING
+          bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-jellyfin
+          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
+          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
+          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
+    persistence:
+        config:
+            volsync:
+                - name: config
+                  type: restic
+                  credentials: cloudflare_r2
+                  dest:
+                    enabled: true
+                  src:
+                    enabled: true
+                    trigger:
+                      schedlue: 30 0 * * *
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: sonarr.${DOMAIN_0}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+            integrations:
+                certManager:
+                    enabled: true
+                    certificateIssuer: domain-0-le-prod
+                traefik:
+                    enabled: true
+                    entrypoints:
+                        - websecure
+                homepage:
+                    enabled: true
+                    name: Sonarr
+                    description: This is a sonarr instance
+                    group: Media
+                    icon: ""
+                    widget:
+                      type: sonarr
+                      url: https://sonarr.media.svc.cluster.local
