@@ -6,3 +6,4 @@ resources:
   - deploykey.secret.yaml
   - flux.yaml
   - upgradesettings.yaml
+  - sopssecret.secret.yaml
