@@ -42,6 +42,7 @@ spec:
       main:
         ports:
           main:
+            enabled: true
             port: 7878
       metrics:
         enabled: "{{ .Values.metrics.main.enabled }}"
@@ -131,7 +132,7 @@ spec:
                   src:
                     enabled: true
                     trigger:
-                      schedlue: 30 0 * * *
+                      schedule: 30 0 * * *
         target: # this is the target location for media
             enabled: true
             type: nfs
