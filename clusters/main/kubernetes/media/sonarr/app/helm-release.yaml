@@ -141,17 +141,29 @@ spec:
                     enabled: true
                     trigger:
                       schedlue: 30 0 * * *
-        shows:
+        target: # this is the target location for media
             enabled: true
             type: nfs
-            mountPath: /shows
-            path: /mnt/hhd-hc-primary/media/data/media/shows
+            mountPath: /data/media
+            path: /mnt/hhd-hc-primary/media/data/media
             server: 192.168.30.49
-        downloads:
+        nzbget-target: # this is the target location for nzbget
             enabled: true
             type: nfs
             mountPath: /config/downloads
             path: /mnt/hhd-hc-primary/media/data/usenet
+            server: 192.168.30.49
+        torrents: # this is the target location for complete shows from torrents (qbittorrent)
+            enabled: true
+            type: nfs
+            mountPath: /data/torrents
+            path: /mnt/hhd-hc-primary/media/data/torrents/tv
+            server: 192.168.30.49
+        usenet: # this is the target location for completed shows from usenet (nzbget)
+            enabled: true
+            type: nfs
+            mountPath: /data/usenet
+            path: /mnt/hhd-hc-primary/media/data/usenet/completed/shows
             server: 192.168.30.49
     ingress:
         main:
