@@ -51,7 +51,6 @@ spec:
             enabled: true
             port: 7879
     workload:
-      enabled: true
       main:
         podSpec:
           containers:
