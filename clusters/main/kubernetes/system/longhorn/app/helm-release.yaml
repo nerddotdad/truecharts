@@ -24,6 +24,13 @@ spec:
         remediation:
             retries: 3
     values:
+        service:
+            main:
+                type: LoadBalancer
+                loadBalancerIP: ${LONGHORN_IP}
+                ports:
+                main:
+                    port: 80
         defaultSettings:
             # Increase to 3 for a multi-node cluster
             defaultReplicaCount: 1
