@@ -42,7 +42,6 @@ spec:
       main:
         ports:
           main:
-            enabled: true
             port: 8989
       metrics:
         enabled: "{{ .Values.metrics.main.enabled }}"
