@@ -1,0 +1,98 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyseerr
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: jellyseerr
+      version: 12.1.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    credentials:
+      cloudflare_r2:
+          type: s3
+          url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
+          bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
+          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
+          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
+          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
+    persistence:
+        config:
+            volsync:
+                - name: config
+                  type: restic
+                  credentials: cloudflare_r2
+                  dest:
+                    enabled: true
+                  src:
+                    enabled: true
+                    trigger:
+                      schedule: 30 0 * * *
+    image:
+      repository: docker.io/fallenbagel/jellyseerr
+      tag: 2.1.0@sha256:af5563771964282e5bfb6a4f30b05c75c8d30661a920f0399086f575217d0573
+      pullPolicy: IfNotPresent
+    service:
+      main:
+        ports:
+          main:
+            port: 10241
+    portal:
+      open:
+        enabled: true
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                PORT: "{{ .Values.service.main.ports.main.port }}"
+                # User Defined
+                JELLYFIN_TYPE: ""
+                LOG_LEVEL: "info"
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: jellyseerr.${DOMAIN_0}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+            integrations:
+                certManager:
+                    enabled: true
+                    certificateIssuer: domain-0-le-prod
+                traefik:
+                    enabled: true
+                    entrypoints:
+                        - websecure
+                homepage:
+                    enabled: true
+                    name: jellyseerr
+                    description: This is a jellyseerr instance
+                    group: Media
+                    icon: ""
+                    widget:
+                      type: jellyseerr
+                      url: https://jellyseerr.media.svc.cluster.local
