@@ -70,11 +70,24 @@ spec:
     portal:
       open:
         enabled: true
+    addons:
+      codeserver:
+        # -- Enable running a code-server container in the pod
+        enabled: true
+        ingress:
+          # -- Enable an ingress for the code-server add-on.
+          enabled: true
+          integrations:
+            certManager:
+              enabled: true
+              certificateIssuer: cloudflare
+          hosts:
+            - host: maintainerr.codeserver.${DOMAIN_0}
     ingress:
         main:
             enabled: true
             hosts:
-                - host: prowlarr.${DOMAIN_0}
+                - host: maintainerr.${DOMAIN_0}
                   paths:
                     - path: /
                       pathType: Prefix
@@ -88,10 +101,10 @@ spec:
                         - websecure
                 homepage:
                     enabled: true
-                    name: prowlarr
-                    description: This is a prowlarr instance
+                    name: maintainerr
+                    description: This is a maintainerr instance
                     group: Media
                     icon: ""
                     widget:
-                      type: prowlarr
-                      url: https://prowlarr.media.svc.cluster.local
+                      type: maintainerr
+                      url: https://maintainerr.media.svc.cluster.local
