@@ -38,28 +38,26 @@ spec:
           secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
           encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
-        config:
-            volsync:
-                - name: config
-                  type: restic
-                  credentials: cloudflare_r2
-                  dest:
-                    enabled: true
-                  src:
-                    enabled: true
-                    trigger:
-                      schedule: 30 0 * * *
+      config:
+          volsync:
+              - name: config
+                type: restic
+                credentials: cloudflare_r2
+                dest:
+                  enabled: true
+                src:
+                  enabled: true
+                  trigger:
+                    schedule: 30 0 * * *
     image:
       repository: docker.io/jorenn92/maintainerr
       pullPolicy: IfNotPresent
       tag: 2.2.1@sha256:c6a3a886e20e39759014a7bf3d2843068e722d9ec2138ac43acc7a283de92bd0
-
     securityContext:
       container:
         readOnlyRootFilesystem: false
         runAsUser: 0
         runAsGroup: 0
-
     service:
       main:
         ports:
