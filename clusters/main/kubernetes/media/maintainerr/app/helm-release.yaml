@@ -29,26 +29,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    credentials:
-      cloudflare_r2:
-        type: s3
-        url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
-        bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
-        accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
-        secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
-        encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
-      config:
-        volsync:
-          - name: config
-            type: restic
-            credentials: cloudflare_r2
-            dest:
-              enabled: true
-            src:
-              enabled: true
-              trigger:
-                schedule: 30 0 * * *
+      transcode:
+          enabled: true
+          type: nfs
+          mountPath: /opt/data
+          path: /mnt/hhd-hc-primary/maintainerr
+          server: 192.168.30.49
     image:
       repository: docker.io/jorenn92/maintainerr
       pullPolicy: IfNotPresent
