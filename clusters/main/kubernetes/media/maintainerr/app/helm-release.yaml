@@ -30,7 +30,7 @@ spec:
     keepHistory: false
   values:
     persistence:
-      transcode:
+      data:
           enabled: true
           type: nfs
           mountPath: /opt/data
