@@ -1,0 +1,97 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: maintainerr
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: maintainerr
+      version: 4.4.2
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    credentials:
+      cloudflare_r2:
+          type: s3
+          url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
+          bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
+          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
+          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
+          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
+    persistence:
+        config:
+            volsync:
+                - name: config
+                  type: restic
+                  credentials: cloudflare_r2
+                  dest:
+                    enabled: true
+                  src:
+                    enabled: true
+                    trigger:
+                      schedule: 30 0 * * *
+    image:
+      repository: docker.io/jorenn92/maintainerr
+      pullPolicy: IfNotPresent
+      tag: 2.2.1@sha256:c6a3a886e20e39759014a7bf3d2843068e722d9ec2138ac43acc7a283de92bd0
+
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    service:
+      main:
+        ports:
+          main:
+            protocol: http
+            targetPort: 6246
+            port: 6246
+    portal:
+      open:
+        enabled: true
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: prowlarr.${DOMAIN_0}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+            integrations:
+                certManager:
+                    enabled: true
+                    certificateIssuer: domain-0-le-prod
+                traefik:
+                    enabled: true
+                    entrypoints:
+                        - websecure
+                homepage:
+                    enabled: true
+                    name: prowlarr
+                    description: This is a prowlarr instance
+                    group: Media
+                    icon: ""
+                    widget:
+                      type: prowlarr
+                      url: https://prowlarr.media.svc.cluster.local
