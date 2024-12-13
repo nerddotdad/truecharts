@@ -73,6 +73,12 @@ spec:
             mountPath: /shows
             path: /mnt/hhd-hc-primary/media/data/media/shows
             server: 192.168.30.49
+        intros:
+            enabled: true
+            type: nfs
+            mountPath: /intros
+            path: /mnt/hhd-hc-primary/media/data/media/intros
+            server: 192.168.30.49
     ingress:
         main:
             enabled: true
