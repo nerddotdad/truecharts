@@ -7,4 +7,3 @@ resources:
   - sonarr/ks.yaml
   - radarr/ks.yaml
   - jellyseerr/ks.yaml
-  - maintainerr/ks.yaml
