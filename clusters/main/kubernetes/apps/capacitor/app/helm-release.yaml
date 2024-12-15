@@ -8,8 +8,8 @@ spec:
     spec:
       chart: capacitor  # Name of the chart
       sourceRef:
-        kind: GitRepository
-        name: capacitor-repo  # Name of the GitRepository resource
+        kind: HelmRepository
+        name: capacitor  # Name of the HelmRepository resource
         namespace: flux-system  # Namespace of the GitRepository
       interval: 5m  # Reconciliation interval
   timeout: 20m
