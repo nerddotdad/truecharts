@@ -5,3 +5,4 @@ resources:
   - homepage/ks.yaml
   - kubernetes-dashboard/ks.yaml
   - librespeed/ks.yaml
+  - capacitor
