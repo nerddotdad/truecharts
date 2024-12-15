@@ -1,51 +1,90 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
+---
+# Source: onechart/templates/service.yaml
+apiVersion: v1
+kind: Service
 metadata:
   name: capacitor
-  namespace: dashboards  # Adjust to your target namespace
+  namespace: flux-system
+  labels:
+    helm.sh/chart: onechart-0.73.0
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: capacitor
+    app.kubernetes.io/managed-by: Helm
 spec:
-  chart:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: capacitor
+---
+# Source: onechart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capacitor
+  namespace: flux-system
+  labels:
+    helm.sh/chart: onechart-0.73.0
+    app.kubernetes.io/name: onechart
+    app.kubernetes.io/instance: capacitor
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    kubectl.kubernetes.io/default-container: capacitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: onechart
+      app.kubernetes.io/instance: capacitor
+  template:
+    metadata:
+      annotations:
+        checksum/config: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      labels:
+        app.kubernetes.io/name: onechart
+        app.kubernetes.io/instance: capacitor
     spec:
-      chart: capacitor  # Name of the chart
-      sourceRef:
-        kind: HelmRepository
-        name: capacitor  # Name of the HelmRepository resource
-        namespace: flux-system  # Namespace of the GitRepository
-  interval: 5m  # Reconciliation interval
-  timeout: 20m
-  maxHistory: 3
-  driftDetection:
-    mode: warn
-  install:
-    createNamespace: true
-    remediation:
-      retries: 3
-  upgrade:
-    cleanupOnFail: true
-    remediation:
-      retries: 3
-  uninstall:
-    keepHistory: false
-  releaseName: capacitor
-  values:
-    # Example values override. Adjust based on your needs and chart's values.yaml.
-    replicaCount: 2
-    image:
-      repository: gimlet-io/capacitor
-      tag: latest
-    ingress:
-      main:
-        enabled: true
-        hosts: 
-          - host: capacitor.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-          traefik:
-            enabled: true
-            entrypoints:
-              - websecure
+      containers:
+      - image: ghcr.io/gimlet-io/capacitor:v0.4.8
+        imagePullPolicy: IfNotPresent
+        name: capacitor
+        ports:
+        - containerPort: 9000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 9000
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+          limits:
+            cpu: 200m
+            memory: 200mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 101
+          runAsNonRoot: true
+          runAsUser: 100
+          seccompProfile:
+            type: RuntimeDefault
+      initContainers: [null]
+      securityContext:
+        fsGroup: 999
+      serviceAccountName: capacitor
