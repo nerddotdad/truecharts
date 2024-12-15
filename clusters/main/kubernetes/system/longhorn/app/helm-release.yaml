@@ -24,13 +24,6 @@ spec:
         remediation:
             retries: 3
     values:
-        service:
-            main:
-                type: LoadBalancer
-                loadBalancerIP: ${LONGHORN_IP}
-                ports:
-                main:
-                    port: 80
         defaultSettings:
             # Increase to 3 for a multi-node cluster
             defaultReplicaCount: 1
@@ -43,13 +36,13 @@ spec:
             # Increase to 3 for a multi-node cluster
             defaultClassReplicaCount: 1
         ingress:
-            main:
+            longhorn-frontend:
                 enabled: true
                 hosts:
                     - host: longhorn.${DOMAIN_0}
                       paths:
-                        - path: /
-                          pathType: Prefix
+                          - path: /
+                            pathType: Prefix
                 integrations:
                     certManager:
                         enabled: true
