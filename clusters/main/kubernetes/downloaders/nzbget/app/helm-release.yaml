@@ -84,8 +84,6 @@ spec:
         podSpec:
           containers:
             main:
-              env:
-                NZBGET_PASS: ${NZBGET_PASS}
               probes:
                 liveness:
                   enabled: false
