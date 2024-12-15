@@ -26,4 +26,19 @@ spec:
   sourceRef:
     kind: OCIRepository
     name: capacitor
-    
+  ingress:
+    main:
+        enabled: true
+        hosts:
+            - host: capacitor.${DOMAIN_0}
+              paths:
+                - path: /
+                  pathType: Prefix
+        integrations:
+            certManager:
+                enabled: true
+                certificateIssuer: domain-0-le-prod
+            traefik:
+                enabled: true
+                entrypoints:
+                    - websecure
