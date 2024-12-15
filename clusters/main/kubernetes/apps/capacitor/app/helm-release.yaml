@@ -84,7 +84,7 @@ spec:
           runAsUser: 100
           seccompProfile:
             type: RuntimeDefault
-      initContainers: [null]
+      initContainers: null
       securityContext:
         fsGroup: 999
       serviceAccountName: capacitor
