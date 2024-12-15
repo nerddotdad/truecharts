@@ -11,7 +11,7 @@ spec:
         kind: HelmRepository
         name: capacitor  # Name of the HelmRepository resource
         namespace: flux-system  # Namespace of the GitRepository
-      interval: 5m  # Reconciliation interval
+  interval: 5m  # Reconciliation interval
   timeout: 20m
   maxHistory: 3
   driftDetection:
