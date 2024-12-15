@@ -25,7 +25,8 @@ spec:
   path: "./"
   sourceRef:
     kind: OCIRepository
-    name: capacitor
+    name: capacitor\
+values:
   ingress:
     main:
         enabled: true
