@@ -7,3 +7,4 @@ resources:
   - flux.yaml
   - upgradesettings.yaml
 #  - sopssecret.secret.yaml
+  - capacitor.yaml
