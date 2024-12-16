@@ -7,7 +7,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 30m
-  url: ${GITHUB_REPOSITORY}
+  url: ssh://git@github.com/daddotnerd/truecharts
   ref:
     branch: main
   secretRef:
