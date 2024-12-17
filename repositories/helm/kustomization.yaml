@@ -29,4 +29,3 @@ resources:
   - topolvm.yaml
   - truecharts.yaml
 # more goes here!
-  - capacitor.yaml
