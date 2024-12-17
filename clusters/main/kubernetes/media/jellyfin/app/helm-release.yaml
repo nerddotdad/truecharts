@@ -31,82 +31,82 @@ spec:
   values:
     credentials:
       cloudflare_r2:
-          type: s3
-          url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
-          bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
-          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
-          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
-          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
+        type: s3
+        url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
+        bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
+        accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
+        secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
+        encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
-        config:
-            volsync:
-                - name: config
-                  type: restic
-                  credentials: cloudflare_r2
-                  dest:
-                    enabled: true
-                  src:
-                    enabled: true
-                    trigger:
-                      schedule: 30 0 * * *
-        transcode:
-            enabled: true
-            type: nfs
-            mountPath: /transcode
-            path: /mnt/Applications/apps-configs/jellyfin/transcode
-            server: 192.168.30.49
-        family-media:
-            enabled: true
-            type: nfs
-            mountPath: /family-media
-            path: /mnt/hhd-hc-primary/media/photoprism-original
-            server: 192.168.30.49
-        movies:
-            enabled: true
-            type: nfs
-            mountPath: /movies
-            path: /mnt/hhd-hc-primary/media/data/media/movies
-            server: 192.168.30.49
-        shows:
-            enabled: true
-            type: nfs
-            mountPath: /shows
-            path: /mnt/hhd-hc-primary/media/data/media/shows
-            server: 192.168.30.49
-        intros:
-            enabled: true
-            type: nfs
-            mountPath: /intros
-            path: /mnt/hhd-hc-primary/media/data/media/intros
-            server: 192.168.30.49
+      config:
+        volsync:
+          - name: config
+            type: restic
+            credentials: cloudflare_r2
+            dest:
+              enabled: true
+            src:
+              enabled: true
+              trigger:
+                schedule: 30 0 * * *
+      transcode:
+        enabled: true
+        type: nfs
+        mountPath: /transcode
+        path: /mnt/Applications/apps-configs/jellyfin/transcode
+        server: 192.168.30.49
+      family-media:
+        enabled: true
+        type: nfs
+        mountPath: /family-media
+        path: /mnt/hhd-hc-primary/media/photoprism-original
+        server: 192.168.30.49
+      movies:
+        enabled: true
+        type: nfs
+        mountPath: /movies
+        path: /mnt/hhd-hc-primary/media/data/media/movies
+        server: 192.168.30.49
+      shows:
+        enabled: true
+        type: nfs
+        mountPath: /shows
+        path: /mnt/hhd-hc-primary/media/data/media/shows
+        server: 192.168.30.49
+      intros:
+        enabled: true
+        type: nfs
+        mountPath: /intros
+        path: /mnt/hhd-hc-primary/media/data/media/intros
+        server: 192.168.30.49
     ingress:
-        main:
+      main:
+        enabled: true
+        hosts:
+          - host: jellyfin.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
             enabled: true
-            hosts:
-                - host: jellyfin.${DOMAIN_0}
-                  paths:
-                    - path: /
-                      pathType: Prefix
-            integrations:
-                certManager:
-                    enabled: true
-                    certificateIssuer: domain-0-le-prod
-                traefik:
-                    enabled: true
-                    entrypoints:
-                        - websecure
-                homepage:
-                    enabled: true
-                    name: Jellyfin
-                    description: This is a jellyfin instance
-                    group: Media
-                    icon: ""
-                    widget:
-                      type: jellyfin
-                      url: https://jellyfin.media.svc.cluster.local
-                      key: ${HP_JELLYFIN}
-                      enableBlocks: true # optional, defaults to false
-                      enableNowPlaying: true # optional, defaults to true
-                      enableUser: true # optional, defaults to false
-                      showEpisodeNumber: true # optional, defaults to false
-                      expandOneStreamToTwoRows: false # optional, defaults to true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
+          homepage:
+            enabled: true
+            name: Jellyfin
+            description: This is a jellyfin instance
+            group: Media
+            icon: ""
+            widget:
+              type: jellyfin
+              url: https://jellyfin.media.svc.cluster.local
+              key: ${HP_JELLYFIN}
+              enableBlocks: true # optional, defaults to false
+              enableNowPlaying: true # optional, defaults to true
+              enableUser: true # optional, defaults to false
+              showEpisodeNumber: true # optional, defaults to false
+              expandOneStreamToTwoRows: false # optional, defaults to true
