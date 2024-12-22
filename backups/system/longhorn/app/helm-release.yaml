@@ -1,0 +1,90 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: longhorn
+    namespace: longhorn-system
+spec:
+    interval: 5m
+    releaseName: longhorn
+    chart:
+        spec:
+            chart: longhorn
+            version: 1.7.2
+            sourceRef:
+                kind: HelmRepository
+                name: longhorn
+                namespace: flux-system
+    install:
+        createNamespace: true
+        crds: CreateReplace
+        remediation:
+            retries: 3
+    upgrade:
+        crds: CreateReplace
+        remediation:
+            retries: 3
+    values:
+        defaultSettings:
+            # Increase to 3 for a multi-node cluster
+            defaultReplicaCount: 1
+            # Overprovisioning might be needed when using volsync
+            storageOverProvisioningPercentage: 100000
+            # v2DataEngine: true
+        persistence:
+            # Set to false to pick another CSI as default
+            defaultClass: true
+            # Increase to 3 for a multi-node cluster
+            defaultClassReplicaCount: 1
+        networkPolicies:
+            enabled: true
+            type: k3s
+        livenessProbe:
+            # -- Repository for the CSI liveness probe image. When unspecified, Longhorn uses the default value.
+            repository: longhornio/livenessprobe
+            # -- Tag for the CSI liveness probe image. When unspecified, Longhorn uses the default value.
+            tag: v2.14.0
+        metrics:
+            serviceMonitor:
+                # -- Setting that allows the creation of a Prometheus ServiceMonitor resource for Longhorn Manager components.
+                enabled: true
+                # -- Additional labels for the Prometheus ServiceMonitor resource.
+                additionalLabels: {}
+                # -- Annotations for the Prometheus ServiceMonitor resource.
+                annotations: {}
+                # -- Interval at which Prometheus scrapes the metrics from the target.
+                interval: ""
+                # -- Timeout after which Prometheus considers the scrape to be failed.
+                scrapeTimeout: ""
+                # -- Configures the relabeling rules to apply the target’s metadata labels. See the [Prometheus Operator
+                # documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.Endpoint) for
+                # formatting details.
+                relabelings: []
+                # -- Configures the relabeling rules to apply to the samples before ingestion. See the [Prometheus Operator
+                # documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.Endpoint) for
+                # formatting details.
+                metricRelabelings: []
+        ingress:
+            main:
+                enabled: true
+                hosts:
+                    - host: longhorn.${DOMAIN_0}
+                      paths:
+                          - path: /
+                            pathType: Prefix
+                integrations:
+                    certManager:
+                        enabled: true
+                        certificateIssuer: domain-0-le-prod
+                    traefik:
+                        enabled: true
+                        entrypoints:
+                            - websecure
+                    homepage:
+                        enabled: true
+                        name: Longhorn
+                        description: This is a Longhorn instance
+                        group: Storage
+                        icon: ""
+                        widget:
+                            type: longhorn
+                            url: https://longhorn.${DOMAIN_0}
