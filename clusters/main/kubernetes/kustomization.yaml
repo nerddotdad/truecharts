@@ -10,3 +10,4 @@ resources:
   - kube-system
   - media
   - system
+  - my-apps
