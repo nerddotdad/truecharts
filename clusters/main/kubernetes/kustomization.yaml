@@ -3,11 +3,7 @@ kind: Kustomization
 resources:
   - apps
   - core
-  - downloaders
-  - family-media
   - flux-entry.yaml
   - flux-system
   - kube-system
-  - media
   - system
-  - my-apps
