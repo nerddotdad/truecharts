@@ -1,9 +1,11 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - namespace.yaml
-  - clustersettings.secret.yaml
-  - deploykey.secret.yaml
-  - flux.yaml
-  - upgradesettings.yaml
-#  - sopssecret.secret.yaml
+  - ./deploykey.secret.yaml
+  - ./clustersettings.secret.yaml
+  - ./flux.yaml
+  - ./upgradesettings.yaml
+  - ./namespace.yaml
+  # - sopssecret.secret.yaml
