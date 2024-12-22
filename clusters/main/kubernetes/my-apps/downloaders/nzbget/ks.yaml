@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/downloaders/nzbget/app
+  path: clusters/main/kubernetes/my-apps/downloaders/nzbget/app
   prune: true
   sourceRef:
     kind: GitRepository

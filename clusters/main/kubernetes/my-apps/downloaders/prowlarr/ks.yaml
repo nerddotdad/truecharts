@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/media/prowlarr/app
+  path: clusters/main/kubernetes/my-apps/downloaders/prowlarr/app
   prune: true
   sourceRef:
     kind: GitRepository

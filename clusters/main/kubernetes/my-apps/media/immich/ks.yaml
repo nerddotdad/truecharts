@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/family-media/immich/app
+  path: clusters/main/kubernetes/my-apps/media/immich/app
   prune: true
   sourceRef:
     kind: GitRepository
