@@ -75,7 +75,7 @@ spec:
             type: nfs
             mountPath: /config/downloads
             path: /mnt/hhd-hc-primary/media/data/usenet
-            server: 192.168.30.49
+            server:  ${NAS_IP}
     portal:
       open:
         enabled: true

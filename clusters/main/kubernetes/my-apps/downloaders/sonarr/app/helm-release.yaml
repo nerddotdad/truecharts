@@ -146,13 +146,13 @@ spec:
             type: nfs
             mountPath: /data/media
             path: /mnt/hhd-hc-primary/media/data/media
-            server: 192.168.30.49
+            server:  ${NAS_IP}
         nzbget-target: # this is the target location for nzbget
             enabled: true
             type: nfs
             mountPath: /config/downloads
             path: /mnt/hhd-hc-primary/media/data/usenet
-            server: 192.168.30.49
+            server:  ${NAS_IP}
     ingress:
         main:
             enabled: true
