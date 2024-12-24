@@ -37,3 +37,24 @@ spec:
         ports:
           main:
             port: 80
+    ingress:
+      main:
+        enabled: true
+        hosts:
+          - host: kubedash.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
+          homepage:
+            enabled: true
+            name: "kubernetes dashboard"
+            description: "kubernetes dashboard Instance"
+            group: "dashboards"
