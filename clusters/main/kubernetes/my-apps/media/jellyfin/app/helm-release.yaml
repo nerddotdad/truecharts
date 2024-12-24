@@ -101,10 +101,10 @@ spec:
         mountPath: /intros
         path: /mnt/hhd-hc-primary/media/data/media/intros
         server: ${NAS_IP}
-      cache:
-        enabled: true
-        mountPath: "/cache"
-        type: "emptyDir"
+      # cache:
+      #   enabled: true
+      #   mountPath: "/cache"
+      #   type: "emptyDir"
     portal:
       open:
         enabled: true
