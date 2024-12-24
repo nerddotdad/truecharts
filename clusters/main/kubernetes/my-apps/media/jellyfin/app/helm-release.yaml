@@ -61,16 +61,21 @@ spec:
         encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
       config:
-        volsync:
-          - name: config
-            type: restic
-            credentials: cloudflare_r2
-            dest:
-              enabled: true
-            src:
-              enabled: true
-              trigger:
-                schedule: 30 0 * * *
+        enabled: true
+        type: nfs
+        mountPath: /config
+        path: /mnt/Applications/apps-configs/jellyfin/config
+        server: ${NAS_IP}
+        # volsync:
+        #   - name: config
+        #     type: restic
+        #     credentials: cloudflare_r2
+        #     dest:
+        #       enabled: true
+        #     src:
+        #       enabled: true
+        #       trigger:
+        #         schedule: 30 0 * * *
       transcode:
         enabled: true
         type: nfs
