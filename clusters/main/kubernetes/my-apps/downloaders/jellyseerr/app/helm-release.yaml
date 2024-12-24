@@ -33,7 +33,7 @@ spec:
       config:
         enabled: true
         type: nfs
-        mountPath: /app
+        mountPath: /app/config
         path: /mnt/Applications/apps-configs/jellyseerr
         server: ${NAS_IP}
     image:
