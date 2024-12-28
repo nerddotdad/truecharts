@@ -30,7 +30,6 @@ spec:
     keepHistory: false
   values:
     ingress:
-      enabled: true
       main:
         enabled: true
         hosts:
