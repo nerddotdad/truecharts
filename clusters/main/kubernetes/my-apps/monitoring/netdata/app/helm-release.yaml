@@ -167,6 +167,7 @@ spec:
         fsGroup: 201
     workload:
       main:
+        type: deployment
         podSpec:
           automountServiceAccountToken: true
           initContainers:
