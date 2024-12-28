@@ -32,6 +32,8 @@ spec:
     persistence:
       group:
         enabled: false
+      passwd:
+        enabled: false
     ingress:
       main:
         enabled: true
