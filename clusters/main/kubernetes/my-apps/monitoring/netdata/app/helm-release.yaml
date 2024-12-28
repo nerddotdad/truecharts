@@ -29,21 +29,20 @@ spec:
   uninstall:
     keepHistory: false
   values:
-values:
-  ingress:
-    main:
-      enabled: true
-      hosts:
-        - host: netdata.${DOMAIN_0}
-      integrations:
-        certManager:
-          enabled: true
-          certificateIssuer: domain-0-le-prod
-        traefik:
-          enabled: true
-        homepage:
-          enabled: true
-          name: netdata
-          description: This is a netdata instance
-          group: Monitoring
-          icon: ""
+    ingress:
+      main:
+        enabled: true
+        hosts:
+          - host: netdata.${DOMAIN_0}
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+          homepage:
+            enabled: true
+            name: netdata
+            description: This is a netdata instance
+            group: Monitoring
+            icon: ""
