@@ -139,8 +139,6 @@ spec:
                     enabled: true
                   src:
                     enabled: true
-                    trigger:
-                      schedule: 30 0 * * *
         target: # this is the target location for media
             enabled: true
             type: nfs

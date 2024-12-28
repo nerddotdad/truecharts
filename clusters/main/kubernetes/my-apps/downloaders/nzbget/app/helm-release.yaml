@@ -68,8 +68,6 @@ spec:
                     enabled: true
                   src:
                     enabled: true
-                    trigger:
-                      schedlue: 30 0 * * *
         downloads:
             enabled: true
             type: nfs

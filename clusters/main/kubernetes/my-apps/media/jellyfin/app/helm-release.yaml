@@ -74,8 +74,6 @@ spec:
         #       enabled: true
         #     src:
         #       enabled: true
-        #       trigger:
-        #         schedule: 30 0 * * *
       transcode:
         enabled: true
         type: nfs
