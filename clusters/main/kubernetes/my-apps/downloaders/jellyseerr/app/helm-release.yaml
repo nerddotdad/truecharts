@@ -36,50 +36,23 @@ spec:
         mountPath: /app/config
         path: /mnt/Applications/apps-configs/jellyseerr
         server: ${NAS_IP}
-    image:
-      repository: docker.io/fallenbagel/jellyseerr
-      tag: 2.1.0@sha256:af5563771964282e5bfb6a4f30b05c75c8d30661a920f0399086f575217d0573
-      pullPolicy: IfNotPresent
-    service:
-      main:
-        ports:
-          main:
-            port: 10241
-    portal:
-      open:
-        enabled: true
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              env:
-                PORT: "{{ .Values.service.main.ports.main.port }}"
-                # User Defined
-                JELLYFIN_TYPE: ""
-                LOG_LEVEL: "info"
     ingress:
-        main:
+      main:
+        enabled: true
+        hosts:
+          - host: jellyseerr.${DOMAIN_0}
+        integrations:
+          certManager:
             enabled: true
-            hosts:
-                - host: jellyseerr.${DOMAIN_0}
-                  paths:
-                    - path: /
-                      pathType: Prefix
-            integrations:
-                certManager:
-                    enabled: true
-                    certificateIssuer: domain-0-le-prod
-                traefik:
-                    enabled: true
-                    entrypoints:
-                        - websecure
-                homepage:
-                    enabled: true
-                    name: jellyseerr
-                    description: This is a jellyseerr instance
-                    group: Media
-                    icon: ""
-                    widget:
-                      type: jellyseerr
-                      url: https://jellyseerr.media.svc.cluster.local
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+          homepage:
+            enabled: true
+            name: jellyseerr
+            description: This is a jellyseerr instance
+            group: Media
+            icon: ""
+            widget:
+              type: jellyseerr
+              url: https://jellyseerr.media.svc.cluster.local
