@@ -31,7 +31,7 @@ spec:
   values:
     persistence:
       group:
-        enable: false
+        enabled: false
     ingress:
       main:
         enabled: true
