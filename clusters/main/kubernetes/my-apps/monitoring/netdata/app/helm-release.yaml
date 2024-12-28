@@ -224,6 +224,7 @@ spec:
                 NETDATA_CLAIM_TOKEN: ""
                 NETDATA_CLAIM_ROOMS: ""
       ingress:
+        enabled: true
         main:
           enabled: true
           hosts:
