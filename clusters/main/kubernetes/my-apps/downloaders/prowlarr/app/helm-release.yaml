@@ -49,7 +49,7 @@ spec:
                     enabled: true
     image:
       repository: ghcr.io/onedr0p/prowlarr-develop
-      tag: 1.26.1.4844@sha256:dd6ab1a0c8f2d780b990f1034f2da6ffb0b4d3e3ca6042b656f691f06d4c9397
+      tag: 1.29.1.4903@sha256:aa0f5743b6b0a0d6e321dd55af0b78088199347e3cd1a7e5d635e4f4829adb6d
       pullPolicy: IfNotPresent
     exportarrImage:
       repository: ghcr.io/onedr0p/exportarr
