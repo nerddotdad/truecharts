@@ -36,6 +36,14 @@ spec:
         loadBalancerIP: ${TDARR_IP}
         ports:
           main:
+            port: 8265
+      comm:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${TDARR_IP}
+        ports:
+          comm:
+            enabled: true
             port: 8266
     persistence:
         configs:
