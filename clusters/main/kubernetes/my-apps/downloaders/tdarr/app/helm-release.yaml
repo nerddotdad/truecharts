@@ -1,0 +1,82 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tdarr
+  namespace: downloaders
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: tdarr
+      version: 11.12.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    persistence:
+        configs:
+            enabled: true
+            type: nfs
+            mountPath: /app/configs
+            path: /mnt/Applications/apps-configs/tdarr/configs
+            server: ${NAS_IP}
+        server:
+            enabled: true
+            type: nfs
+            mountPath: /app/server
+            path: /mnt/Applications/apps-configs/tdarr/server
+            server: ${NAS_IP}
+        logs:
+            enabled: true
+            type: nfs
+            mountPath: /app/logs
+            path: /mnt/Applications/apps-configs/tdarr/logs
+            server: ${NAS_IP}
+        media:
+            enabled: true
+            type: nfs
+            mountPath: /media
+            path: /mnt/Applications/apps-configs/tdarr/media
+            server: ${NAS_IP}
+    ingress:
+        main:
+            enabled: true
+            hosts:
+                - host: tdarr.${DOMAIN_0}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+            integrations:
+                certManager:
+                    enabled: true
+                    certificateIssuer: domain-0-le-prod
+                traefik:
+                    enabled: true
+                    entrypoints:
+                        - websecure
+                homepage:
+                    enabled: true
+                    name: tdarr
+                    description: This is a tdarr instance
+                    group: Downloaders
+                    icon: ""
+                    widget:
+                      type: tdarr
+                      url: https://tdarr.hoth.systems
