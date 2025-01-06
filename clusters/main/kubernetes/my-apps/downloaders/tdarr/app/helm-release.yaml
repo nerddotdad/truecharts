@@ -30,6 +30,7 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    stopAll: true
     persistence:
         configs:
             enabled: true
