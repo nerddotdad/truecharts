@@ -49,11 +49,17 @@ spec:
             mountPath: /app/logs
             path: /mnt/Applications/apps-configs/tdarr/logs
             server: ${NAS_IP}
-        media:
+        movies:
             enabled: true
             type: nfs
-            mountPath: /media
-            path: /mnt/Applications/apps-configs/tdarr/media
+            mountPath: /movies
+            path: /mnt/hhd-hc-primary/media/data/media/movies
+            server: ${NAS_IP}
+        shows:
+            enabled: true
+            type: nfs
+            mountPath: /movies
+            path: /mnt/hhd-hc-primary/media/data/media/shows
             server: ${NAS_IP}
     ingress:
         main:
