@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${TDARR_IP}
     persistence:
         configs:
             enabled: true
