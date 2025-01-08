@@ -30,40 +30,40 @@ spec:
     keepHistory: false
   values:
     persistence:
-        config:
-            enabled: true
-            type: nfs
-            mountPath: /config
-            path: /mnt/Applications/apps-config/nzbget
-            server:  ${NAS_IP}
-        downloads:
-            enabled: true
-            type: nfs
-            mountPath: /config/downloads
-            path: /mnt/hhd-hc-primary/media/usenet
-            server:  ${NAS_IP}
+      config:
+        enabled: true
+        type: nfs
+        mountPath: /config
+        path: /mnt/Applications/apps-config/nzbget
+        server: ${NAS_IP}
+      downloads:
+        enabled: true
+        type: nfs
+        mountPath: /config/downloads
+        path: /mnt/hhd-hc-primary/media/usenet
+        server: ${NAS_IP}
     ingress:
-        main:
+      main:
+        enabled: true
+        hosts:
+          - host: nzbget.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
             enabled: true
-            hosts:
-                - host: nzbget.${DOMAIN_0}
-                  paths:
-                    - path: /
-                      pathType: Prefix
-            integrations:
-                certManager:
-                    enabled: true
-                    certificateIssuer: domain-0-le-prod
-                traefik:
-                    enabled: true
-                    entrypoints:
-                        - websecure
-                homepage:
-                    enabled: true
-                    name: NZBget
-                    description: This is a NZBget instance
-                    group: Media
-                    icon: ""
-                    widget:
-                      type: nzbget
-                      url: https://nzbget.downloaders.svc.cluster.local
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
+          homepage:
+            enabled: true
+            name: NZBget
+            description: This is a NZBget instance
+            group: Media
+            icon: ""
+            widget:
+              type: nzbget
+              url: https://nzbget.downloaders.svc.cluster.local
