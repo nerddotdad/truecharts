@@ -29,36 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # image:
-    #   repository: ghcr.io/jellyfin/jellyfin
-    #   pullPolicy: IfNotPresent
-    #   tag: 10.10.3@sha256:17c3a8d9dddb97789b5f37112840ebf96566442c14d4754193a6c2eb154bc221
-    # broadcastProxyImage:
-    #   repository: docker.io/alpine/socat
-    #   pullPolicy: IfNotPresent
-    #   tag: 1.8.0.0@sha256:a6be4c0262b339c53ddad723cdd178a1a13271e1137c65e27f90a08c16de02b8
-    # service:
-    #   main:
-    #     ports:
-    #       main:
-    #         port: 8096
-    #         targetPort: 8096
-    #   autodiscovery:
-    #     enabled: true
-    #     ports:
-    #       autodiscovery:
-    #         enabled: true
-    #         protocol: udp
-    #         port: 7359
-    #         targetPort: 7359
-    credentials:
-      cloudflare_r2:
-        type: s3
-        url: ${CLOUDFLARE_R2_URL} ## DO NOT TOUCH - THIS IS WORKING
-        bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-{{ .Chart.Name }}
-        accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
-        secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
-        encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
       config:
         enabled: true
@@ -66,14 +36,6 @@ spec:
         mountPath: /config
         path: /mnt/Applications/apps-configs/jellyfin/config
         server: ${NAS_IP}
-        # volsync:
-        #   - name: config
-        #     type: restic
-        #     credentials: cloudflare_r2
-        #     dest:
-        #       enabled: true
-        #     src:
-        #       enabled: true
       transcode:
         enabled: true
         type: nfs
@@ -108,12 +70,6 @@ spec:
         enabled: true
         mountPath: "/cache"
         type: "emptyDir"
-    portal:
-      open:
-        enabled: true
-    securityContext:
-      container:
-        readOnlyRootFilesystem: false
     ingress:
       main:
         enabled: true

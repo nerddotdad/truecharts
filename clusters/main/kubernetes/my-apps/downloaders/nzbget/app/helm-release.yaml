@@ -40,55 +40,19 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    image:
-      repository: ghcr.io/elfhosted/nzbget
-      pullPolicy: IfNotPresent
-      tag: 24.5@sha256:8861eae1bdf7b5be8986dcfb75b793948652d3a63c5b0d355a88a99519027dca
-    service:
-      main:
-        ports:
-          main:
-            port: 10057
-            targetPort: 6789
-    credentials:
-      cloudflare_r2:
-          type: s3
-          url: https://695051d557f576416fd4b96344422c4d.r2.cloudflarestorage.com ## DO NOT TOUCH - THIS IS WORKING
-          bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-jellyfin
-          accessKey: ${CLOUDFLARE_R2_KEY_ID} ## DO NOT TOUCH - THIS IS WORKING
-          secretKey: ${CLOUDFLARE_R2_ACESS_KEY} ## DO NOT TOUCH - THIS IS WORKING
-          encrKey: ${CLOUDFLARE_R2_ENCRKEY} ## DO NOT TOUCH - THIS IS WORKING
     persistence:
         config:
-            volsync:
-                - name: config
-                  type: restic
-                  credentials: cloudflare_r2
-                  dest:
-                    enabled: true
-                  src:
-                    enabled: true
+            enabled: true
+            type: nfs
+            mountPath: /config
+            path: /mnt/Applications/apps-config/nzbget
+            server:  ${NAS_IP}
         downloads:
             enabled: true
             type: nfs
             mountPath: /config/downloads
-            path: /mnt/hhd-hc-primary/media/data/usenet
+            path: /mnt/hhd-hc-primary/media/usenet
             server:  ${NAS_IP}
-    portal:
-      open:
-        enabled: true
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              probes:
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-                startup:
-                  enabled: false
     ingress:
         main:
             enabled: true
@@ -114,20 +78,3 @@ spec:
                     widget:
                       type: nzbget
                       url: https://nzbget.downloaders.svc.cluster.local
-    # addons:
-    #   vpn:
-    #     type: gluetun
-    #     killSwitch: true
-    #     excludedNetworks_IPv4:
-    #       - "192.168.30.0/24"
-    #       - "192.168.20.0/24"
-    #     exclusiveNetworks_IPv6: []
-    #     env:
-    #       VPN_SERVICE_PROVIDER: "private internet access"
-    #       VPN_TYPE: "openvpn"
-    #       OPENVPN_USER: ${OPENVPN_USER}
-    #       OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
-    #       SERVER_REGIONS: "US California"
-    #       SERVER_HOSTNAMES: "us-california.privacy.network"
-    #       PRIVATE_INTERNET_ACCESS_OPENVPN_ENCRYPTION_PRESET: "normal"
-    #       OPENVPN_ENDPOINT_PORT: "1198"
