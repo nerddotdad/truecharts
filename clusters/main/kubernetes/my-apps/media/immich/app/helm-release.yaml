@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: immich
-      version: 17.34.0
+      version: 17.38.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -31,20 +31,20 @@ spec:
   values:
     image:
       repository: ghcr.io/immich-app/immich-server
-      tag: v1.124.1@sha256:f86bb84d16bfa3364cad05529b903844c3c4da6f558a8fe4fe97ef6f152ca422
+      tag: v1.124.2@sha256:c14dccad0611635668abf98f17ce87c3badcc17bb979c53ef96dc49e934ebbc8
       pullPolicy: IfNotPresent
     mlImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.124.1@sha256:db61408634e608dde65ecda5b9d9cc8c20948d0e7b78b660bf33b3c526b6c1fd
+      tag: v1.124.2@sha256:a134652b47278edfdac3187d61558e78679be39c810536193a41e9e0d894c5f4
     mlCudaImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.124.1-cuda@sha256:58c7f1abd6af7f05200ced82fdeda5c0ee403b345d7f644b3c3746d4b3d482b0
+      tag: v1.124.2-cuda@sha256:e58b1b6af112f68db8930b6b6c6568fec1952d6bd9d3c645e75365154743d97a
     mlOpenvinoImage:
       repository: ghcr.io/immich-app/immich-machine-learning
       pullPolicy: IfNotPresent
-      tag: v1.124.1-openvino@sha256:311b74b9abaf4fdc22f4b4a4e8d3157e361d375829cec3ebf1e3bd95873499db
+      tag: v1.124.2-openvino@sha256:ade3c07adaf64ce658956ab21b7a93845fcad668e0ed813bf40f8a5c9802be9d
 
     securityContext:
       container:
