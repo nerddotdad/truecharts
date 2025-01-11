@@ -41,13 +41,13 @@ spec:
         enabled: true
         type: nfs
         mountPath: /data/media
-        path: ${NFS_MEDIA}
+        path: ${NFS_MEDIA_MOVIES}
         server: ${NAS_IP}
       nzbget-target: # this is the target location for nzbget
         enabled: true
         type: nfs
         mountPath: /config/downloads
-        path: ${NFS_NZBGET_DOWNLOADS}
+        path: ${NFS_MEDIA_USENET}
         server: ${NAS_IP}
     ingress:
       main:
