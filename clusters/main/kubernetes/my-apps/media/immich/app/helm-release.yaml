@@ -116,6 +116,10 @@ spec:
             main: {}
           microservices:
             microservices: {}
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${IMMICH_IP}
     ingress:
       main:
         enabled: true
