@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: librespeed
-  namespace: testing
+  namespace: utilities
 spec:
   interval: 15m
   chart:
