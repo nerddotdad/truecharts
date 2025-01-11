@@ -34,7 +34,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /app/config
-        path: /mnt/vault/app-configs/jellyseerr/config
+        path: ${NFS_JELLYSEERR_CONFIG}
         server: ${NAS_IP}
     ingress:
       main:
