@@ -36,6 +36,10 @@ spec:
         mountPath: /config
         path: ${NFS_PROWLARR_CONFIG}
         server:  ${NAS_IP}
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${PROWLARR_IP}
     ingress:
       main:
         enabled: true

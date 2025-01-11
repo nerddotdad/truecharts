@@ -49,6 +49,10 @@ spec:
         mountPath: /config/downloads
         path: ${NFS_MEDIA_USENET}
         server: ${NAS_IP}
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${RADARR_IP}
     ingress:
       main:
         enabled: true
