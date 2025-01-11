@@ -52,6 +52,10 @@ spec:
         enabled: true
         mountPath: "/cache"
         type: "emptyDir"
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${JELLYFIN_IP}
     ingress:
       main:
         enabled: true
