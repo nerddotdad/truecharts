@@ -70,17 +70,11 @@ spec:
             mountPath: /temp
             path: ${NFS_TDARR_TRANSCODE_CACHE}
             server: ${NAS_IP}
-        movies:
+        tdarr-media:
             enabled: true
             type: nfs
-            mountPath: /movies
-            path: ${NFS_MEDIA_MOVIES}
-            server: ${NAS_IP}
-        shows:
-            enabled: true
-            type: nfs
-            mountPath: /shows
-            path: ${NFS_MEDIA_SHOWS}
+            mountPath: /tdarr-media
+            path: ${NFS_MEDIA}
             server: ${NAS_IP}
     ingress:
         main:
