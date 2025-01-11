@@ -34,13 +34,13 @@ spec:
         enabled: true
         type: nfs
         mountPath: /config
-        path: /mnt/Applications/apps-config/nzbget
+        path: ${NFS_NZBGET_CONFIG}
         server: ${NAS_IP}
       downloads:
         enabled: true
         type: nfs
         mountPath: /config/downloads
-        path: /mnt/hhd-hc-primary/media/usenet
+        path: ${NFS_NZBGET_DOWNLOADS}
         server: ${NAS_IP}
     ingress:
       main:

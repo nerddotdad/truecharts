@@ -50,37 +50,37 @@ spec:
             enabled: true
             type: nfs
             mountPath: /app/configs
-            path: /mnt/Applications/apps-configs/tdarr/configs
+            path: ${NFS_TDARR_CONFIG}
             server: ${NAS_IP}
         server:
             enabled: true
             type: nfs
             mountPath: /app/server
-            path: /mnt/Applications/apps-configs/tdarr/server
+            path: ${NFS_TDARR_SERVER}
             server: ${NAS_IP}
         logs:
             enabled: true
             type: nfs
             mountPath: /app/logs
-            path: /mnt/Applications/apps-configs/tdarr/logs
+            path: ${NFS_TDARR_LOGS}
             server: ${NAS_IP}
         transcode-cache:
             enabled: true
             type: nfs
             mountPath: /temp
-            path: /mnt/Applications/apps-configs/tdarr/transcode-cache
+            path: ${NFS_TDARR_TRANSCODE_CACHE}
             server: ${NAS_IP}
         movies:
             enabled: true
             type: nfs
             mountPath: /movies
-            path: /mnt/hhd-hc-primary/media/data/media/movies
+            path: ${NFS_MEDIA_MOVIES}
             server: ${NAS_IP}
         shows:
             enabled: true
             type: nfs
             mountPath: /shows
-            path: /mnt/hhd-hc-primary/media/data/media/shows
+            path: ${NFS_MEDIA_SHOWS}
             server: ${NAS_IP}
     ingress:
         main:

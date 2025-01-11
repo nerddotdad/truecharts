@@ -34,7 +34,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /config
-        path: /mnt/Applications/apps-config/nzbget
+        path: ${NFS_PROWLARR_CONFIG}
         server:  ${NAS_IP}
     ingress:
       main:

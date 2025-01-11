@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: immich
-      version: 17.38.1
+      version: 17.34.0
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -29,67 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    image:
-      repository: ghcr.io/immich-app/immich-server
-      tag: v1.124.2@sha256:c14dccad0611635668abf98f17ce87c3badcc17bb979c53ef96dc49e934ebbc8
-      pullPolicy: IfNotPresent
-    mlImage:
-      repository: ghcr.io/immich-app/immich-machine-learning
-      pullPolicy: IfNotPresent
-      tag: v1.124.2@sha256:a134652b47278edfdac3187d61558e78679be39c810536193a41e9e0d894c5f4
-    mlCudaImage:
-      repository: ghcr.io/immich-app/immich-machine-learning
-      pullPolicy: IfNotPresent
-      tag: v1.124.2-cuda@sha256:e58b1b6af112f68db8930b6b6c6568fec1952d6bd9d3c645e75365154743d97a
-    mlOpenvinoImage:
-      repository: ghcr.io/immich-app/immich-machine-learning
-      pullPolicy: IfNotPresent
-      tag: v1.124.2-openvino@sha256:ade3c07adaf64ce658956ab21b7a93845fcad668e0ed813bf40f8a5c9802be9d
-
-    securityContext:
-      container:
-        readOnlyRootFilesystem: false
-        runAsNonRoot: false
-        runAsUser: 0
-        runAsGroup: 0
-
-    immich:
-      enable_ml: true
-      mlImageType: mlImage
-      log_level: log
-
-    service:
-      main:
-        # Main service targets the server
-        targetSelector: main
-        ports:
-          main:
-            port: 10323
-            protocol: http
-            targetSelector: main
-      microservices:
-        enabled: true
-        type: ClusterIP
-        targetSelector: microservices
-        ports:
-          microservices:
-            enabled: true
-            primary: true
-            port: 10004
-            protocol: http
-            targetSelector: microservices
-      machinelearning:
-        enabled: true
-        type: ClusterIP
-        targetSelector: machinelearning
-        ports:
-          machinelearning:
-            enabled: true
-            primary: true
-            port: 10003
-            protocol: http
-            targetSelector: machinelearning
-
     persistence:
       mlcache:
         enabled: true
@@ -105,59 +44,11 @@ spec:
           microservices:
             microservices:
               mountPath: /microcache
-      library:
-        enabled: true
-        type: nfs
-        mountPath: /usr/src/app/upload/library/
-        path: /mnt/hhd-hc-primary/immich/library/
-        server:  ${NAS_IP}
-        targetSelector:
-          # Main pod/container is server
-          main:
-            main: {}
-          microservices:
-            microservices: {}
-      uploads:
-        enabled: true
-        type: nfs
-        mountPath: /usr/src/app/upload/upload/
-        path: /mnt/hhd-hc-primary/immich/upload/
-        server:  ${NAS_IP}
-        targetSelector:
-          # Main pod/container is server
-          main:
-            main: {}
-          microservices:
-            microservices: {}
       backups:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/backups/
-        path: /mnt/hhd-hc-primary/immich/backups/
-        server:  ${NAS_IP}
-        targetSelector:
-          # Main pod/container is server
-          main:
-            main: {}
-          microservices:
-            microservices: {}
-      thumbs:
-        enabled: true
-        type: nfs
-        mountPath: /usr/src/app/upload/thumbs/
-        path: /mnt/hhd-hc-primary/immich/thumbs/
-        server:  ${NAS_IP}
-        targetSelector:
-          # Main pod/container is server
-          main:
-            main: {}
-          microservices:
-            microservices: {}
-      profile:
-        enabled: true
-        type: nfs
-        mountPath: /usr/src/app/upload/profile/
-        path: /mnt/hhd-hc-primary/immich/profile/
+        path: ${NFS_IMMICH_BACKUPS}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -169,7 +60,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/encoded-video/
-        path: /mnt/hhd-hc-primary/immich/encoded-video/
+        path: ${IMMICH_NFS_ENCODED_VIDEO}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -177,33 +68,54 @@ spec:
             main: {}
           microservices:
             microservices: {}
-
-    cnpg:
-      main:
+      library:
         enabled: true
-        user: immich
-        database: immich
-        type: vectors
-        cluster:
-          initdb:
-            postInitApplicationSQL:
-              - CREATE EXTENSION IF NOT EXISTS cube;
-              - CREATE EXTENSION IF NOT EXISTS earthdistance;
-              - CREATE SCHEMA IF NOT EXISTS vectors;
-              - ALTER DATABASE immich SET search_path TO "immich", public, vectors;
-              - SET search_path TO "immich", public, vectors;
-              - GRANT SELECT ON TABLE pg_vector_index_stat TO PUBLIC;
-              - ALTER SCHEMA vectors OWNER TO immich;
-
-    redis:
-      enabled: true
-      includeCommon: true
-      redisUsername: default
-
-    portal:
-      open:
+        type: nfs
+        mountPath: /usr/src/app/upload/library/
+        path: ${IMMICH_NFS_LIBRARY}
+        server:  ${NAS_IP}
+        targetSelector:
+          # Main pod/container is server
+          main:
+            main: {}
+          microservices:
+            microservices: {}
+      uploads:
         enabled: true
-
+        type: nfs
+        mountPath: /usr/src/app/upload/upload/
+        path: ${IMMICH_NFS_UPLOAD}
+        server:  ${NAS_IP}
+        targetSelector:
+          # Main pod/container is server
+          main:
+            main: {}
+          microservices:
+            microservices: {}
+      thumbs:
+        enabled: true
+        type: nfs
+        mountPath: /usr/src/app/upload/thumbs/
+        path: ${IMMICH_NFS_THUMBS}
+        server:  ${NAS_IP}
+        targetSelector:
+          # Main pod/container is server
+          main:
+            main: {}
+          microservices:
+            microservices: {}
+      profile:
+        enabled: true
+        type: nfs
+        mountPath: /usr/src/app/upload/profile/
+        path: ${IMMICH_NFS_PROFILE}
+        server:  ${NAS_IP}
+        targetSelector:
+          # Main pod/container is server
+          main:
+            main: {}
+          microservices:
+            microservices: {}
     ingress:
       main:
         enabled: true

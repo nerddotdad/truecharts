@@ -35,19 +35,19 @@ spec:
         enabled: true
         type: nfs
         mountPath: /config
-        path: /mnt/Applications/apps-configs/sonarr
+        path: ${NFS_SONARR_CONFIG}
         server: ${NAS_IP}
       target: # this is the target location for media
         enabled: true
         type: nfs
         mountPath: /data/media
-        path: /mnt/hhd-hc-primary/media/data/media
+        path: ${NFS_MEDIA}
         server: ${NAS_IP}
       nzbget-target: # this is the target location for nzbget
         enabled: true
         type: nfs
         mountPath: /config/downloads
-        path: /mnt/hhd-hc-primary/media/data/usenet
+        path: ${NFS_NZBGET_DOWNLOADS}
         server: ${NAS_IP}
     ingress:
       main:
