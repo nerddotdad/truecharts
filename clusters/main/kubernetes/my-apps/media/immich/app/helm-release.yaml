@@ -60,7 +60,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/encoded-video/
-        path: ${IMMICH_NFS_ENCODED_VIDEO}
+        path: ${NFS_IMMICH_ENCODED_VIDEO}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -72,7 +72,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/library/
-        path: ${IMMICH_NFS_LIBRARY}
+        path: ${NFS_IMMICH_LIBRARY}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -84,7 +84,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/upload/
-        path: ${IMMICH_NFS_UPLOAD}
+        path: ${NFS_IMMICH_UPLOAD}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -96,7 +96,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/thumbs/
-        path: ${IMMICH_NFS_THUMBS}
+        path: ${NFS_IMMICH_THUMBS}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
@@ -108,7 +108,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /usr/src/app/upload/profile/
-        path: ${IMMICH_NFS_PROFILE}
+        path: ${NFS_IMMICH_PROFILE}
         server:  ${NAS_IP}
         targetSelector:
           # Main pod/container is server
