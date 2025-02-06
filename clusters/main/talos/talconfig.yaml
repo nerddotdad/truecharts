@@ -6,68 +6,68 @@ kubernetesVersion: v1.31.1
 endpoint: https://${VIP}:6443
 allowSchedulingOnControlPlanes: true
 additionalMachineCertSans:
-    - 127.0.0.1
-    - ${VIP}
+  - 127.0.0.1
+  - ${VIP}
 additionalApiServerCertSans:
-    - 127.0.0.1
-    - ${VIP}
+  - 127.0.0.1
+  - ${VIP}
 # Warning: Also used in Cilium CNI values!
 clusterPodNets:
-    - ${PODNET}
+  - ${PODNET}
 clusterSvcNets:
-    - ${SVCNET}
+  - ${SVCNET}
 cniConfig:
-    name: none
+  name: none
 patches:
-    - '@./patches/all.yaml'
+  - "@./patches/all.yaml"
 nodes:
-    # We would adivce to always stick to a "k8s-something-1" style naming scheme
-    - hostname: k8s-control-1
-      ipAddress: ${MASTER1IP_IP}
-      controlPlane: true
-      nameservers:
-        - 1.1.1.1
-        - 8.8.8.8
-      installDiskSelector:
-        size: <= 1600GB
-      networkInterfaces:
-        # suffix is the adapter mac adres.
-        - interface: eth0
-          addresses:
-            - ${MASTER1IP_CIDR}
-          routes:
-            - network: 0.0.0.0/0
-              gateway: ${GATEWAY}
-          vip:
-            ip: ${VIP}
-      schematic:
-        customization:
-          systemExtensions:
-            officialExtensions:
-              - siderolabs/util-linux-tools
-              - siderolabs/iscsi-tools
-              - siderolabs/qemu-guest-agent
-              - siderolabs/nonfree-kmod-nvidia-lts
-              - siderolabs/nvidia-container-toolkit-lts
-      patches:
-        - '@./patches/gpu.yaml'
-controlPlane:
-    patches:
-        - '@./patches/controlplane.yaml'
-    kernelModules:
-     - name: nvme_tcp
-     - name: vfio_pci
-     - name: uio_pci_generic
+  # We would adivce to always stick to a "k8s-something-1" style naming scheme
+  - hostname: k8s-control-1
+    ipAddress: ${MASTER1IP_IP}
+    controlPlane: true
+    nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+    installDiskSelector:
+      size: <= 1600GB
+    networkInterfaces:
+      # suffix is the adapter mac adres.
+      - interface: eth0
+        addresses:
+          - ${MASTER1IP_CIDR}
+        routes:
+          - network: 0.0.0.0/0
+            gateway: ${GATEWAY}
+        vip:
+          ip: ${VIP}
     schematic:
-        customization:
-            extraKernelArgs:
-                - net.ifnames=0
-            systemExtensions:
-                officialExtensions:
-                    - siderolabs/util-linux-tools
-                    - siderolabs/iscsi-tools
-                    - siderolabs/qemu-guest-agent
-    machineFiles:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/util-linux-tools
+            - siderolabs/iscsi-tools
+            - siderolabs/qemu-guest-agent
+            - siderolabs/nonfree-kmod-nvidia-lts
+            - siderolabs/nvidia-container-toolkit-lts
+    patches:
+      - "@./patches/gpu.yaml"
+controlPlane:
+  patches:
+    - "@./patches/controlplane.yaml"
+  kernelModules:
+    - name: nvme_tcp
+    - name: vfio_pci
+    - name: uio_pci_generic
+  schematic:
+    customization:
+      extraKernelArgs:
+        - net.ifnames=0
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/util-linux-tools
+          - siderolabs/iscsi-tools
+          - siderolabs/qemu-guest-agent
+  machineFiles:
     - content: |
         [plugins."io.containerd.grpc.v1.cri"]
           enable_unprivileged_ports = true
@@ -91,22 +91,21 @@ controlPlane:
       permissions: 420
       path: /etc/nfsmount.conf
       op: overwrite
-
 worker:
-    patches:
-        - '@./patches/worker.yaml'
-    kernelModules:
-     - name: nvme_tcp
-     - name: vfio_pci
-     - name: uio_pci_generic
-    schematic:
-        customization:
-            systemExtensions:
-                officialExtensions:
-                    - siderolabs/util-linux-tools
-                    - siderolabs/iscsi-tools
-                    - siderolabs/qemu-guest-agent
-    machineFiles:
+  patches:
+    - "@./patches/worker.yaml"
+  kernelModules:
+    - name: nvme_tcp
+    - name: vfio_pci
+    - name: uio_pci_generic
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/util-linux-tools
+          - siderolabs/iscsi-tools
+          - siderolabs/qemu-guest-agent
+  machineFiles:
     - content: |
         [plugins."io.containerd.grpc.v1.cri"]
           enable_unprivileged_ports = true
