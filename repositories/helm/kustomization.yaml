@@ -29,3 +29,4 @@ resources:
   - topolvm.yaml
   - truecharts.yaml
 # more goes here!
+  - nvdp.yaml
