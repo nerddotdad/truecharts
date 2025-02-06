@@ -1,6 +1,6 @@
 clusterName: ${CLUSTERNAME}
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.8.4
+talosVersion: v1.9.3
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.31.1
 endpoint: https://${VIP}:6443
@@ -20,7 +20,6 @@ cniConfig:
     name: none
 patches:
     - '@./patches/all.yaml'
-    - "@./patches/gpu.yaml"
 nodes:
     # We would adivce to always stick to a "k8s-something-1" style naming scheme
     - hostname: k8s-control-1
@@ -41,10 +40,20 @@ nodes:
               gateway: ${GATEWAY}
           vip:
             ip: ${VIP}
+      schematic:
+        customization:
+          systemExtensions:
+            officialExtensions:
+              - siderolabs/util-linux-tools
+              - siderolabs/iscsi-tools
+              - siderolabs/qemu-guest-agent
+              - siderolabs/nonfree-kmod-nvidia-lts
+              - siderolabs/nvidia-container-toolkit-lts
+      patches:
+        - '@./patches/gpu.yaml'
 controlPlane:
     patches:
         - '@./patches/controlplane.yaml'
-
     kernelModules:
      - name: nvme_tcp
      - name: vfio_pci
@@ -58,8 +67,6 @@ controlPlane:
                     - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
                     - siderolabs/qemu-guest-agent
-                    - siderolabs/nonfree-kmod-nvidia-lts
-                    - siderolabs/nvidia-container-toolkit-lts
     machineFiles:
     - content: |
         [plugins."io.containerd.grpc.v1.cri"]
