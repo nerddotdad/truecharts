@@ -66,3 +66,48 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${AVORION_IP}
+        ports:
+          main:
+            port: 27000
+            protocol: tcp
+            targetPort: 27000
+      mainudp:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          mainudp:
+            enabled: true
+            port: 27000
+            protocol: udp
+            targetPort: 27000
+      hostport3:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          hostport3:
+            enabled: true
+            port: 27003
+            protocol: udp
+            targetPort: 27003
+      hostport4:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          hostport4:
+            enabled: true
+            port: 27020
+            protocol: udp
+            targetPort: 27020
+      hostport5:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          hostport5:
+            enabled: true
+            port: 27021
+            protocol: udp
+            targetPort: 27021
