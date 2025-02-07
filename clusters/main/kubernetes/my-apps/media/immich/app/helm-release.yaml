@@ -121,11 +121,11 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${IMMICH_IP}
     workload:
-      main:
+      microservices:
         podSpec:
           runtimeClassName: "nvidia"
           containers:
-            main:
+            microservices:
               resources:
                 limits:
                   nvidia.com/gpu: 1
