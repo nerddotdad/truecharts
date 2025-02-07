@@ -29,6 +29,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    workload:
+      main:
+        podSpec:
+          runtimeClassName: "nvidia"
+          containers:
+            main:
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
     persistence:
       config:
         enabled: true
@@ -52,15 +61,6 @@ spec:
         enabled: true
         mountPath: "/cache"
         type: "emptyDir"
-    workload:
-      main:
-        podSpec:
-          runtimeClassName: "nvidia"
-          containers:
-            main:
-              resources:
-                limits:
-                  nvidia.com/gpu: 1
     service:
       main:
         type: LoadBalancer
