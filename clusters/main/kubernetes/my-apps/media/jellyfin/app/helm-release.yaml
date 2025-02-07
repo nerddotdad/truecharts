@@ -52,13 +52,15 @@ spec:
         enabled: true
         mountPath: "/cache"
         type: "emptyDir"
-    resources:
-        limits:
-            nvidia.com/gpu: 1
     workload:
-        main:
-            podSpec:
-            runtimeClassName: "nvidia"
+      main:
+        podSpec:
+          runtimeClassName: "nvidia"
+          containers:
+            main:
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
     service:
       main:
         type: LoadBalancer
