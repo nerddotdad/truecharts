@@ -111,3 +111,19 @@ spec:
             port: 27021
             protocol: udp
             targetPort: 27021
+    ingress:
+      main:
+        enabled: true
+        hosts:
+          - host: avorion.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
