@@ -51,7 +51,7 @@ spec:
               GALAXY_NAME: "Hoth Systems"
               GAME_ID: "565060"
               GAME_PARAMS: ""
-              PASSWRD: "hothsys123!"
+              PASSWRD: "${AVORION_PW}"
               USERNAME: ""
               VALIDATE: "false"
             probes:
