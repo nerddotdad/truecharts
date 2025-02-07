@@ -51,7 +51,7 @@ spec:
               env:
                 GALAXY_NAME: "Hoth Systems"
                 GAME_ID: "565060"
-                GAME_PARAMS: "+motd=this is a test +name=Hoth Systems +description=A Hoth Systems Server"
+                GAME_PARAMS: "+motd this is a test +name Hoth Systems +description A Hoth Systems Server"
                 PASSWRD: ""
                 USERNAME: ""
                 VALIDATE: "false"
