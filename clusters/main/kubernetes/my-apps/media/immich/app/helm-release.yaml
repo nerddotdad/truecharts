@@ -29,15 +29,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    workload:
-      main:
-        podSpec:
-          runtimeClassName: "nvidia"
-          containers:
-            main:
-              resources:
-                limits:
-                  nvidia.com/gpu: 1
+    # workload:
+    #   main:
+    #     podSpec:
+    #       runtimeClassName: "nvidia"
+    #       containers:
+    #         main:
+    #           resources:
+    #             limits:
+    #               nvidia.com/gpu: 1
     persistence:
       mlcache:
         enabled: true
