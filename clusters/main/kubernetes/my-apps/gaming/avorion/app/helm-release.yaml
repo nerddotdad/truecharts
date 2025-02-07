@@ -42,22 +42,22 @@ spec:
         mountPath: /serverdata/steamcmd
         path: ${NFS_STEAM_CMD}
         server: ${NAS_IP}
-  workload:
-    main:
-      podSpec:
-        containers:
-          main:
-            env:
-              GALAXY_NAME: "Hoth Systems"
-              GAME_ID: "565060"
-              GAME_PARAMS: ""
-              PASSWRD: "${AVORION_PW}"
-              USERNAME: ""
-              VALIDATE: "false"
-            probes:
-              liveness:
-                enabled: false
-              readiness:
-                enabled: false
-              startup:
-                enabled: false
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                GALAXY_NAME: "Hoth Systems"
+                GAME_ID: "565060"
+                GAME_PARAMS: ""
+                PASSWRD: "${AVORION_PW}"
+                USERNAME: ""
+                VALIDATE: "false"
+              probes:
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+                startup:
+                  enabled: false
