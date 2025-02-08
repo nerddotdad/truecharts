@@ -51,7 +51,7 @@ spec:
               env:
                 GALAXY_NAME: "Hoth Systems"
                 GAME_ID: "565060"
-                GAME_PARAMS: "--server-name Hoth_Systems --admin itzteajay --password ${AVORION_PW}"
+                GAME_PARAMS: "--server-name Hoth_Systems --admin itzteajay +password ${AVORION_PW}"
                 PASSWRD: ""
                 USERNAME: ""
                 VALIDATE: "false"
