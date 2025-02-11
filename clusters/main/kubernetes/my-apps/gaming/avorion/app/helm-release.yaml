@@ -111,6 +111,26 @@ spec:
             port: 27021
             protocol: udp
             targetPort: 27021
+      rcon:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          hostport5:
+            enabled: true
+            port: 27015
+            protocol: tcp
+            targetPort: 27015
+      rconudp:
+        type: LoadBalancer
+        loadBalancerIP: ${AVORION_IP}
+        enabled: true
+        ports:
+          hostport5:
+            enabled: true
+            port: 27015
+            protocol: udp
+            targetPort: 27015
     ingress:
       main:
         enabled: true
