@@ -51,7 +51,7 @@ spec:
               env:
                 GALAXY_NAME: "Hoth Systems"
                 GAME_ID: "565060"
-                GAME_PARAMS: '--server-name Hoth_Systems --admin itzteajay -max-players 20 --listed yes --use-steam-networking true --public false'
+                GAME_PARAMS: '--server-name Hoth_Systems --admin itzteajay --max-players 20 --listed yes --use-steam-networking true --public false'
                 PASSWRD: ""
                 USERNAME: ""
                 VALIDATE: "false"
