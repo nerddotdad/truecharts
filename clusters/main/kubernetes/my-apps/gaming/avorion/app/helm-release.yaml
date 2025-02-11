@@ -116,7 +116,7 @@ spec:
         loadBalancerIP: ${AVORION_IP}
         enabled: true
         ports:
-          hostport5:
+          rcon:
             enabled: true
             port: 27015
             protocol: tcp
@@ -126,7 +126,7 @@ spec:
         loadBalancerIP: ${AVORION_IP}
         enabled: true
         ports:
-          hostport5:
+          rconudp:
             enabled: true
             port: 27015
             protocol: udp
