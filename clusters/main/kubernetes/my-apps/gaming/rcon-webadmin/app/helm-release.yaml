@@ -36,7 +36,7 @@ spec:
       rwa_read_only_widget_options: false
       rwa_game: avorion
       rwa_server_name: Hoth_Systems
-      rwa_rcon_host: ""
+      rwa_rcon_host: "${AVORION_IP}"
       rwa_rcon_port: 27015
       rwa_websocket_url_ssl: ""
       rwa_websocket_url: ""
