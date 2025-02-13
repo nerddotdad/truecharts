@@ -52,6 +52,8 @@ spec:
             protocol: http
             targetPort: 4326
       websocketaccess:
+        type: LoadBalancer
+        loadBalancerIP: ${RWA_IP}
         enabled: true
         ports:
           websocketaccess:
