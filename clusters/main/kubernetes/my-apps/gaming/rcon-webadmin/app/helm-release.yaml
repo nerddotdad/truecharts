@@ -52,8 +52,6 @@ spec:
             protocol: http
             targetPort: 4326
       websocketaccess:
-        type: LoadBalancer
-        loadBalancerIP: ${RWA_IP}
         enabled: true
         ports:
           websocketaccess:
@@ -91,7 +89,6 @@ spec:
                 RWA_RCON_PASSWORD: ${RCON_PASS}
     ingress:
       websocketaccess:
-        enabled: true
         autoLink: true
       main:
         enabled: true
