@@ -93,17 +93,17 @@ spec:
       websocketaccess:
         autoLink: true
       main:
-      enabled: true
-      hosts:
-        - host: rcon.${DOMAIN_0}
-          paths:
-            - path: /
-              pathType: Prefix
-      integrations:
-        certManager:
-          enabled: true
-          certificateIssuer: domain-0-le-prod
-        traefik:
-          enabled: true
-          entrypoints:
-            - websecure
+        enabled: true
+        hosts:
+          - host: rcon.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
