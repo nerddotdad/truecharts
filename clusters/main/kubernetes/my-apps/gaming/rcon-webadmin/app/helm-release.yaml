@@ -1,0 +1,109 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rcon-webadmin
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: rcon-webadmin
+      version: 10.5.1
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    rcon:
+      rwa_admin: true
+      rwa_env: false
+      rwa_web_rcon: false
+      rwa_read_only_widget_options: false
+      rwa_game: avorion
+      rwa_server_name: Hoth_Systems
+      rwa_rcon_host: ""
+      rwa_rcon_port: 27015
+      rwa_websocket_url_ssl: ""
+      rwa_websocket_url: ""
+      rwa_restrict_commands: []
+      rwa_restrict_widgets: []
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${RWA_IP}
+        ports:
+          main:
+            port: 4326
+            protocol: http
+            targetPort: 4326
+      websocketaccess:
+        type: LoadBalancer
+        loadBalancerIP: ${RWA_IP}
+        enabled: true
+        ports:
+          websocketaccess:
+            enabled: true
+            port: 4327
+            protocol: tcp
+            targetPort: 4327
+    persistence:
+      db:
+        enabled: true
+        type: nfs
+        mountPath: /opt/rcon-web-admin/db
+        path: ${NFS_RCON_WEBADMIN}
+        server: ${NAS_IP}
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                RWA_ADMIN: '{{ ternary "TRUE" "FALSE" .Values.rcon.rwa_admin }}'
+                RWA_ENV: '{{ ternary "TRUE" "FALSE" .Values.rcon.rwa_env }}'
+                RWA_WEB_RCON: '{{ ternary "TRUE" "FALSE" .Values.rcon.rwa_web_rcon }}'
+                RWA_READ_ONLY_WIDGET_OPTIONS: '{{ ternary "TRUE" "FALSE" .Values.rcon.rwa_read_only_widget_options }}'
+                RWA_GAME: "{{ .Values.rcon.rwa_game }}"
+                RWA_SERVER_NAME: "{{ .Values.rcon.rwa_server_name }}"
+                RWA_RCON_HOST: "{{ .Values.rcon.rwa_rcon_host }}"
+                RWA_RCON_PORT: "{{ .Values.rcon.rwa_rcon_port }}"
+                RWA_RESTRICT_COMMANDS: '{{ join "," .Values.rcon.rwa_restrict_commands }}'
+                RWA_RESTRICT_WIDGETS: '{{ join "," .Values.rcon.rwa_restrict_widgets }}'
+                RWA_WEBSOCKET_URL_SSL: "{{ .Values.rcon.rwa_websocket_url_ssl }}"
+                RWA_WEBSOCKET_URL: "{{ .Values.rcon.rwa_websocket_url }}"
+                RWA_USERNAME: admin
+                RWA_PASSWORD: ${RCON_PASS}
+                RWA_RCON_PASSWORD: ${RCON_PASS}
+    ingress:
+      websocketaccess:
+        autoLink: true
+      main:
+      enabled: true
+      hosts:
+        - host: rcon.${DOMAIN_0}
+          paths:
+            - path: /
+              pathType: Prefix
+      integrations:
+        certManager:
+          enabled: true
+          certificateIssuer: domain-0-le-prod
+        traefik:
+          enabled: true
+          entrypoints:
+            - websecure
