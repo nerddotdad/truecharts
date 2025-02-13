@@ -91,10 +91,23 @@ spec:
       websocketaccess:
         enabled: true
         autoLink: true
+        hosts:
+          - host: rwa-sock.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+            enabled: true
+            entrypoints:
+              - websecure
       main:
         enabled: true
         hosts:
-          - host: rcon.${DOMAIN_0}
+          - host: rwa.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
