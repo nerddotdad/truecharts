@@ -89,6 +89,7 @@ spec:
                 RWA_RCON_PASSWORD: ${RCON_PASS}
     ingress:
       websocketaccess:
+        enabled: true
         autoLink: true
       main:
         enabled: true
