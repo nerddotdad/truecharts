@@ -37,11 +37,8 @@ spec:
       REDIS_PASSWORD: "changeme"
     service:
       main:
-        enabled: true
-        type: ClusterIP
-        ports:
-          http:
-            port: 80
+        type: LoadBalancer
+        loadBalancerIP: ${PIXELFED_IP}
     ingress:
       main:
         enabled: true
