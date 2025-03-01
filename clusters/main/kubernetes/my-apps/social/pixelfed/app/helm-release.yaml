@@ -1,24 +1,5 @@
-apiVersion: v2
-name: pixelfed
-version: 0.1.0
-description: A TrueCharts Helm Chart for deploying Pixelfed using the custom-app template
-
-dependencies:
-  - name: custom-app
-    version: "1.0.0"
-    repository: "https://charts.truecharts.org"
-
-type: application
-
-maintainers:
-  - name: YourName
-    email: your.email@example.com
-
-sources:
-  - https://github.com/pixelfed/pixelfed
-
-appVersion: "dev"
-
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
 metadata:
   name: pixelfed
   namespace: social
@@ -32,76 +13,65 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-
-# values.yaml
-custom:
-  application:
-    enabled: true
-    image:
-      repository: pixelfed/pixelfed
-      tag: latest
-      pullPolicy: IfNotPresent
-
-env:
-  APP_NAME: "Pixelfed"
-  APP_ENV: "production"
-  APP_DEBUG: "false"
-  APP_URL: "https://pixelfed.example.com"
-  DB_CONNECTION: "pgsql"
-  DB_HOST: "postgres"
-  DB_PORT: "5432"
-  DB_DATABASE: "pixelfed"
-  DB_USERNAME: "pixelfed"
-  DB_PASSWORD: "changeme"
-  REDIS_HOST: "redis"
-  REDIS_PORT: "6379"
-  REDIS_PASSWORD: "changeme"
-
-service:
-  main:
-    enabled: true
-    type: ClusterIP
-    ports:
-      http:
-        port: 80
-persistence:
-  media:
-    enabled: true
-    type: nfs
-    mountPath: /media
-    path: ${NFS_MEDIA}
-    server: ${NAS_IP}
-  config:
-    enabled: true
-    type: nfs
-    mountPath: /var/www/html/storage
-    path: ${NFS_PIXELFED_STORAGE}
-    server: ${NAS_IP}
-  public:
-    enabled: true
-    type: nfs
-    mountPath: /var/www/html/public/storage
-    path: ${NFS_PIXELFED_PUBLIC}
-    server: ${NAS_IP}
-database:
-  type: postgresql
-  enabled: true
-  postgresql:
-    auth:
-      database: pixelfed
-      username: pixelfed
-      password: changeme
-
-redis:
-  enabled: true
-  auth:
-    enabled: false
-
-ingress:
-  main:
-    enabled: true
-    hosts:
-      - host: pixelfed.hoth.systems
-        paths:
-          - path: /
-            pathType: Prefix
+  values:
+    custom:
+      application:
+        enabled: true
+        image:
+          repository: pixelfed/pixelfed
+          tag: latest
+          pullPolicy: IfNotPresent
+    env:
+      APP_NAME: "Pixelfed"
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      APP_URL: "https://pixelfed.hoth.systems"
+      DB_CONNECTION: "pgsql"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_DATABASE: "pixelfed"
+      DB_USERNAME: "pixelfed"
+      DB_PASSWORD: "changeme"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "changeme"
+    service:
+      main:
+        enabled: true
+        type: ClusterIP
+        ports:
+          http:
+            port: 80
+    ingress:
+      main:
+        enabled: true
+        hosts:
+          - host: pixelfed.hoth.systems
+            paths:
+              - path: /
+                pathType: Prefix
+    persistence:
+      config:
+        enabled: true
+        type: nfs
+        mountPath: /var/www/html/storage
+        path: ${NFS_PIXELFED_STORAGE}
+        server: ${NAS_IP}
+      public:
+        enabled: true
+        type: nfs
+        mountPath: /var/www/html/public/storage
+        path: ${NFS_PIXELFED_PUBLIC}
+        server: ${NAS_IP}
+    database:
+      type: postgresql
+      enabled: true
+      postgresql:
+        auth:
+          database: pixelfed
+          username: pixelfed
+          password: changeme
+    redis:
+      enabled: true
+      auth:
+        enabled: false
