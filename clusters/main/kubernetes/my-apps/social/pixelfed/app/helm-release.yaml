@@ -55,13 +55,13 @@ spec:
         enabled: true
         type: nfs
         mountPath: /var/www/html/storage
-        path: ${NFS_PIXELFED_STORAGE}
+        path: /mnt/vault/app-configs/pixelfed/storage
         server: ${NAS_IP}
       public:
         enabled: true
         type: nfs
         mountPath: /var/www/html/public/storage
-        path: ${NFS_PIXELFED_PUBLIC}
+        path: /mnt/vault/app-configs/pixelfed/public
         server: ${NAS_IP}
     database:
       type: postgresql
