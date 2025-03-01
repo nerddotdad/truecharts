@@ -7,8 +7,8 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: custom-app
-      version: "1.0.0"
+      chart: app-template
+      version: "latest"
       sourceRef:
         kind: HelmRepository
         name: truecharts
