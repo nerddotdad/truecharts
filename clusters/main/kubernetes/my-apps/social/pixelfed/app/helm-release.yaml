@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 14.5.2
+      version: "latest"
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -32,7 +32,7 @@ spec:
       DB_DATABASE: "pixelfed"
       DB_USERNAME: "pixelfed"
       DB_PASSWORD: "changeme"
-      REDIS_HOST: "redis"
+      REDIS_HOST: "pixelfed-redis"
       REDIS_PORT: "6379"
       REDIS_PASSWORD: "changeme"
     service:
@@ -56,13 +56,13 @@ spec:
         enabled: true
         type: nfs
         mountPath: /var/www/html/storage
-        path: /mnt/vault/app-configs/pixelfed/storage
+        path: ${NFS_PIXELFED_STORAGE}
         server: ${NAS_IP}
       public:
         enabled: true
         type: nfs
         mountPath: /var/www/html/public/storage
-        path: /mnt/vault/app-configs/pixelfed/public
+        path: ${NFS_PIXELFED_PUBLIC}
         server: ${NAS_IP}
     database:
       type: postgresql
