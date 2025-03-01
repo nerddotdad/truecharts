@@ -1,0 +1,89 @@
+apiVersion: v2
+name: pixelfed
+version: 0.1.0
+description: A TrueCharts Helm Chart for deploying Pixelfed using the custom-app template
+
+dependencies:
+  - name: custom-app
+    version: "1.0.0"
+    repository: "https://charts.truecharts.org"
+
+type: application
+
+maintainers:
+  - name: YourName
+    email: your.email@example.com
+
+sources:
+  - https://github.com/pixelfed/pixelfed
+
+appVersion: "dev"
+
+metadata:
+  name: pixelfed
+  namespace: social
+
+---
+
+# values.yaml
+custom:
+  application:
+    enabled: true
+    image:
+      repository: pixelfed/pixelfed
+      tag: latest
+      pullPolicy: IfNotPresent
+
+env:
+  APP_NAME: "Pixelfed"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://pixelfed.example.com"
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_DATABASE: "pixelfed"
+  DB_USERNAME: "pixelfed"
+  DB_PASSWORD: "changeme"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: "changeme"
+
+service:
+  main:
+    enabled: true
+    type: ClusterIP
+    ports:
+      http:
+        port: 80
+
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: pixelfed.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /var/www/html/storage
+  public:
+    enabled: true
+    mountPath: /var/www/html/public/storage
+
+database:
+  type: postgresql
+  enabled: true
+  postgresql:
+    auth:
+      database: pixelfed
+      username: pixelfed
+      password: changeme
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
