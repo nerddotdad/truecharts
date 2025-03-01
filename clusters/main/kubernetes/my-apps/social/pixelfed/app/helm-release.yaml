@@ -56,24 +56,25 @@ service:
     ports:
       http:
         port: 80
-
-ingress:
-  main:
-    enabled: true
-    hosts:
-      - host: pixelfed.example.com
-        paths:
-          - path: /
-            pathType: Prefix
-
 persistence:
+  media:
+    enabled: true
+    type: nfs
+    mountPath: /media
+    path: ${NFS_MEDIA}
+    server: ${NAS_IP}
   config:
     enabled: true
+    type: nfs
     mountPath: /var/www/html/storage
+    path: ${NFS_PIXELFED_STORAGE}
+    server: ${NAS_IP}
   public:
     enabled: true
+    type: nfs
     mountPath: /var/www/html/public/storage
-
+    path: ${NFS_PIXELFED_PUBLIC}
+    server: ${NAS_IP}
 database:
   type: postgresql
   enabled: true
@@ -87,3 +88,12 @@ redis:
   enabled: true
   auth:
     enabled: false
+
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: pixelfed.hoth.systems
+        paths:
+          - path: /
+            pathType: Prefix
