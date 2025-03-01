@@ -37,6 +37,10 @@ spec:
       REDIS_PASSWORD: "changeme"
     service:
       main:
+        ports:
+          main:
+            port: 80
+            targetPort: 80
         type: LoadBalancer
         loadBalancerIP: ${PIXELFED_IP}
     ingress:
