@@ -3,6 +3,14 @@ kind: HelmRelease
 metadata:
   name: pixelfed
   namespace: social
+dependencies:
+  - name: redis
+    version: 15.6.5
+    repository: oci://tccr.io/truecharts
+    condition: redis.enabled
+    alias: ""
+    tags: []
+    import-values: []
 spec:
   interval: 5m
   chart:
@@ -76,4 +84,3 @@ spec:
       enabled: true
       auth:
         enabled: false
-      architecture: standalone
