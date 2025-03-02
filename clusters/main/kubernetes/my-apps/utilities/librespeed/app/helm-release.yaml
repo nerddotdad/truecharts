@@ -82,5 +82,5 @@ spec:
           password: changeme
     redis:
       enabled: true
-      auth:
-        enabled: false
+      includeCommon: true
+      redisUsername: default
