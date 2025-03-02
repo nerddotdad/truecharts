@@ -13,10 +13,6 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-      dependencies:
-        - name: redis
-          repository: "https://charts.truecharts.org"
-          version: "latest"
   values:
     custom:
       application:
@@ -69,7 +65,7 @@ spec:
         path: ${NFS_PIXELFED_PUBLIC}
         server: ${NAS_IP}
     database:
-      type: postgresql
+      type: postgresqla
       enabled: true
       postgresql:
         auth:
@@ -80,3 +76,4 @@ spec:
       enabled: true
       auth:
         enabled: false
+      architecture: standalone
