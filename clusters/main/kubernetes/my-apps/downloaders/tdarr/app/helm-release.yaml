@@ -45,6 +45,17 @@ spec:
           comm:
             enabled: true
             port: 8266
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              securityContext:
+                container:
+                  readOnlyRootFilesystem: false
+                  runAsNonRoot: false
+                  runAsUser: 0
+                  runAsGroup: 0
     persistence:
         configs:
             enabled: true
