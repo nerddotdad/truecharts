@@ -31,11 +31,17 @@ spec:
     keepHistory: false
   values:
     persistence:
-      media: # this is the target location for media
+      movies: # this is the target location for media
         enabled: true
         type: nfs
-        mountPath: /data/media
+        mountPath: /data/media/movies
         path: ${NFS_MEDIA_MOVIES}
+        server: ${NAS_IP}
+      shows: # this is the target location for media
+        enabled: true
+        type: nfs
+        mountPath: /data/media/shows
+        path: ${NFS_MEDIA_SHOWS}
         server: ${NAS_IP}
     service:
       main:
