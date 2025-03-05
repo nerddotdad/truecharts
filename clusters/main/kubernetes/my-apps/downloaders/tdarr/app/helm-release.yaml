@@ -45,56 +45,6 @@ spec:
           comm:
             enabled: true
             port: 8266
-    securityContext:
-      container:
-        PUID: 0
-        UMASK: "002"
-        runAsNonRoot: true
-        runAsUser: 0
-        runAsGroup: 0
-        readOnlyRootFilesystem: true
-        allowPrivilegeEscalation: true
-        privileged: true
-        seccompProfile:
-          type: RuntimeDefault
-        capabilities:
-          add:
-            - SYS_ADMIN
-            - SYS_PTRACE
-          drop:
-            - ALL
-      pod:
-        fsGroup: 568
-        fsGroupChangePolicy: OnRootMismatch
-        supplementalGroups:
-          - 568
-          - 1000
-        sysctls:
-          - name: net.ipv4.ip_unprivileged_port_start
-            value: "0"
-    workload:
-      main:
-        enabled: true
-        primary: true
-        podSpec:
-          containers:
-            main:
-              enabled: true
-              primary: true
-              securityContext:
-                runAsNonRoot: false
-                runAsUser: 0
-                runAsGroup: 0
-                readOnlyRootFilesystem: true
-                allowPrivilegeEscalation: true
-                privileged: true
-                seccompProfile:
-                  type: Localhost
-                  profile: path/to/profile.json
-                capabilities:
-                  add: []
-                  drop:
-                    - ALL
     persistence:
         configs:
             enabled: true
