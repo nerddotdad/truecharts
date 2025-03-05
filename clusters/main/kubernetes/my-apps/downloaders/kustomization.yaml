@@ -8,3 +8,4 @@ resources:
   - radarr/ks.yaml
   - sonarr/ks.yaml
   - tdarr/ks.yaml
+  - bazarr/ks.yaml
