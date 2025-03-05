@@ -30,6 +30,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    persistence:
+      media: # this is the target location for media
+        enabled: true
+        type: nfs
+        mountPath: /data/media
+        path: ${NFS_MEDIA_MOVIES}
+        server: ${NAS_IP}
     service:
       main:
         type: LoadBalancer
