@@ -42,6 +42,12 @@ spec:
         mountPath: /config/downloads
         path: ${NFS_MEDIA_USENET}
         server: ${NAS_IP}
+      scripts:
+        enabled: true
+        type: nfs
+        mountPath: /app/scripts
+        path: ${NFS_NZBGET_SCRIPTS}
+        server: ${NAS_IP}
     ingress:
       main:
         enabled: true
