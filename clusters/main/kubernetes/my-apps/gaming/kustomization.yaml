@@ -4,4 +4,4 @@ resources:
   - avorion/ks.yaml
   - namespace.yaml
   - rcon-webadmin/ks.yaml
-  # - minecraft-java/ks.yaml
+  - minecraft-java/ks.yaml
