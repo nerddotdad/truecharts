@@ -1,0 +1,168 @@
+# https://github.com/truecharts/public/blob/master/charts/stable/avorion/values.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minecraft
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: minecraft
+      version: 22.34.1
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 25565
+          query:
+            enabled: true
+            protocol: udp
+            port: 25565
+      rcon:
+        enabled: true
+        ports:
+          rcon:
+            enabled: true
+            port: 25575
+
+    mcbackup:
+      zstd_params:
+        - --long=25
+        - --single-thread
+      # comma separated list
+      excludes:
+        - "*.jar"
+        - "cache"
+        - "logs"
+        - "*.tmp"
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              imageSelector: image
+              env:
+                SERVER_PORT: "{{ .Values.service.main.ports.main.port }}"
+                QUERY_PORT: "{{ .Values.service.main.ports.query.port }}"
+                RCON_PORT: "{{ .Values.service.rcon.ports.rcon.port }}"
+                ENABLE_QUERY: "true"
+                EULA: "TRUE"
+                GUI: "FALSE"
+                OVERRIDE_SERVER_PROPERTIES: true
+                VERSION: "LATEST"
+                TYPE: "VANILLA"
+                DIFFICULTY: easy
+                MAX_PLAYERS: 20
+                MAX_WORLD_SIZE: 10000
+                ALLOW_NETHER: true
+                ANNOUNCE_PLAYER_ACHIEVEMENTS: true
+                ENABLE_COMMAND_BLOCK: false
+                FORCE_GAMEMODE: false
+                GENERATE_STRUCTURES: true
+                HARDCORE: false
+                MAX_BUILD_HEIGHT: 256
+                MAX_TICK_TIME: 60000
+                SPAWN_ANIMALS: true
+                SPAWN_MONSTERS: true
+                SPAWN_NPCS: true
+                VIEW_DISTANCE: 16
+                MODE: survival
+                MOTD: "Welcome to Minecraft on TrueNAS Scale!"
+                PVP: false
+                LEVEL_TYPE: DEFAULT
+                LEVEL: world
+                ONLINE_MODE: true
+                MEMORY: 2048M
+                RCON_PASSWORD: "secretrconpass"
+                # PACKWIZ_URL: ""
+                # CUSTOM_SERVER: ""
+                # QUILT_LOADER_VERSION: ""
+                # QUILT_LAUNCHER: ""
+                # QUILT_LAUNCHER_URL: ""
+                # PUFFERFISH_BUILD: "lastSuccessfulBuild"
+                # FORGEVERSION: ""
+                # FORGE_INSTALLER: ""
+                # FORGE_INSTALLER_URL: ""
+                # FABRIC_LOADER_VERSION: ""
+                # FABRIC_INSTALLER: ""
+                # FABRIC_INSTALLER_URL: ""
+                # SPIGOT_DOWNLOAD_URL: ""
+                # BUILD_FROM_SOURCE: false
+                # BUKKIT_DOWNLOAD_URL: ""
+                # PAPERBUILD: ""
+                # PAPER_DOWNLOAD_URL: ""
+                # AIRPLANE_BUILD: "lastSuccessfulBuild"
+                # MAGMA_CHANNEL: "stable"
+                # MOHIST_BUILD: ""
+                # CANYON_BUILD: ""
+                # SPONGEBRANCH: "STABLE"
+                # SPONGEVERSION: ""
+                # LIMBO_BUILD: "LATEST"
+                # LIMBO_SCHEMA_FILENAME: "default.schem"
+                # CRUCIBLE_RELEASE: "latest"
+                # FTB_MODPACK_ID: ""
+                # FTB_MODPACK_VERSION_ID: ""
+                # CF_SERVER_MOD: ""
+                # CF_BASE_DIR: ""
+                # USE_MODPACK_START_SCRIPT: true
+                # FTB_LEGACYJAVAFIXER: false
+                # WHITELIST: ""
+                # OPS: ""
+                # ICON: ""
+                # SEED: ""
+                # GENERATOR_SETTINGS: ""
+                # WORLD: ""
+                # FORCE_REDOWNLOAD: false
+                # USE_FLARE_FLAGS: false
+                # USE_AIKAR_FLAGS: true
+                # USE_SIMD_FLAGS: false
+                # JVM_OPTS: ""
+                # JVM_XX_OPTS: ""
+                # CF_API_KEY
+                # CF_PAGE_URL
+                # CF_SLUG
+                # CF_EXCLUDE_INCLUDE_FILE
+                # CF_EXCLUDE_MODS
+                # CF_FORCE_INCLUDE_MODS
+                # CF_FORCE_SYNCHRONIZE
+                # CF_OVERRIDES_SKIP_EXISTING
+                # CF_PARALLEL_DOWNLOADS
+                # CF_SET_LEVEL_FROM
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        mountPath: /data
+        path: ${NFS_GAME_SERVERS}/mc-1/data
+        server: ${NAS_IP}
+      backups:
+        enabled: true
+        type: nfs
+        mountPath: /backups
+        path: ${NFS_GAME_SERVERS}/mc-1/backups
+        server: ${NAS_IP}
