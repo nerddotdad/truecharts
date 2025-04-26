@@ -5,3 +5,5 @@ resources:
   - namespace.yaml
   - rcon-webadmin/ks.yaml
   - minecraft/ks.yaml
+  - avorion copy/ks.yaml
+  - minecraft-java/ks.yaml
