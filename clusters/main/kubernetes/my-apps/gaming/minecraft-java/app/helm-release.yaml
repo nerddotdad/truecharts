@@ -32,6 +32,8 @@ spec:
   values:
     service:
       main:
+        type: LoadBalancer
+        loadBalancerIP: ${MC1_IP}
         enabled: true
         ports:
           main:
