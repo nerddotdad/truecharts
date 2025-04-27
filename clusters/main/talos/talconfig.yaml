@@ -47,10 +47,10 @@ nodes:
               - siderolabs/util-linux-tools
               - siderolabs/iscsi-tools
               - siderolabs/qemu-guest-agent
-              - siderolabs/nonfree-kmod-nvidia-lts
-              - siderolabs/nvidia-container-toolkit-lts
-      patches:
-        - "@./patches/gpu.yaml"
+              # - siderolabs/nonfree-kmod-nvidia-lts
+              # - siderolabs/nvidia-container-toolkit-lts
+      # patches:
+      #   - "@./patches/gpu.yaml"
 controlPlane:
     patches:
         - '@./patches/controlplane.yaml'
