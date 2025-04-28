@@ -6,5 +6,4 @@ resources:
   - kyverno-policies/ks.yaml
   - metallb-config/ks.yaml
   - system-upgrade-controller-plans/ks.yaml
-  - traefik/ks.yaml
   # - nvidia-device-plugin/ks.yaml
