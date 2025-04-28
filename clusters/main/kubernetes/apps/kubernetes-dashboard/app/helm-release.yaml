@@ -37,3 +37,19 @@ spec:
         ports:
           main:
             port: 80
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        hosts:
+          - host: kubedash.hoth.systems
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Kubernetes Dashboard
+            description: Dashboard for visualizing my cluster
+            group: Infrastructure
+            icon: ""
