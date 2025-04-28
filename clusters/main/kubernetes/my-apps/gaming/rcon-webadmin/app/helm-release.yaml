@@ -92,6 +92,7 @@ spec:
     ingress:
       websocketaccess:
         enabled: true
+        ingressClassName: internal
         autoLink: true
         hosts:
           - host: rwa-sock.${DOMAIN_0}
@@ -102,12 +103,9 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
-          traefik:
-            enabled: true
-            entrypoints:
-              - websecure
       main:
         enabled: true
+        ingressClassName: internal
         hosts:
           - host: rwa.${DOMAIN_0}
             paths:
@@ -117,7 +115,3 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
-          traefik:
-            enabled: true
-            entrypoints:
-              - websecure

@@ -6,6 +6,6 @@ resources:
   - inf
   - media
   - monitoring
-  - utilities
+  # - utilities
   - gaming
-  - social
+  # - social

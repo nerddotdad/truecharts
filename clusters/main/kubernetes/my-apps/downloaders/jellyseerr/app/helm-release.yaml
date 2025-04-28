@@ -39,14 +39,13 @@ spec:
     ingress:
       main:
         enabled: true
+        ingressClassName: internal
         hosts:
           - host: jellyseerr.${DOMAIN_0}
         integrations:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
-          traefik:
-            enabled: true
           homepage:
             enabled: true
             name: jellyseerr

@@ -78,26 +78,23 @@ spec:
             server: ${NAS_IP}
     ingress:
         main:
-            enabled: true
-            hosts:
-                - host: tdarr.${DOMAIN_0}
-                  paths:
-                    - path: /
-                      pathType: Prefix
-            integrations:
-                certManager:
-                    enabled: true
-                    certificateIssuer: domain-0-le-prod
-                traefik:
-                    enabled: true
-                    entrypoints:
-                        - websecure
-                homepage:
-                    enabled: true
-                    name: tdarr
-                    description: This is a tdarr instance
-                    group: Downloaders
-                    icon: ""
-                    widget:
-                      type: tdarr
-                      url: https://tdarr.hoth.systems
+          enabled: true
+          ingressClassName: internal
+          hosts:
+              - host: tdarr.${DOMAIN_0}
+                paths:
+                  - path: /
+                    pathType: Prefix
+          integrations:
+              certManager:
+                  enabled: true
+                  certificateIssuer: domain-0-le-prod
+              homepage:
+                  enabled: true
+                  name: tdarr
+                  description: This is a tdarr instance
+                  group: Downloaders
+                  icon: ""
+                  widget:
+                    type: tdarr
+                    url: https://tdarr.hoth.systems
