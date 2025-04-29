@@ -68,18 +68,18 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: internal
-        hosts:
+        ingressClassName: external
+        hosts: 
           - host: jellyfin.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
         integrations:
+          traefik:
+            enabled: false
           certManager:
             enabled: true
-            certificateIssuer: domain-0-le-prod
-          traefik:
-              enabled: false
+            certificateIssuer: "domain-0-le-prod"
           homepage:
             enabled: true
             name: Jellyfin

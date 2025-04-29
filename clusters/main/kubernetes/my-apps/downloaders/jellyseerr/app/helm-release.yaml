@@ -39,7 +39,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: internal
+        ingressClassName: external
         hosts:
           - host: jellyseerr.${DOMAIN_0}
         integrations:
