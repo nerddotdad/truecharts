@@ -103,6 +103,8 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
+          traefik:
+              enabled: false
       main:
         enabled: true
         ingressClassName: internal
