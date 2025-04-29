@@ -29,11 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    persistence:
-      group:
-        enabled: false
-      passwd:
-        enabled: false
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${GRAFANA_IP}
     ingress:
       main:
         enabled: true
