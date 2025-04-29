@@ -107,28 +107,7 @@ spec:
               sourceLabels: ["__meta_kubernetes_pod_node_name"]
               targetLabel: kubernetes_node
     grafana:
-      enabled: true
-      ingress:
-        enabled: true
-        main:
-          enabled: true
-          ingressClassName: internal
-          hosts: 
-            - host: grafana.${DOMAIN_0}
-              paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: kube-prometheus-stack-grafana
-                      port:
-                        number: 80
-          integrations:
-            traefik:
-              enabled: false
-            certManager:
-              enabled: true
-              certificateIssuer: "domain-0-le-prod"
+      enabled: false
       forceDeployDashboards: true
       defaultDashboardsEnabled: true
       forceDeployDatasources: true
