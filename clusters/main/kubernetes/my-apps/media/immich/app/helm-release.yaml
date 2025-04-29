@@ -29,6 +29,22 @@ spec:
   uninstall:
     keepHistory: false
   values:
+  credentials:
+    cloudflare_r2:
+      type: s3
+      url: ${CLOUDFLARE_R2_URL}
+      bucket: ${CLOUDFLARE_R2_BUCKET_PREFIX}-immich
+      accessKey: ${CLOUDFLARE_R2_ACESS_KEY}
+      secretKey: ${CLOUDFLARE_R2_KEY_ID}
+      encrKey: ${Stinkerbell181!}
+  cnpg:
+    main:
+      mode: recovery
+      backups:
+        enabled: true
+        credentials: cloudflare_r2
+      recovery:
+        credentials: cloudflare_r2
     persistence:
       mlcache:
         enabled: true
