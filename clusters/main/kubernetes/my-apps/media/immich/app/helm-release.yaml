@@ -34,8 +34,8 @@ spec:
         type: s3
         url: "${CLOUDFLARE_R2_URL}"
         bucket: "${CLOUDFLARE_R2_BUCKET_PREFIX}-immich"
-        accessKey: "${CLOUDFLARE_R2_ACESS_KEY}"
-        secretKey: "${CLOUDFLARE_R2_KEY_ID}"
+        accessKey: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
+        secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
       main:
