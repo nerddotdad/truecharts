@@ -37,11 +37,12 @@ spec:
         ports:
           main:
             port: 80
+
     ingress:
       main:
         enabled: true
         ingressClassName: internal
-        hosts:
+        hosts: 
           - host: kubedash.${DOMAIN_0}
             paths:
               - path: /
@@ -51,10 +52,4 @@ spec:
             enabled: false
           certManager:
             enabled: true
-            certificateIssuer: domain-0-le-prod
-          homepage:
-            enabled: true
-            name: Kubernetes Dashboard
-            description: Dashboard for visualizing my cluster
-            group: Infrastructure
-            icon: ""
+            certificateIssuer: "domain-0-le-prod"
