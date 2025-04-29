@@ -108,6 +108,21 @@ spec:
               targetLabel: kubernetes_node
     grafana:
       enabled: true
+      ingress:
+        main:
+          enabled: true
+          ingressClassName: internal
+          hosts: 
+            - host: grafana.${DOMAIN_0}
+              paths:
+                - path: /
+                  pathType: Prefix
+          integrations:
+            traefik:
+              enabled: false
+            certManager:
+              enabled: true
+              certificateIssuer: "domain-0-le-prod"
       forceDeployDashboards: true
       defaultDashboardsEnabled: true
       forceDeployDatasources: true
