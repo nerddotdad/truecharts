@@ -39,11 +39,13 @@ spec:
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
       main:
-        mode: recovery
+        # mode: recovery # uncomment this if recovery is needed
         backups:
           enabled: true
+          # revision: "1" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
         recovery:
+          # revision: "1" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
     persistence:
       mlcache:
