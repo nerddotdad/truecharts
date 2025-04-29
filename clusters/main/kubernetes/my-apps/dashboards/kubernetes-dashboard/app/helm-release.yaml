@@ -43,6 +43,9 @@ spec:
         ingressClassName: internal
         hosts:
           - host: kubedash.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
         integrations:
           traefik:
             enabled: false
