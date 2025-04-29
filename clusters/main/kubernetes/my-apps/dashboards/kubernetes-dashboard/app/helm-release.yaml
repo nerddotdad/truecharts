@@ -42,7 +42,7 @@ spec:
         enabled: true
         ingressClassName: internal
         hosts:
-          - host: kubedash.hoth.systems
+          - host: kubedash.${DOMAIN_0}
         integrations:
           certManager:
             enabled: true
