@@ -49,9 +49,9 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
-          homepage:
-            enabled: true
-            name: Kubernetes Dashboard
-            description: Dashboard for visualizing my cluster
-            group: Infrastructure
-            icon: ""
+          # homepage:
+          #   enabled: true
+          #   name: Kubernetes Dashboard
+          #   description: Dashboard for visualizing my cluster
+          #   group: Infrastructure
+          #   icon: ""
