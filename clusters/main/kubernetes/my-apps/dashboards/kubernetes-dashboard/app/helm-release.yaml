@@ -44,6 +44,8 @@ spec:
         hosts:
           - host: kubedash.${DOMAIN_0}
         integrations:
+          traefik:
+              enabled: false
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
