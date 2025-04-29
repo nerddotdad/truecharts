@@ -142,6 +142,8 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+          traefik:
+              enabled: false
           homepage:
             enabled: true
             name: "Immich"
