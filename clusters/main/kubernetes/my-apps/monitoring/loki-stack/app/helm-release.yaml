@@ -52,7 +52,6 @@ spec:
           port: 3100
         initialDelaySeconds: 45
 
-
     promtail:
       enabled: true
       config:
@@ -60,6 +59,10 @@ spec:
         serverPort: 3101
         clients:
           - url: http://loki:3100/loki/api/v1/push
+        positions:
+          filename: /run/promtail/positions.yaml
+        rbac:
+          create: true 
 
     fluent-bit:
       enabled: false
