@@ -36,6 +36,11 @@ spec:
     loki:
       enabled: true
       url: http://loki:3100
+      limits_config:
+        volume_enabled: true
+      datasource:
+        jsonData: "{}"
+        uid: ""
       readinessProbe:
         httpGet:
           path: /ready
@@ -46,9 +51,6 @@ spec:
           path: /ready
           port: 3100
         initialDelaySeconds: 45
-      datasource:
-        jsonData: "{}"
-        uid: ""
 
 
     promtail:
