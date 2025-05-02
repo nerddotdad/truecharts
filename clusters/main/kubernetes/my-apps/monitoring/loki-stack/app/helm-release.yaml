@@ -45,16 +45,16 @@ spec:
         datasource:
           jsonData: "{}"
           uid: ""
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 3100
-          initialDelaySeconds: 45
-        livenessProbe:
-          httpGet:
-            path: /ready
-            port: 3100
-          initialDelaySeconds: 45
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 3100
+        initialDelaySeconds: 45
+      livenessProbe:
+        httpGet:
+          path: /ready
+          port: 3100
+        initialDelaySeconds: 45
 
     promtail:
       enabled: true
