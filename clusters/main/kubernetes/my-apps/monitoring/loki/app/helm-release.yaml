@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: loki
-      version: 3.5.0 # check for latest stable
+      version: 3.10.0 # check for latest stable
       sourceRef:
         kind: HelmRepository
         name: grafana
