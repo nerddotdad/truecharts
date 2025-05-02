@@ -6,7 +6,7 @@ values:
 
   loki:
     enabled: true
-    url: http://loki:3100
+    url: http://loki.monitoring.svc.cluster.local:3100
     pattern_ingester:
       enabled: true
     config: |
