@@ -16,26 +16,25 @@ spec:
         namespace: flux-system
       interval: 15m
   values:
+    mode: "singleBinary"  # <---- explicitly use single binary mode
     singleBinary:
       replicas: 1
-
     loki:
-      config: |
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        schema_config:
-          configs:
-            - from: '2022-01-01'
-              store: boltdb-shipper
-              object_store: filesystem
-              schema: v11
-              index:
-                prefix: index_
-                period: 24h
-        storage_config:
-          boltdb_shipper:
-            active_index_directory: /data/loki/index
-            shared_store: filesystem
-          filesystem:
-            directory: /data/loki/chunks
+      auth_enabled: false
+      server:
+        http_listen_port: 3100
+      schema_config:
+        configs:
+          - from: '2022-01-01'
+            store: boltdb-shipper
+            object_store: filesystem
+            schema: v11
+            index:
+              prefix: index_
+              period: 24h
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /data/loki/index
+          shared_store: filesystem
+        filesystem:
+          directory: /data/loki/chunks
