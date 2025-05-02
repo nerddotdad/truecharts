@@ -30,7 +30,7 @@ spec:
   values:
     loki:
       enabled: true
-      config:
+      config: |
         auth_enabled: false
         server:
           http_listen_port: 3100
@@ -39,7 +39,7 @@ spec:
           volume_enabled: true
         schema_config:
           configs:
-            - from: 2022-01-01
+            - from: '2022-01-01'  # <-- force plain string
               store: boltdb-shipper
               object_store: filesystem
               schema: v11
