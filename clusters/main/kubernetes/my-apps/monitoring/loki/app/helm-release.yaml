@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   interval: 15m
+  timeout: 5m
   chart:
     spec:
       chart: loki
@@ -14,12 +15,12 @@ spec:
         name: grafana
         namespace: flux-system
       interval: 15m
-  timeout: 5m
   values:
+    singleBinary:
+      replicas: 1
+
     loki:
       config: |
-        singleBinary:
-          replicas: 1
         auth_enabled: false
         server:
           http_listen_port: 3100
