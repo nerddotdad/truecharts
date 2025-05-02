@@ -8,14 +8,14 @@ spec:
   chart:
     spec:
       chart: loki
-      version: 3.10.0 # check for latest stable
+      version: 3.10.0
       sourceRef:
         kind: HelmRepository
         name: grafana
         namespace: flux-system
   values:
     loki:
-      config:
+      config: |
         auth_enabled: false
         server:
           http_listen_port: 3100
