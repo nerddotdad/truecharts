@@ -28,45 +28,50 @@ spec:
             index:
               prefix: loki_index_
               period: 24h
-      pattern_ingester:
-          enabled: true
+            filesystem:
+              directory: /mnt/loki  # This is where NFS is mounted
       limits_config:
         allow_structured_metadata: true
         volume_enabled: true
       ruler:
         enable_api: true
-
-    minio:
-      enabled: false
-          
-    deploymentMode: SingleBinary
-
-    singleBinary:
-      replicas: 1
-
-    # Zero out replica counts of other deployment modes
-    backend:
-      replicas: 0
-    read:
-      replicas: 0
-    write:
-      replicas: 0
-
-    ingester:
-      replicas: 0
-    querier:
-      replicas: 0
-    queryFrontend:
-      replicas: 0
-    queryScheduler:
-      replicas: 0
-    distributor:
-      replicas: 0
-    compactor:
-      replicas: 0
-    indexGateway:
-      replicas: 0
-    bloomCompactor:
-      replicas: 0
-    bloomGateway:
-      replicas: 0
+      minio:
+        enabled: false
+      deploymentMode: SingleBinary
+      singleBinary:
+        replicas: 1
+      # Zero out replica counts of other deployment modes
+      backend:
+        replicas: 0
+      read:
+        replicas: 0
+      write:
+        replicas: 0
+      ingester:
+        replicas: 0
+      querier:
+        replicas: 0
+      queryFrontend:
+        replicas: 0
+      queryScheduler:
+        replicas: 0
+      distributor:
+        replicas: 0
+      compactor:
+        replicas: 0
+      indexGateway:
+        replicas: 0
+      bloomCompactor:
+        replicas: 0
+      bloomGateway:
+        replicas: 0
+    # Define volume and volume mounts for Loki container
+    podSpec:
+      volumes:
+        - name: loki-storage
+          nfs:
+            server: ${NAS_IP}  # Replace with the correct server IP or handle via environment variable
+            path: /mnt/vault/app-configs/loki  # NFS path on the server
+      volumeMounts:
+        - mountPath: /mnt/loki  # Mount the NFS volume to this path inside the Loki container
+          name: loki-storage
