@@ -36,7 +36,10 @@ spec:
     loki:
       enabled: true
       url: http://loki:3100
+      pattern_ingester:
+        enabled: true
       limits_config:
+        allow_structured_metadata: true
         volume_enabled: true
       datasource:
         jsonData: "{}"
