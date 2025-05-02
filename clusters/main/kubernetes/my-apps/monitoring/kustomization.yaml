@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - grafana/ks.yaml
-  - loki-stack/ks.yaml
+  # - loki-stack/ks.yaml
