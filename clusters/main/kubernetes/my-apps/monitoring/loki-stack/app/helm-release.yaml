@@ -39,12 +39,12 @@ spec:
         limits_config:
           allow_structured_metadata: true
           volume_enabled: true
-        url: http://loki:3100
-        pattern_ingester:
-          enabled: true
-        datasource:
-          jsonData: "{}"
-          uid: ""
+      url: http://loki:3100
+      pattern_ingester:
+        enabled: true
+      datasource:
+        jsonData: "{}"
+        uid: ""
       readinessProbe:
         httpGet:
           path: /ready
