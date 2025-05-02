@@ -35,25 +35,26 @@ spec:
 
     loki:
       enabled: true
-      url: http://loki:3100
-      pattern_ingester:
-        enabled: true
-      limits_config:
-        allow_structured_metadata: true
-        volume_enabled: true
-      datasource:
-        jsonData: "{}"
-        uid: ""
-      readinessProbe:
-        httpGet:
-          path: /ready
-          port: 3100
-        initialDelaySeconds: 45
-      livenessProbe:
-        httpGet:
-          path: /ready
-          port: 3100
-        initialDelaySeconds: 45
+      config:
+        limits_config:
+          allow_structured_metadata: true
+          volume_enabled: true
+        url: http://loki:3100
+        pattern_ingester:
+          enabled: true
+        datasource:
+          jsonData: "{}"
+          uid: ""
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 45
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 45
 
     promtail:
       enabled: true
@@ -72,14 +73,6 @@ spec:
 
     grafana:
       enabled: false
-      sidecar:
-        datasources:
-          label: ""
-          labelValue: ""
-          enabled: true
-          maxLines: 1000
-      image:
-        tag: 10.3.3
 
     prometheus:
       enabled: false
