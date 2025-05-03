@@ -16,27 +16,9 @@ spec:
       interval: 5m
   values:
     grafana:
-      enabled: true
+      enabled: false
       adminPassword: "admin"
     promtail:
       enabled: true
     loki:
       enabled: true
-    ingress:
-      main:
-        enabled: true
-        ingressClassName: internal
-        hosts:
-          - host: grafana.${DOMAIN_0}
-        integrations:
-          certManager:
-            enabled: true
-            certificateIssuer: domain-0-le-prod
-          traefik:
-              enabled: false
-          homepage:
-            enabled: true
-            name: grafana
-            description: This is a grafana instance
-            group: Monitoring
-            icon: ""
