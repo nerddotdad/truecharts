@@ -22,3 +22,6 @@ spec:
       enabled: true
     loki:
       enabled: true
+      service:
+        type: ClusterIP
+        port: 3100
