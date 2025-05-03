@@ -16,7 +16,8 @@ spec:
       interval: 5m
   values:
     grafana:
-      enabled: false
+      enabled: true
+      adminPassword: "admin"
     promtail:
       enabled: true
     loki:
