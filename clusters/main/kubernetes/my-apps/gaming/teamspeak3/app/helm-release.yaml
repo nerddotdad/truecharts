@@ -50,7 +50,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: external
+        ingressClassName: internal
         hosts: 
           - host: ts31.${DOMAIN_0}
             paths:
