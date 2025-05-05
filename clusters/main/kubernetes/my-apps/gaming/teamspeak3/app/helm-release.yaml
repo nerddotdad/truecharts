@@ -43,3 +43,27 @@ spec:
         mountPath: /var/run/ts3server
         path: ${NFS_GAME_SERVERS}/teamspeak3-1/config
         server: ${NAS_IP}
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: ts31.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: Teamspeak3
+            description: This is a {{ metadata.name }} instance
+            group: Media
+            icon: ""
+            widget:
+              type: Teamspeak3
+              url: ts31.${DOMAIN_0}
