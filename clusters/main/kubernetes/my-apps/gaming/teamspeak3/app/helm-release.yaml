@@ -43,6 +43,10 @@ spec:
         mountPath: /var/run/ts3server
         path: ${NFS_GAME_SERVERS}/teamspeak3-1/config
         server: ${NAS_IP}
+    service:
+      main:
+        type: LoadBalancer
+        loadBalancerIP: ${TS31_IP}
     ingress:
       main:
         enabled: true
