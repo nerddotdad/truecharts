@@ -61,7 +61,7 @@ spec:
           homepage:
             enabled: true
             name: Teamspeak3
-            description: This is a {{ metadata.name }} instance
+            description: This is a teamspeak3 instance
             group: Media
             icon: ""
             widget:
