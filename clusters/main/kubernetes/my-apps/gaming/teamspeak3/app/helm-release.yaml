@@ -35,11 +35,11 @@ spec:
         enabled: true
         type: nfs
         mountPath: /var/ts3server
-        path: ${NFS_GAME_SERVERS}/teamspeak/data
+        path: ${NFS_GAME_SERVERS}/teamspeak3-1/data
         server: ${NAS_IP}
       config:
         enabled: true
         type: nfs
         mountPath: /var/run/ts3server
-        path: ${NFS_GAME_SERVERS}/teamspeak/config
+        path: ${NFS_GAME_SERVERS}/teamspeak3-1/config
         server: ${NAS_IP}
