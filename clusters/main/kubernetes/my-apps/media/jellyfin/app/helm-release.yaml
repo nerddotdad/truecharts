@@ -32,11 +32,12 @@ spec:
     workload:
       main:
         podSpec:
+          runtimeClassName: "intel-gpu"
           containers:
             main:
               resources:
                 limits:
-                  nvidia.com/gpu: 1
+                  gpu.intel.com/i915: 1
     persistence:
       config:
         enabled: true
