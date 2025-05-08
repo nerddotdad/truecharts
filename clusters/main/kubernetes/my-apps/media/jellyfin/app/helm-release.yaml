@@ -32,7 +32,7 @@ spec:
     workload:
       main:
         podSpec:
-          runtimeClassName: "intel-gpu"
+          # runtimeClassName: "intel-gpu"
           containers:
             main:
               resources:
