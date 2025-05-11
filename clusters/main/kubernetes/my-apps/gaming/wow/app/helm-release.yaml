@@ -26,19 +26,6 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         ports:
-          worldserver:
-            enabled: true
-            primary: true
-            targetSelector: main
-            port: 8085
-            protocol: tcp
-            targetPort: 8085
-
-      auth:
-        enabled: true
-        type: LoadBalancer
-        loadBalancerIP: ${WOW_IP}
-        ports:
           authserver:
             enabled: true
             primary: true
@@ -46,6 +33,15 @@ spec:
             port: 3724
             protocol: tcp
             targetPort: 3724
+
+          worldserver:
+            enabled: true
+            primary: false  # Not primary since authserver is primary
+            targetSelector: main
+            port: 8085
+            protocol: tcp
+            targetPort: 8085
+
 
     # Database environment variables
     env:
