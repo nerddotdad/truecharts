@@ -24,17 +24,19 @@ spec:
       main:
         enabled: true
         ports:
-          - name: worldserver-port
-            protocol: tcp
+          worldserver:
             port: 8085  # Worldserver port
+            protocol: tcp
+            name: worldserver-port
 
       # Auth service configuration for Authserver
       auth:
         enabled: true
         ports:
-          - name: authserver-port
-            protocol: tcp
+          authserver:
             port: 3724  # Authserver port
+            protocol: tcp
+            name: authserver-port
 
     # Database environment variables
     env:
