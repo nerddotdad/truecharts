@@ -36,12 +36,11 @@ spec:
 
           worldserver:
             enabled: true
-            primary: false  # Not primary since authserver is primary
+            primary: false  # Must be false to avoid the conflict
             targetSelector: main
             port: 8085
             protocol: tcp
             targetPort: 8085
-
 
     # Database environment variables
     env:
