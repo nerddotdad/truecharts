@@ -1,122 +1,88 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: wow
-  namespace: gaming
-spec:
-  chart:
-    spec:
-      chart: app-template
-      version: 14.5.3
-      sourceRef:
-        kind: HelmRepository
-        name: truecharts
-        namespace: flux-system
-  interval: 5m
-  values:
-    image:
-      repository: acore/ac-wotlk-server  # Use the stable AzerothCore server image
-      tag: latest
-      pullPolicy: IfNotPresent
+image:
+  repository: acore/ac-wotlk-server
+  pullPolicy: IfNotPresent
+  tag: latest
 
-    # Main service configuration for Worldserver
-    service:
-      main:
-        enabled: false
-      wow:
-        type: LoadBalancer
-        loadBalancerIP: ${WOW_IP}
+workload:
+  main:
+    enabled: true
+    podSpec:
+      containers:
+        main:
+          ports:
+            - name: authserver
+              containerPort: 3724
+              protocol: tcp
+            - name: worldserver
+              containerPort: 8085
+              protocol: tcp
+
+          probes:
+            liveness:
+              type: tcp
+              port: 3724  # Use authserver port for liveness
+              initialDelaySeconds: 30
+              periodSeconds: 10
+
+            readiness:
+              type: tcp
+              port: 3724  # Use authserver port for readiness
+              initialDelaySeconds: 30
+              periodSeconds: 10
+
+            startup:
+              type: tcp
+              port: 3724  # Use authserver port for startup
+              initialDelaySeconds: 60
+              periodSeconds: 10
+
+service:
+  main:
+    enabled: true
+    type: LoadBalancer
+    ports:
+      authserver:
         enabled: true
-        primary: true
-        ports:
-          authserver:
-            enabled: true
-            primary: true
-            protocol: tcp
-            port: 3724
-          worldserver:
-            enabled: true
-            protocol: tcp
-            port: 8085
+        port: 3724
+        targetPort: 3724
+        protocol: tcp
+      worldserver:
+        enabled: true
+        port: 8085
+        targetPort: 8085
+        protocol: tcp
 
-    # Database environment variables
+additionalContainers:
+  mysql:
+    enabled: true
+    image: mysql:5.7
     env:
-      - name: DB_HOST
-        value: "mysql"
-      - name: DB_PORT
-        value: "3306"
-      - name: DB_USER
+      - name: MYSQL_ROOT_PASSWORD
         value: "acore"
-      - name: DB_PASSWORD
-        value: "acore"
-      - name: DB_NAME
+      - name: MYSQL_DATABASE
         value: "acore_world"
-
-    # Adding MySQL container for AzerothCore
-    additionalContainers:
-      mysql:
-        enabled: true
-        image: mysql:5.7
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            value: "acore"
-          - name: MYSQL_DATABASE
-            value: "acore_world"
-          - name: MYSQL_USER
-            value: "acore"
-          - name: MYSQL_PASSWORD
-            value: "acore"
-        volumeMounts:
-          - name: mysql-data
-            mountPath: /var/lib/mysql
-
-    # NFS Volumes
-    additionalVolumes:
-      - name: azerothcore-data
-        nfs:
-          path: "${NFS_GAME_SERVERS}/wow-1/data"
-          server: "${NAS_IP}"
-      
-      - name: mysql-data
-        nfs:
-          path: "${NFS_GAME_SERVERS}/wow-1/mysql"
-          server: "${NAS_IP}"
-
+      - name: MYSQL_USER
+        value: "acore"
+      - name: MYSQL_PASSWORD
+        value: "acore"
     volumeMounts:
-      - name: azerothcore-data
-        mountPath: /azerothcore/data
-
       - name: mysql-data
         mountPath: /var/lib/mysql
 
-    # Initialize the authserver and worldserver
-    initContainers:
-      - name: authserver-init
-        image: acore/ac-wotlk-server:latest
-        command: ["/bin/bash", "-c", "/azerothcore/startup/authserver"]
+additionalVolumes:
+  - name: azerothcore-data
+    nfs:
+      path: "${NFS_GAME_SERVERS}/wow-1/data"
+      server: "${NAS_IP}"
+  
+  - name: mysql-data
+    nfs:
+      path: "${NFS_GAME_SERVERS}/wow-1/mysql"
+      server: "${NAS_IP}"
 
-      - name: worldserver-init
-        image: acore/ac-wotlk-server:latest
-        command: ["/bin/bash", "-c", "/azerothcore/startup/worldserver"]
+volumeMounts:
+  - name: azerothcore-data
+    mountPath: /azerothcore/data
 
-    # Overriding the probes for the acore-wotlk-server container
-    containers:
-      - name: acore-wotlk-server
-        livenessProbe:
-          tcpSocket:
-            port: 3724  # Use the authserver port or worldserver port for probes
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          tcpSocket:
-            port: 3724  # Same as above
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        startupProbe:
-          tcpSocket:
-            port: 3724  # Same as above
-          initialDelaySeconds: 60
-          periodSeconds: 10
-
-    # Service configuration and replicas
-    replicas: 1
+  - name: mysql-data
+    mountPath: /var/lib/mysql
