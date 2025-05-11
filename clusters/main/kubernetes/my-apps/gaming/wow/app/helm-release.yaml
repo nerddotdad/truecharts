@@ -25,24 +25,17 @@ spec:
         enabled: true
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
-        main:
-          enabled: true
-          ports:
-            worldserver:
-              # Worldserver port
-              port: 8085
-              protocol: tcp
-              name: worldserver-port
+        ports:
+          - name: worldserver-port
+            port: 8085   # Worldserver port
+            protocol: tcp
 
-        # Auth service configuration for Authserver
-        auth:
-          enabled: true
-          ports:
-            authserver:
-              # Authserver port
-              port: 3724
-              protocol: tcp
-              name: authserver-port
+      auth:
+        enabled: true
+        ports:
+          - name: authserver-port
+            port: 3724   # Authserver port
+            protocol: tcp
 
     # Database environment variables
     env:
