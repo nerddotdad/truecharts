@@ -39,7 +39,7 @@ spec:
         ports:
           authserver:
             enabled: true
-            # primary: true
+            primary: false
             targetSelector: main
             port: 3724
             protocol: tcp
