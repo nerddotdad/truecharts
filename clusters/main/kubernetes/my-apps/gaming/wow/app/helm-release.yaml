@@ -15,7 +15,7 @@ spec:
   interval: 5m
   values:
     image:
-      repository: azerothcore/azerothcore-wotlk
+      repository: acore/ac-wotlk-server  # Stable server image
       tag: latest
       pullPolicy: IfNotPresent
 
@@ -25,7 +25,14 @@ spec:
         ports:
           main:
             protocol: tcp
-            port: 8085  # AzerothCore worldserver port
+            port: 8085  # Worldserver port
+
+      auth:
+        enabled: true
+        ports:
+          auth:
+            protocol: tcp
+            port: 3724  # Authserver port
 
     env:
       - name: DB_HOST
@@ -59,13 +66,13 @@ spec:
     additionalVolumes:
       - name: azerothcore-data
         nfs:
-          path: ${NFS_GAME_SERVERS}/wow-1/data
-          server: ${NAS_IP}
+          path: "${NFS_GAME_SERVERS}/wow-1/data"
+          server: "${NAS_IP}"
 
       - name: mysql-data
         nfs:
-          path: ${NFS_GAME_SERVERS}/wow-1/mysql
-          server: ${NAS_IP}
+          path: "${NFS_GAME_SERVERS}/wow-1/mysql"
+          server: "${NAS_IP}"
 
     volumeMounts:
       - name: azerothcore-data
@@ -73,3 +80,23 @@ spec:
 
       - name: mysql-data
         mountPath: /var/lib/mysql
+
+    # Optional: SOAP configuration for web management
+    envSecrets:
+      - name: SOAP_ENABLED
+        value: "1"
+      - name: SOAP_IP
+        value: "0.0.0.0"
+
+    # Initialize the authserver and worldserver
+    initContainers:
+      - name: authserver-init
+        image: acore/ac-wotlk-server:latest
+        command: ["/bin/bash", "-c", "/azerothcore/startup/authserver"]
+
+      - name: worldserver-init
+        image: acore/ac-wotlk-server:latest
+        command: ["/bin/bash", "-c", "/azerothcore/startup/worldserver"]
+
+    # Ensure worldserver and authserver stay up
+    replicas: 1
