@@ -22,6 +22,8 @@ spec:
     # Main service configuration for Worldserver
     service:
       main:
+        enabled: false
+      wow:
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         enabled: true
