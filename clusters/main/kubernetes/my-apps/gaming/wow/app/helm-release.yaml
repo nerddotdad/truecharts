@@ -28,6 +28,7 @@ spec:
         ports:
           worldserver:
             enabled: true
+            primary: true
             targetSelector: main
             port: 8085
             protocol: tcp
