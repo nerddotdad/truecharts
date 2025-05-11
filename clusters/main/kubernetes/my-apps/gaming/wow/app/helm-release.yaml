@@ -28,7 +28,7 @@ spec:
         ports:
           worldserver:
             enabled: true
-            primary: true
+            # primary: true
             targetSelector: main
             port: 8085
             protocol: TCP
@@ -39,7 +39,7 @@ spec:
         ports:
           authserver:
             enabled: true
-            primary: true
+            # primary: true
             targetSelector: main
             port: 3724
             protocol: TCP
