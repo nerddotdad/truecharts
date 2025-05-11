@@ -27,6 +27,7 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         enabled: true
+        primary: true
         ports:
           authserver:
             enabled: true
