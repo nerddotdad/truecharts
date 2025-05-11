@@ -15,7 +15,7 @@ spec:
   interval: 5m
   values:
     image:
-      repository: acore/ac-wotlk-server  # Stable server image
+      repository: acore/ac-wotlk-server
       tag: latest
       pullPolicy: IfNotPresent
 
