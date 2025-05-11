@@ -1,0 +1,75 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: azerothcore
+  namespace: gameservers
+spec:
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  interval: 5m
+  values:
+    image:
+      repository: azerothcore/azerothcore-wotlk
+      tag: latest
+      pullPolicy: IfNotPresent
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            protocol: TCP
+            port: 8085  # AzerothCore worldserver port
+
+    env:
+      - name: DB_HOST
+        value: "mysql"
+      - name: DB_PORT
+        value: "3306"
+      - name: DB_USER
+        value: "acore"
+      - name: DB_PASSWORD
+        value: "acore"
+      - name: DB_NAME
+        value: "acore_world"
+
+    additionalContainers:
+      mysql:
+        enabled: true
+        image: mysql:5.7
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "acore"
+          - name: MYSQL_DATABASE
+            value: "acore_world"
+          - name: MYSQL_USER
+            value: "acore"
+          - name: MYSQL_PASSWORD
+            value: "acore"
+        volumeMounts:
+          - name: mysql-data
+            mountPath: /var/lib/mysql
+
+    additionalVolumes:
+      - name: azerothcore-data
+        nfs:
+          path: ${NFS_GAME_SERVERS/wow-1/data
+          server: ${NAS_IP}
+
+      - name: mysql-data
+        nfs:
+          path: ${NFS_GAME_SERVERS/wow-1/mysql
+          server: ${NAS_IP}
+
+    volumeMounts:
+      - name: azerothcore-data
+        mountPath: /azerothcore/data
+
+      - name: mysql-data
+        mountPath: /var/lib/mysql
