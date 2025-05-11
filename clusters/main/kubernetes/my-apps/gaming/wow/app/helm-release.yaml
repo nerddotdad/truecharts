@@ -102,3 +102,21 @@ spec:
     # Container probes (health checks)
     containers:
       - name: acore-wotlk-server
+        livenessProbe:
+          tcpSocket:
+            port: 3724  # Use authserver port or worldserver port for probes
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 3724  # Same as above
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        startupProbe:
+          tcpSocket:
+            port: 3724  # Same as above
+          initialDelaySeconds: 60
+          periodSeconds: 10
+
+    # Service configuration and replicas
+    replicas: 1
