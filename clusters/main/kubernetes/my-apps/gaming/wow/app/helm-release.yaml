@@ -29,7 +29,8 @@ spec:
           enabled: true
           ports:
             worldserver:
-              port: 8085  # Worldserver port
+              # Worldserver port
+              port: 8085
               protocol: tcp
               name: worldserver-port
 
@@ -38,7 +39,8 @@ spec:
           enabled: true
           ports:
             authserver:
-              port: 3724  # Authserver port
+              # Authserver port
+              port: 3724
               protocol: tcp
               name: authserver-port
 
