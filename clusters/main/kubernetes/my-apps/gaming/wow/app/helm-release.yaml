@@ -31,7 +31,7 @@ spec:
             # primary: true
             targetSelector: main
             port: 8085
-            protocol: TCP
+            protocol: tcp
             targetPort: 8085
 
       auth:
@@ -42,7 +42,7 @@ spec:
             # primary: true
             targetSelector: main
             port: 3724
-            protocol: TCP
+            protocol: tcp
             targetPort: 3724
 
     # Database environment variables
