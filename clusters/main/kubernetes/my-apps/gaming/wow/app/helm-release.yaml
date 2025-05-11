@@ -99,12 +99,12 @@ spec:
         image: acore/ac-wotlk-server:latest
         command: ["/bin/bash", "-c", "/azerothcore/startup/worldserver"]
 
-    # Container probes (health checks)
+    # Overriding the probes for the acore-wotlk-server container
     containers:
       - name: acore-wotlk-server
         livenessProbe:
           tcpSocket:
-            port: 3724  # Use authserver port or worldserver port for probes
+            port: 3724  # Use the authserver port or worldserver port for probes
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
