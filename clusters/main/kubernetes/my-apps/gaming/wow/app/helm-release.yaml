@@ -28,17 +28,13 @@ spec:
         ports:
           authserver:
             enabled: true
-            primary: true  # authserver is primary
             port: 3724
             protocol: tcp
-            targetPort: 3724
 
           worldserver:
             enabled: true
-            primary: false  # worldserver is non-primary
             port: 8085
             protocol: tcp
-            targetPort: 8085
 
     # Database environment variables
     env:
