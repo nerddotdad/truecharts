@@ -22,19 +22,18 @@ spec:
     # Main service configuration for Worldserver
     service:
       main:
-        enabled: true
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
+        enabled: true
         ports:
           authserver:
             enabled: true
-            port: 3724
             protocol: tcp
-
+            port: 3724
           worldserver:
             enabled: true
-            port: 8085
             protocol: tcp
+            port: 8085
 
     # Database environment variables
     env:
