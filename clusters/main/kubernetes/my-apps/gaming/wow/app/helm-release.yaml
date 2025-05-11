@@ -28,7 +28,6 @@ spec:
         ports:
           worldserver:
             enabled: true
-            primary: true
             targetSelector: main
             port: 8085
             protocol: tcp
@@ -36,6 +35,8 @@ spec:
 
       auth:
         enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${WOW_IP}
         ports:
           authserver:
             enabled: true
