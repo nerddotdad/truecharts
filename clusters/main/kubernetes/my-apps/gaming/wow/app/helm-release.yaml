@@ -28,16 +28,14 @@ spec:
         ports:
           authserver:
             enabled: true
-            primary: true
-            targetSelector: main
+            primary: true  # authserver is primary
             port: 3724
             protocol: tcp
             targetPort: 3724
 
           worldserver:
             enabled: true
-            primary: false  # Must be false to avoid the conflict
-            targetSelector: main
+            primary: false  # worldserver is non-primary
             port: 8085
             protocol: tcp
             targetPort: 8085
