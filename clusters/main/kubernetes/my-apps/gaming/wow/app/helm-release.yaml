@@ -26,14 +26,14 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         ports:
-          - name: worldserver-port
+          worldserver-port:
             port: 8085   # Worldserver port
             protocol: tcp
 
       auth:
         enabled: true
         ports:
-          - name: authserver-port
+          authserver-port:
             port: 3724   # Authserver port
             protocol: tcp
 
