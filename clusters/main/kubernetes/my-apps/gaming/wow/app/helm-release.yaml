@@ -29,6 +29,7 @@ spec:
           worldserver-port:
             port: 8085   # Worldserver port
             protocol: tcp
+            targetPort: 8085
 
       auth:
         enabled: true
@@ -36,6 +37,7 @@ spec:
           authserver-port:
             port: 3724   # Authserver port
             protocol: tcp
+            targetPort: 3724
 
     # Database environment variables
     env:
