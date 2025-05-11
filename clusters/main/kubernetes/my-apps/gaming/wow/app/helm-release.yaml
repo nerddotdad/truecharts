@@ -24,7 +24,7 @@ spec:
         enabled: true
         ports:
           main:
-            protocol: TCP
+            protocol: tcp
             port: 8085  # AzerothCore worldserver port
 
     env:
