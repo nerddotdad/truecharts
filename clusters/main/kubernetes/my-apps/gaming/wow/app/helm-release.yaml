@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: wow-1
+  name: azerothcore
   namespace: gaming
 spec:
   chart:
@@ -15,25 +15,28 @@ spec:
   interval: 5m
   values:
     image:
-      repository: acore/ac-wotlk-server
+      repository: acore/ac-wotlk-server  # Use the stable AzerothCore server image
       tag: latest
       pullPolicy: IfNotPresent
 
+    # Main service configuration for Worldserver
     service:
       main:
         enabled: true
         ports:
-          main:
+          - name: worldserver-port
             protocol: tcp
             port: 8085  # Worldserver port
 
+      # Auth service configuration for Authserver
       auth:
         enabled: true
         ports:
-          auth:
+          - name: authserver-port
             protocol: tcp
             port: 3724  # Authserver port
 
+    # Database environment variables
     env:
       - name: DB_HOST
         value: "mysql"
@@ -46,6 +49,7 @@ spec:
       - name: DB_NAME
         value: "acore_world"
 
+    # Adding MySQL container for AzerothCore
     additionalContainers:
       mysql:
         enabled: true
@@ -63,12 +67,13 @@ spec:
           - name: mysql-data
             mountPath: /var/lib/mysql
 
+    # NFS Volumes
     additionalVolumes:
       - name: azerothcore-data
         nfs:
           path: "${NFS_GAME_SERVERS}/wow-1/data"
           server: "${NAS_IP}"
-
+      
       - name: mysql-data
         nfs:
           path: "${NFS_GAME_SERVERS}/wow-1/mysql"
@@ -81,13 +86,6 @@ spec:
       - name: mysql-data
         mountPath: /var/lib/mysql
 
-    # Optional: SOAP configuration for web management
-    envSecrets:
-      - name: SOAP_ENABLED
-        value: "1"
-      - name: SOAP_IP
-        value: "0.0.0.0"
-
     # Initialize the authserver and worldserver
     initContainers:
       - name: authserver-init
@@ -98,5 +96,5 @@ spec:
         image: acore/ac-wotlk-server:latest
         command: ["/bin/bash", "-c", "/azerothcore/startup/worldserver"]
 
-    # Ensure worldserver and authserver stay up
+    # Service configuration and replicas
     replicas: 1
