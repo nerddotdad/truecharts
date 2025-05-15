@@ -63,9 +63,3 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
-          homepage:
-            enabled: true
-            name: Grav
-            description: This is a Grav instance
-            group: Media
-            icon: ""
