@@ -8,4 +8,5 @@ resources:
   - monitoring
   # - utilities
   - gaming
-  # - social  - websites
+  # - social
+  - websites
