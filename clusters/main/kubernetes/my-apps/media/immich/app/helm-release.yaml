@@ -167,9 +167,6 @@ spec:
         ingressClassName: external
         hosts:
           - host: immich.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
         integrations:
           certManager:
             enabled: true
