@@ -39,7 +39,7 @@ spec:
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
       main:
-        # mode: recovery # uncomment this if recovery is needed
+        mode: recovery # uncomment this if recovery is needed
         backups:
           enabled: true
           # revision: "1" # uncomment this out if recovery is needed
