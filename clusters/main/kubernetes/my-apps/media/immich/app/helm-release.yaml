@@ -42,7 +42,7 @@ spec:
         mode: recovery # uncomment this if recovery is needed
         backups:
           enabled: true
-          # revision: "1" # uncomment this out if recovery is needed
+          revision: "1" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
@@ -52,7 +52,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          # revision: "1" # uncomment this out if recovery is needed
+          revision: "0" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
     persistence:
       mlcache:
