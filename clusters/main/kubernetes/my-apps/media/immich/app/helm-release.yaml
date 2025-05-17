@@ -38,11 +38,18 @@ spec:
         secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
+    # backup process as follows
+    # update revision in recover to current revision in backups
+    ## this will tell cnpg to use the most current revision
+    ## incriment backup.revsision +1
+    ## deploy for restore.
+    ## once restore is complete update recovery.revision to match backup revision.
+    ## during stable times both backups.revision and recovery.revision should match.
       main:
-        mode: recovery # uncomment this if recovery is needed
+        mode: recovery
         backups:
           enabled: true
-          revision: "1" # uncomment this out if recovery is needed
+          revision: "1"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
@@ -52,7 +59,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          revision: "" # uncomment this out if recovery is needed
+          revision: "1"
           credentials: cloudflare_r2
     persistence:
       mlcache:
@@ -157,7 +164,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: internal
+        ingressClassName: external
         hosts:
           - host: immich.${DOMAIN_0}
             paths:
