@@ -52,7 +52,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          revision: "0" # uncomment this out if recovery is needed
+          revision: "" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
     persistence:
       mlcache:
