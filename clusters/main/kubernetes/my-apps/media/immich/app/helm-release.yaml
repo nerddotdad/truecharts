@@ -45,7 +45,12 @@ spec:
           # revision: "1" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
           retentionPolicy: "7d"
-          schedule: "0 20 13 * * *"
+          scheduledBackups:
+          - name: daily-backup
+            schedule: "0 25 13 * * *"
+            backupOwnerReference: self
+            immediate: true
+            suspend: false
         recovery:
           # revision: "1" # uncomment this out if recovery is needed
           credentials: cloudflare_r2
