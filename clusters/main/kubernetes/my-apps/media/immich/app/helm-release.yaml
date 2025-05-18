@@ -39,12 +39,7 @@ spec:
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
     # backup process as follows
-    # update revision in recover to current revision in backups
-    ## this will tell cnpg to use the most current revision
-    ## incriment backup.revsision +1
-    ## deploy for restore.
-    ## once restore is complete update recovery.revision to match backup revision.
-    ## during stable times both backups.revision and recovery.revision should match.
+    ## incriment backup.revsision and recovery.revision +1
       main:
         mode: recovery
         backups:
@@ -142,6 +137,18 @@ spec:
         mountPath: /usr/src/app/upload/profile/
         path: ${NFS_IMMICH_PROFILE}
         server:  ${NAS_IP}
+        targetSelector:
+          # Main pod/container is server
+          main:
+            main: {}
+          microservices:
+            microservices: {}
+      external:
+        enabled: true
+        type: nfs
+        mountpath: /usr/src/app/external
+        path: ${NFS_IMMICH_EXTERNAL}
+        server: ${NAS_IP}
         targetSelector:
           # Main pod/container is server
           main:
