@@ -59,7 +59,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          revision: "0"
+          revision: "1"
           credentials: cloudflare_r2
     persistence:
       mlcache:
