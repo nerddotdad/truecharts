@@ -59,7 +59,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          revision: "1"
+          revision: "0"
           credentials: cloudflare_r2
     persistence:
       mlcache:
@@ -152,15 +152,15 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${IMMICH_IP}
-    # workload:
-    #   main:
-    #     podSpec:
-    #       runtimeClassName: "nvidia"
-    #       containers:
-    #         main:
-    #           resources:
-    #             limits:
-    #               nvidia.com/gpu: 1
+    workload:
+      main:
+        podSpec:
+          # runtimeClassName: "intel-gpu"
+          containers:
+            main:
+              resources:
+                limits:
+                  gpu.intel.com/i915: 1
     ingress:
       main:
         enabled: true
