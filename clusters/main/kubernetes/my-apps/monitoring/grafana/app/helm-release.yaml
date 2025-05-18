@@ -37,15 +37,15 @@ spec:
       sidecar:
         datasources:
           enabled: true
-      datasources:
-        datasources.yaml:
-          apiVersion: 1
-          datasources:
-            - name: Loki
-              type: loki
-              access: proxy
-              url: http://loki-stack:3100
-              isDefault: true
+      # datasources:
+      #   datasources.yaml:
+      #     apiVersion: 1
+      #     datasources:
+      #       - name: Loki
+      #         type: loki
+      #         access: proxy
+      #         url: http://loki-stack:3100
+      #         isDefault: true
     ingress:
       main:
         enabled: true
