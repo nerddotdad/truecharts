@@ -146,7 +146,7 @@ spec:
       external:
         enabled: true
         type: nfs
-        mountpath: /usr/src/app/external
+        mountPath: /usr/src/app/external
         path: ${NFS_IMMICH_EXTERNAL}
         server: ${NAS_IP}
         targetSelector:
