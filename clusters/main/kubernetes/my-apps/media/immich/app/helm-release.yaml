@@ -49,12 +49,12 @@ spec:
         mode: recovery
         backups:
           enabled: true
-          revision: "1"
+          revision: "2"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
           - name: daily-backup
-            schedule: "0 25 13 * * *"
+            schedule: "0 0 1 * * *"
             backupOwnerReference: self
             immediate: true
             suspend: false
