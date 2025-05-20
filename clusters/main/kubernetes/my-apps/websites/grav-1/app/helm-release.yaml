@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: grav
-      version: 13.5.10
+      version: 13.5.11
       sourceRef:
         kind: HelmRepository
         name: truecharts
