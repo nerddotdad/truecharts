@@ -39,7 +39,7 @@ spec:
       azerothcore-config:
         enabled: true
         type: configmap
-        objectName: wow-app-template-wow-config
+        objectName: wow-config
         mountPath: /azerothcore/build/dist/etc/
         items:
           - key: authserver.conf
