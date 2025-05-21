@@ -42,6 +42,7 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         ports:
+          enabled: true
           world:
             enabled: true
             protocol: tcp
