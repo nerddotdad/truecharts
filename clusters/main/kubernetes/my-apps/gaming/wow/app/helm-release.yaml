@@ -82,7 +82,7 @@ spec:
             mountPath: /docker-entrypoint-initdb.d
 
     service:
-      main:
+      main-lb:
         enabled: true
         primary: true
         type: LoadBalancer
