@@ -19,60 +19,65 @@ spec:
       pullPolicy: IfNotPresent
       tag: v0.0.10
 
+    persistence:
+      config:
+        enabled: true
+        mountPath: /azerothcore/build/dist/etc/
+        targetSelector:
+          main:
+            main:
+              mountPath: /azerothcore/build/dist/etc/
+            init-copy:
+              mountPath: /azerothcore/build/dist/etc/
+      ac-configmap-vol:
+        enabled: true
+        type: configmap
+        objectName: azerothcore-configmap
+        items:
+          - key: authserver.conf
+            path: authserver.conf
+          - key: worldserver.conf
+            path: worldserver.conf
+        targetSelector:
+          main:
+            init-copy:
+            - subPath: authserver.conf
+              mountPath: /tmp/authserver.conf
+            - subPath: worldserver.conf
+              mountPath: /tmp/worldserver.conf
+
     workload:
       main:
-        volumeMounts:
-          main:
-            - name: config
-              mountPath: /azerothcore/build/dist/etc/
         podSpec:
-          volumes:
-          - name: config
-            emptyDir: {}
           initContainers:
-            write-config:
+            init-copy:
               enabled: true
               type: init
-              image: busybox
+              imageSelector: busyboxImage
               command:
                 - /bin/sh
                 - -c
                 - |
-                  mkdir -p /config
-                  printf '%s\n' \
-                    'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
-                    'LogLevel = 3' \
-                    'BindIP = "0.0.0.0"' \
-                    'RealmListPort = 3724' \
-                    > /configauthserver.conf
+                  cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
+                  cp /tmp/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
 
-                  printf '%s\n' \
-                    'WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"' \
-                    'CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"' \
-                    'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
-                    'HotReload = 1' \
-                    'BindIP = "0.0.0.0"' \
-                    'WorldServerPort = 8085' \
-                    > /config/worldserver.conf
-              volumeMounts:
-                - name: config
-                  mountPath: /config
-          containers:
-            main:
-              volumeMounts:
-                - name: config
-                  mountPath: /azerothcore/build/dist/etc/
-                  # readOnly: true
-              probes:
-                liveness:
-                  type: tcp
-                  port: 8085
-                readiness:
-                  type: tcp
-                  port: 8085
-                startup:
-                  type: tcp
-                  port: 8085
+    configmap:
+      azerothcore-configmap:
+        enabled: true
+        data:
+          authserver.conf: |
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            LogLevel = 3
+            BindIP = "0.0.0.0"
+            RealmListPort = 3724
+
+          worldserver.conf: |
+            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+            CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            HotReload = 1
+            BindIP = "0.0.0.0"
+            WorldServerPort = 8085
 
     service:
       main:
