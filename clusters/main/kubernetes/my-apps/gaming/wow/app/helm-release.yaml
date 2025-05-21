@@ -15,8 +15,9 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: nerddotdad/azerothcore-runtime@sha256:628e29baf98b6893ca27e3396fa1178dab5204eb99a8642a8366da7d5c0c229a
-      pullPolicy: IfNotPresent
+      repository: nerddotdad/azerothcore-runtime
+      pullPolicy: always
+      tag: latest
 
     workload:
       main:
