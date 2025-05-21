@@ -24,6 +24,7 @@ spec:
         volumes:
           - name: config
             emptyDir: {}
+
         podSpec:
           initContainers:
             write-config:
@@ -40,7 +41,7 @@ spec:
                     'LogLevel = 3' \
                     'BindIP = "0.0.0.0"' \
                     'RealmListPort = 3724' \
-                    > /azerothcore/build/dist/etc/authserver.conf
+                    > /config/authserver.conf
 
                   printf '%s\n' \
                     'WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"' \
@@ -49,16 +50,16 @@ spec:
                     'HotReload = 1' \
                     'BindIP = "0.0.0.0"' \
                     'WorldServerPort = 8085' \
-                    > /azerothcore/build/dist/etc/worldserver.conf
+                    > /config/worldserver.conf
               volumeMounts:
                 - name: config
-                  mountPath: /azerothcore/build/dist/etc/
+                  mountPath: /config
+
           containers:
             main:
               volumeMounts:
                 - name: config
                   mountPath: /azerothcore/build/dist/etc/
-                  # readOnly: true
               probes:
                 liveness:
                   type: tcp
