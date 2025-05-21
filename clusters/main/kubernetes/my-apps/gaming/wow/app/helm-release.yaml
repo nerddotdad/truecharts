@@ -4,6 +4,7 @@ metadata:
   name: wow
   namespace: gaming
 spec:
+  interval: 5m
   chart:
     spec:
       chart: app-template
@@ -12,28 +13,134 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-  interval: 5m
+  valuesFrom:
+    - kind: Secret
+      name: azerothcore-db-secret
+      valuesKey: username
+      targetPath: env[2].valueFrom.secretKeyRef.key
+    - kind: Secret
+      name: azerothcore-db-secret
+      valuesKey: password
+      targetPath: env[3].valueFrom.secretKeyRef.key
   values:
     image:
-      repository: acore/ac-wotlk-server
+      repository: azerothcore/acore-worldserver
       tag: latest
       pullPolicy: IfNotPresent
 
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              probes:
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-                startup:
-                  enabled: false
+    additionalContainers:
+      - name: authserver
+        image: azerothcore/acore-authserver:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 3724
+            name: authserver
+        env:
+          - name: DB_HOST
+            value: mariadb
+          - name: DB_PORT
+            value: "3306"
+          - name: DB_NAME
+            value: azeroth
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: azerothcore-db-secret
+                key: username
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: azerothcore-db-secret
+                key: password
+
+    env:
+      - name: DB_HOST
+        value: mariadb
+      - name: DB_PORT
+        value: "3306"
+      - name: DB_NAME
+        value: azeroth
+      - name: DB_USER
+        valueFrom:
+          secretKeyRef:
+            name: azerothcore-db-secret
+            key: username
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: azerothcore-db-secret
+            key: password
+
+    initContainers:
+      - name: init-db-setup
+        image: azerothcore/database:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Checking database schema..."
+            # Add schema guard logic here
+            # For example: if table doesn't exist, import it
+            if ! mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} -e 'use azeroth'; then
+              mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} < /docker-entrypoint-initdb.d/authserver.sql;
+              mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} < /docker-entrypoint-initdb.d/worldserver.sql;
+            fi
+        envFrom:
+          - secretRef:
+              name: azerothcore-db-secret
+        volumeMounts:
+          - name: config
+            mountPath: /docker-entrypoint-initdb.d
 
     service:
       main:
-        enabled: false
+        ports:
+          worldserver:
+            protocol: TCP
+            port: 8085
+            targetPort: 8085
+          authserver:
+            protocol: TCP
+            port: 3724
+            targetPort: 3724
+      additional:
+        worldserver-lb:
+          enabled: true
+          type: LoadBalancer
+          externalIPs:
+            - ${WOW_IP}
+          ports:
+            - name: worldserver
+              port: 8085
+              targetPort: 8085
+              protocol: TCP
+        authserver-lb:
+          enabled: true
+          type: LoadBalancer
+          externalIPs:
+            - ${WOW_IP}
+          ports:
+            - name: authserver
+              port: 3724
+              targetPort: 3724
+              protocol: TCP
 
-    replicas: 1
+    persistence:
+      data:
+        enabled: true
+        mountPath: /azerothcore/data
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NFS_GAME_SERVERS}/azerothcore/data
+        readOnly: false
+      config:
+        enabled: true
+        mountPath: /azerothcore/etc
+        type: configMap
+        name: azerothcore-config
+
+    addons:
+      mariadb:
+        enabled: true
+        mariadbUsername: azeroth
+        mariadbPassword: azerothpass
+        mariadbDatabase: azeroth
