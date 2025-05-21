@@ -89,11 +89,11 @@ spec:
         ports:
           worldserver:
             enabled: true
-            protocol: TCP
+            protocol: tcp
             port: 8085
           authserver:
             enabled: true
-            protocol: TCP
+            protocol: tcp
             port: 3724
       # additional:
       #   enabled: true
@@ -105,7 +105,7 @@ spec:
       #     ports:
       #       worldserver:
       #         enabled: true
-      #         protocol: TCP
+      #         protocol: tcp
       #         port: 8085
       #   authserver-lb:
       #     enabled: true
@@ -115,7 +115,7 @@ spec:
       #     ports:
       #       authserver:
       #         enabled: true
-      #         protocol: TCP
+      #         protocol: tcp
       #         port: 3724
 
     persistence:
