@@ -95,28 +95,28 @@ spec:
             enabled: true
             protocol: TCP
             port: 3724
-      additional:
-        enabled: true
-        worldserver-lb:
-          enabled: true
-          type: LoadBalancer
-          externalIPs:
-            - ${WOW_IP}
-          ports:
-            worldserver:
-              enabled: true
-              protocol: TCP
-              port: 8085
-        authserver-lb:
-          enabled: true
-          type: LoadBalancer
-          externalIPs:
-            - ${WOW_IP}
-          ports:
-            authserver:
-              enabled: true
-              protocol: TCP
-              port: 3724
+      # additional:
+      #   enabled: true
+      #   worldserver-lb:
+      #     enabled: true
+      #     type: LoadBalancer
+      #     externalIPs:
+      #       - ${WOW_IP}
+      #     ports:
+      #       worldserver:
+      #         enabled: true
+      #         protocol: TCP
+      #         port: 8085
+      #   authserver-lb:
+      #     enabled: true
+      #     type: LoadBalancer
+      #     externalIPs:
+      #       - ${WOW_IP}
+      #     ports:
+      #       authserver:
+      #         enabled: true
+      #         protocol: TCP
+      #         port: 3724
 
     persistence:
       data:
