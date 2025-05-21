@@ -58,7 +58,7 @@ spec:
               volumeMounts:
                 - name: config
                   mountPath: /azerothcore/build/dist/etc/
-                  readOnly: true
+                  # readOnly: true
               probes:
                 liveness:
                   type: tcp
