@@ -19,6 +19,21 @@ spec:
       pullPolicy: IfNotPresent
       tag: v0.0.10
 
+    config:
+      "authserver.conf": |
+        LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+        LogLevel = 3
+        BindIP = "0.0.0.0"
+        RealmListPort = 3724
+
+      "worldserver.conf": |
+        WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+        CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"
+        LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+        HotReload = 1
+        BindIP = "0.0.0.0"
+        WorldServerPort = 8085
+
     workload:
       main:
         podSpec:
@@ -34,38 +49,10 @@ spec:
                 startup:
                   type: tcp
                   port: 8085
-
-    configmap:
-      wow-config:
-        enabled: true
-        data:
-          authserver.conf: |
-            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-            LogLevel = 3
-            BindIP = "0.0.0.0"
-            RealmListPort = 3724
-          worldserver.conf: |
-            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
-            HotReload = 1
-            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-            CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"
-            WorldServerPort = 8085
-            BindIP = "0.0.0.0"
-
-    persistence:
-      azerothcore-config:
-        enabled: true
-        type: configmap
-        objectName: wow-app-template-wow-config
-        mountPath: /azerothcore/build/dist/etc/
-        items:
-          - key: authserver.conf
-            path: authserver.conf
-          - key: worldserver.conf
-            path: worldserver.conf
-        targetSelector:
-          main: 
-            default: {}
+              volumeMounts:
+                - mountPath: /azerothcore/build/dist/etc/
+                  name: config
+                  readOnly: true
 
     service:
       main:
