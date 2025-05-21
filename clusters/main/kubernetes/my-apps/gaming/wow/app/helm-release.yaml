@@ -46,11 +46,11 @@ spec:
           world:
             enabled: true
             primary: true
-            protocol: TCP
+            protocol: tcp
             port: 8085
             targetPort: 8085
           auth:
             enabled: true
-            protocol: TCP
+            protocol: tcp
             port: 3724
             targetPort: 3724
