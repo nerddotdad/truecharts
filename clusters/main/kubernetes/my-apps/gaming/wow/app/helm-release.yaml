@@ -47,7 +47,8 @@ spec:
           - key: worldserver.conf
             path: worldserver.conf
         targetSelector:
-          main: {}
+          main: 
+            default: {}
 
     configmap:
       wow-config:
