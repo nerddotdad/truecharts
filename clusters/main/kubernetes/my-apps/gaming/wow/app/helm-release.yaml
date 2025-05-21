@@ -17,20 +17,23 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.9
+      tag: v0.0.4
 
-    config:
-      files:
-        authserver.conf: |
-          LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-          LogLevel = 3
-        worldserver.conf: |
-          WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
-          HotReload = 1
-
-    configMap:
-      enabled: true
-      mountPath: /azerothcore/build/dist/etc
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              probes:
+                liveness:
+                  type: tcp
+                  port: 8085
+                readiness:
+                  type: tcp
+                  port: 8085
+                startup:
+                  type: tcp
+                  port: 8085
 
     service:
       main:
@@ -48,3 +51,16 @@ spec:
             protocol: tcp
             port: 3724
             targetPort: 3724
+
+    config:
+      files:
+        authserver.conf: |
+          LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+          LogLevel = 3
+        worldserver.conf: |
+          WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+          HotReload = 1
+
+    configMap:
+      enabled: true
+      mountPath: /azerothcore/build/dist/etc
