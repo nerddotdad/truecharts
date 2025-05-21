@@ -15,12 +15,12 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: acore/ac-wotlk-worldserver:master
+      repository: acore/ac-wotlk-worldserver
       pullPolicy: IfNotPresent
 
     additionalContainers:
       - name: authserver
-        image: acore/ac-wotlk-authserver:master
+        image: acore/ac-wotlk-authserver
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 3724
