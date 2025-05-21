@@ -53,7 +53,7 @@ spec:
             init-copy:
               enabled: true
               type: init
-              imageSelector: busyboxImage
+              imageSelector: alpineImage
               command:
                 - /bin/sh
                 - -c
