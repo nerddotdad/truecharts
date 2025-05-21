@@ -16,7 +16,7 @@ spec:
   values:
     image:
       repository: nerddotdad/azerothcore-runtime
-      pullPolicy: Always
+      pullPolicy: IfNotPresent
       tag: v0.0.1
 
     workload:
