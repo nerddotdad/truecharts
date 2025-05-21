@@ -93,6 +93,7 @@ spec:
             port: 3724
             targetPort: 3724
       additional:
+        enabled: true
         worldserver-lb:
           enabled: true
           type: LoadBalancer
