@@ -35,6 +35,28 @@ spec:
                   type: tcp
                   port: 8085
 
+    persistence:
+      config:
+        enabled: true
+        type: configmap
+        objectName: wow-config
+        items:
+          - key: authserver.conf
+            path: authserver.conf
+          - key: worldserver.conf
+            path: worldserver.conf
+
+    configmap:
+      wow-config:
+        enabled: true
+        data:
+          authserver.conf: |
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            LogLevel = 3
+          worldserver.conf: |
+            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+            HotReload = 1
+
     service:
       main:
         enabled: true
@@ -51,16 +73,3 @@ spec:
             protocol: tcp
             port: 3724
             targetPort: 3724
-
-    config:
-      files:
-        authserver.conf: |
-          LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-          LogLevel = 3
-        worldserver.conf: |
-          WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
-          HotReload = 1
-
-    configMap:
-      enabled: true
-      mountPath: /azerothcore/build/dist/etc
