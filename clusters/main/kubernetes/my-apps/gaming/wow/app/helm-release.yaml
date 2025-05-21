@@ -36,15 +36,18 @@ spec:
                   port: 8085
 
     persistence:
-      config:
+      azerothcore-config:
         enabled: true
         type: configmap
         objectName: wow-config
+        mountPath: /azerothcore/build/dist/etc/
         items:
           - key: authserver.conf
             path: authserver.conf
           - key: worldserver.conf
             path: worldserver.conf
+        targetSelector:
+          main: {}
 
     configmap:
       wow-config:
