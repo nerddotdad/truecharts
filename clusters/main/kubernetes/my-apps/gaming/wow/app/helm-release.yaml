@@ -35,6 +35,17 @@ spec:
                   type: tcp
                   port: 8085
 
+    configmap:
+      wow-config:
+        enabled: true
+        data:
+          authserver.conf: |
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            LogLevel = 3
+          worldserver.conf: |
+            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+            HotReload = 1
+
     persistence:
       azerothcore-config:
         enabled: true
@@ -49,17 +60,6 @@ spec:
         targetSelector:
           main: 
             default: {}
-
-    configmap:
-      wow-config:
-        enabled: true
-        data:
-          authserver.conf: |
-            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-            LogLevel = 3
-          worldserver.conf: |
-            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
-            HotReload = 1
 
     service:
       main:
