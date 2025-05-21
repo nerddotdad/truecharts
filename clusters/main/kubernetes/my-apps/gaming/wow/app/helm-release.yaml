@@ -17,23 +17,38 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.2
+      tag: v0.0.9
 
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              probes:
-                liveness:
-                  type: tcp
-                  port: 8085
-                readiness:
-                  type: tcp
-                  port: 8085
-                startup:
-                  type: tcp
-                  port: 8085
+    config:
+      files:
+        authserver.conf: |
+          [authserver]
+          LoginDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_auth"
+          LogLevel = 3
+          MaxPingTime = 30
+          MaxThreads = 4
+          RealmID = 1
+          RealmName = "Hoth"
+          MaxPlayerCount = 1000
+          BindIP = "0.0.0.0"
+          Port = 8085
+          AllowLocalhost = true
+
+        worldserver.conf: |
+          [worldserver]
+          WorldDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_world"
+          CharacterDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_characters"
+          LogLevel = 3
+          MaxThreads = 4
+          MaxPingTime = 30
+          MaxPlayerCount = 1000
+          BindIP = "0.0.0.0"
+          Port = 8086
+          AllowLocalhost = true
+          DataDir = "/azerothcore/data"
+
+    configMap:
+      mountPath: /azerothcore/build/dist/etc
 
     service:
       main:
