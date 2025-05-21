@@ -22,30 +22,11 @@ spec:
     config:
       files:
         authserver.conf: |
-          [authserver]
-          LoginDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_auth"
+          LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
           LogLevel = 3
-          MaxPingTime = 30
-          MaxThreads = 4
-          RealmID = 1
-          RealmName = "Hoth"
-          MaxPlayerCount = 1000
-          BindIP = "0.0.0.0"
-          Port = 8085
-          AllowLocalhost = true
-
         worldserver.conf: |
-          [worldserver]
-          WorldDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_world"
-          CharacterDatabaseInfo = "mysql://${WOW_USER}:${WOW_PASS}@db/acore_characters"
-          LogLevel = 3
-          MaxThreads = 4
-          MaxPingTime = 30
-          MaxPlayerCount = 1000
-          BindIP = "0.0.0.0"
-          Port = 8086
-          AllowLocalhost = true
-          DataDir = "/azerothcore/data"
+          WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+          HotReload = 1
 
     configMap:
       enabled: true
