@@ -82,25 +82,20 @@ spec:
             mountPath: /docker-entrypoint-initdb.d
 
     service:
-      worldserver:
+      main:
         enabled: true
+        primary: true
         type: LoadBalancer
-        loadBalancerIP: "${WOW_IP}"
+        loadBalancerIP: "${WOW_IP}"  # Replace with your actual IP or ensure the variable is correctly substituted
         externalIPs:
-          - "${WOW_IP}"
+          - "${WOW_IP}"  # Ensure this is a valid IP address
         ports:
           worldserver:
             enabled: true
+            primary: true
             port: 8085
             protocol: tcp
             targetPort: 8085
-      authserver:
-        enabled: true
-        type: LoadBalancer
-        loadBalancerIP: "${WOW_IP}"
-        externalIPs:
-          - "${WOW_IP}"
-        ports:
           authserver:
             enabled: true
             port: 3724
