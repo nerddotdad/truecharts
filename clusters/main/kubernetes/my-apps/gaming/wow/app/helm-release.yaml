@@ -13,15 +13,6 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-  valuesFrom:
-    - kind: Secret
-      name: azerothcore-db-secret
-      valuesKey: username
-      targetPath: env[2].valueFrom.secretKeyRef.key
-    - kind: Secret
-      name: azerothcore-db-secret
-      valuesKey: password
-      targetPath: env[3].valueFrom.secretKeyRef.key
   values:
     image:
       repository: azerothcore/acore-worldserver
@@ -103,7 +94,6 @@ spec:
             port: 3724
             targetPort: 3724
       additional:
-        enabled: true
         worldserver-lb:
           enabled: true
           type: LoadBalancer
