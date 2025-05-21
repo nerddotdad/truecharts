@@ -21,49 +21,48 @@ spec:
 
     workload:
       main:
-        podSpec:
-          volumes:
-            - name: config
-              emptyDir: {}
-        additionalContainers:
-          init:
-            enabled: true
-            type: init
-            image: busybox
-            command:
-              - /bin/sh
-              - -c
-              - |
-                mkdir -p /config
-                printf '%s\n' \
-                  'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
-                  'LogLevel = 3' \
-                  'BindIP = "0.0.0.0"' \
-                  'RealmListPort = 3724' \
-                  > /config/authserver.conf
-
-                printf '%s\n' \
-                  'WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"' \
-                  'CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"' \
-                  'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
-                  'HotReload = 1' \
-                  'BindIP = "0.0.0.0"' \
-                  'WorldServerPort = 8085' \
-                  > /config/worldserver.conf
-            volumeMounts:
-              - name: config
-                mountPath: /config
-
         volumeMounts:
           main:
             - name: config
               mountPath: /azerothcore/build/dist/etc/
+        podSpec:
+          volumes:
+          - name: config
+            emptyDir: {}
+          initContainers:
+            write-config:
+              enabled: true
+              type: init
+              image: busybox
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  mkdir -p /config
+                  printf '%s\n' \
+                    'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
+                    'LogLevel = 3' \
+                    'BindIP = "0.0.0.0"' \
+                    'RealmListPort = 3724' \
+                    > /configauthserver.conf
 
+                  printf '%s\n' \
+                    'WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"' \
+                    'CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"' \
+                    'LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"' \
+                    'HotReload = 1' \
+                    'BindIP = "0.0.0.0"' \
+                    'WorldServerPort = 8085' \
+                    > /config/worldserver.conf
+              volumeMounts:
+                - name: config
+                  mountPath: /config
           containers:
             main:
               volumeMounts:
                 - name: config
                   mountPath: /azerothcore/build/dist/etc/
+                  # readOnly: true
               probes:
                 liveness:
                   type: tcp
