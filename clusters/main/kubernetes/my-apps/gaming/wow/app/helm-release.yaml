@@ -19,6 +19,26 @@ spec:
       pullPolicy: IfNotPresent
       tag: v0.0.10
 
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              volumeMounts:
+              - name: config
+                mountPath: /azerothcore/build/dist/etc/
+                readOnly: true
+              probes:
+                liveness:
+                  type: tcp
+                  port: 8085
+                readiness:
+                  type: tcp
+                  port: 8085
+                startup:
+                  type: tcp
+                  port: 8085
+
     config:
       "authserver.conf": |
         LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
@@ -33,26 +53,6 @@ spec:
         HotReload = 1
         BindIP = "0.0.0.0"
         WorldServerPort = 8085
-
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              probes:
-                liveness:
-                  type: tcp
-                  port: 8085
-                readiness:
-                  type: tcp
-                  port: 8085
-                startup:
-                  type: tcp
-                  port: 8085
-              volumeMounts:
-                - mountPath: /azerothcore/build/dist/etc/
-                  name: config
-                  readOnly: true
 
     service:
       main:
