@@ -37,15 +37,13 @@ spec:
                   port: 8085
 
     service:
-      service-lb:
+      main:
         enabled: true
-        primary: true
         type: LoadBalancer
         loadBalancerIP: ${WOW_IP}
         ports:
           world:
             enabled: true
-            primary: true
             protocol: tcp
             port: 8085
             targetPort: 8085
