@@ -15,141 +15,42 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: acore/ac-wotlk-worldserver
+      repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
+      tag: latest
 
-    additionalContainers:
-      - name: authserver
-        image: acore/ac-wotlk-authserver
-        imagePullPolicy: IfNotPresent
-        ports:
-          - containerPort: 3724
-            name: authserver
-        env:
-          - name: DB_HOST
-            value: mariadb
-          - name: DB_PORT
-            value: "3306"
-          - name: DB_NAME
-            value: azeroth
-          - name: DB_USER
-            valueFrom:
-              secretKeyRef:
-                name: azerothcore-db-secret
-                key: username
-          - name: DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: azerothcore-db-secret
-                key: password
-
-    env:
-      - name: DB_HOST
-        value: mariadb
-      - name: DB_PORT
-        value: "3306"
-      - name: DB_NAME
-        value: azeroth
-      - name: DB_USER
-        valueFrom:
-          secretKeyRef:
-            name: azerothcore-db-secret
-            key: username
-      - name: DB_PASSWORD
-        valueFrom:
-          secretKeyRef:
-            name: azerothcore-db-secret
-            key: password
-
-    initContainers:
-      - name: init-db-setup
-        image: azerothcore/database:latest
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            echo "Checking database schema..."
-            # Add schema guard logic here
-            # For example: if table doesn't exist, import it
-            if ! mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} -e 'use azeroth'; then
-              mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} < /docker-entrypoint-initdb.d/authserver.sql;
-              mysql -hmariadb -u${DB_USER} -p${DB_PASSWORD} < /docker-entrypoint-initdb.d/worldserver.sql;
-            fi
-        envFrom:
-          - secretRef:
-              name: azerothcore-db-secret
-        volumeMounts:
-          - name: config
-            mountPath: /docker-entrypoint-initdb.d
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              command: ["/azerothcore/bin/worldserver"]
+              probes:
+                liveness:
+                  type: tcp
+                  port: 8085
+                readiness:
+                  type: tcp
+                  port: 8085
+                startup:
+                  type: tcp
+                  port: 8085
 
     service:
-      main:
+      service-lb:
         enabled: true
         primary: true
         type: LoadBalancer
-        loadBalancerIP: "${WOW_IP}"
-        externalIPs:
-          - "${WOW_IP}"
+        loadBalancerIP: ${WOW_IP}
         ports:
-          worldserver:
+          world:
             enabled: true
             primary: true
+            protocol: TCP
             port: 8085
-            protocol: tcp
             targetPort: 8085
-      auth:
-        enabled: true
-        type: LoadBalancer
-        loadBalancerIP: "${WOW_IP}"  # You can split them if you want separate IPs
-        externalIPs:
-          - "${WOW_IP}"
-        ports:
-          authserver:
+          auth:
             enabled: true
-            primary: true  # Only one primary per service
+            protocol: TCP
             port: 3724
-            protocol: tcp
             targetPort: 3724
-
-      # additional:
-      #   enabled: true
-      #   worldserver-lb:
-      #     enabled: true
-      #     type: LoadBalancer
-      #     externalIPs:
-      #       - ${WOW_IP}
-      #     ports:
-      #       worldserver:
-      #         enabled: true
-      #         protocol: tcp
-      #         port: 8085
-      #   authserver-lb:
-      #     enabled: true
-      #     type: LoadBalancer
-      #     externalIPs:
-      #       - ${WOW_IP}
-      #     ports:
-      #       authserver:
-      #         enabled: true
-      #         protocol: tcp
-      #         port: 3724
-
-    persistence:
-      data:
-        enabled: true
-        mountPath: /azerothcore/data
-        type: nfs
-        server: ${NAS_IP}
-        path: ${NFS_GAME_SERVERS}/azerothcore/data
-        readOnly: false
-      config:
-        enabled: true
-        mountPath: /azerothcore/etc
-        type: configMap
-        name: azerothcore-config
-
-    addons:
-      mariadb:
-        enabled: true
-        mariadbUsername: azeroth
-        mariadbPassword: azerothpass
-        mariadbDatabase: azeroth
