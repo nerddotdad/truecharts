@@ -29,6 +29,7 @@ spec:
               mountPath: /azerothcore/build/dist/etc/
             init-copy:
               mountPath: /azerothcore/build/dist/etc/
+
       ac-configmap-vol:
         enabled: true
         type: configmap
@@ -41,10 +42,10 @@ spec:
         targetSelector:
           main:
             init-copy:
-            - subPath: authserver.conf
-              mountPath: /tmp/authserver.conf
-            - subPath: worldserver.conf
-              mountPath: /tmp/worldserver.conf
+              - subPath: authserver.conf
+                mountPath: /tmp/authserver.conf
+              - subPath: worldserver.conf
+                mountPath: /tmp/worldserver.conf
 
     workload:
       main:
@@ -58,6 +59,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
+                  echo "Copying config files..."
                   cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
                   cp /tmp/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
 
