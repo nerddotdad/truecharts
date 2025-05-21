@@ -83,15 +83,18 @@ spec:
 
     service:
       main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${WOW_IP}
         ports:
           worldserver:
+            enabled: true
             protocol: TCP
             port: 8085
-            targetPort: 8085
           authserver:
+            enabled: true
             protocol: TCP
             port: 3724
-            targetPort: 3724
       additional:
         enabled: true
         worldserver-lb:
@@ -100,20 +103,20 @@ spec:
           externalIPs:
             - ${WOW_IP}
           ports:
-            - name: worldserver
-              port: 8085
-              targetPort: 8085
+            worldserver:
+              enabled: true
               protocol: TCP
+              port: 8085
         authserver-lb:
           enabled: true
           type: LoadBalancer
           externalIPs:
             - ${WOW_IP}
           ports:
-            - name: authserver
-              port: 3724
-              targetPort: 3724
+            authserver:
+              enabled: true
               protocol: TCP
+              port: 3724
 
     persistence:
       data:
