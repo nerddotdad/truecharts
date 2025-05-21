@@ -48,6 +48,7 @@ spec:
           DataDir = "/azerothcore/data"
 
     configMap:
+      enabled: true
       mountPath: /azerothcore/build/dist/etc
 
     service:
