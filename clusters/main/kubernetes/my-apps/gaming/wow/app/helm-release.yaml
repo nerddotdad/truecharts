@@ -24,7 +24,6 @@ spec:
         podSpec:
           containers:
             main:
-              command: ["/azerothcore/bin/worldserver"]
               probes:
                 liveness:
                   type: tcp
