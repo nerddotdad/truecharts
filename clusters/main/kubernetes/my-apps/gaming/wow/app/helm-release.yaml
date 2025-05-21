@@ -27,6 +27,8 @@ spec:
         podSpec:
           initContainers:
             write-config:
+              enabled: true
+              type: init
               image: busybox
               command:
                 - /bin/sh
@@ -51,7 +53,6 @@ spec:
               volumeMounts:
                 - name: config
                   mountPath: /config
-
           containers:
             main:
               volumeMounts:
