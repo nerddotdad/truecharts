@@ -86,9 +86,9 @@ spec:
         enabled: true
         primary: true
         type: LoadBalancer
-        loadBalancerIP: "${WOW_IP}"  # Replace with your actual IP or ensure the variable is correctly substituted
+        loadBalancerIP: "${WOW_IP}"
         externalIPs:
-          - "${WOW_IP}"  # Ensure this is a valid IP address
+          - "${WOW_IP}"
         ports:
           worldserver:
             enabled: true
@@ -96,11 +96,20 @@ spec:
             port: 8085
             protocol: tcp
             targetPort: 8085
+      auth:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: "${WOW_IP}"  # You can split them if you want separate IPs
+        externalIPs:
+          - "${WOW_IP}"
+        ports:
           authserver:
             enabled: true
+            primary: true  # Only one primary per service
             port: 3724
             protocol: tcp
             targetPort: 3724
+
       # additional:
       #   enabled: true
       #   worldserver-lb:
