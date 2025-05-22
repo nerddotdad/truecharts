@@ -44,11 +44,11 @@ spec:
             main:
               init-copy:
                 mountPath: /tmp
-                volumeMounts:
-                  - subPath: authserver.conf
-                    mountPath: /tmp/authserver.conf
-                  - subPath: worldserver.conf
-                    mountPath: /tmp/worldserver.conf
+                # volumeMounts:
+                #   - subPath: authserver.conf
+                #     mountPath: /tmp/authserver.conf
+                #   - subPath: worldserver.conf
+                #     mountPath: /tmp/worldserver.conf
 
     workload:
       main:
