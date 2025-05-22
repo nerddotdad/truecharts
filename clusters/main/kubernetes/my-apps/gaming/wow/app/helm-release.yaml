@@ -68,9 +68,16 @@ spec:
         data:
           authserver.conf: |
             LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
-            LogLevel = 3
             BindIP = "0.0.0.0"
             RealmListPort = 3724
+
+            LogLevel = 3
+            [Loggers]
+            root = Error
+            server = Info
+            database = Error
+            maps = Error
+            network = Error
 
           worldserver.conf: |
             WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
@@ -79,6 +86,14 @@ spec:
             HotReload = 1
             BindIP = "0.0.0.0"
             WorldServerPort = 8085
+            
+            LogLevel = 3
+            [Loggers]
+            root = Error
+            server = Info
+            database = Error
+            maps = Error
+            network = Error
 
     service:
       main:
