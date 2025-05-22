@@ -81,6 +81,8 @@ spec:
             path: authserver.conf
           - key: worldserver.conf
             path: worldserver.conf
+          - key: data
+            path: data
         targetSelector:
           main:
             copy-configs:
