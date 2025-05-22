@@ -69,7 +69,7 @@ spec:
               periodSeconds: 10
               failureThreshold: 3
           initContainers:
-            init-copy:
+            copy-configs:
               enabled: true
               type: init
               imageSelector: alpineImage
@@ -82,6 +82,20 @@ spec:
                   cp authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
                   cp worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
                   echo "authserver.conf and worldserver.conf copied successfully."
+            # mariadb:
+            #   enabled: true
+            #   type: init
+            #   imageSelector: mariadb
+            #   command:
+            #     CREATE DATABASE IF NOT EXISTS acore_auth;
+            #     CREATE DATABASE IF NOT EXISTS acore_world;
+            #     CREATE DATABASE IF NOT EXISTS acore_characters;
+
+            #     CREATE USER 'ac_user'@'%' IDENTIFIED BY 'password';
+            #     GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
+            #     GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
+            #     GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
+            #     FLUSH PRIVILEGES;
 
     configmap:
       azerothcore-configmap:
@@ -109,6 +123,19 @@ spec:
             Logger.root=3,Console
             Logger.server=6,Console
             Logger.sql.sql=6,Console
+      azerothcore-init-sql:
+        enabled: true
+        data:
+          init.sql: |
+            CREATE DATABASE IF NOT EXISTS acore_auth;
+            CREATE DATABASE IF NOT EXISTS acore_world;
+            CREATE DATABASE IF NOT EXISTS acore_characters;
+
+            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'password';
+            GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
+            GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
+            GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
+            FLUSH PRIVILEGES;
 
     service:
       main:
@@ -126,3 +153,21 @@ spec:
             protocol: tcp
             port: 3724
             targetPort: 3724
+
+    mariadb:
+      enabled: true
+      includeCommon: true
+      password: ${WOW_PASS}
+      rootPassword: ${WOW_PASS}
+      creds:
+        auth: acore_auth
+        characters: acore_characters
+        world: acore_world
+      additionalVolumes:
+      - name: init-sql
+        configMap:
+          name: azerothcore-init-sql
+      additionalVolumeMounts:
+        - mountPath: /docker-entrypoint-initdb.d/init.sql
+          name: init-sql
+          subPath: init.sql
