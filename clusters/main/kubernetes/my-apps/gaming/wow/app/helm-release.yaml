@@ -178,7 +178,6 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-
-values:
-  mariadbUsername: "ac_user"
-  mariadbDatabase: "wow-mariadb"
+  values:
+    mariadbUsername: "ac_user"
+    mariadbDatabase: "wow-mariadb"
