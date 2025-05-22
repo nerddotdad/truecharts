@@ -43,6 +43,7 @@ spec:
           targetSelector:
             main:
               init-copy:
+                mountPath: /tmp
                 volumeMounts:
                   - subPath: authserver.conf
                     mountPath: /tmp/authserver.conf
