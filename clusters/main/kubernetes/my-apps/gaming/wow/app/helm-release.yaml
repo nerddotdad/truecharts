@@ -30,23 +30,24 @@ spec:
             init-copy:
               mountPath: /azerothcore/build/dist/etc/
 
-      ac-configmap-vol:
-        enabled: true
-        type: configmap
-        objectName: azerothcore-configmap
-        items:
-          - key: authserver.conf
-            path: authserver.conf
-          - key: worldserver.conf
-            path: worldserver.conf
-        targetSelector:
-          main:
-            init-copy:
-              volumeMounts:
-                - subPath: authserver.conf
-                  mountPath: /tmp/authserver.conf
-                - subPath: worldserver.conf
-                  mountPath: /tmp/worldserver.conf
+        ac-configmap-vol:
+          enabled: true
+          type: configmap
+          objectName: azerothcore-configmap
+          mountPath: /tmp  # required
+          items:
+            - key: authserver.conf
+              path: authserver.conf
+            - key: worldserver.conf
+              path: worldserver.conf
+          targetSelector:
+            main:
+              init-copy:
+                volumeMounts:
+                  - subPath: authserver.conf
+                    mountPath: /tmp/authserver.conf
+                  - subPath: worldserver.conf
+                    mountPath: /tmp/worldserver.conf
 
     workload:
       main:
