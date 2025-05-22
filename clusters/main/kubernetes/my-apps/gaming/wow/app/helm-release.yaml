@@ -23,12 +23,12 @@ spec:
       config:
         enabled: true
         mountPath: /azerothcore/build/dist/etc/
-        # Corrected targetSelector to directly map subcontainers (no duplicate keys)
         targetSelector:
           main:
-            mountPath: /azerothcore/build/dist/etc/
-          init-copy:
-            mountPath: /azerothcore/build/dist/etc/
+            main:
+              mountPath: /azerothcore/build/dist/etc/
+            init-copy:
+              mountPath: /azerothcore/build/dist/etc/
 
       ac-configmap-vol:
         enabled: true
@@ -42,9 +42,8 @@ spec:
             path: worldserver.conf
         targetSelector:
           main:
-            mountPath: /tmp/configs
-          init-copy:
-            mountPath: /tmp/configs
+            init-copy:
+              mountPath: /tmp/configs
 
     workload:
       main:
@@ -59,8 +58,11 @@ spec:
                 - -c
                 - |
                   echo "Copying config files..."
-                  cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
-                  cp /tmp/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
+                  cd /tmp
+                  ls
+
+# cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
+# cp /tmp/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
 
     configmap:
       azerothcore-configmap:
