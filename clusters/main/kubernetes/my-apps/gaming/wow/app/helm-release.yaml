@@ -58,7 +58,7 @@ spec:
                 - -c
                 - |
                   echo "Copying config files..."
-                  cd /tmp
+                  cd /tmp/configs
                   ls
 
 # cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
