@@ -42,10 +42,11 @@ spec:
         targetSelector:
           main:
             init-copy:
-              - subPath: authserver.conf
-                mountPath: /tmp/authserver.conf
-              - subPath: worldserver.conf
-                mountPath: /tmp/worldserver.conf
+              volumeMounts:
+                - subPath: authserver.conf
+                  mountPath: /tmp/authserver.conf
+                - subPath: worldserver.conf
+                  mountPath: /tmp/worldserver.conf
 
     workload:
       main:
