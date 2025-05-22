@@ -1,182 +1,97 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: ac-database
-  namespace: games
+  name: wow
+  namespace: gaming
 spec:
   interval: 5m
   chart:
     spec:
-      chart: mariadb
-      version: 12.1.4
+      chart: app-template
+      version: 14.5.3
       sourceRef:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
   values:
-    auth:
-      rootPassword: ${WOW_PASS}  # CHANGE THIS
-      database: acore
-      username: acoreuser
-      password: ${WOW_PASS}
-    primary:
-      persistence:
+    image:
+      repository: nerddotdad/azerothcore-runtime
+      pullPolicy: IfNotPresent
+      tag: v0.0.10
+
+    persistence:
+      config:
         enabled: true
-        size: 10Gi
+        mountPath: /azerothcore/build/dist/etc/
+        targetSelector:
+          main:
+            main:
+              mountPath: /azerothcore/build/dist/etc/
+            init-copy:
+              mountPath: /azerothcore/build/dist/etc/
+
+      ac-configmap-vol:
+        enabled: true
+        type: configmap
+        objectName: azerothcore-configmap
+        mountPath: /tmp/configs
+        items:
+          - key: authserver.conf
+            path: authserver.conf
+          - key: worldserver.conf
+            path: worldserver.conf
+        targetSelector:
+          main:
+            init-copy:
+              mountPath: /tmp/configs
+
+    workload:
+      main:
+        podSpec:
+          initContainers:
+            init-copy:
+              enabled: true
+              type: init
+              imageSelector: alpineImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Copying config files..."
+                  cp /tmp/authserver.conf /azerothcore/build/dist/etc/authserver.conf
+                  cp /tmp/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
+
+    configmap:
+      azerothcore-configmap:
+        enabled: true
+        data:
+          authserver.conf: |
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            LogLevel = 3
+            BindIP = "0.0.0.0"
+            RealmListPort = 3724
+
+          worldserver.conf: |
+            WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
+            CharacterDatabaseInfo = "mysql://ac_user:password@db/acore_characters"
+            LoginDatabaseInfo = "mysql://ac_user:password@db/acore_auth"
+            HotReload = 1
+            BindIP = "0.0.0.0"
+            WorldServerPort = 8085
+
     service:
-      port: 3306
-
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: ac-db-import
-  namespace: games
-spec:
-  interval: 5m
-  chart:
-    spec:
-      chart: acore-db-import
-      version: 0.1.0
-      sourceRef:
-        kind: GitRepository
-        name: your-azerothcore-repo
-        namespace: flux-system
-  values:
-    AC_DATA_DIR: "/azerothcore/env/dist/data"
-    AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-    AC_LOGIN_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_auth"
-    AC_WORLD_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_world"
-    AC_CHARACTER_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_characters"
-    volumes:
-      - ./env/dist/etc:/azerothcore/env/dist/etc
-      - ./env/dist/logs:/azerothcore/env/dist/logs
-
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: ac-authserver
-  namespace: games
-spec:
-  interval: 5m
-  chart:
-    spec:
-      chart: acore-authserver
-      version: 0.1.0
-      sourceRef:
-        kind: GitRepository
-        name: your-azerothcore-repo
-        namespace: flux-system
-  values:
-    AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-    AC_TEMP_DIR: "/azerothcore/env/dist/temp"
-    AC_LOGIN_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_auth"
-    envFile: conf/dist/env.ac
-    volumes:
-      - ./env/dist/etc:/azerothcore/env/dist/etc
-      - ./env/dist/logs:/azerothcore/env/dist/logs
-    ports:
-      - containerPort: 3724
-
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: ac-worldserver
-  namespace: games
-spec:
-  interval: 5m
-  chart:
-    spec:
-      chart: acore-worldserver
-      version: 0.1.0
-      sourceRef:
-        kind: GitRepository
-        name: your-azerothcore-repo
-        namespace: flux-system
-  values:
-    AC_DATA_DIR: "/azerothcore/env/dist/data"
-    AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-    AC_LOGIN_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_auth"
-    AC_WORLD_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_world"
-    AC_CHARACTER_DATABASE_INFO: "ac-database.games.svc.cluster.local;3306;root;password;acore_characters"
-    envFile: conf/dist/env.ac
-    volumes:
-      - ./env/dist/etc:/azerothcore/env/dist/etc
-      - ./env/dist/logs:/azerothcore/env/dist/logs
-      - ac-client-data:/azerothcore/env/dist/data/:ro
-    ports:
-      - containerPort: 8085
-      - containerPort: 7878
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: ac-client-data
-  namespace: games
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: games
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ac-database
-  namespace: games
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app.kubernetes.io/name: mariadb
-    app.kubernetes.io/instance: ac-database
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ac-authserver
-  namespace: games
-spec:
-  selector:
-    app: ac-authserver
-  ports:
-    - port: 3724
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ac-worldserver
-  namespace: games
-spec:
-  selector:
-    app: ac-worldserver
-  ports:
-    - port: 8085
-    - port: 7878
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: ac-logs
-  namespace: games
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${WOW_IP}
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 8085
+            targetPort: 8085
+          auth:
+            enabled: true
+            protocol: tcp
+            port: 3724
+            targetPort: 3724
