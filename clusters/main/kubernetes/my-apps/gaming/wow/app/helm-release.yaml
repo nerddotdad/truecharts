@@ -92,13 +92,10 @@ spec:
             BindIP = "0.0.0.0"
             RealmListPort = 3724
 
-            LogLevel = 3
-            [Loggers]
-            root = Error
-            server = Info
-            database = Error
-            maps = Error
-            network = Error
+            Loggers = ""
+            Logger.root=3,Console
+            Logger.server=6,Console
+            Logger.sql.sql=6,Console
 
           worldserver.conf: |
             WorldDatabaseInfo = "mysql://ac_user:password@db/acore_world"
@@ -108,13 +105,10 @@ spec:
             BindIP = "0.0.0.0"
             WorldServerPort = 8085
             
-            LogLevel = 3
-            [Loggers]
-            root = Error
-            server = Info
-            database = Error
-            maps = Error
-            network = Error
+            Loggers = ""
+            Logger.root=3,Console
+            Logger.server=6,Console
+            Logger.sql.sql=6,Console
 
     service:
       main:
