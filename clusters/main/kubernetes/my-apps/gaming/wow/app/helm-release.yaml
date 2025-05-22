@@ -17,33 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.10
-
-    persistence:
-      config:
-        enabled: true
-        mountPath: /azerothcore/build/dist/etc/
-        targetSelector:
-          main:
-            main:
-              mountPath: /azerothcore/build/dist/etc/
-            copy-configs:
-              mountPath: /azerothcore/build/dist/etc/
-
-      ac-configmap-vol:
-        enabled: true
-        type: configmap
-        objectName: azerothcore-configmap
-        mountPath: /tmp/configs
-        items:
-          - key: authserver.conf
-            path: authserver.conf
-          - key: worldserver.conf
-            path: worldserver.conf
-        targetSelector:
-          main:
-            copy-configs:
-              mountPath: /tmp/configs
+      tag: v0.0.11
 
     workload:
       main:
@@ -79,23 +53,38 @@ spec:
                 - |
                   echo "Copying config files..."
                   cd /tmp/configs
-                  cp authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-                  cp worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+                  cp -vR Data /azerothcore/build/dist/etc/data && \
+                  cp -v authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+                  cp -v worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+                  cd /azerothcore/build/dist/etc && \
+                  ls && \
                   echo "authserver.conf and worldserver.conf copied successfully."
-            # mariadb:
-            #   enabled: true
-            #   type: init
-            #   imageSelector: mariadb
-            #   command:
-            #     CREATE DATABASE IF NOT EXISTS acore_auth;
-            #     CREATE DATABASE IF NOT EXISTS acore_world;
-            #     CREATE DATABASE IF NOT EXISTS acore_characters;
 
-            #     CREATE USER 'ac_user'@'%' IDENTIFIED BY 'password';
-            #     GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
-            #     GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
-            #     GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
-            #     FLUSH PRIVILEGES;
+    persistence:
+      config:
+        enabled: true
+        mountPath: /azerothcore/build/dist/etc/
+        targetSelector:
+          main:
+            main:
+              mountPath: /azerothcore/build/dist/etc/
+            copy-configs:
+              mountPath: /azerothcore/build/dist/etc/
+
+      ac-configmap-vol:
+        enabled: true
+        type: configmap
+        objectName: azerothcore-configmap
+        mountPath: /tmp/configs
+        items:
+          - key: authserver.conf
+            path: authserver.conf
+          - key: worldserver.conf
+            path: worldserver.conf
+        targetSelector:
+          main:
+            copy-configs:
+              mountPath: /tmp/configs
 
     configmap:
       azerothcore-configmap:
