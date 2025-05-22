@@ -52,10 +52,8 @@ spec:
                 - -c
                 - |
                   echo "Copying config files..."
-                  cd /tmp/configs
-                  cp -v authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-                  cp -v worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
-                  cd /azerothcore/build/dist/etc && \
+                  cp -v /tmp/configs/authserver.conf /azerothcore/bin/authserver.conf && \
+                  cp -v /tmp/configs/worldserver.conf /azerothcore/bin/worldserver.conf && \
                   ls && \
                   echo "authserver.conf and worldserver.conf copied successfully."
 
