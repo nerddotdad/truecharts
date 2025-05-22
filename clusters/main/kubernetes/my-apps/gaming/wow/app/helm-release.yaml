@@ -107,10 +107,15 @@ spec:
             BindIP = "0.0.0.0"
             WorldServerPort = 8085
             
-            Loggers = ""
+            Loggers = root,server,sql.sql
             Logger.root=3,Console
             Logger.server=6,Console
             Logger.sql.sql=6,Console
+
+            Appender.Console=ConsoleAppender
+            Appender.Console.Threshold=1
+            Appender.Console.Layout=PatternLayout
+Appender.Console.Layout.Pattern=%d [%t] %-5p %c: %m%n
       azerothcore-init-sql:
         enabled: true
         data:
