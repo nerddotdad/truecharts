@@ -60,13 +60,13 @@ spec:
     persistence:
       config:
         enabled: true
-        mountPath: /azerothcore/
+        mountPath: /azerothcore
         targetSelector:
           main:
             main:
-              mountPath: /azerothcore/
+              mountPath: /azerothcore
             copy-configs:
-              mountPath: /azerothcore/
+              mountPath: /azerothcore
 
       ac-configmap-vol:
         enabled: true
