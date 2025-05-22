@@ -27,7 +27,7 @@ spec:
           main:
             main:
               mountPath: /azerothcore/build/dist/etc/
-            init-copy:
+            copy-configs:
               mountPath: /azerothcore/build/dist/etc/
 
       ac-configmap-vol:
@@ -42,7 +42,7 @@ spec:
             path: worldserver.conf
         targetSelector:
           main:
-            init-copy:
+            copy-configs:
               mountPath: /tmp/configs
 
     workload:
