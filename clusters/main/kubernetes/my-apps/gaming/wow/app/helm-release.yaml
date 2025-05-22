@@ -184,10 +184,12 @@ spec:
       enabled: true
       size: 8Gi
     extraVolumes:
-      - name: init-sql
+      - enabled: true
+        name: init-sql
         configMap:
           name: azerothcore-init-sql
     extraVolumeMounts:
-      - name: init-sql
+      - enabled: true
+        name: init-sql
         mountPath: /docker-entrypoint-initdb.d/init.sql
         subPath: init.sql
