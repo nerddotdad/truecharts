@@ -52,8 +52,8 @@ spec:
                 - -c
                 - |
                   echo "Copying config files..."
-                  cp -v /tmp/configs/authserver.conf /azerothcore/bin/authserver.conf && \
-                  cp -v /tmp/configs/worldserver.conf /azerothcore/bin/worldserver.conf && \
+                  cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+                  cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
                   ls && \
                   echo "authserver.conf and worldserver.conf copied successfully."
 
@@ -66,7 +66,7 @@ spec:
             main:
               mountPath: /azerothcore/configs
             copy-configs:
-              mountPath: /azerothcore/bin
+              mountPath: /azerothcore/build/dist/etc
 
       ac-configmap-vol:
         enabled: true
