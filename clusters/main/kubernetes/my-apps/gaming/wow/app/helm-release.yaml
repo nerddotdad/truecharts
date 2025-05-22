@@ -188,26 +188,3 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
-  values:
-    auth:
-      rootPassword: "${WOW_PASS}"
-      password: "${WOW_PASS}"
-      username: ac_user
-      database: acore_auth   # primary db for the user, rest created by init.sql
-    primary:
-      service:
-        nameOverride: wow-mariadb
-        port: 3306
-    persistence:
-      enabled: true
-      size: 8Gi
-      extraVolumes:
-        - enabled: true
-          name: init-sql
-          configMap:
-            name: azerothcore-init-sql
-      extraVolumeMounts:
-        - enabled: true
-          name: init-sql
-          mountPath: /docker-entrypoint-initdb.d/init.sql
-          subPath: init.sql
