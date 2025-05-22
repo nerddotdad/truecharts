@@ -53,7 +53,6 @@ spec:
                 - |
                   echo "Copying config files..."
                   cd /tmp/configs
-                  cp -vR data /azerothcore/build/dist/etc/data && \
                   cp -v authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
                   cp -v worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
                   cd /azerothcore/build/dist/etc && \
@@ -81,8 +80,6 @@ spec:
             path: authserver.conf
           - key: worldserver.conf
             path: worldserver.conf
-          - key: data
-            path: data
         targetSelector:
           main:
             copy-configs:
