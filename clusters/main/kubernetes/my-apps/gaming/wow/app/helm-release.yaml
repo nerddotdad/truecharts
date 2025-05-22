@@ -113,7 +113,7 @@ spec:
             Appender.Console=ConsoleAppender
             Appender.Console.Threshold=1
             Appender.Console.Layout=PatternLayout
-Appender.Console.Layout.Pattern=%d [%t] %-5p %c: %m%n
+            Appender.Console.Layout.Pattern=%d [%t] %-5p %c:
       azerothcore-init-sql:
         enabled: true
         data:
