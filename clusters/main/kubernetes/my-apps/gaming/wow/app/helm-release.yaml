@@ -157,20 +157,10 @@ spec:
     mariadb:
       enabled: true
       includeCommon: true
-      password: ${WOW_PASS}
-      rootPassword: ${WOW_PASS}
       creds:
         auth: acore_auth
         characters: acore_characters
         world: acore_world
-      additionalVolumes:
-      - name: init-sql
-        configMap:
-          name: azerothcore-init-sql
-      additionalVolumeMounts:
-        - mountPath: /docker-entrypoint-initdb.d/init.sql
-          name: init-sql
-          subPath: init.sql
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -188,3 +178,7 @@ spec:
         kind: HelmRepository
         name: truecharts
         namespace: flux-system
+
+values:
+  mariadbUsername: "test"
+  mariadbDatabase: "test"
