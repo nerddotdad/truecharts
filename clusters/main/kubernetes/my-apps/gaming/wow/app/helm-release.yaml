@@ -53,7 +53,7 @@ spec:
                 - |
                   echo "Copying config files..."
                   cd /tmp/configs
-                  cp -vR Data /azerothcore/build/dist/etc/data && \
+                  cp -vR data /azerothcore/build/dist/etc/data && \
                   cp -v authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
                   cp -v worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
                   cd /azerothcore/build/dist/etc && \
