@@ -79,8 +79,9 @@ spec:
                 - |
                   echo "Copying config files..."
                   cd /tmp/configs
-                  cp authserver.conf /azerothcore/build/dist/etc/authserver.conf
-                  cp worldserver.conf /azerothcore/build/dist/etc/worldserver.conf
+                  cp authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+                  cp worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+                  echo "authserver.conf and worldserver.conf copied successfully."
 
     configmap:
       azerothcore-configmap:
