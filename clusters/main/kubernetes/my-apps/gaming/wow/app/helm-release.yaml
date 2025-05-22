@@ -201,11 +201,13 @@ spec:
     persistence:
       enabled: true
       size: 8Gi
-    extraVolumes:
-      - name: init-sql
-        configMap:
-          name: azerothcore-init-sql
-    extraVolumeMounts:
-      - name: init-sql
-        mountPath: /docker-entrypoint-initdb.d/init.sql
-        subPath: init.sql
+      extraVolumes:
+        - enabled: true
+          name: init-sql
+          configMap:
+            name: azerothcore-init-sql
+      extraVolumeMounts:
+        - enabled: true
+          name: init-sql
+          mountPath: /docker-entrypoint-initdb.d/init.sql
+          subPath: init.sql
