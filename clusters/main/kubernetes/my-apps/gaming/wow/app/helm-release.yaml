@@ -159,17 +159,6 @@ kind: HelmRelease
 metadata:
   name: wow-mariadb
   namespace: gaming
-data:
-  init.sql: |
-    CREATE DATABASE IF NOT EXISTS acore_auth;
-    CREATE DATABASE IF NOT EXISTS acore_world;
-    CREATE DATABASE IF NOT EXISTS acore_characters;
-
-    CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
-    GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
-    GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
-    GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
-    FLUSH PRIVILEGES;
 spec:
   interval: 5m
   chart:
@@ -181,24 +170,19 @@ spec:
         name: truecharts
         namespace: flux-system
   values:
-    additionalContainers:
-      init-sql:
+    configmap:
+      passinit:
         enabled: true
-        type: init
-        imageSelector: mariadbImage
-        command:
-          - /bin/sh
-          - -c
-          - |
-            echo "Waiting for MariaDB to be ready..."
-            until mysql -h 127.0.0.1 -u root -p$MARIADB_ROOT_PASSWORD -e 'SELECT 1'; do sleep 2; done
-            echo "Running init.sql..."
-            mysql -h 127.0.0.1 -u root -p$MARIADB_ROOT_PASSWORD < /init/init.sql
-        volumeMounts:
-          - mountPath: /init
-            name: init-sql-volume
-    persistence:
-      init-sql-volume:
-        enabled: true
-        type: configmap
-        objectName: wow-mariadb-init
+        data:
+          passinit.sql: |
+            CREATE DATABASE IF NOT EXISTS acore_auth;
+            CREATE DATABASE IF NOT EXISTS acore_world;
+            CREATE DATABASE IF NOT EXISTS acore_characters;
+
+            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
+            GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
+            GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
+            GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
+            FLUSH PRIVILEGES;
+    mariadbUsername: "ac_user"
+    mariadbDatabase: "wow-mariadb"
