@@ -101,7 +101,7 @@ spec:
         enabled: true
         data:
           authserver.conf: |
-            LoginDatabaseInfo = "mysql://ac_user:password@wow-mariadb/acore_auth"
+            LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_auth"
             BindIP = "0.0.0.0"
             RealmListPort = 3724
 
@@ -111,9 +111,9 @@ spec:
             Logger.sql.sql=6,Console
 
           worldserver.conf: |
-            WorldDatabaseInfo = "mysql://ac_user:password@wow-mariadb/acore_world"
-            CharacterDatabaseInfo = "mysql://ac_user:password@wow-mariadb/acore_characters"
-            LoginDatabaseInfo = "mysql://ac_user:password@wow-mariadb/acore_auth"
+            WorldDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_world"
+            CharacterDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_characters"
+            LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_auth"
             HotReload = 1
             BindIP = "0.0.0.0"
             WorldServerPort = 8085
@@ -135,7 +135,7 @@ spec:
             CREATE DATABASE IF NOT EXISTS acore_world;
             CREATE DATABASE IF NOT EXISTS acore_characters;
 
-            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'password';
+            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
             GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
             GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
             GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
