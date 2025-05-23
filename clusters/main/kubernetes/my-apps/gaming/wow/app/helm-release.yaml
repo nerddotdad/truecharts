@@ -68,6 +68,17 @@ spec:
                     secretKeyRef:
                       name: mariadb-secret
                       key: password
+                - name: ACORE_CHARACTERS_HOST
+                  value: wow-mariadb.gaming.svc.cluster.local
+                - name: ACORE_CHARACTERS_DB
+                  value: acore_characters
+                - name: ACORE_CHARACTERS_USER
+                  value: ac_user
+                - name: ACORE_CHARACTERS_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mariadb-secret
+                      key: password
           # initContainers:
           #   copy-configs:
           #     enabled: true
