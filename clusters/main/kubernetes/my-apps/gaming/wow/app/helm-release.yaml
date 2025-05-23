@@ -55,8 +55,8 @@ spec:
                 - name: ACORE_AUTH_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: mariadb-secret
-                      key: password
+                      name: wow-mariadbcreds
+                      key: mariadb-password
                 - name: ACORE_WORLD_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_WORLD_DB
@@ -66,8 +66,8 @@ spec:
                 - name: ACORE_WORLD_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: mariadb-secret
-                      key: password
+                      name: wow-mariadbcreds
+                      key: mariadb-password
                 - name: ACORE_CHARACTERS_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_CHARACTERS_DB
@@ -77,8 +77,8 @@ spec:
                 - name: ACORE_CHARACTERS_PASS
                   valueFrom:
                     secretKeyRef:
-                      name: mariadb-secret
-                      key: password
+                      name: wow-mariadbcreds
+                      key: mariadb-password
           # initContainers:
           #   copy-configs:
           #     enabled: true
