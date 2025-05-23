@@ -56,7 +56,7 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: wow-mariadbcreds
-                      key: mariadb-password
+                      key: MARIADB_PASSWORD
                 - name: ACORE_WORLD_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_WORLD_DB
@@ -67,7 +67,7 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: wow-mariadbcreds
-                      key: mariadb-password
+                      key: MARIADB_PASSWORD
                 - name: ACORE_CHARACTERS_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_CHARACTERS_DB
@@ -78,7 +78,7 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: wow-mariadbcreds
-                      key: mariadb-password
+                      key: MARIADB_PASSWORD
           # initContainers:
           #   copy-configs:
           #     enabled: true
