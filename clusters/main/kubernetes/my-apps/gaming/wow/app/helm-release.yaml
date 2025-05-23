@@ -42,91 +42,107 @@ spec:
               port: 8085
               periodSeconds: 10
               failureThreshold: 3
-          # containers:
-          #   main:
-          #     command:
-          #     - /bin/sh
-          #     - -c
-          #     - |
-          #       echo "Checking permissions:"; \
-          #       ls -l /azerothcore/build/dist/etc; \
-          #       id; \
-          #       sleep 3600
-          initContainers:
-            copy-configs:
-              enabled: true
-              type: init
-              imageSelector: alpineImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "Copying config files..."
-                  cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-                  cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
-                  chmod 644 /azerothcore/build/dist/etc/*.conf && \
-                  chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
-                  ls && \
-                  echo "authserver.conf and worldserver.conf copied successfully."
-
-    persistence:
-      config:
-        enabled: true
-        mountPath: /azerothcore/build/dist/etc
-        targetSelector:
-          main:
+          containers:
             main:
-              mountPath: /azerothcore/build/dist/etc
-            copy-configs:
-              mountPath: /azerothcore/build/dist/etc
+              enabled: true
+              envList:
+                - name: ACORE_AUTH_HOST
+                  value: wow-mariadb.gaming.svc.cluster.local
+                - name: ACORE_AUTH_DB
+                  value: acore_auth
+                - name: ACORE_AUTH_USER
+                  value: ac_user
+                - name: ACORE_AUTH_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mariadb-secret
+                      key: password
+                - name: ACORE_WORLD_HOST
+                  value: wow-mariadb.gaming.svc.cluster.local
+                - name: ACORE_WORLD_DB
+                  value: acore_world
+                - name: ACORE_WORLD_USER
+                  value: ac_user
+                - name: ACORE_WORLD_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: mariadb-secret
+                      key: password
+          # initContainers:
+          #   copy-configs:
+          #     enabled: true
+          #     type: init
+          #     imageSelector: alpineImage
+          #     command:
+          #       - /bin/sh
+          #       - -c
+          #       - |
+          #         echo "Copying config files..."
+          #         cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+          #         cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+          #         chmod 644 /azerothcore/build/dist/etc/*.conf && \
+          #         chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
+          #         ls && \
+          #         echo "authserver.conf and worldserver.conf copied successfully."
+
+    # persistence:
+    #   config:
+    #     enabled: true
+    #     mountPath: /azerothcore/build/dist/etc
+    #     targetSelector:
+    #       main:
+    #         main:
+    #           mountPath: /azerothcore/build/dist/etc
+    #         copy-configs:
+    #           mountPath: /azerothcore/build/dist/etc
 
 
-      ac-configmap-vol:
-        enabled: true
-        type: configmap
-        objectName: azerothcore-configmap
-        mountPath: /tmp/configs
-        items:
-          - key: authserver.conf
-            path: authserver.conf
-          - key: worldserver.conf
-            path: worldserver.conf
-        targetSelector:
-          main:
-            copy-configs:
-              mountPath: /tmp/configs
+      # ac-configmap-vol:
+      #   enabled: true
+      #   type: configmap
+      #   objectName: azerothcore-configmap
+      #   mountPath: /tmp/configs
+      #   items:
+      #     - key: authserver.conf
+      #       path: authserver.conf
+      #     - key: worldserver.conf
+      #       path: worldserver.conf
+      #   targetSelector:
+      #     main:
+      #       copy-configs:
+      #         mountPath: /tmp/configs
 
-    configmap:
-      azerothcore-configmap:
-        enabled: true
-        data:
-          authserver.conf: |
-            LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_auth"
-            BindIP = "0.0.0.0"
-            RealmListPort = 3724
+    # configmap:
+    #   azerothcore-configmap:
+    #     enabled: true
+    #     data:
+    #       authserver.conf: |
+    #         LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_auth"
+    #         BindIP = "0.0.0.0"
+    #         RealmListPort = 3724
 
-            Loggers = ""
-            Logger.root=3,Console
-            Logger.server=6,Console
-            Logger.sql.sql=6,Console
+    #         Loggers = ""
+    #         Logger.root=3,Console
+    #         Logger.server=6,Console
+    #         Logger.sql.sql=6,Console
 
-          worldserver.conf: |
-            WorldDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_world"
-            CharacterDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_characters"
-            LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb/acore_auth"
-            HotReload = 1
-            BindIP = "0.0.0.0"
-            WorldServerPort = 8085
+    #       worldserver.conf: |
+    #         WorldDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_world"
+    #         CharacterDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_characters"
+    #         LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_auth"
+    #         HotReload = 1
+    #         BindIP = "0.0.0.0"
+    #         WorldServerPort = 8085
             
-            Loggers = root,server,sql.sql
-            Logger.root=3,Console
-            Logger.server=6,Console
-            Logger.sql.sql=6,Console
+    #         Loggers = root,server,sql.sql
+    #         Logger.root=3,Console
+    #         Logger.server=6,Console
+    #         Logger.sql.sql=6,Console
 
-            Appender.Console=ConsoleAppender
-            Appender.Console.Threshold=1
-            Appender.Console.Layout=PatternLayout
-            Appender.Console.Layout.Pattern=%d [%t] %-5p %c:
+    #         Appender.Console=ConsoleAppender
+    #         Appender.Console.Threshold=1
+    #         Appender.Console.Layout=PatternLayout
+    #         Appender.Console.Layout.Pattern=%d [%t] %-5p %c:
 
     service:
       main:
@@ -175,9 +191,9 @@ spec:
         enabled: true
         data:
           passinit.sql: |
-            CREATE DATABASE IF NOT EXISTS acore_auth;
-            CREATE DATABASE IF NOT EXISTS acore_world;
-            CREATE DATABASE IF NOT EXISTS acore_characters;
+            CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
             CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
             GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
