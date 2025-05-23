@@ -45,36 +45,27 @@ spec:
           containers:
             main:
               enabled: true
-              envList:
-                - name: ACORE_AUTH_HOST
-                  value: wow-mariadb.gaming.svc.cluster.local
-                - name: ACORE_AUTH_DB
-                  value: acore_auth
-                - name: ACORE_AUTH_USER
-                  value: ac_user
-                - name: ACORE_WORLD_HOST
-                  value: wow-mariadb.gaming.svc.cluster.local
-                - name: ACORE_WORLD_DB
-                  value: acore_world
-                - name: ACORE_WORLD_USER
-                  value: ac_user
-                - name: ACORE_CHARACTERS_HOST
-                  value: wow-mariadb.gaming.svc.cluster.local
-                - name: ACORE_CHARACTERS_DB
-                  value: acore_characters
-                - name: ACORE_CHARACTERS_USER
-                  value: ac_user
-                - name: ACORE_WORLD_PASS
+              env:
+                ACORE_AUTH_HOST: wow-mariadb.gaming.svc.cluster.local
+                ACORE_AUTH_DB: acore_auth
+                ACORE_AUTH_USER: ac_user
+                ACORE_WORLD_HOST: wow-mariadb.gaming.svc.cluster.local
+                ACORE_WORLD_DB: acore_world
+                ACORE_WORLD_USER: ac_user
+                ACORE_CHARACTERS_HOST: wow-mariadb.gaming.svc.cluster.local
+                ACORE_CHARACTERS_DB: acore_characters
+                ACORE_CHARACTERS_USER: ac_user
+                ACORE_WORLD_PASS:
                   secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
                     expandObjectName: false
-                - name: ACORE_AUTH_PASS
+                ACORE_AUTH_PASS:
                   secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
                     expandObjectName: false
-                - name: ACORE_CHARACTERS_PASS
+                ACORE_CHARACTERS_PASS:
                   secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
