@@ -96,14 +96,14 @@ spec:
           #         ls && \
           #         echo "authserver.conf and worldserver.conf copied successfully."
 
-    # persistence:
-    #   config:
-    #     enabled: true
-    #     mountPath: /azerothcore/build/dist/etc
-    #     targetSelector:
-    #       main:
-    #         main:
-    #           mountPath: /azerothcore/build/dist/etc
+    persistence:
+      config:
+        enabled: true
+        mountPath: /azerothcore/build/dist/etc
+        targetSelector:
+          main:
+            main:
+              mountPath: /azerothcore/build/dist/etc
     #         copy-configs:
     #           mountPath: /azerothcore/build/dist/etc
 
