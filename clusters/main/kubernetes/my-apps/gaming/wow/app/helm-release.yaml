@@ -159,6 +159,17 @@ kind: HelmRelease
 metadata:
   name: wow-mariadb
   namespace: gaming
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS acore_auth;
+    CREATE DATABASE IF NOT EXISTS acore_world;
+    CREATE DATABASE IF NOT EXISTS acore_characters;
+
+    CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
+    GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
+    GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
+    GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
+    FLUSH PRIVILEGES;
 spec:
   interval: 5m
   chart:
@@ -191,18 +202,3 @@ spec:
         enabled: true
         type: configmap
         objectName: wow-mariadb-init
-
-    configmap:
-      wow-mariadb-init:
-        enabled: true
-        data:
-          init.sql: |
-            CREATE DATABASE IF NOT EXISTS acore_auth;
-            CREATE DATABASE IF NOT EXISTS acore_world;
-            CREATE DATABASE IF NOT EXISTS acore_characters;
-
-            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
-            GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
-            GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
-            GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
-            FLUSH PRIVILEGES;
