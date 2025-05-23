@@ -52,33 +52,34 @@ spec:
                   value: acore_auth
                 - name: ACORE_AUTH_USER
                   value: ac_user
-                - name: ACORE_AUTH_PASS
-                  valueFrom:
-                    secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: MARIADB_PASSWORD
                 - name: ACORE_WORLD_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_WORLD_DB
                   value: acore_world
                 - name: ACORE_WORLD_USER
                   value: ac_user
-                - name: ACORE_WORLD_PASS
-                  valueFrom:
-                    secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: MARIADB_PASSWORD
                 - name: ACORE_CHARACTERS_HOST
                   value: wow-mariadb.gaming.svc.cluster.local
                 - name: ACORE_CHARACTERS_DB
                   value: acore_characters
                 - name: ACORE_CHARACTERS_USER
                   value: ac_user
+              envFron:
+                - name: ACORE_WORLD_PASS
+                  secretRef:
+                    name: wow-mariadbcreds
+                    key: MARIADB_PASSWORD
+                    expandObjectName: false
+                - name: ACORE_AUTH_PASS
+                  secretRef:
+                    name: wow-mariadbcreds
+                    key: MARIADB_PASSWORD
+                    expandObjectName: false
                 - name: ACORE_CHARACTERS_PASS
-                  valueFrom:
-                    secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: MARIADB_PASSWORD
+                  secretRef:
+                    name: wow-mariadbcreds
+                    key: MARIADB_PASSWORD
+                    expandObjectName: false
           # initContainers:
           #   copy-configs:
           #     enabled: true
