@@ -70,40 +70,29 @@ spec:
                     name: wow-mariadbcreds
                     key: mariadb-password
                     expandObjectName: false
-          initContainers:
-            copy-configs:
-              enabled: true
-              type: init
-              imageSelector: alpineImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "Copying config files..."
-                  cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-                  cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
-                  chmod 644 /azerothcore/build/dist/etc/*.conf && \
-                  chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
-                  ls && \
-                  echo "authserver.conf and worldserver.conf copied successfully."
+          # initContainers:
+          #   copy-configs:
+          #     enabled: true
+          #     type: init
+          #     imageSelector: alpineImage
+          #     command:
+          #       - /bin/sh
+          #       - -c
+          #       - |
+          #         echo "Copying config files..."
+          #         cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+          #         cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+          #         chmod 644 /azerothcore/build/dist/etc/*.conf && \
+          #         chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
+          #         ls && \
+          #         echo "authserver.conf and worldserver.conf copied successfully."
 
     persistence:
       config:
         enabled: true
-        mountPath: /azerothcore/build/dist/etc
-        targetSelector:
-          main:
-            main:
-              mountPath: /azerothcore/build/dist/etc
-            copy-configs:
-              mountPath: /azerothcore/build/dist/etc
-
-
-      ac-configmap-vol:
-        enabled: true
         type: configmap
         objectName: azerothcore-configmap
-        mountPath: /tmp/configs
+        mountPath: /azerothcore/build/dist/etc
         items:
           - key: authserver.conf
             path: authserver.conf
@@ -111,8 +100,26 @@ spec:
             path: worldserver.conf
         targetSelector:
           main:
-            copy-configs:
-              mountPath: /tmp/configs
+            main:
+              mountPath: /azerothcore/build/dist/etc
+            # copy-configs:
+            #   mountPath: /azerothcore/build/dist/etc
+
+
+      # ac-configmap-vol:
+      #   enabled: true
+      #   type: configmap
+      #   objectName: azerothcore-configmap
+      #   mountPath: /tmp/configs
+      #   items:
+      #     - key: authserver.conf
+      #       path: authserver.conf
+      #     - key: worldserver.conf
+      #       path: worldserver.conf
+      #   targetSelector:
+      #     main:
+      #       copy-configs:
+      #         mountPath: /tmp/configs
 
     configmap:
       azerothcore-configmap:
