@@ -42,16 +42,16 @@ spec:
               port: 8085
               periodSeconds: 10
               failureThreshold: 3
-          containers:
-            main:
-              command:
-              - /bin/sh
-              - -c
-              - |
-                echo "Checking permissions:"; \
-                ls -l /azerothcore/build/dist/etc; \
-                id; \
-                sleep 3600
+          # containers:
+          #   main:
+          #     command:
+          #     - /bin/sh
+          #     - -c
+          #     - |
+          #       echo "Checking permissions:"; \
+          #       ls -l /azerothcore/build/dist/etc; \
+          #       id; \
+          #       sleep 3600
           initContainers:
             copy-configs:
               enabled: true
