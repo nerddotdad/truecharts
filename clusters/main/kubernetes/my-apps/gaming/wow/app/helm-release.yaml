@@ -64,7 +64,7 @@ spec:
                   value: acore_characters
                 - name: ACORE_CHARACTERS_USER
                   value: ac_user
-              envFron:
+              envFrom:
                 - name: ACORE_WORLD_PASS
                   secretRef:
                     name: wow-mariadbcreds
