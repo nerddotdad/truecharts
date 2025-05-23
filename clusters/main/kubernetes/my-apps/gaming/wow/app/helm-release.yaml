@@ -64,19 +64,18 @@ spec:
                   value: acore_characters
                 - name: ACORE_CHARACTERS_USER
                   value: ac_user
-              envFrom:
                 - name: ACORE_WORLD_PASS
-                  secretRef:
+                  secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
                     expandObjectName: false
                 - name: ACORE_AUTH_PASS
-                  secretRef:
+                  secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
                     expandObjectName: false
                 - name: ACORE_CHARACTERS_PASS
-                  secretRef:
+                  secretKeyRef:
                     name: wow-mariadbcreds
                     key: MARIADB_PASSWORD
                     expandObjectName: false
