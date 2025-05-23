@@ -70,22 +70,22 @@ spec:
                     name: wow-mariadbcreds
                     key: mariadb-password
                     expandObjectName: false
-          # initContainers:
-          #   copy-configs:
-          #     enabled: true
-          #     type: init
-          #     imageSelector: alpineImage
-          #     command:
-          #       - /bin/sh
-          #       - -c
-          #       - |
-          #         echo "Copying config files..."
-          #         cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-          #         cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
-          #         chmod 644 /azerothcore/build/dist/etc/*.conf && \
-          #         chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
-          #         ls && \
-          #         echo "authserver.conf and worldserver.conf copied successfully."
+          initContainers:
+            copy-configs:
+              enabled: true
+              type: init
+              imageSelector: alpineImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Copying config files..."
+                  cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
+                  cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
+                  chmod 644 /azerothcore/build/dist/etc/*.conf && \
+                  chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
+                  ls && \
+                  echo "authserver.conf and worldserver.conf copied successfully."
 
     persistence:
       config:
@@ -95,56 +95,32 @@ spec:
           main:
             main:
               mountPath: /azerothcore/build/dist/etc
-    #         copy-configs:
-    #           mountPath: /azerothcore/build/dist/etc
+            copy-configs:
+              mountPath: /azerothcore/build/dist/etc
 
 
-      # ac-configmap-vol:
-      #   enabled: true
-      #   type: configmap
-      #   objectName: azerothcore-configmap
-      #   mountPath: /tmp/configs
-      #   items:
-      #     - key: authserver.conf
-      #       path: authserver.conf
-      #     - key: worldserver.conf
-      #       path: worldserver.conf
-      #   targetSelector:
-      #     main:
-      #       copy-configs:
-      #         mountPath: /tmp/configs
+      ac-configmap-vol:
+        enabled: true
+        type: configmap
+        objectName: azerothcore-configmap
+        mountPath: /tmp/configs
+        items:
+          - key: authserver.conf
+            path: authserver.conf
+          - key: worldserver.conf
+            path: worldserver.conf
+        targetSelector:
+          main:
+            copy-configs:
+              mountPath: /tmp/configs
 
-    # configmap:
-    #   azerothcore-configmap:
-    #     enabled: true
-    #     data:
-    #       authserver.conf: |
-    #         LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_auth"
-    #         BindIP = "0.0.0.0"
-    #         RealmListPort = 3724
+    configmap:
+      azerothcore-configmap:
+        enabled: true
+        data:
+          authserver.conf: ""
 
-    #         Loggers = ""
-    #         Logger.root=3,Console
-    #         Logger.server=6,Console
-    #         Logger.sql.sql=6,Console
-
-    #       worldserver.conf: |
-    #         WorldDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_world"
-    #         CharacterDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_characters"
-    #         LoginDatabaseInfo = "mysql://ac_user:PLACEHOLDERPASSWORD@wow-mariadb.gaming.svc.cluster.local/acore_auth"
-    #         HotReload = 1
-    #         BindIP = "0.0.0.0"
-    #         WorldServerPort = 8085
-            
-    #         Loggers = root,server,sql.sql
-    #         Logger.root=3,Console
-    #         Logger.server=6,Console
-    #         Logger.sql.sql=6,Console
-
-    #         Appender.Console=ConsoleAppender
-    #         Appender.Console.Threshold=1
-    #         Appender.Console.Layout=PatternLayout
-    #         Appender.Console.Layout.Pattern=%d [%t] %-5p %c:
+          worldserver.conf: ""
 
     service:
       main:
