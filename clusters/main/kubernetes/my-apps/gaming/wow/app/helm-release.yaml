@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.20
+      tag: v0.0.21
 
     workload:
       main:
@@ -50,30 +50,21 @@ spec:
               args:
                 - infinity
               env:
-                ACORE_AUTH_HOST: wow-mariadb.gaming.svc.cluster.local
-                ACORE_AUTH_DB: acore_auth
-                ACORE_AUTH_USER: ac_user
-                ACORE_WORLD_HOST: wow-mariadb.gaming.svc.cluster.local
-                ACORE_WORLD_DB: acore_world
-                ACORE_WORLD_USER: ac_user
-                ACORE_CHARACTERS_HOST: wow-mariadb.gaming.svc.cluster.local
-                ACORE_CHARACTERS_DB: acore_characters
-                ACORE_CHARACTERS_USER: ac_user
-                ACORE_WORLD_PASS:
-                  secretKeyRef:
-                    name: wow-mariadbcreds
-                    key: mariadb-password
-                    expandObjectName: false
-                ACORE_AUTH_PASS:
-                  secretKeyRef:
-                    name: wow-mariadbcreds
-                    key: mariadb-password
-                    expandObjectName: false
-                ACORE_CHARACTERS_PASS:
-                  secretKeyRef:
-                    name: wow-mariadbcreds
-                    key: mariadb-password
-                    expandObjectName: false
+                - name: ACORE_LOGIN_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: wow-mariadbcreds
+                      key: mariadb-password
+                - name: ACORE_WORLD_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: wow-mariadbcreds
+                      key: mariadb-password
+                - name: ACORE_CHARACTERS_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: wow-mariadbcreds
+                      key: mariadb-password
           # initContainers:
           #   copy-configs:
           #     enabled: true
@@ -179,10 +170,10 @@ spec:
             CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
             CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-            CREATE USER 'ac_user'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
-            GRANT ALL PRIVILEGES ON acore_auth.* TO 'ac_user'@'%';
-            GRANT ALL PRIVILEGES ON acore_world.* TO 'ac_user'@'%';
-            GRANT ALL PRIVILEGES ON acore_characters.* TO 'ac_user'@'%';
+            CREATE USER 'acore'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
+            GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
+            GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
+            GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
             FLUSH PRIVILEGES;
-    mariadbUsername: "ac_user"
+    mariadbUsername: "acore"
     mariadbDatabase: "wow-mariadb"
