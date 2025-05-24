@@ -1,0 +1,10 @@
+apiVersion: v2
+name: azerothcore
+description: AzerothCore WoW server using TrueCharts app-template
+type: application
+version: 0.1.0
+appVersion: "latest"
+dependencies:
+  - name: app-template
+    version: 0.0.0  # pin to a TrueCharts version you use
+    repository: https://charts.truecharts.org
