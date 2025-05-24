@@ -72,7 +72,7 @@ spec:
             wait-for-db:
               enabled: true
               type: init
-              image: alpineImage
+              image: busybox
               command: ['sh', '-c', 'until nc -z wow-mysql.gaming.svc.cluster.local 3306; do echo waiting for db; sleep 2; done;']
 
           # initContainers:
