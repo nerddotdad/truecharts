@@ -70,22 +70,17 @@ spec:
                     name: wow-mariadbcreds
                     key: mariadb-password
                     expandObjectName: false
-          # initContainers:
-          #   copy-configs:
-          #     enabled: true
-          #     type: init
-          #     imageSelector: alpineImage
-          #     command:
-          #       - /bin/sh
-          #       - -c
-          #       - |
-          #         echo "Copying config files..."
-          #         cp -v /tmp/configs/authserver.conf /azerothcore/build/dist/etc/authserver.conf && \
-          #         cp -v /tmp/configs/worldserver.conf /azerothcore/build/dist/etc/worldserver.conf && \
-          #         chmod 644 /azerothcore/build/dist/etc/*.conf && \
-          #         chown -v 568:568 /azerothcore/build/dist/etc/*.conf && \
-          #         ls && \
-          #         echo "authserver.conf and worldserver.conf copied successfully."
+          initContainers:
+            copy-configs:
+              enabled: true
+              type: init
+              imageSelector: alpineImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "checking files"
+                  cd /azerothcore && ls -ltrhR
 
     persistence:
       config:
@@ -102,8 +97,8 @@ spec:
           main:
             main:
               mountPath: /azerothcore/build/dist/etc
-            # copy-configs:
-            #   mountPath: /azerothcore/build/dist/etc
+            copy-configs:
+              mountPath: /azerothcore/build/dist/etc
 
 
       # ac-configmap-vol:
