@@ -45,10 +45,10 @@ spec:
           containers:
             main:
               enabled: true
-              # command:
-              #   - sleep
-              # args:
-              #   - infinity
+              command:
+                - sleep
+              args:
+                - infinity
               env:
                 ACORE_LOGIN_PASS:
                     secretKeyRef:
