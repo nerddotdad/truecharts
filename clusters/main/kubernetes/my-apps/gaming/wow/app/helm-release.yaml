@@ -175,14 +175,11 @@ spec:
       existingSecret: wow-mysql
       existingSecretPasswordKey: mysql-password
       database: "acore_auth" # This is only the primary DB, the rest are created in init
-    primary:
-      extraInitContainers:
-        - name: passinit
-          image: bitnami/mysql:8.4
-          command:
-            - bash
-            - -c
-            - |
+    configmap:
+      passinit:
+        enabled: true
+        data:
+          passinit.sql: |
               echo "Waiting for MySQL to be ready..."
               sleep 10
               mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
