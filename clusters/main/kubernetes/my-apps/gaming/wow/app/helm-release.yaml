@@ -200,6 +200,7 @@ spec:
                 secretKeyRef:
                   name: wow-mysql
                   key: mysql-root-password
+
   # values:
   #   configmap:
   #     passinit:
@@ -217,3 +218,14 @@ spec:
   #           FLUSH PRIVILEGES;
   #   mariadbUsername: "acore"
   #   mariadbDatabase: "wow-mariadb"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wow-mysql
+  namespace: gaming
+type: Opaque
+stringData:
+  mysql-password: acorepass
+  mysql-root-password: rootpass
