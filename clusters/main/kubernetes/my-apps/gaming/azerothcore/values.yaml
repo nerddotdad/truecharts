@@ -3,23 +3,23 @@ image:
     tag: master
 controller:
     type: deployment
-    replicas: ENC[AES256_GCM,data:yA==,iv:5clCUmKmpLU/g2obcwVGbZR23MrYyoyC3mIsL0Wuktk=,tag:ZTNZSxJQgkcMIGion81vGg==,type:int]
+    replicas: ENC[AES256_GCM,data:iQ==,iv:ER0KadJUuI5kvawKmjQUc+tzf2Yzc8rFoahiwzG+BHg=,tag:NUE19GOc0a1snTi+Owwogg==,type:int]
 env:
     # These match the MariaDB container creds
     MYSQL_HOST: mariadb.default.svc.cluster.local
     MYSQL_USER: acore
-    MYSQL_PASSWORD: ENC[AES256_GCM,data:By4cTJs=,iv:p4QrSYjwR6na6wf0Rp+G9W7BeB9lRifh1GyTZ6r05HA=,tag:wy0R33dXORZ4/wUcoJhFCw==,type:str]
+    MYSQL_PASSWORD: ENC[AES256_GCM,data:um8WK8c=,iv:wZjt5qAL3NhbvNq+zTdkL0rk26nZ7K7vBaJDCrn7WPU=,tag:pCFBjLAoVid+wZfcFs5sXw==,type:str]
     MYSQL_DATABASE: acore
 initContainers: []
 sidecars:
     authserver:
-        image: ENC[AES256_GCM,data:sX3s8Aj6X1YVXPM1cF5PL+Rj9W8I9NeL4TW22XmKmvY=,iv:LvTULQXjOEiNMi1pGP2Xd5dFY2dZfpnEqoUCayCMqJ8=,tag:cNjfk7knIefPpPoTxLueoQ==,type:str]
+        image: ENC[AES256_GCM,data:YNSMGVBeGFUXpsQ82lDx0m1WaoQZ7LSrt6Gjq7xLUYM=,iv:IEGzZ6YCSJCJ8I07xxb+glHONLHFkRea4r8y6SfWT2s=,tag:AWCZ0vQEryDI1CJ3M7rLRg==,type:str]
         command:
-            - ENC[AES256_GCM,data:DQPRlMGwK8Auxa+nDmeuz+kUEXBGSzILO1b+,iv:50tiaj4UtjgJ60jIIV9Ue/YoMkc4cC4hu/KSKg1hU3E=,tag:+eXyDBksgIm256/iHhRE8w==,type:str]
+            - ENC[AES256_GCM,data:th6W3AHTbNdEqDhyehylLRvd18ZYUMkajIX8,iv:Fe7B9ZeGcVe7lce5/4n3O/RomDzOI5SkVj6F0sBMnG4=,tag:0fldXzIrakD+WRwFb75YhA==,type:str]
         args: []
         envFrom:
             - secretRef:
-                name: ENC[AES256_GCM,data:6HFXzKiuNI7BXeLhOA==,iv:N7ayPn+MnktwZLQGLQo2HD5dmQmGqkia1m4qnog2Qjo=,tag:VeQqoSMAcwyeKVbTzM82ZQ==,type:str]
+                name: ENC[AES256_GCM,data:n2+gkkH2icqN3A80wQ==,iv:4RixpJMozlNMR4zL9I4T5aK/Oqc7xRgnB/yVJ92qgso=,tag:yBmBYmjnA02qAb9fNnH7iQ==,type:str]
 args:
     - /azerothcore/bin/worldserver
 service:
@@ -40,9 +40,9 @@ persistence:
 mariadb:
     enabled: true
     auth:
-        rootPassword: ENC[AES256_GCM,data:cBXMUg==,iv:6LhHhlDHxYuVSl0DYDs+bJ1Xehqi/KFd+vy6PH7MuDE=,tag:mvrDduZsRdZsbGDiFwWu5Q==,type:str]
+        rootPassword: ENC[AES256_GCM,data:TezIUw==,iv:1kuuQDWp2VtIz22WMSsRHjM9lCJinOEe/awOmX0xiNg=,tag:Sy6FbUZJkAxxSlKi14U/ng==,type:str]
         username: acore
-        password: ENC[AES256_GCM,data:S3k5vMY=,iv:rqKxfgALJQcWoH2P/ftwcLgVA5mE6QqHileeXK0zfN4=,tag:gShCwqamarhEoxXt0xGO/Q==,type:str]
+        password: ENC[AES256_GCM,data:/RU+Xos=,iv:riaQf1Rn2EXoSS5m0ZwGNABf+whwSsBwTmwfgJ8GsZg=,tag:2xGwJb2s+SKObnByDNNwWQ==,type:str]
         database: acore
 sops:
     shamir_threshold: 3
@@ -50,13 +50,13 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB2dDhzRFFhRklGeTdKYzZU
-            UDh4T3M4UGxVTmdxL2Y3eVZlZ2dDWXliMWc4ClE4ZHI0OG1NaUZGQU5BcEJ0TVVt
-            RTUrL0NORnZJUHYyOUcrMnd2Zk1ZcVkKLS0tIERZRjFQaFBvREtxWVBrb3lEWEtm
-            ZUw2VThWdEhWRnhtVk5LNVJpU2VPUncK4SX1rNtHhIHHpc0/eEMxRJswie1FMoW1
-            YQEroc2l7R6BEewXhSkrsC2k21R95cYtgJGb5x9ghL0SM4hB+nODFA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBuM1VGTDdyREp6RTZvV3U0
+            OHdHVHdnd2VPSDgyTVFXbS9FMXQyaG16eldrClRwM1cwdkZOZGErMnVGalMxSXdl
+            R3VDazI4WWl4Sy9HbU8wNUhWWXkwL1UKLS0tIDBQSVp4SEpMM2hPaHpjeU1ZOUUw
+            ajFwbkdxNU1XWmV4MkpJaGZ0UERKSUEKYJiM3xMKtekX4JajWkwnGtkbqdU69R1k
+            F5Rm1foSZF0V3jZBHr9OK5wz4hz5KVxqvCjZrVdchD/DrZeE5Zf6dA==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2025-05-24T04:03:36Z"
-    mac: ENC[AES256_GCM,data:iMA3ZpnZF2Mk3Mp4apR+kjwlAFkGeZGuRZZMwoyig4LIoOOj/YVBfNZDIW5+ppFstagAu3moDzprx2ZEOfQDZ54YYxwn9g89xZ8ujCU+b5uZn5NmX60l7vRIY7RMo7mqnJrILj5S294wzjNTYeNF3vKR1fE5IOTRHgWzmCUXItg=,iv:iASDKCtRa6ixxy+NXyigXjjF2U938/19ONcY4kKmdaE=,tag:cVzz7sE4JkkkjLSkG54ZXw==,type:str]
+    lastmodified: "2025-05-24T04:10:37Z"
+    mac: ENC[AES256_GCM,data:5hPHPwT4iNVF2Z3nRcJGPmV7m5UaMJLF1ghy116xUF4vyfVHCrYQf6HQZDQ34u8v+O5sezELC+cIsuffugE4OD+i3vFachitDkZaXzWFpSEdKbTn0vsaUKtPmkIgsUnmlKSzIEsvGJAuHD4sgdbYXUqbur4qsOqnPAcl0SXss30=,iv:x68RfujLJ16qYJixd9X9fOIWa1Zs7PU/jP8+lbOPITQ=,tag:j9z9enTer67Efc3oNecf3w==,type:str]
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.10.1
