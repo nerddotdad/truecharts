@@ -50,7 +50,7 @@ spec:
               # args:
               #   - infinity
               env:
-                DB_HOST: wow-mariadb.gaming.svc.cluster.local
+                DB_HOST: wow-mysql.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: acore
                 ACORE_LOGIN_PASS:
