@@ -45,10 +45,10 @@ spec:
           containers:
             main:
               enabled: true
-              # command:
-              #   - sleep
-              # args:
-              #   - infinity
+              command:
+                - sleep
+              args:
+                - infinity
               env:
                 ACORE_AUTH_HOST: wow-mariadb.gaming.svc.cluster.local
                 ACORE_AUTH_DB: acore_auth
