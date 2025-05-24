@@ -55,19 +55,24 @@ spec:
                 DB_USER: acore
                 ACORE_LOGIN_PASS:
                     secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: mariadb-password
+                      name: wow-mysql
+                      key: mysql-password
                       expandObjectName: false
                 ACORE_WORLD_PASS:
                     secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: mariadb-password
+                      name: wow-mysql
+                      key: mysql-password
                       expandObjectName: false
                 ACORE_CHARACTERS_PASS:
                     secretKeyRef:
-                      name: wow-mariadbcreds
-                      key: mariadb-password
+                      name: wow-mysql
+                      key: mysql-password
                       expandObjectName: false
+          initContainers:
+          - name: wait-for-db
+            image: alpineImage
+            command: ['sh', '-c', 'until nc -z wow-mysql 3306; do echo waiting for db; sleep 2; done;']
+
           # initContainers:
           #   copy-configs:
           #     enabled: true
@@ -139,44 +144,76 @@ spec:
             port: 3724
             targetPort: 3724
 
-    mariadb:
-      enabled: true
-      includeCommon: true
-      creds:
-        auth: acore_auth
-        characters: acore_characters
-        world: acore_world
+    # mariadb:
+    #   enabled: true
+    #   includeCommon: true
+    #   creds:
+    #     auth: acore_auth
+    #     characters: acore_characters
+    #     world: acore_world
 
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: wow-mariadb
+  name: wow-mysql
   namespace: gaming
 spec:
   interval: 5m
   chart:
     spec:
-      chart: mariadb
+      chart: mysql
       version: 15.9.0  # adjust to your desired version
       sourceRef:
         kind: HelmRepository
-        name: truecharts
+        name: bitnami
         namespace: flux-system
   values:
-    configmap:
-      passinit:
-        enabled: true
-        data:
-          passinit.sql: |
-            CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-            CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-            CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    auth:
+      existingSecret: wow-mysql
+      existingSecretPasswordKey: mysql-password
+      database: "acore_auth" # This is only the primary DB, the rest are created in init
+    primary:
+      extraInitContainers:
+        - name: passinit
+          image: bitnami/mysql:8.0
+          command:
+            - bash
+            - -c
+            - |
+              echo "Waiting for MySQL to be ready..."
+              sleep 10
+              mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
+              CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+              CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+              CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-            CREATE USER 'acore'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
-            GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
-            GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
-            GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
-            FLUSH PRIVILEGES;
-    mariadbUsername: "acore"
-    mariadbDatabase: "wow-mariadb"
+              CREATE USER IF NOT EXISTS 'acore'@'%' IDENTIFIED BY '${MYSQL_ACORE_PASSWORD}';
+              GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
+              GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
+              GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
+              FLUSH PRIVILEGES;
+              EOF
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wow-mysql
+                  key: mysql-root-password
+  # values:
+  #   configmap:
+  #     passinit:
+  #       enabled: true
+  #       data:
+  #         passinit.sql: |
+  #           CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  #           CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  #           CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+  #           CREATE USER 'acore'@'%' IDENTIFIED BY 'PLACEHOLDERPASSWORD';
+  #           GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
+  #           GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
+  #           GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
+  #           FLUSH PRIVILEGES;
+  #   mariadbUsername: "acore"
+  #   mariadbDatabase: "wow-mariadb"
