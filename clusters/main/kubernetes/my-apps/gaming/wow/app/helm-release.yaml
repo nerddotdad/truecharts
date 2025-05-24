@@ -70,17 +70,17 @@ spec:
                     name: wow-mariadbcreds
                     key: mariadb-password
                     expandObjectName: false
-          initContainers:
-            copy-configs:
-              enabled: true
-              type: init
-              imageSelector: alpineImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "checking files"
-                  cd /azerothcore && ls -ltrhR
+          # initContainers:
+          #   copy-configs:
+          #     enabled: true
+          #     type: init
+          #     imageSelector: alpineImage
+          #     command:
+          #       - /bin/sh
+          #       - -c
+          #       - |
+          #         echo "checking files"
+          #         cd /azerothcore && ls -ltrhR
 
     # persistence:
     #   config:
