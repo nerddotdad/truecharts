@@ -22,26 +22,24 @@ spec:
       type: deployment
       replicas: 1
 
-    env:
-      # These match the MariaDB container creds
-      MYSQL_HOST: "mariadb.default.svc.cluster.local"
-      MYSQL_USER: "acore"
-      MYSQL_PASSWORD: "acore"
-      MYSQL_DATABASE: "acore"
-
-    initContainers: []
-    sidecars:
-      authserver:
-        image: acore/ac-wotlk-authserver:master
-        command:
-          - /azerothcore/bin/authserver
-        args: []
-        envFrom:
-          - secretRef:
-              name: mariadb-creds
-
-    args:
+    command:
       - /azerothcore/bin/worldserver
+
+    env:
+      AC_LOGIN_DATABASE_INFO: "mariadb.default.svc.cluster.local;3306;acore;acore;acore_auth"
+      AC_WORLD_DATABASE_INFO: "mariadb.default.svc.cluster.local;3306;acore;acore;acore_world"
+      AC_CHARACTER_DATABASE_INFO: "mariadb.default.svc.cluster.local;3306;acore;acore;acore_characters"
+
+    persistence:
+      config:
+        enabled: true
+        mountPath: /azerothcore/etc
+        type: nfs
+        server: <YOUR_NAS_IP>
+        path: <YOUR_NFS_PATH>
+
+    mariadb:
+      enabled: false
 
     service:
       main:
@@ -50,20 +48,3 @@ spec:
           main:
             port: 8085
             targetPort: 8085
-            protocol: tcp
-
-    persistence:
-        config:
-            enabled: true
-            mountPath: /azerothcore/etc
-            type: nfs
-            server: ${NAS_IP}
-            path: ${NFS_GAME_SERVERS}/azerothcore
-            
-    mariadb:
-      enabled: true
-      auth:
-        rootPassword: root
-        username: acore
-        password: acore
-        database: acore
