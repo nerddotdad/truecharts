@@ -69,9 +69,11 @@ spec:
                       key: mysql-password
                       expandObjectName: false
           initContainers:
-          - name: wait-for-db
-            image: alpineImage
-            command: ['sh', '-c', 'until nc -z wow-mysql 3306; do echo waiting for db; sleep 2; done;']
+            wait-for-db:
+              enabled: true
+              type: init
+              image: alpineImage
+              command: ['sh', '-c', 'until nc -z wow-mysql 3306; do echo waiting for db; sleep 2; done;']
 
           # initContainers:
           #   copy-configs:
