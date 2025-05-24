@@ -68,12 +68,12 @@ spec:
                       name: wow-mysql
                       key: mysql-password
                       expandObjectName: false
-          initContainers:
-            wait-for-db:
-              enabled: true
-              type: init
-              image: busybox
-              command: ['sh', '-c', 'until nc -z wow-mysql.gaming.svc.cluster.local 3306; do echo waiting for db; sleep 2; done;']
+          # initContainers:
+          #   wait-for-db:
+          #     enabled: true
+          #     type: init
+          #     image: busybox
+          #     command: ['sh', '-c', 'until nc -z wow-mysql.gaming.svc.cluster.local 3306; do echo waiting for db; sleep 2; done;']
 
           # initContainers:
           #   copy-configs:
