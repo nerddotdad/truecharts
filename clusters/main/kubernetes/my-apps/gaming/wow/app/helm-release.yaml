@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.22
+      tag: v0.0.23
 
     workload:
       main:
@@ -45,10 +45,10 @@ spec:
           containers:
             main:
               enabled: true
-              # command:
-              #   - sleep
-              # args:
-              #   - infinity
+              command:
+                - sleep
+              args:
+                - infinity
               env:
                 ACORE_LOGIN_PASS:
                     secretKeyRef:
