@@ -163,7 +163,7 @@ spec:
   chart:
     spec:
       chart: mysql
-      version: 15.9.0  # adjust to your desired version
+      version: 13.0.0
       sourceRef:
         kind: HelmRepository
         name: bitnami
