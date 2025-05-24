@@ -25,23 +25,23 @@ spec:
           probes:
             startup:
               enabled: false
-              type: tcp
-              port: 8085
-              initialDelaySeconds: 30
-              periodSeconds: 10
-              failureThreshold: 10
+              # type: tcp
+              # port: 8085
+              # initialDelaySeconds: 30
+              # periodSeconds: 10
+              # failureThreshold: 10
             liveness:
               enabled: false
-              type: tcp
-              port: 8085
-              periodSeconds: 10
-              failureThreshold: 5
+              # type: tcp
+              # port: 8085
+              # periodSeconds: 10
+              # failureThreshold: 5
             readiness:
               enabled: false
-              type: tcp
-              port: 8085
-              periodSeconds: 10
-              failureThreshold: 3
+              # type: tcp
+              # port: 8085
+              # periodSeconds: 10
+              # failureThreshold: 3
           containers:
             main:
               enabled: true
