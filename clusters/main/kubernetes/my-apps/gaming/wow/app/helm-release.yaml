@@ -24,20 +24,20 @@ spec:
         podSpec:
           probes:
             startup:
-              enabled: true
+              enabled: false
               type: tcp
               port: 8085
               initialDelaySeconds: 30
               periodSeconds: 10
               failureThreshold: 10
             liveness:
-              enabled: true
+              enabled: false
               type: tcp
               port: 8085
               periodSeconds: 10
               failureThreshold: 5
             readiness:
-              enabled: true
+              enabled: false
               type: tcp
               port: 8085
               periodSeconds: 10
