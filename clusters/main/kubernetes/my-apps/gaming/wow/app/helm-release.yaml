@@ -197,8 +197,7 @@ spec:
               FLUSH PRIVILEGES;
               EOF
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
+            MYSQL_ROOT_PASSWORD:
                 secretKeyRef:
                   name: wow-mysql
                   key: mysql-root-password
