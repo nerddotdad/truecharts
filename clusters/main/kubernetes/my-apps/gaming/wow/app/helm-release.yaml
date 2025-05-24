@@ -65,9 +65,9 @@ spec:
                       name: wow-mariadbcreds
                       key: mariadb-password
                       expandObjectName: false
-                LOGIN_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;${ACORE_LOGIN_PASS};acore_auth"
-                WORLD_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;${ACORE_WORLD_PASS};acore_world"
-                CHARACTER_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;${ACORE_CHARACTERS_PASS};acore_characters"
+                LOGIN_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;{{ ACORE_LOGIN_PASS }};acore_auth"
+                WORLD_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;{{ ACORE_WORLD_PASS }};acore_world"
+                CHARACTER_DATABASE_INFO: "wow-mariadb.gaming.svc.cluster.local;3306;acore;{{ ACORE_CHARACTERS_PASS }};acore_characters"
           # initContainers:
           #   copy-configs:
           #     enabled: true
