@@ -82,23 +82,23 @@ spec:
                   echo "checking files"
                   cd /azerothcore && ls -ltrhR
 
-    persistence:
-      config:
-        enabled: true
-        type: configmap
-        objectName: azerothcore-configmap
-        mountPath: /azerothcore/build/dist/etc
-        items:
-          - key: authserver.conf
-            path: authserver.conf
-          - key: worldserver.conf
-            path: worldserver.conf
-        targetSelector:
-          main:
-            main:
-              mountPath: /azerothcore/build/dist/etc
-            copy-configs:
-              mountPath: /azerothcore/build/dist/etc
+    # persistence:
+    #   config:
+    #     enabled: true
+    #     type: configmap
+    #     objectName: azerothcore-configmap
+    #     mountPath: /azerothcore/build/dist/etc
+    #     items:
+    #       - key: authserver.conf
+    #         path: authserver.conf
+    #       - key: worldserver.conf
+    #         path: worldserver.conf
+    #     targetSelector:
+    #       main:
+    #         main:
+    #           mountPath: /azerothcore/build/dist/etc
+    #         copy-configs:
+    #           mountPath: /azerothcore/build/dist/etc
 
 
       # ac-configmap-vol:
@@ -116,13 +116,13 @@ spec:
       #       copy-configs:
       #         mountPath: /tmp/configs
 
-    configmap:
-      azerothcore-configmap:
-        enabled: true
-        data:
-          authserver.conf: ""
+    # configmap:
+    #   azerothcore-configmap:
+    #     enabled: true
+    #     data:
+    #       authserver.conf: ""
 
-          worldserver.conf: ""
+    #       worldserver.conf: ""
 
     service:
       main:
