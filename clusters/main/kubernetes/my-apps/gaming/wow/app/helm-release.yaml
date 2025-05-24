@@ -176,7 +176,7 @@ spec:
     primary:
       extraInitContainers:
         - name: passinit
-          image: bitnami/mysql:8.0
+          image: bitnami/mysql:8.4
           command:
             - bash
             - -c
