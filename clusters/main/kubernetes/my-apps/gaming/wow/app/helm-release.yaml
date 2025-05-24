@@ -54,14 +54,17 @@ spec:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
+                      expandObjectName: false
                 ACORE_WORLD_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
+                      expandObjectName: false
                 ACORE_CHARACTERS_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
+                      expandObjectName: false
           # initContainers:
           #   copy-configs:
           #     enabled: true
