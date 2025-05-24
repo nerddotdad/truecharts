@@ -59,3 +59,11 @@ spec:
             type: nfs
             server: ${NAS_IP}
             path: ${NFS_GAME_SERVERS}/azerothcore
+            
+    mariadb:
+      enabled: true
+      auth:
+        rootPassword: root
+        username: acore
+        password: acore
+        database: acore
