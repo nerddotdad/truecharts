@@ -7,4 +7,4 @@ resources:
   - minecraft-java/ks.yaml
   - teamspeak3/ks.yaml
   - wow/ks.yaml
-  - azerothcore
+  - azerothcore/ks.yaml
