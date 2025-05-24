@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.23
+      tag: v0.0.24
 
     workload:
       main:
@@ -45,11 +45,14 @@ spec:
           containers:
             main:
               enabled: true
-              command:
-                - sleep
-              args:
-                - infinity
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
               env:
+                DB_HOST: wow-mariadb.gaming.svc.cluster.local
+                DB_PORT: 3306
+                DB_USER: acore
                 ACORE_LOGIN_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
