@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.21
+      tag: v0.0.20
 
     workload:
       main:
@@ -50,18 +50,15 @@ spec:
               args:
                 - infinity
               env:
-                - name: ACORE_LOGIN_PASS
-                  valueFrom:
+                ACORE_LOGIN_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
-                - name: ACORE_WORLD_PASS
-                  valueFrom:
+                ACORE_WORLD_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
-                - name: ACORE_CHARACTERS_PASS
-                  valueFrom:
+                ACORE_CHARACTERS_PASS:
                     secretKeyRef:
                       name: wow-mariadbcreds
                       key: mariadb-password
