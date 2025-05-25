@@ -79,6 +79,45 @@ spec:
                     name: wow-mysql
                     key: mysql-password
                     expandObjectName: false
+          initContainers:
+            prep-mysql:
+              env:
+                DB_HOST: wow-mysql.gaming.svc.cluster.local
+                DB_USER: acore
+                ACORE_LOGIN_ROOT_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-root-password
+                    expandObjectName: false
+                ACORE_LOGIN_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-password
+                    expandObjectName: false
+              enabled: true
+              type: init
+              imageSelector: alpineImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  apk add --no-cache mysql-client
+
+                  until mysqladmin ping -h "${DB_HOST}" -u root -p"${ACORE_LOGIN_ROOT_PASS}" --silent; do
+                    echo "Waiting for MySQL..."
+                    sleep 2
+                  done
+                  
+                  mysql -u root -p${ACORE_LOGIN_ROOT_PASS} -h ${DB_HOST} << eof
+                  CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${ACORE_LOGIN_PASS}' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
+                  GRANT ALL PRIVILEGES ON * . * TO 'acore'@'%' WITH GRANT OPTION;
+                  CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  CREATE DATABASE IF NOT EXISTS acore_world DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  CREATE DATABASE IF NOT EXISTS acore_characters DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  GRANT ALL PRIVILEGES ON acore_auth.* TO '${DB_USER}'@'%' WITH GRANT OPTION;
+                  GRANT ALL PRIVILEGES ON acore_world.* TO '${DB_USER}'@'%' WITH GRANT OPTION;
+                  GRANT ALL PRIVILEGES ON acore_characters.* TO '${DB_USER}'@'%' WITH GRANT OPTION;
+                  eof
 
     service:
       main:
@@ -144,56 +183,6 @@ spec:
                   type: tcp
                 startup:
                   type: tcp
-          initContainers:
-            prep-mysql:
-              env:
-                DB_HOST: wow-mysql.gaming.svc.cluster.local
-                DB_PORT: 3306
-                DB_USER: acore
-                ACORE_LOGIN_ROOT_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                ACORE_LOGIN_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_WORLD_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_CHARACTERS_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-              enabled: true
-              type: init
-              imageSelector: alpineImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  apk add --no-cache mysql-client
-
-                  until mysqladmin ping -h "${DB_HOST}" -u root -p"${ACORE_LOGIN_ROOT_PASS}" --silent; do
-                    echo "Waiting for MySQL..."
-                    sleep 2
-                  done
-
-                  mysql -u root -p${ACORE_LOGIN_ROOT_PASS} -h ${DB_HOST} << eof
-                  CREATE USER IF NOT EXISTS 'acore'@'%' IDENTIFIED BY '${ACORE_LOGIN_PASS}' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
-                  GRANT ALL PRIVILEGES ON * . * TO 'acore'@'%' WITH GRANT OPTION;
-                  CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
-                  CREATE DATABASE IF NOT EXISTS acore_world DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
-                  CREATE DATABASE IF NOT EXISTS acore_characters DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
-                  GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%' WITH GRANT OPTION;
-                  GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%' WITH GRANT OPTION;
-                  GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%' WITH GRANT OPTION;
-                  eof
 
     service:
       main:
