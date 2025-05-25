@@ -68,50 +68,50 @@ spec:
                     name: wow-mysql
                     key: mysql-password
                     expandObjectName: false
-          initContainers:
-            prep-mysql:
-              env:
-                DB_HOST: wow-mysql.gaming.svc.cluster.local
-                DB_PORT: 3306
-                DB_USER: acore
-                ACORE_DB_ROOT:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                ACORE_LOGIN_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_WORLD_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_CHARACTERS_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-              enabled: true
-              type: init
-              imageSelector: alpineImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  apk add --no-cache mysql-client
-                  mysql -u root -p${ACORE_LOGIN_PASS} -h ${DB_HOST} << eof
-                  CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-                  CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-                  CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-                  CREATE USER IF NOT EXISTS 'acore'@'%' IDENTIFIED BY '${ACORE_LOGIN_PASS}';
-                  GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
-                  GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
-                  GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
-                  FLUSH PRIVILEGES;
-                  eof
+          # initContainers:
+          #   prep-mysql:
+          #     env:
+          #       DB_HOST: wow-mysql.gaming.svc.cluster.local
+          #       DB_PORT: 3306
+          #       DB_USER: acore
+          #       ACORE_DB_ROOT:
+          #         secretKeyRef:
+          #           name: wow-mysql
+          #           key: mysql-root-password
+          #           expandObjectName: false
+          #       ACORE_LOGIN_PASS:
+          #         secretKeyRef:
+          #           name: wow-mysql
+          #           key: mysql-password
+          #           expandObjectName: false
+          #       ACORE_WORLD_PASS:
+          #         secretKeyRef:
+          #           name: wow-mysql
+          #           key: mysql-password
+          #           expandObjectName: false
+          #       ACORE_CHARACTERS_PASS:
+          #         secretKeyRef:
+          #           name: wow-mysql
+          #           key: mysql-password
+          #           expandObjectName: false
+          #     enabled: true
+          #     type: init
+          #     imageSelector: alpineImage
+          #     command:
+          #       - /bin/sh
+          #       - -c
+          #       - |
+          #         apk add --no-cache mysql-client
+          #         mysql -u root -p${ACORE_LOGIN_PASS} -h ${DB_HOST} << eof
+          #         CREATE DATABASE IF NOT EXISTS acore_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          #         CREATE DATABASE IF NOT EXISTS acore_world CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          #         CREATE DATABASE IF NOT EXISTS acore_characters CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          #         CREATE USER IF NOT EXISTS 'acore'@'%' IDENTIFIED BY '${ACORE_LOGIN_PASS}';
+          #         GRANT ALL PRIVILEGES ON acore_auth.* TO 'acore'@'%';
+          #         GRANT ALL PRIVILEGES ON acore_world.* TO 'acore'@'%';
+          #         GRANT ALL PRIVILEGES ON acore_characters.* TO 'acore'@'%';
+          #         FLUSH PRIVILEGES;
+          #         eof
 
     service:
       main:
