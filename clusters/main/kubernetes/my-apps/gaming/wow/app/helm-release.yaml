@@ -49,10 +49,10 @@ spec:
           containers:
             main:
               enabled: true
-              command:
-                - sleep
-              args:
-                - infinity
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
               env:
                 WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
