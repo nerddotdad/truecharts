@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.32
+      tag: v0.0.33
     
     # securityContext:
     #   container:
@@ -54,7 +54,7 @@ spec:
               # args:
               #   - infinity
               env:
-                # AC_BIND_IP: ${WOW_IP}
+                WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: acore
