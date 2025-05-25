@@ -101,12 +101,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  apk add --no-cache mariadb-client
-
-                  until mysqladmin ping -h "${DB_HOST}" -u root -p"${ACORE_LOGIN_ROOT_PASS}" --silent; do
-                    echo "Waiting for MySQL..."
-                    sleep 2
-                  done
+                  apk add --no-cache mysql-client
                   
                   mysql -u root -p${ACORE_LOGIN_ROOT_PASS} -h ${DB_HOST} << eof
                   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${ACORE_LOGIN_PASS}' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
