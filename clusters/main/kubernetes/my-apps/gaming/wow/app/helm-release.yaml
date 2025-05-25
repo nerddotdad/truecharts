@@ -106,18 +106,52 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: mysql
-      version: 13.0.0
+      chart: app-template
+      version: 14.5.3
       sourceRef:
         kind: HelmRepository
-        name: bitnami
+        name: truecharts
         namespace: flux-system
   values:
-    auth:
-      existingSecret: wow-mysql
-      existingSecretPasswordKey: mysql-password
-      existingSecretRootPasswordKey: mysql-root-password
-      database: acore_auth
+    image:
+      repository: mysql
+      pullPolicy: IfNotPresent
+      tag: 8.0-debian@sha256:ec0957404cd383ad34be3bae61173ab9c33d9404e14f5cc236dd53a43c819373
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              probes:
+                liveness:
+                  type: tcp
+                readiness:
+                  type: tcp
+                startup:
+                  type: tcp
+---
+# apiVersion: helm.toolkit.fluxcd.io/v2beta1
+# kind: HelmRelease
+# metadata:
+#   name: wow-mysql
+#   namespace: gaming
+# spec:
+#   interval: 5m
+#   chart:
+#     spec:
+#       chart: mysql
+#       version: 13.0.0
+#       sourceRef:
+#         kind: HelmRepository
+#         name: bitnami
+#         namespace: flux-system
+#   values:
+#     auth:
+#       existingSecret: wow-mysql
+#       existingSecretPasswordKey: mysql-password
+#       existingSecretRootPasswordKey: mysql-root-password
+#       database: acore_auth
 ---
 apiVersion: v1 
 kind: Secret
