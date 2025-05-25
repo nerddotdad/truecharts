@@ -96,7 +96,7 @@ spec:
                     expandObjectName: false
               enabled: true
               type: init
-              imageSelector: mariadbClientImage
+              image: mariadb
               command:
                 - /bin/sh
                 - -c
