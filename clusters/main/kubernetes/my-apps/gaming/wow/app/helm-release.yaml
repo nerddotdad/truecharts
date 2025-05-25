@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.27
+      tag: v0.0.28
 
     workload:
       main:
@@ -45,10 +45,10 @@ spec:
           containers:
             main:
               enabled: true
-              command:
-                - sleep
-              args:
-                - infinity
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
               env:
                 DB_HOST: wow-mysql.gaming.svc.cluster.local
                 DB_PORT: 3306
@@ -153,7 +153,7 @@ spec:
       existingSecretRootPasswordKey: mysql-root-password
       database: acore_auth
 ---
-apiVersion: v1
+apiVersion: v1 
 kind: Secret
 metadata:
   name: wow-mysql
