@@ -19,9 +19,9 @@ spec:
       pullPolicy: IfNotPresent
       tag: v0.0.33
     
-    # securityContext:
-    #   container:
-    #     readOnlyRootFilesystem: false
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
 
     workload:
       main:
