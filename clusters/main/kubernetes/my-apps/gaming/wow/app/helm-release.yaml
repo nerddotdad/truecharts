@@ -101,7 +101,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until /usr/bin/mariadb-admin ping -h ${DB_HOST} -u root -p${ACORE_LOGIN_ROOT_PASS} --silent; do
+                  until mysqladmin ping -h ${DB_HOST} -u root -p${ACORE_LOGIN_ROOT_PASS} --silent; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
