@@ -82,7 +82,7 @@ spec:
           initContainers:
             prep-mysql:
               env:
-                DB_HOST: wow-mysql.gaming.svc.cluster.local
+                DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: acore
                 ACORE_LOGIN_ROOT_PASS:
                   secretKeyRef:
