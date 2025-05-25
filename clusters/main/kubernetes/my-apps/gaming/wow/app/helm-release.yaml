@@ -101,7 +101,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  apk add --no-cache mysql-client
+                  apk add --no-cache mariadb-client
 
                   until mysqladmin ping -h "${DB_HOST}" -u root -p"${ACORE_LOGIN_ROOT_PASS}" --silent; do
                     echo "Waiting for MySQL..."
