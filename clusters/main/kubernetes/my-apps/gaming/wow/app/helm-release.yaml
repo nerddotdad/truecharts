@@ -18,6 +18,10 @@ spec:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
       tag: v0.0.28
+    
+    securityContext:
+      main:
+        readOnlyRootFilesystem: false
 
     workload:
       main:
