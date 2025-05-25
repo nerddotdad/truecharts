@@ -20,7 +20,7 @@ spec:
       tag: v0.0.28
     
     securityContext:
-      main:
+      container:
         readOnlyRootFilesystem: false
 
     workload:
