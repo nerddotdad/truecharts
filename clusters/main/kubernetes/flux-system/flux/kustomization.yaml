@@ -8,4 +8,5 @@ resources:
   - ./flux.yaml
   - ./upgradesettings.yaml
   - ./namespace.yaml
-  # - sopssecret.secret.yaml
+  - ./capacitor.yaml
+  # - sopssecret.secret.yaml  - capacitor.yaml
