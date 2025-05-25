@@ -49,6 +49,8 @@ spec:
           containers:
             main:
               enabled: true
+              stdin: true
+              tty: true
               # command:
               #   - sleep
               # args:
