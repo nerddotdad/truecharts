@@ -123,6 +123,19 @@ spec:
         podSpec:
           containers:
             main:
+              env:
+                MYSQL_DATABASE: acore_auth
+                MYSQL_USER: acore
+                MYSQL_ROOT_PASSWORD:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-root-password
+                    expandObjectName: false
+                MYSQL_PASSWORD:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-password
+                    expandObjectName: false
               probes:
                 liveness:
                   type: tcp
@@ -130,6 +143,16 @@ spec:
                   type: tcp
                 startup:
                   type: tcp
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 3306
+            targetPort: 3306
 ---
 # apiVersion: helm.toolkit.fluxcd.io/v2beta1
 # kind: HelmRelease
