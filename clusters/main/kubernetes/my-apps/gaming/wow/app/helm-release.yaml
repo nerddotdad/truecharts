@@ -58,7 +58,7 @@ spec:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: acore
-                $ACORE_LOGIN_ROOT_PASS:
+                ACORE_LOGIN_ROOT_PASS:
                   secretKeyRef:
                     name: wow-mysql
                     key: mysql-root-password
