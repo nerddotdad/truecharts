@@ -140,6 +140,7 @@ spec:
           containers:
             realmlist-updater:
               enabled: true
+              primary: true
               probes:
                 startup:
                   enabled: false
