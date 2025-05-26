@@ -144,7 +144,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -p -h "$DB_HOST"; do
+                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST"; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
