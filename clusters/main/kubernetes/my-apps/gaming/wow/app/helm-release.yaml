@@ -26,28 +26,28 @@ spec:
     workload:
       main:
         podSpec:
-          probes:
-            startup:
-              enabled: false
-              # type: tcp
-              # port: 8085
-              # initialDelaySeconds: 30
-              # periodSeconds: 10
-              # failureThreshold: 10
-            liveness:
-              enabled: false
-              # type: tcp
-              # port: 8085
-              # periodSeconds: 10
-              # failureThreshold: 5
-            readiness:
-              enabled: false
-              # type: tcp
-              # port: 8085
-              # periodSeconds: 10
-              # failureThreshold: 3
           containers:
             main:
+              probes:
+                startup:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # initialDelaySeconds: 30
+                  # periodSeconds: 10
+                  # failureThreshold: 10
+                liveness:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # periodSeconds: 10
+                  # failureThreshold: 5
+                readiness:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # periodSeconds: 10
+                  # failureThreshold: 3
               enabled: true
               stdin: true
               tty: true
@@ -83,6 +83,26 @@ spec:
                     key: mysql-password
                     expandObjectName: false
             auth:
+              probes:
+                startup:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # initialDelaySeconds: 30
+                  # periodSeconds: 10
+                  # failureThreshold: 10
+                liveness:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # periodSeconds: 10
+                  # failureThreshold: 5
+                readiness:
+                  enabled: false
+                  # type: tcp
+                  # port: 8085
+                  # periodSeconds: 10
+                  # failureThreshold: 3
               enabled: true
               stdin: true
               tty: true
