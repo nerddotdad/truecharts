@@ -26,7 +26,7 @@ spec:
             main:
               env:
                 MYSQL_DATABASE: acore_auth
-                MYSQL_USER: acore
+                MYSQL_USER: ${WOW_DB_USER}
                 MYSQL_ROOT_PASSWORD:
                   secretKeyRef:
                     name: wow-mysql
@@ -37,14 +37,6 @@ spec:
                     name: wow-mysql
                     key: mysql-password
                     expandObjectName: false
-              probes:
-                liveness:
-                  type: tcp
-                readiness:
-                  type: tcp
-                startup:
-                  type: tcp
-
     service:
       main:
         enabled: true
@@ -54,3 +46,11 @@ spec:
             protocol: tcp
             port: 3306
             targetPort: 3306
+
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        mountPath: /var/lib/mysql
+        path: ${NFS_GAME_SERVERS}/azerothcore/data
+        server: ${NAS_IP}

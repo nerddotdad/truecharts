@@ -1,3 +1,5 @@
+# VARS from clusterenv.yaml
+# WOW_DB_USER, WOW_DB_ROOT_USER, WOW_DB_PASS, WOW_DB_ROOT_PASS, WOW_IP
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -17,7 +19,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.35
+      tag: v0.1.0
     
     securityContext:
       container:
@@ -28,26 +30,6 @@ spec:
         podSpec:
           containers:
             main:
-              probes:
-                startup:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # initialDelaySeconds: 30
-                  # periodSeconds: 10
-                  # failureThreshold: 10
-                liveness:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # periodSeconds: 10
-                  # failureThreshold: 5
-                readiness:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # periodSeconds: 10
-                  # failureThreshold: 3
               enabled: true
               stdin: true
               tty: true
@@ -56,12 +38,11 @@ spec:
               # args:
               #   - infinity
               env:
-                AUTH_SERV: false
-                AC_DATA_DIR: /azerothcore/data
+                AUTH_SERV: false # this is required for entrypoint to run the correct servers per container.
                 WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
-                DB_USER: acore
+                DB_USER: ${WOW_DB_USER}
                 ACORE_LOGIN_ROOT_PASS:
                   secretKeyRef:
                     name: wow-mysql
@@ -83,26 +64,6 @@ spec:
                     key: mysql-password
                     expandObjectName: false
             auth:
-              probes:
-                startup:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # initialDelaySeconds: 30
-                  # periodSeconds: 10
-                  # failureThreshold: 10
-                liveness:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # periodSeconds: 10
-                  # failureThreshold: 5
-                readiness:
-                  enabled: false
-                  # type: tcp
-                  # port: 8085
-                  # periodSeconds: 10
-                  # failureThreshold: 3
               enabled: true
               stdin: true
               tty: true
@@ -111,12 +72,11 @@ spec:
               # args:
               #   - infinity
               env:
-                AUTH_SERV: true
-                AC_DATA_DIR: /azerothcore/data
+                AUTH_SERV: true # this is required for entrypoint to run the correct servers per container.
                 WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
-                DB_USER: acore
+                DB_USER: ${WOW_DB_USER}
                 ACORE_LOGIN_ROOT_PASS:
                   secretKeyRef:
                     name: wow-mysql
@@ -141,7 +101,7 @@ spec:
             prep-mysql:
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
-                DB_USER: acore
+                DB_USER: ${WOW_DB_USER}
                 ACORE_LOGIN_ROOT_PASS:
                   secretKeyRef:
                     name: wow-mysql
@@ -163,8 +123,7 @@ spec:
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
-
-                  mysql -u root -p"$ACORE_LOGIN_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  mysql -u "$DB_ROOT_USER" -p"$ACORE_LOGIN_ROOT_PASS" -h "$DB_HOST" <<EOF
                   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$ACORE_LOGIN_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
                   GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
@@ -173,6 +132,7 @@ spec:
                   GRANT ALL PRIVILEGES ON acore_auth.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_world.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  UPDATE realmlist SET address = '${WOW_IP}', port = 8085 WHERE id = 1;
                   EOF
 
     service:
