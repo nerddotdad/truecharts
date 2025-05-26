@@ -43,26 +43,8 @@ spec:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: ${WOW_DB_USER}
-                ACORE_LOGIN_ROOT_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                ACORE_LOGIN_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_WORLD_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_CHARACTERS_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
             auth:
               enabled: true
               stdin: true
@@ -77,41 +59,15 @@ spec:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: ${WOW_DB_USER}
-                ACORE_LOGIN_ROOT_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                ACORE_LOGIN_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_WORLD_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
-                ACORE_CHARACTERS_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
           initContainers:
             prep-mysql:
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: ${WOW_DB_USER}
-                ACORE_LOGIN_ROOT_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                ACORE_LOGIN_PASS:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
+                ACORE_LOGIN_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                ACORE_LOGIN_PASS: ${WOW_DB_PASS}
               enabled: true
               type: init
               imageSelector: mysqlImage
@@ -119,12 +75,12 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -h "$DB_HOST" -u root -p"$ACORE_LOGIN_ROOT_PASS" --silent; do
+                  until mysqladmin ping -h "$DB_HOST" -u root -p"$WOW_DB_ROOT_PASS" --silent; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
-                  mysql -u "$DB_ROOT_USER" -p"$ACORE_LOGIN_ROOT_PASS" -h "$DB_HOST" <<EOF
-                  CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$ACORE_LOGIN_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
+                  mysql -u "$DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$WOW_DB_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
                   GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
                   CREATE DATABASE IF NOT EXISTS acore_world DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;

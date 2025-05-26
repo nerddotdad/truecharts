@@ -27,16 +27,8 @@ spec:
               env:
                 MYSQL_DATABASE: acore_auth
                 MYSQL_USER: ${WOW_DB_USER}
-                MYSQL_ROOT_PASSWORD:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-root-password
-                    expandObjectName: false
-                MYSQL_PASSWORD:
-                  secretKeyRef:
-                    name: wow-mysql
-                    key: mysql-password
-                    expandObjectName: false
+                MYSQL_ROOT_PASSWORD: ${WOW_DB_ROOT_PASS}
+                MYSQL_PASSWORD: ${WOW_DB_PASS}
     service:
       main:
         enabled: true
