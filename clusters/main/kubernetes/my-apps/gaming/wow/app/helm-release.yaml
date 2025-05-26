@@ -86,12 +86,12 @@ spec:
                 - -c
                 - |
                   echo "Waiting for worldserver to finish initializing..."
-                  until mysql -u $"WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "SELECT * FROM realmlist;" | egrep -qi '$WOW_REALM_NAME|Azerothcore'; do
+                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "SELECT * FROM realmlist;" | egrep -i '$WOW_REALM_NAME|Azerothcore'; do
                     echo "Still waiting..."
                     sleep 5
                   done
                   echo "Updating realm IP"
-                  mysql -u $"WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
             auth:
               enabled: true
               probes:
