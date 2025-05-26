@@ -31,6 +31,26 @@ spec:
           containers:
             main:
               enabled: true
+              probes:
+                startup:
+                  enabled: false
+                  type: tcp
+                  port: 8085
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: false
+                  type: tcp
+                  port: 8085
+                  periodSeconds: 10
+                  failureThreshold: 5
+                readiness:
+                  enabled: false
+                  type: tcp
+                  port: 8085
+                  periodSeconds: 10
+                  failureThreshold: 3
               stdin: true
               tty: true
               # command:
@@ -47,6 +67,26 @@ spec:
                 WOW_DB_PASS: ${WOW_DB_PASS}
             auth:
               enabled: true
+              probes:
+                startup:
+                  enabled: false
+                  type: tcp
+                  port: 3724
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: false
+                  type: tcp
+                  port: 3724
+                  periodSeconds: 10
+                  failureThreshold: 5
+                readiness:
+                  enabled: false
+                  type: tcp
+                  port: 3724
+                  periodSeconds: 10
+                  failureThreshold: 3
               stdin: true
               tty: true
               # command:
