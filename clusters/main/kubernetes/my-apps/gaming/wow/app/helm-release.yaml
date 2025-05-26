@@ -132,6 +132,7 @@ spec:
                   GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   EOF
       realmlist-updater:
+        enabled: true
         type: job
         podSpec:
           restartPolicy: Never
@@ -168,7 +169,6 @@ spec:
                   UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_IP", port = 8085 WHERE id = 1;
                   EOF
                   exit 0
-
     service:
       main:
         enabled: true
