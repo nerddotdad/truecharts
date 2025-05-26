@@ -99,6 +99,7 @@ spec:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_PORT: 3306
                 DB_USER: ${WOW_DB_USER}
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
           initContainers:
@@ -106,6 +107,7 @@ spec:
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: ${WOW_DB_USER}
+                
                 ACORE_LOGIN_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 ACORE_LOGIN_PASS: ${WOW_DB_PASS}
               enabled: true
@@ -115,7 +117,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -h "$DB_HOST" -u root -p"$WOW_DB_ROOT_PASS" --silent; do
+                  until mysqladmin ping -h "$DB_HOST" -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" --silent; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
@@ -128,7 +130,7 @@ spec:
                   GRANT ALL PRIVILEGES ON acore_auth.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_world.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
-                  UPDATE realmlist SET address = '${WOW_IP}', port = 8085 WHERE id = 1;
+                  UPDATE realmlist SET address = '$WOW_IP', port = 8085 WHERE id = 1;
                   EOF
 
     service:
