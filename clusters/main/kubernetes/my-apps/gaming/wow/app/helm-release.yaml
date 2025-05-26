@@ -65,38 +65,6 @@ spec:
                 DB_USER: ${WOW_DB_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
-            realmlist-updater:
-              enabled: true
-              probes:
-                startup:
-                  enabled: false
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-              env:
-                WOW_IP: ${WOW_IP}
-                DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
-                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
-                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
-                WOW_DB_PASS: ${WOW_DB_PASS}
-                WOW_REALM_NAME: ${WOW_REALM_NAME}
-              imageSelector: mysqlImage
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "Waiting for worldserver to finish initializing..."
-                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
-                    echo "Still waiting..."
-                    sleep 5
-                  done
-                  echo "Updating realm NAME and IP"
-                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
-                  USE acore_auth;
-                  UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_IP", port = 8085 WHERE id = 1;
-                  EOF
-                  exit 0
             auth:
               enabled: true
               probes:
@@ -163,6 +131,43 @@ spec:
                   GRANT ALL PRIVILEGES ON acore_world.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   EOF
+      realmlist-updater:
+        type: job
+        podSpec:
+          restartPolicy: Never
+          containers:
+            realmlist-updater:
+              enabled: true
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              env:
+                WOW_IP: ${WOW_IP}
+                DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+                WOW_REALM_NAME: ${WOW_REALM_NAME}
+              imageSelector: mysqlImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Waiting for worldserver to finish initializing..."
+                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
+                    echo "Still waiting..."
+                    sleep 5
+                  done
+                  echo "Updating realm NAME and IP"
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  USE acore_auth;
+                  UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_IP", port = 8085 WHERE id = 1;
+                  EOF
+                  exit 0
 
     service:
       main:
