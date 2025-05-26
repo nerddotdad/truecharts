@@ -140,24 +140,3 @@ spec:
       repository: mysql
       tag: 8.0@sha256:923dcd6f78027196232fa46f0c32cc475f9a161dfcd40c8e9d0a103357d00922
       pullPolicy: IfNotPresent
-# apiVersion: helm.toolkit.fluxcd.io/v2beta1
-# kind: HelmRelease
-# metadata:
-#   name: wow-mysql
-#   namespace: gaming
-# spec:
-#   interval: 5m
-#   chart:
-#     spec:
-#       chart: mysql
-#       version: 13.0.0
-#       sourceRef:
-#         kind: HelmRepository
-#         name: bitnami
-#         namespace: flux-system
-#   values:
-#     auth:
-#       existingSecret: wow-mysql
-#       existingSecretPasswordKey: mysql-password
-#       existingSecretRootPasswordKey: mysql-root-password
-#       database: acore_auth
