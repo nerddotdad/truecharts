@@ -87,15 +87,22 @@ spec:
                 - -c
                 - |
                   echo "Waiting for worldserver to finish initializing..."
-                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
-                    echo "Still waiting..."
+                  until nc -z localhost 8085; do
+                    echo "worldserver not ready on 8085... sleeping"
                     sleep 5
                   done
-                  echo "Updating realm NAME and IP"
+                  echo "worldserver is up, verifying realm..."
+                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | grep -q "$WOW_REALM_NAME"; do
+                    echo "Realm not found yet, waiting..."
+                    sleep 5
+                  done
+                  echo "Updating realm name and IP..."
                   mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
                   USE acore_auth;
                   UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_IP", port = 8085 WHERE id = 1;
                   EOF
+                  echo "Update complete. Exiting."
+                  exit 0
             auth:
               enabled: true
               probes:
