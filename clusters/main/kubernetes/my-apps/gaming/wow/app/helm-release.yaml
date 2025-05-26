@@ -75,6 +75,7 @@ spec:
                 readiness:
                   enabled: false
               env:
+                WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
