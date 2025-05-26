@@ -116,11 +116,11 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -h "$DB_HOST" -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" --silent; do
+                  until mysqladmin ping-u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" --silent; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
-                  mysql -u "$DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
                   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$WOW_DB_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
                   GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
