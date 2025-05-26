@@ -133,7 +133,7 @@ spec:
                   EOF
       realmlist-updater:
         enabled: true
-        type: job
+        type: Job
         podSpec:
           restartPolicy: Never
           containers:
