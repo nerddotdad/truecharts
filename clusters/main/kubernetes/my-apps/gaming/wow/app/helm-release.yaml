@@ -86,12 +86,12 @@ spec:
                 - -c
                 - |
                   echo "Waiting for worldserver to finish initializing..."
-                  until mysql -u $"WOW_DB_ROOT_USER" -h "$DB_HOST" -e "SELECT * FROM realmlist;" | egrep -qi '$WOW_REALM_NAME|Azerothcore'; do
+                  until mysql -u $"WOW_DB_ROOT_USER" -p -h "$DB_HOST" -e "SELECT * FROM realmlist;" | egrep -qi '$WOW_REALM_NAME|Azerothcore'; do
                     echo "Still waiting..."
                     sleep 5
                   done
                   echo "Updating realm IP"
-                  mysql -u $"WOW_DB_ROOT_USER" -h "$DB_HOST" -e "UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
+                  mysql -u $"WOW_DB_ROOT_USER" -p -h "$DB_HOST" -e "UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
             auth:
               enabled: true
               probes:
@@ -144,7 +144,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -h "$DB_HOST"; do
+                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -p -h "$DB_HOST"; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
