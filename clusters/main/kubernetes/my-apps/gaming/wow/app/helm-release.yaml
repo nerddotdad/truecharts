@@ -107,6 +107,7 @@ spec:
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: ${WOW_DB_USER}
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
               enabled: true
