@@ -134,6 +134,7 @@ spec:
       realmlist-updater:
         enabled: true
         type: Job
+        primary: true
         podSpec:
           restartPolicy: Never
           containers:
