@@ -17,7 +17,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v0.0.34
+      tag: v0.0.35
     
     securityContext:
       container:
