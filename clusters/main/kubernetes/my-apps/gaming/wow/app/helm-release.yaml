@@ -56,6 +56,42 @@ spec:
               # args:
               #   - infinity
               env:
+                AUTH_SERV: false
+                AC_DATA_DIR: /azerothcore/data
+                WOW_IP: ${WOW_IP}
+                DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
+                DB_PORT: 3306
+                DB_USER: acore
+                ACORE_LOGIN_ROOT_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-root-password
+                    expandObjectName: false
+                ACORE_LOGIN_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-password
+                    expandObjectName: false
+                ACORE_WORLD_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-password
+                    expandObjectName: false
+                ACORE_CHARACTERS_PASS:
+                  secretKeyRef:
+                    name: wow-mysql
+                    key: mysql-password
+                    expandObjectName: false
+            auth:
+              enabled: true
+              stdin: true
+              tty: true
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
+              env:
+                AUTH_SERV: true
                 AC_DATA_DIR: /azerothcore/data
                 WOW_IP: ${WOW_IP}
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
