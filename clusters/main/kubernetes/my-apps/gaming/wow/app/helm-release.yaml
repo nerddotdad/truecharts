@@ -33,20 +33,20 @@ spec:
               enabled: true
               probes:
                 startup:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 8085
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 10
                 liveness:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 8085
                   periodSeconds: 10
                   failureThreshold: 5
                 readiness:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 8085
                   periodSeconds: 10
@@ -67,6 +67,13 @@ spec:
                 WOW_DB_PASS: ${WOW_DB_PASS}
             realmlist-updater:
               enabled: true
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
@@ -89,20 +96,20 @@ spec:
               enabled: true
               probes:
                 startup:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 3724
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 10
                 liveness:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 3724
                   periodSeconds: 10
                   failureThreshold: 5
                 readiness:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 3724
                   periodSeconds: 10
