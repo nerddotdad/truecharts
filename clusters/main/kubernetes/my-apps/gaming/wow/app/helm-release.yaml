@@ -91,7 +91,7 @@ spec:
                     sleep 5
                   done
                   echo "Updating realm IP"
-                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; UPDATE realmlist SET name = '$WOW_REALM_NAME' address = '$WOW_IP', port = 8085 WHERE id = 1;"
             auth:
               enabled: true
               probes:
