@@ -1,5 +1,5 @@
 # VARS from clusterenv.yaml
-# WOW_DB_USER, WOW_DB_ROOT_USER, WOW_DB_PASS, WOW_DB_ROOT_PASS, WOW_IP
+# WOW_DB_USER, WOW_DB_ROOT_USER, WOW_DB_PASS, WOW_DB_ROOT_PASS, WOW_IP, WOW_REALM_NAME
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -65,6 +65,25 @@ spec:
                 DB_USER: ${WOW_DB_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
+            realmlist-updater:
+              env:
+                DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                MYSQL_ROOT_PASSWORD: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+                WOW_REALM_NAME: ${WOW_REALM_NAME}
+              imageSelector: mysqlImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Waiting for worldserver to finish initializing..."
+                  until mysql -u $"WOW_DB_ROOT_USER" -h "$DB_HOST" -e "SELECT * FROM realmlist;" | egrep -qi '$WOW_REALM_NAME|Azerothcore'; do
+                    echo "Still waiting..."
+                    sleep 5
+                  done
+                  echo "Updating realm IP"
+                  mysql -u $"WOW_DB_ROOT_USER" -h "$DB_HOST" -e "UPDATE realmlist SET name = $WOW_REALM_NAME address = '${WOW_IP}', port = 8085 WHERE id = 1;"
             auth:
               enabled: true
               probes:
@@ -108,7 +127,7 @@ spec:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: ${WOW_DB_USER}
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
-                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                MYSQL_ROOT_PASSWORD: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
               enabled: true
               type: init
@@ -117,11 +136,11 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST"; do
+                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -h "$DB_HOST"; do
                     echo "Waiting for MySQL..."
                     sleep 2
                   done
-                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  mysql -u "$WOW_DB_ROOT_USER" -h "$DB_HOST" <<EOF
                   CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$WOW_DB_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
                   GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
