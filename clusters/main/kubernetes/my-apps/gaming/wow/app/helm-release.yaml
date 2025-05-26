@@ -66,6 +66,7 @@ spec:
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
             realmlist-updater:
+              enabled: true
               env:
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
