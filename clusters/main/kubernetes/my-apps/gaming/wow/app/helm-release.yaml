@@ -149,7 +149,7 @@ spec:
                   enabled: false
               env:
                 WOW_IP: ${WOW_IP}
-                WOW_REALM_FQDN: wotlk-realm.hoth.systems
+                WOW_REALM_FQDN: wow-wotlk.hoth.systems
                 DB_HOST: wow-mysql-app-template.gaming.svc.cluster.local
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
@@ -192,43 +192,3 @@ spec:
       repository: mysql
       tag: 8.4@sha256:2764fe573c51062d1eadd39a78cc60aa85359bffec2451b7a9660f531bcfb53e
       pullPolicy: IfNotPresent
-
-    ingress:
-      main:
-        enabled: true
-        ingressClassName: external
-        hosts: 
-          - host: wotlk-realm.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-          homepage:
-            enabled: true
-            name: "WOTLK-REALM"
-            description: "Wrath of the Lich King"
-            group: "Game Servers"
-      auth:
-        enabled: true
-        ingressClassName: external
-        hosts: 
-          - host: wotlk-auth.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-          homepage:
-            enabled: true
-            name: "WOTLK-AUTH"
-            description: "Wrath of the Lich King"
-            group: "Game Servers"
