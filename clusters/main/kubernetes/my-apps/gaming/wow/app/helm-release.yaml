@@ -19,8 +19,8 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      # tag: v0.1.1 # Default Azeroth Core
-      tag: v1-playerbot # player-bots
+      tag: v0.1.1 # Default Azeroth Core
+      # tag: v1-playerbot # player-bots
     
     securityContext:
       container:
