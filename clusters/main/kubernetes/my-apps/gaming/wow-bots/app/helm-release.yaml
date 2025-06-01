@@ -151,7 +151,7 @@ spec:
                   enabled: false
               env:
                 WOW_BOTS_IP: ${WOW_BOTS_IP}
-                WOW_REALM_FQDN: wow-pb-wotlk.hoth.systems
+                WOW_REALM_FQDN: wow-wotlk.hoth.systems
                 DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
