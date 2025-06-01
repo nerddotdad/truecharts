@@ -19,7 +19,7 @@ spec:
     image:
       repository: nerddotdad/azerothcore-runtime
       pullPolicy: IfNotPresent
-      tag: v2-playerbots # player-bots
+      tag: v3-playerbots # player-bots
     
     securityContext:
       container:
@@ -102,17 +102,43 @@ spec:
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
+            update-realm:
+              enabled: true
+              imageSelector: mysqlImage
+              env:
+                WOW_BOTS_IP: ${WOW_BOTS_IP}
+                WOW_REALM_FQDN: wow-pb-wotlk.hoth.systems
+                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+                WOW_REALM_NAME: ${WOW_REALM_NAME}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Waiting for worldserver to finish initializing..."
+                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
+                    echo "Still waiting..."
+                    sleep 5
+                  done
+                  echo "Updating realm NAME and IP"
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  USE acore_auth;
+                  UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_REALM_FQDN", port = 8085 WHERE id = 1;
+                  EOF
+                  exit 0
           initContainers:
             prep-mysql:
+              enabled: true
+              type: init
+              imageSelector: mysqlImage
               env:
                 DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
                 DB_USER: ${WOW_DB_USER}
                 WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
                 WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
                 WOW_DB_PASS: ${WOW_DB_PASS}
-              enabled: true
-              type: init
-              imageSelector: mysqlImage
               command:
                 - /bin/sh
                 - -c
@@ -127,39 +153,12 @@ spec:
                   CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
                   CREATE DATABASE IF NOT EXISTS acore_world DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
                   CREATE DATABASE IF NOT EXISTS acore_characters DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  CREATE DATABASE IF NOT EXISTS acore_playerbots DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
                   GRANT ALL PRIVILEGES ON acore_auth.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_world.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  GRANT ALL PRIVILEGES ON acore_playerbots.* TO '$DB_USER'@'%' WITH GRANT OPTION;
                   EOF
-      realmlist-updater:
-        enabled: true
-        type: Job
-        podSpec:
-          restartPolicy: Never
-          containers:
-            realmlist-updater:
-              enabled: true
-              primary: true
-              probes:
-                startup:
-                  enabled: false
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-              env:
-                WOW_BOTS_IP: ${WOW_BOTS_IP}
-                WOW_REALM_FQDN: wow-wotlk.hoth.systems
-                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
-                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
-                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
-                WOW_DB_PASS: ${WOW_DB_PASS}
-                WOW_REALM_NAME: ${WOW_REALM_NAME}
-              imageSelector: mysqlImage
-              command:
-                - /bin/sh
-                - -c
-                - |
                   echo "Waiting for worldserver to finish initializing..."
                   until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
                     echo "Still waiting..."
