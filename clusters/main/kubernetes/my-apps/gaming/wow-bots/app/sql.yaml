@@ -1,0 +1,48 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: wow-bots-mysql
+  namespace: gaming
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  values:
+    image:
+      repository: mysql
+      pullPolicy: IfNotPresent
+      tag: 8.0-debian@sha256:9340de42f088a081373abb199ae1f1c09bb2a9fe0698b018a4bc6f5530c72fcf
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                MYSQL_DATABASE: acore_auth
+                MYSQL_USER: ${WOW_DB_USER}
+                MYSQL_ROOT_PASSWORD: ${WOW_DB_ROOT_PASS}
+                MYSQL_PASSWORD: ${WOW_DB_PASS}
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 3306
+            targetPort: 3306
+
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        mountPath: /var/lib/mysql
+        path: ${NFS_GAME_SERVERS}/azerothcore/wow-bots-mysql
+        server: ${NAS_IP}

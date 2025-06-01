@@ -1,0 +1,194 @@
+# VARS from clusterenv.yaml
+# WOW_DB_USER, WOW_DB_ROOT_USER, WOW_DB_PASS, WOW_DB_ROOT_PASS, WOW_BOTS_IP, WOW_REALM_NAME
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: wow-bots
+  namespace: gaming
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  values:
+    image:
+      repository: nerddotdad/azerothcore-runtime
+      pullPolicy: IfNotPresent
+      tag: v2-playerbots # player-bots
+    
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: tcp
+                  port: 8085
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: tcp
+                  port: 8085
+                  periodSeconds: 10
+                  failureThreshold: 5
+                readiness:
+                  enabled: true
+                  type: tcp
+                  port: 8085
+                  periodSeconds: 10
+                  failureThreshold: 3
+              stdin: true
+              tty: true
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
+              env:
+                AUTH_SERV: false # this is required for entrypoint to run the correct servers per container.
+                WOW_BOTS_IP: ${WOW_BOTS_IP}
+                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
+                DB_PORT: 3306
+                DB_USER: ${WOW_DB_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+            auth:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: tcp
+                  port: 3724
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: tcp
+                  port: 3724
+                  periodSeconds: 10
+                  failureThreshold: 5
+                readiness:
+                  enabled: true
+                  type: tcp
+                  port: 3724
+                  periodSeconds: 10
+                  failureThreshold: 3
+              stdin: true
+              tty: true
+              # command:
+              #   - sleep
+              # args:
+              #   - infinity
+              env:
+                AUTH_SERV: true # this is required for entrypoint to run the correct servers per container.
+                WOW_BOTS_IP: ${WOW_BOTS_IP}
+                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
+                DB_PORT: 3306
+                DB_USER: ${WOW_DB_USER}
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+          initContainers:
+            prep-mysql:
+              env:
+                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
+                DB_USER: ${WOW_DB_USER}
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+              enabled: true
+              type: init
+              imageSelector: mysqlImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  until mysqladmin ping -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST"; do
+                    echo "Waiting for MySQL..."
+                    sleep 2
+                  done
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$WOW_DB_PASS' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0;
+                  GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  CREATE DATABASE IF NOT EXISTS acore_auth DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  CREATE DATABASE IF NOT EXISTS acore_world DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  CREATE DATABASE IF NOT EXISTS acore_characters DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8mb4_unicode_ci;
+                  GRANT ALL PRIVILEGES ON acore_auth.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  GRANT ALL PRIVILEGES ON acore_world.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  GRANT ALL PRIVILEGES ON acore_characters.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                  EOF
+      realmlist-updater:
+        enabled: true
+        type: Job
+        podSpec:
+          restartPolicy: Never
+          containers:
+            realmlist-updater:
+              enabled: true
+              primary: true
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              env:
+                WOW_BOTS_IP: ${WOW_BOTS_IP}
+                WOW_REALM_FQDN: wow-wotlk.hoth.systems
+                DB_HOST: wow-bots-mysql-app-template.gaming.svc.cluster.local
+                WOW_DB_ROOT_USER: ${WOW_DB_ROOT_USER}
+                WOW_DB_ROOT_PASS: ${WOW_DB_ROOT_PASS}
+                WOW_DB_PASS: ${WOW_DB_PASS}
+                WOW_REALM_NAME: ${WOW_REALM_NAME}
+              imageSelector: mysqlImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Waiting for worldserver to finish initializing..."
+                  until mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" -e "USE acore_auth; SELECT * FROM realmlist;" | egrep -i "$WOW_REALM_NAME|Azerothcore"; do
+                    echo "Still waiting..."
+                    sleep 5
+                  done
+                  echo "Updating realm NAME and IP"
+                  mysql -u "$WOW_DB_ROOT_USER" -p"$WOW_DB_ROOT_PASS" -h "$DB_HOST" <<EOF
+                  USE acore_auth;
+                  UPDATE realmlist SET name = "$WOW_REALM_NAME", address = "$WOW_REALM_FQDN", port = 8085 WHERE id = 1;
+                  EOF
+                  exit 0
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${WOW_BOTS_IP}
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 8085
+            targetPort: 8085
+          auth:
+            enabled: true
+            protocol: tcp
+            port: 3724
+            targetPort: 3724
+
+    mysqlImage:
+      repository: mysql
+      tag: 8.4@sha256:8d643340d4e6a15f7aa51d46b6406f51a2a286c222f871f4d5ec116587c586da
+      pullPolicy: IfNotPresent
