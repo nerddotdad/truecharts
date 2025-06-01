@@ -105,6 +105,13 @@ spec:
             update-realm:
               enabled: true
               imageSelector: mysqlImage
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
               env:
                 WOW_BOTS_IP: ${WOW_BOTS_IP}
                 WOW_REALM_FQDN: wow-pb-wotlk.hoth.systems
