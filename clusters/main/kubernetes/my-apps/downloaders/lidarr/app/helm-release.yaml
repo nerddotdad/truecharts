@@ -53,6 +53,13 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${LIDARR_IP}
+    workload:
+      main:
+        podSpec:
+          containers:
+            exportarr:
+              env:
+                URL: "lidarr.downloaders:{{ .Values.service.metrics.ports.metrics.port }}"
     ingress:
       main:
         enabled: true
