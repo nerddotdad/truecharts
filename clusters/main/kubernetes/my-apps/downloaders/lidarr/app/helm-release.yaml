@@ -59,7 +59,7 @@ spec:
           containers:
             exportarr:
               env:
-                URL: 'lidarr.downloaders:{{ .Values.service.main.ports.main.port }}'
+                URL: 'http://lidarr.downloaders:{{ .Values.service.main.ports.main.port }}'
     ingress:
       main:
         enabled: true
