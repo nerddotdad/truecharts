@@ -41,7 +41,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /data/media
-        path: ${NFS_MEDIA_MOVIES}
+        path: ${NFS_MEDIA_MUSIC}
         server: ${NAS_IP}
       nzbget-target: # this is the target location for nzbget
         enabled: true
