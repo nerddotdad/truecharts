@@ -35,7 +35,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /config
-        path: ${NFS_RADARR_CONFIG}
+        path: ${NFS_LIDARR_CONFIG}
         server: ${NAS_IP}
       target: # this is the target location for media
         enabled: true
