@@ -28,29 +28,12 @@ spec:
               env:
                 SYNAPSE_SERVER_NAME: matrix.hoth.systems
                 SYNAPSE_REPORT_STATS: "yes"
+                SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD:
                   secretKeyRef:
                       name: matrix-postgresql
                       key: postgresql-password
                       expandObjectName: false
-
-    configmap:
-      matrix-config:
-        enabled: true
-        data:
-          homeserver.yaml: |
-            server_name: "matrix.hoth.systems"
-            pid_file: /data/homeserver.pid
-            enable_registration: false
-            allow_guest_access: false
-            database:
-              name: psycopg2
-              args:
-                user: synapse
-                password: ${POSTGRES_PASSWORD}
-                database: synapse
-                host: matrix-postgresql
-                port: 5432
 
     service:
       main:
@@ -81,6 +64,25 @@ spec:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
 
+    configmap:
+      matrix-config:
+        enabled: true
+        data:
+          homeserver.yaml: |
+            server_name: "matrix.hoth.systems"
+            pid_file: /data/homeserver.pid
+            enable_registration: false
+            allow_guest_access: false
+            report_stats: true
+            database:
+              name: psycopg2
+              args:
+                user: synapse
+                password: ${POSTGRES_PASSWORD}
+                database: synapse
+                host: matrix-postgresql
+                port: 5432
+
     persistence:
       data:
         enabled: true
@@ -92,4 +94,4 @@ spec:
         enabled: true
         type: configmap
         objectName: matrix-config
-        mountPath: /data/homeserver.yaml
+        mountPath: /config
