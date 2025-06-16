@@ -19,24 +19,22 @@ spec:
       pullPolicy: IfNotPresent
       tag: latest  # You can lock to a specific version like v1.105.0
 
-    env:
-      SYNAPSE_SERVER_NAME: matrix.hoth.systems  # Replace with your domain
-      SYNAPSE_REPORT_STATS: "yes"
-      TZ: UTC
-      POSTGRES_PASSWORD:
-        valueFrom:
-          secretKeyRef:
-            name: matrix-postgresql
-            key: postgresql-password
-
-    service:
+    workload:
       main:
-        enabled: true
-        ports:
-          main:
-            protocol: http
-            targetPort: 8008  # Synapse listens here by default
-            port: 8080        # External cluster port
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              env:
+                enabled: true
+                variables:
+                  SYNAPSE_SERVER_NAME: matrix.hoth.systems
+                  SYNAPSE_REPORT_STATS: "yes"
+                  TZ: UTC
+                secretEnv:
+                  POSTGRES_PASSWORD:
+                    name: matrix-postgresql
+                    key: postgresql-password
 
     configmap:
       config:
@@ -56,11 +54,25 @@ spec:
                 host: matrix-postgresql
                 port: 5432
 
+    additionalVolumes:
+      - name: config
+        configMap:
+          name: matrix-config  # or whatever name is generated
+
     additionalVolumeMounts:
       - name: config
         mountPath: /data/homeserver.yaml
         subPath: homeserver.yaml
         readOnly: true
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            protocol: http
+            targetPort: 8008  # Synapse listens here by default
+            port: 8080        # External cluster port
 
     postgresql:
       enabled: true
