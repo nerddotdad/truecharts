@@ -28,7 +28,6 @@ spec:
               env:
                 SYNAPSE_SERVER_NAME: matrix.hoth.systems
                 SYNAPSE_REPORT_STATS: "yes"
-                TZ: UTC
                 POSTGRES_PASSWORD:
                   secretKeyRef:
                       name: matrix-postgresql
