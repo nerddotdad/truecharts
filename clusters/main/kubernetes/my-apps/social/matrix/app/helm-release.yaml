@@ -91,6 +91,7 @@ spec:
       config:
         enabled: true
         type: configmap
-        name: matrix-config
-        mountPath: /data/homeserver.yaml
-        subPath: homeserver.yaml
+        objectName: matrix-config
+        items:
+          - key: config
+            path: /data/homeserver.yaml
