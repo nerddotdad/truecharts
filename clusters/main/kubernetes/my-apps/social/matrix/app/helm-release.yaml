@@ -92,6 +92,4 @@ spec:
         enabled: true
         type: configmap
         objectName: matrix-config
-        items:
-          - key: config
-            path: /data/homeserver.yaml
+        mountPath: /data/homeserver.yaml
