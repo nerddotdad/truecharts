@@ -1,0 +1,58 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: matrix
+  namespace: social
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  values:
+    image:
+      repository: matrixdotorg/synapse
+      pullPolicy: IfNotPresent
+      tag: latest  # You can lock to a specific version like v1.105.0
+
+    env:
+      SYNAPSE_SERVER_NAME: matrix.hoth.systems  # Replace with your domain
+      SYNAPSE_REPORT_STATS: "yes"
+      TZ: UTC
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            protocol: HTTP
+            targetPort: 8008  # Synapse listens here by default
+            port: 8080        # External cluster port
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: matrix.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+
+    persistence:
+      config:
+        enabled: true
+        type: nfs
+        mountPath: /data
+        path: ${NFS_MATRIX_DATA}
+        server: ${NAS_IP}
