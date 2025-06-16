@@ -74,6 +74,8 @@ spec:
             enable_registration: false
             allow_guest_access: false
             report_stats: true
+            signing_key_path: "/data/matrix.hoth.systems.signing.key"
+            media_store_path: "/data/media_store"
             database:
               name: psycopg2
               args:
