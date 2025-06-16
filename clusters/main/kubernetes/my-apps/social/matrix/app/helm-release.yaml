@@ -4,7 +4,7 @@ metadata:
   name: matrix
   namespace: social
 spec:
-  interval: 5m
+  interval: 1m
   chart:
     spec:
       chart: app-template
