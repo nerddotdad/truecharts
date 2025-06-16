@@ -19,22 +19,16 @@ spec:
       pullPolicy: IfNotPresent
       tag: latest  # You can lock to a specific version like v1.105.0
 
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              enabled: true
-              env:
-                enabled: true
-                variables:
-                  SYNAPSE_SERVER_NAME: matrix.hoth.systems
-                  SYNAPSE_REPORT_STATS: "yes"
-                  TZ: UTC
-                secretEnv:
-                  POSTGRES_PASSWORD:
-                    name: matrix-postgresql
-                    key: postgresql-password
+    env:
+      enabled: true
+      variables:
+        SYNAPSE_SERVER_NAME: matrix.hoth.systems
+        SYNAPSE_REPORT_STATS: "yes"
+        TZ: UTC
+      secretEnv:
+        POSTGRES_PASSWORD:
+          name: matrix-postgresql
+          key: postgresql-password
 
     configmap:
       config:
