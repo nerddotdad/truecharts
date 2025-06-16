@@ -69,7 +69,7 @@ spec:
         enabled: true
         data:
           homeserver.yaml: |
-            server_name: "matrix.hoth.systems"
+            server_name: matrix.hoth.systems
             pid_file: /data/homeserver.pid
             enable_registration: false
             allow_guest_access: false
