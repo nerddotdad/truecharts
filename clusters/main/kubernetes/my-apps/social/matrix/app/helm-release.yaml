@@ -90,7 +90,7 @@ spec:
         server: ${NAS_IP}
       config:
         enabled: true
-        type: configMap
+        type: configmap
         name: matrix-config
         mountPath: /data/homeserver.yaml
         subPath: homeserver.yaml
