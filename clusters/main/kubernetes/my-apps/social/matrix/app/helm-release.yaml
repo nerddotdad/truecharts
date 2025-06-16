@@ -35,7 +35,7 @@ spec:
                       expandObjectName: false
 
     configmap:
-      config:
+      matrix-config:
         enabled: true
         data:
           homeserver.yaml: |
@@ -47,21 +47,10 @@ spec:
               name: psycopg2
               args:
                 user: synapse
-                password: "${POSTGRES_PASSWORD}"
+                password: ${POSTGRES_PASSWORD}
                 database: synapse
                 host: matrix-postgresql
                 port: 5432
-
-    additionalVolumes:
-      - name: config
-        configMap:
-          name: matrix-config  # or whatever name is generated
-
-    additionalVolumeMounts:
-      - name: config
-        mountPath: /data/homeserver.yaml
-        subPath: homeserver.yaml
-        readOnly: true
 
     service:
       main:
@@ -99,3 +88,9 @@ spec:
         mountPath: /data
         path: ${NFS_MATRIX_DATA}
         server: ${NAS_IP}
+      config:
+        enabled: true
+        type: configMap
+        name: matrix-config
+        mountPath: /data/homeserver.yaml
+        subPath: homeserver.yaml
