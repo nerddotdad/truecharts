@@ -23,6 +23,7 @@ spec:
       SYNAPSE_SERVER_NAME: matrix.hoth.systems  # Replace with your domain
       SYNAPSE_REPORT_STATS: "yes"
       TZ: UTC
+      SYNAPSE_CONFIG_PATH: /data/homeserver.yaml
 
     service:
       main:
@@ -32,6 +33,34 @@ spec:
             protocol: http
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
+
+    configmap:
+      config:
+        enabled: true
+        data:
+          homeserver.yaml: |
+            server_name: "matrix.hoth.systems"
+            pid_file: /data/homeserver.pid
+            enable_registration: false
+            allow_guest_access: false
+            database:
+              name: psycopg2
+              args:
+                user: synapse
+                password: changeme
+                database: synapse
+                host: matrix-postgresql
+                port: 5432
+
+    additionalVolumeMounts:
+      - name: config
+        mountPath: /config/homeserver.yaml
+        subPath: homeserver.yaml
+        readOnly: true
+
+    postgresql:
+      enabled: true
+      existingSecret: matrix-postgresql
 
     ingress:
       main:
