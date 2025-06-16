@@ -37,20 +37,19 @@ spec:
     configmap:
       matrix-config:
         enabled: true
-        data:
-          homeserver.yaml: |
-            server_name: "matrix.hoth.systems"
-            pid_file: /data/homeserver.pid
-            enable_registration: false
-            allow_guest_access: false
-            database:
-              name: psycopg2
-              args:
-                user: synapse
-                password: ${POSTGRES_PASSWORD}
-                database: synapse
-                host: matrix-postgresql
-                port: 5432
+        data: |
+          server_name: "matrix.hoth.systems"
+          pid_file: /data/homeserver.pid
+          enable_registration: false
+          allow_guest_access: false
+          database:
+            name: psycopg2
+            args:
+              user: synapse
+              password: ${POSTGRES_PASSWORD}
+              database: synapse
+              host: matrix-postgresql
+              port: 5432
 
     service:
       main:
