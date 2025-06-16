@@ -79,7 +79,7 @@ spec:
             certificateIssuer: "domain-0-le-prod"
 
     persistence:
-      config:
+      data:
         enabled: true
         type: nfs
         mountPath: /data
