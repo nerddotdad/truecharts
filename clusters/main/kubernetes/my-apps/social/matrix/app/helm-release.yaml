@@ -24,6 +24,11 @@ spec:
       SYNAPSE_REPORT_STATS: "yes"
       TZ: UTC
       SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
+      POSTGRES_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: matrix-postgresql
+            key: postgresql-password
 
     service:
       main:
@@ -37,6 +42,8 @@ spec:
     configmap:
       config:
         enabled: true
+        mountPath: /config
+        subPath: homeserver.yaml
         data:
           homeserver.yaml: |
             server_name: "matrix.hoth.systems"
@@ -47,16 +54,10 @@ spec:
               name: psycopg2
               args:
                 user: synapse
-                password: changeme
+                password: "${POSTGRES_PASSWORD}"
                 database: synapse
                 host: matrix-postgresql
                 port: 5432
-
-    additionalVolumeMounts:
-      - name: config
-        mountPath: /config/homeserver.yaml
-        subPath: homeserver.yaml
-        readOnly: true
 
     postgresql:
       enabled: true
