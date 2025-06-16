@@ -23,7 +23,6 @@ spec:
       SYNAPSE_SERVER_NAME: matrix.hoth.systems  # Replace with your domain
       SYNAPSE_REPORT_STATS: "yes"
       TZ: UTC
-      SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
       POSTGRES_PASSWORD:
         valueFrom:
           secretKeyRef:
@@ -42,8 +41,6 @@ spec:
     configmap:
       config:
         enabled: true
-        mountPath: /config
-        subPath: homeserver.yaml
         data:
           homeserver.yaml: |
             server_name: "matrix.hoth.systems"
@@ -58,6 +55,12 @@ spec:
                 database: synapse
                 host: matrix-postgresql
                 port: 5432
+
+    additionalVolumeMounts:
+      - name: config
+        mountPath: /data/homeserver.yaml
+        subPath: homeserver.yaml
+        readOnly: true
 
     postgresql:
       enabled: true
