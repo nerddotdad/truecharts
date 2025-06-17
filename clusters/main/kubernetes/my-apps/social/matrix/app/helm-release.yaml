@@ -53,10 +53,6 @@ spec:
           storage:
             size: 8Gi  # or whatever fits your needs
 
-    postgresql:
-      enabled: true
-      existingSecret: matrix-postgresql
-
     ingress:
       main:
         enabled: true
@@ -90,7 +86,7 @@ spec:
               name: psycopg2
               args:
                 user: synapse
-                password: ${POSTGRES_PASSWORD}
+                password: !env_var POSTGRES_PASSWORD
                 database: synapse
                 host: matrix-app-template-cnpg-main-rw
                 port: 5432
