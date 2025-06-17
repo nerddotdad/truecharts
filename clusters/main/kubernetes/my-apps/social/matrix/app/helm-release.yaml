@@ -92,6 +92,16 @@ spec:
               tls: false
               resources:
                 - names: [client, federation]
+              - name: web
+                resources:
+                  - name: discovery
+                  - name: human
+                  - name: oauth
+                  - name: compat
+                  - name: graphql
+                binds:
+                  - address: "[::]:8080"
+                proxy_protocol: true
             upstream_oauth2:
               providers:
               - id: ${MATRIX_SSO_ULID}
@@ -128,6 +138,12 @@ spec:
       main:
         enabled: true
         ingressClassName: external
+        annotations:
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            location = /.well-known/matrix/client {
+              default_type application/json;
+              return 200 '{"m.homeserver":{"base_url":"https://matrix.hoth.systems"}}';
+            }
         hosts: 
           - host: matrix.${DOMAIN_0}
             paths:
