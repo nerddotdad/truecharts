@@ -57,21 +57,6 @@ spec:
                   enabled: false
               imageSelector: nginx
               name: wellknown
-              volumeMounts:
-                - name: wellknown-data
-                  mountPath: /usr/share/nginx/html/.well-known
-                - name: nginx-cache
-                  mountPath: /var/cache/nginx
-                - name: nginx-logs
-                  mountPath: /var/log/nginx
-          volumes:
-            - name: wellknown-data
-              configMap:
-                name: matrix-wellknown
-            - name: nginx-cache
-              emptyDir: {}
-            - name: nginx-logs
-              emptyDir: {}
 
     service:
       main:
@@ -172,6 +157,23 @@ spec:
         type: configmap
         objectName: matrix-config
         mountPath: /config
+      wellknown-data:
+        enabled: true
+        objectName: matrix-wellknown
+        targetSelector:
+          main:
+            sso:
+              mountPath: /usr/share/nginx/html/.well-known
+      nginx-cache:
+        targetSelector:
+          main:
+            sso:
+              emptyDir: {}
+      nginx-logs:
+        targetSelector:
+          main:
+            sso:
+              emptyDir: {}
 
     ingress:
       main:
