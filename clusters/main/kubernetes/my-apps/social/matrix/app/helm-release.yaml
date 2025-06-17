@@ -55,11 +55,17 @@ spec:
               volumeMounts:
                 - name: wellknown-data
                   mountPath: /usr/share/nginx/html/.well-known
+                - name: nginx-cache
+                  mountPath: /var/cache/nginx
+                - name: nginx-logs
+                  mountPath: /var/log/nginx
           volumes:
             - name: wellknown-data
               configMap:
                 name: matrix-wellknown
             - name: nginx-cache
+              emptyDir: {}
+            - name: nginx-logs
               emptyDir: {}
 
     service:
