@@ -31,8 +31,8 @@ spec:
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD:
                   secretKeyRef:
-                      name: matrix-postgresql
-                      key: postgresql-password
+                      name: matrix-app-template-cnpg-main-user
+                      key: password
                       expandObjectName: false
 
     service:
@@ -43,6 +43,15 @@ spec:
             protocol: http
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
+
+cnpg:
+  main:
+    enabled: true
+    user: synapse
+    database: synapse
+    cluster:
+      storage:
+        size: 8Gi  # or whatever fits your needs
 
     postgresql:
       enabled: true
@@ -76,13 +85,14 @@ spec:
             report_stats: true
             signing_key_path: "/data/matrix.hoth.systems.signing.key"
             media_store_path: "/data/media_store"
+            macaroon_secret_key: "change-this-key-please"
             database:
               name: psycopg2
               args:
                 user: synapse
                 password: ${POSTGRES_PASSWORD}
                 database: synapse
-                host: matrix-postgresql
+                host: matrix-app-template-cnpg-main-rw
                 port: 5432
 
     persistence:
