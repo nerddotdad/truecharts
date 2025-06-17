@@ -41,6 +41,17 @@ spec:
                 SYNAPSE_REPORT_STATS: "yes"
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
+            sso:
+              enabled: true
+              imageSelector: nginx
+              name: wellknown
+              volumeMounts:
+                - name: wellknown-data
+                  mountPath: /usr/share/nginx/html/.well-known
+          volumes:
+            - name: wellknown-data
+              configMap:
+                name: matrix-wellknown
 
     service:
       main:
@@ -111,6 +122,18 @@ spec:
                       action: suggest
                       template: "{{`{{ user.email }}`}}"
                       set_email_verification: always
+      matrix-wellknown:
+        enabled: true
+        data:
+          matrix: |
+            {
+              "m.homeserver": {
+                "base_url": "https://matrix.hoth.systems"
+              },
+              "org.matrix.msc3824.authentication_service": {
+                "url": "https://auth.matrix.hoth.systems"
+              }
+            }
 
     persistence:
       data:
@@ -129,12 +152,6 @@ spec:
       main:
         enabled: true
         ingressClassName: external
-        annotations:
-          nginx.ingress.kubernetes.io/configuration-snippet: |
-            location = /.well-known/matrix/client {
-              default_type application/json;
-              return 200 '{"m.homeserver":{"base_url":"https://matrix.hoth.systems"}}';
-            }
         hosts: 
           - host: matrix.${DOMAIN_0}
             paths:
@@ -146,3 +163,11 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+      sso:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: matrix.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
