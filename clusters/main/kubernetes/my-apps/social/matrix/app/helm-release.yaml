@@ -43,6 +43,9 @@ spec:
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
             sso:
               enabled: true
+              securityContext:
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
               probes:
                 startup:
                   enabled: false
