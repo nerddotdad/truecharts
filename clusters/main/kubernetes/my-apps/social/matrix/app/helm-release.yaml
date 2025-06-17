@@ -102,13 +102,13 @@ spec:
                 claims_imports:
                     localpart:
                       action: require
-                      template: "{{ user.preferred_username }}"
+                      template: "{{`{{ user.preferred_username }}`}}"
                     displayname:
                       action: suggest
-                      template: "{{ user.name }}"
+                      template: "{{`{{ user.name }}`}}"
                     email:
                       action: suggest
-                      template: "{{ user.email }}"
+                      template: "{{`{{ user.email }}`}}"
                       set_email_verification: always
 
     persistence:
