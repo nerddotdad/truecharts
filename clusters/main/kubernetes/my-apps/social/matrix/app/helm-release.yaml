@@ -59,6 +59,8 @@ spec:
             - name: wellknown-data
               configMap:
                 name: matrix-wellknown
+            - name: nginx-cache
+              emptyDir: {}
 
     service:
       main:
