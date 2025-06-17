@@ -29,11 +29,7 @@ spec:
                 SYNAPSE_SERVER_NAME: matrix.hoth.systems
                 SYNAPSE_REPORT_STATS: "yes"
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
-                POSTGRES_PASSWORD:
-                  secretKeyRef:
-                      name: matrix-app-template-cnpg-main-user
-                      key: password
-                      expandObjectName: false
+                POSTGRES_PASSWORD: $POSTGRES_PASWORD
 
     service:
       main:
@@ -49,6 +45,7 @@ spec:
         enabled: true
         user: synapse
         database: synapse
+        password: $POSTGRES_PASWORD
         cluster:
           storage:
             size: 8Gi  # or whatever fits your needs
@@ -86,7 +83,7 @@ spec:
               name: psycopg2
               args:
                 user: synapse
-                password: !env_var POSTGRES_PASSWORD
+                password: $POSTGRES_PASWORD
                 database: synapse
                 host: matrix-app-template-cnpg-main-rw
                 port: 5432
