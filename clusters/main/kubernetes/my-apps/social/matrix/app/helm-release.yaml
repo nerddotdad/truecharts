@@ -87,6 +87,12 @@ spec:
                 database: synapse
                 host: matrix-app-template-cnpg-main-rw
                 port: 5432
+            listeners:
+            - port: 8008
+              type: http
+              tls: false
+              resources:
+                - names: [client, federation]
 
     persistence:
       data:
