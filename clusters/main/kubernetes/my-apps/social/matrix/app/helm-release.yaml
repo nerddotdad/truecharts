@@ -90,18 +90,9 @@ spec:
             - port: 8008
               type: http
               tls: false
+              proxy_protocol: true
               resources:
                 - names: [client, federation]
-              - name: web
-                resources:
-                  - name: discovery
-                  - name: human
-                  - name: oauth
-                  - name: compat
-                  - name: graphql
-                binds:
-                  - address: "[::]:8080"
-                proxy_protocol: true
             upstream_oauth2:
               providers:
               - id: ${MATRIX_SSO_ULID}
