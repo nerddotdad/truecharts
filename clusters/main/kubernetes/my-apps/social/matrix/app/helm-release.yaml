@@ -50,22 +50,6 @@ spec:
           storage:
             size: 8Gi  # or whatever fits your needs
 
-    ingress:
-      main:
-        enabled: true
-        ingressClassName: external
-        hosts: 
-          - host: matrix.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-
     configmap:
       matrix-config:
         enabled: true
@@ -107,3 +91,19 @@ spec:
         type: configmap
         objectName: matrix-config
         mountPath: /config
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: matrix.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
