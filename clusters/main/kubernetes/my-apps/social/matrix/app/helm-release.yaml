@@ -170,4 +170,9 @@ spec:
           - host: matrix.${DOMAIN_0}
             paths:
               - path: /
-                pathType: Prefix
+                pathType: 
+                
+    nginx:
+      repository: nginx
+      tag: latest
+      pullPolicy: IfNotPresent
