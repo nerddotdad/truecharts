@@ -81,6 +81,13 @@ spec:
             protocol: http
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
+      sso:
+        enabled: true
+        controller: main
+        ports:
+          http:
+            port: 80
+            targetPort: 80
 
     cnpg:
       main:
@@ -177,20 +184,11 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-      sso:
-        enabled: true
-        ingressClassName: external
-        hosts: 
-          - host: sso.matrix.${DOMAIN_0}
-            paths:
-              - path: /
+              - path: /.well-known
                 pathType: Prefix
+                service:
+                  name: matrix-app-template-sso
+                  port: 80  # nginx
         integrations:
           traefik:
             enabled: false
