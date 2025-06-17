@@ -164,18 +164,18 @@ spec:
           main:
             sso:
               mountPath: /usr/share/nginx/html/.well-known
-      nginx-cache:
-        enabled: true
-        targetSelector:
-          main:
-            sso:
-              emptyDir: {}
-      nginx-logs:
-        enabled: true
-        targetSelector:
-          main:
-            sso:
-              emptyDir: {}
+      # nginx-cache:
+      #   enabled: true
+      #   targetSelector:
+      #     main:
+      #       sso:
+      #         emptyDir: {}
+      # nginx-logs:
+      #   enabled: true
+      #   targetSelector:
+      #     main:
+      #       sso:
+      #         emptyDir: {}
 
     ingress:
       main:
