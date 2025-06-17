@@ -83,6 +83,7 @@ spec:
             port: 8080        # External cluster port
       sso:
         enabled: true
+        controller: main
         ports:
           http:
             targetSelector: sso
