@@ -1,3 +1,14 @@
+### Setup
+# Set these in clusterenv.yaml
+# I use openssl rand -base64 32 to generate tokens
+# NFS_MATRIX_DATA: /mnt/vault/app-configs/matrix/data
+# MATRIX_REG_SECRET: RANDOM_TOKEN
+# MATRIX_MACAROON_SECRET: RANDOM_TOKEN
+# POSTGRES_PASWORD: Password you'd like to use for your postgress db
+#
+# After successful boot Run the below command to generate your admin user.
+# kubectl -n social exec -it deploy/matrix-app-template -- register_new_matrix_user -u <YOUR_USER_NAME> -p <YOUR_USER_PASSWORD> -a -k <MATRIX_REG_SECRET> http://localhost:8008
+
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -17,7 +28,7 @@ spec:
     image:
       repository: matrixdotorg/synapse
       pullPolicy: IfNotPresent
-      tag: latest  # You can lock to a specific version like v1.105.0
+      tag: latest
 
     workload:
       main:
@@ -54,6 +65,9 @@ spec:
       matrix-config:
         enabled: true
         data:
+          # signing_key_path: Used to uniquely identify and sign events from your server - Required
+          # macaroon_secret_key: Signs access tokens for internal user auth - Required
+          # registration_shared_secret: Needed for shared-secret registration - Required If registering users via CLI or API
           homeserver.yaml: |
             server_name: matrix.hoth.systems
             pid_file: /data/homeserver.pid
@@ -61,7 +75,7 @@ spec:
             registration_shared_secret: ${MATRIX_REG_SECRET}
             allow_guest_access: false
             report_stats: true
-            signing_key_path: "/data/matrix.hoth.systems.signing.key"
+            signing_key_path: "/data/synapse.signing.key"
             media_store_path: "/data/media_store"
             macaroon_secret_key: ${MATRIX_REG_SECRET}
             database:
