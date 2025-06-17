@@ -92,6 +92,24 @@ spec:
               tls: false
               resources:
                 - names: [client, federation]
+            upstream_oauth2:
+              providers:
+              - id: ${MATRIX_SSO_ULID}
+                human_name: Cloudflare Access
+                issuer: ${MATRIX_SSO_ISSUER}
+                client_secret: ${MATRIX_SSO_CLIENT_SECRET}
+                scope: "openid profile email"
+                claims_imports:
+                    localpart:
+                      action: require
+                      template: "{{ user.preferred_username }}"
+                    displayname:
+                      action: suggest
+                      template: "{{ user.name }}"
+                    email:
+                      action: suggest
+                      template: "{{ user.email }}"
+                      set_email_verification: always
 
     persistence:
       data:
