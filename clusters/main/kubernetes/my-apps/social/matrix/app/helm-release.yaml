@@ -177,7 +177,13 @@ spec:
           - host: matrix.${DOMAIN_0}
             paths:
               - path: /
-                pathType: 
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
                 
     nginx:
       repository: nginx
