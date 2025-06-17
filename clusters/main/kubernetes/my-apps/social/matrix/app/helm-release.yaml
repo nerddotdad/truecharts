@@ -79,7 +79,7 @@ spec:
             report_stats: true
             signing_key_path: "/data/matrix.hoth.systems.signing.key"
             media_store_path: "/data/media_store"
-            macaroon_secret_key: "change-this-key-please"
+            macaroon_secret_key: ${MATRIX_REG_SECRET}
             database:
               name: psycopg2
               args:
