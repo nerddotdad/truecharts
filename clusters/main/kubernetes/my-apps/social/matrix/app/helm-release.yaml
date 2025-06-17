@@ -44,14 +44,14 @@ spec:
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
 
-cnpg:
-  main:
-    enabled: true
-    user: synapse
-    database: synapse
-    cluster:
-      storage:
-        size: 8Gi  # or whatever fits your needs
+    cnpg:
+      main:
+        enabled: true
+        user: synapse
+        database: synapse
+        cluster:
+          storage:
+            size: 8Gi  # or whatever fits your needs
 
     postgresql:
       enabled: true
