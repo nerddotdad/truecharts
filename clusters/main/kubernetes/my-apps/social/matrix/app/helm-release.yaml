@@ -146,7 +146,7 @@ spec:
                 "base_url": "https://matrix.hoth.systems"
               },
               "org.matrix.msc3824.authentication_service": {
-                "url": "https://auth.matrix.hoth.systems"
+                "url": "https://sso.matrix.hoth.systems"
               }
             }
 
@@ -182,7 +182,7 @@ spec:
         enabled: true
         ingressClassName: external
         hosts: 
-          - host: matrix.${DOMAIN_0}
+          - host: sso.matrix.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
