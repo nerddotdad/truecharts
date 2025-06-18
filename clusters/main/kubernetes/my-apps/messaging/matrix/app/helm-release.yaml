@@ -210,3 +210,17 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+      wellknown:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: matrix.${DOMAIN_0}
+            paths:
+              - path: /.well-known
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
