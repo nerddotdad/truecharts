@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: matrix-values
+    namespace: social
+data:
+    values.yaml: ENC[AES256_GCM,data:XzDMi0GTWYT7G6zlhyD7X9UvXBdLARICi3n96eOoumeo91d9CLQZCAV0h7bkpF4yCaK7YxwlE3AgKeC6dxCqqutqxEZFg9SCg0z9h40ylkKPW0pZg3FnzIJNgyNsS8HH4b9wLwN5IH5w6S7iSvxC7G6Z9JPGi4G2G8SMsQjaph+XQPnr1n1QzmGIiQsndfF7eRbZbv/Nkve/vwVCtExO45PIokM99zQpzhaWYpZRlkFxuI1l977/ftJv0/5lpJ0E+8WkGDYETl9MBYQvlrUASkTiU2xwiFnFZ2FNj+gE9wh2p5WnYj5yCaAnrikKx1qiFkW2Kp8QgzFyxQNqzpUs/GMNrb4PaRqSSsI4ggpv1XXqaZPqR1FEXXLj7+foFUYXL15UYa2j/uSNJ9bvZXd8w4FVDZoIe+X/5Hs/0z1x0lFZ8vblHymX+hyWAS5z9eIo+oevw/1VlYnaQJTuJyHu7FUnyt6wudiar+3K4eue8IARw1v47z6xn2qwEAqUY8pIyqRFnFCieOSdV+hssJO6bs7w2ykVB7OIka3cI8rNnEeQdKcviy9P2H9VLqzgCUtqTbVtzbPNJZEqHPdSwZApV7MPnviS5zo+W5FY45zOkQv3/PSlSTPKWCVs1mAJhDidqQYifHTQ+KhrIKvuxRRkTJazsBEizgSnZ7C0DCvICBokSSJHTR/OVor+oun8YUDhYOVpImxN4EeYHGxseevkoBPFKrj6wNX2UA7eAVOdCSxJBA4CWHAvDHQ5hw==,iv:26WuGRlNGhtL9ZHuAtBc7oWqDK1CLsfmBOAk9yfFWwI=,tag:p1mKcxgWCsuOMDZMuZlefQ==,type:str]
+sops:
+    shamir_threshold: 3
+    age:
+        - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBML1NSMjJPeW1jbGNKdEF5
+            dUViOU5JZERjN2RvYnpvaC96UmFsbDYyeFZrCklEdHRnWlg1SVNWVWhHVHVUdml3
+            Z2ZOTFJCSGxqRUIvTWVGQ1BwQ3pKc3cKLS0tIEo0eWVqalBrd0NxZVBjV3Rza2V3
+            V3VZS0prZEI1Mi9CN0w1aHE0Q3VZZEEKpfgQV651T9D9/pKrH0nnxkMxg6cyHYwA
+            VrzNFaZvINS8hmccAXMkiuLHlvkV26xbZRc11WPX4xduS7jWvBe8UA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2025-06-18T04:05:16Z"
+    mac: ENC[AES256_GCM,data:bEYg2cFhYXA+BV+IIIL6h6QJxrTmOFQr/UbCg1AjN8GYNKiz93VZkblJiuax9UNiV3iPkiEO9FXiq2PBVa4yRi/7LE3WZjEUg4pYG8k1qk3ujno7orleWzqNw8sSs5aQeoH6ZdPd/kQa7y/kqTGFczy8XP0oDrYxks/+EiDTFXI=,iv:bkjQuIUyehM4XBYjZL0CnB5wdjXBrq7jepMyYiBm/nI=,tag:L8+DbJxEhGesc5PL/i/MJg==,type:str]
+    encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
+    version: 3.10.1
