@@ -119,7 +119,7 @@ spec:
               x_forwarded: true
               resources:
                 - names: [client, federation, openid]
-            oidc_providers::
+            oidc_providers:
             - idp_id: cloudflare
               idp_name: Cloudflare Access
               enable_registration: true
