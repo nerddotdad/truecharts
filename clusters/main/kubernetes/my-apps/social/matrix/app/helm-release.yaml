@@ -56,7 +56,6 @@ spec:
                 readiness:
                   enabled: false
               imageSelector: nginx
-              name: wellknown
 
     service:
       main:
