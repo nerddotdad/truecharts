@@ -118,19 +118,20 @@ spec:
               resources:
                 - names: [client, federation]
             oidc_providers::
-              - idp_id: cloudflare
-                idp_name: Cloudflare Access
-                issuer: ${MATRIX_SSO_ISSUER}
-                client_id: ${MATRIX_SSO_CLIENT_ID}
-                client_secret: ${MATRIX_SSO_CLIENT_SECRET}
-                scopes: ["openid", "profile", "email"]
-                authorization_endpoint: ${MATRIX_SSO_AUTH_ENDPOINT}
-                token_endpoint: ${MATRIX_SSO_TOKEN_ENDPOINT}
-                userinfo_endpoint: ${MATRIX_SSO_USERINFO_ENDPOINT}
-                user_mapping_provider:
-                  config:
-                    display_name_template: "{{`{{ user.name }}`}}"
-                    email_template: "{{`{{ user.email }}`}}"
+            - idp_id: cloudflare
+              idp_name: Cloudflare Access
+              enable_registration: true
+              issuer: ${MATRIX_SSO_ISSUER}
+              client_id: ${MATRIX_SSO_CLIENT_ID}
+              client_secret: ${MATRIX_SSO_CLIENT_SECRET}
+              scopes: ["openid", "profile", "email"]
+              authorization_endpoint: ${MATRIX_SSO_AUTH_ENDPOINT}
+              token_endpoint: ${MATRIX_SSO_TOKEN_ENDPOINT}
+              userinfo_endpoint: ${MATRIX_SSO_USERINFO_ENDPOINT}
+              user_mapping_provider:
+                config:
+                  display_name_template: "{{`{{ user.name }}`}}"
+                  email_template: "{{`{{ user.email }}`}}"
       matrix-wellknown:
         enabled: true
         data:
