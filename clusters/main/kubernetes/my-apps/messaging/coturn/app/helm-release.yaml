@@ -44,7 +44,6 @@ spec:
                 - --no-multicast-peers
                 - --no-cli
                 - --no-tlsv1
-                - --no-tlsv1_1
                 - --realm=matrix.hoth.systems
                 - --use-auth-secret
                 - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
