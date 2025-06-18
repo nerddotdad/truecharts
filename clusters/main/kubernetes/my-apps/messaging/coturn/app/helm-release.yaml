@@ -4,6 +4,7 @@ metadata:
   name: coturn
   namespace: social
 spec:
+  interval: 1m
   chart:
     spec:
       chart: app-template
