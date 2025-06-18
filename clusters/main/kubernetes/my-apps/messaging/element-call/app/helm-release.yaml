@@ -1,7 +1,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: matrix-rtc
+  name: element-call
   namespace: social
 spec:
   interval: 1m
@@ -15,7 +15,7 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: ghcr.io/vector-im/matrix-rtc
+      repository: ghcr.io/element-hq/element-call
       tag: latest
       pullPolicy: IfNotPresent
 
@@ -23,12 +23,12 @@ spec:
       main:
         enabled: true
         type: LoadBalancer
-        loadBalancerIP: ${RTC_FOCUS_IP}      # assign via MetalLB
+        loadBalancerIP: ${RTC_FOCUS_IP}
         ports:
           main:
             enabled: true
-            port: 443
-            targetPort: 443
+            port: 5000
+            targetPort: 5000
             protocol: tcp
 
     configmap:
@@ -38,37 +38,33 @@ spec:
           config.json: |
             {
               "matrixHomeserverUrl": "http://matrix-app-template.messaging.svc.cluster.local:8008",
-              "listenPort": 443,
+              "listenPort": 5000,
               "tls": {
                 "enabled": false
               }
             }
-
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              # mount config.json as /app/config.json
-              volumeMounts:
-                - name: rtc-config
-                  mountPath: /app/config.json
-                  subPath: config.json
-                  readOnly: true
 
     persistence:
       config:
         enabled: true
         type: configmap
         objectName: rtc-config
-        mountPath: /app/config.json
+        mountPath: /app
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              command: ["/app/bin/matrix-rtc"]
+              args: ["--config", "/app/config.json"]
 
     ingress:
       main:
         enabled: true
         ingressClassName: external
         hosts:
-          - host: call.${DOMAIN_0}
+          - host: call.matrix.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
