@@ -194,6 +194,8 @@ spec:
             certificateIssuer: "domain-0-le-prod"
       sso:
         enabled: true
+        targetSelector:
+          sso: sso
         ingressClassName: external
         hosts: 
           - host: sso.matrix.${DOMAIN_0}
