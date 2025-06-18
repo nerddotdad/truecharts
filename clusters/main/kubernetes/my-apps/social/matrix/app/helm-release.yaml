@@ -57,6 +57,32 @@ spec:
                   enabled: false
               imageSelector: nginx
               name: wellknown
+            mas:
+              enabled: true
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              imageSelector: mas
+              env:
+                - name: MAS_ISSUER
+                  value: ${MAS_ISSUER}
+                - name: MAS_CLIENT_ID
+                  value: ${MAS_CLIENT_ID}
+                - name: MAS_CLIENT_SECRET
+                  value: ${MAS_CLIENT_SECRET}
+                - name: MAS_SERVER_NAME
+                  value: matrix.${DOMAIN_0}
+                - name: MAS_BIND
+                  value: 0.0.0.0
+                - name: MAS_PORT
+                  value: "8090"
+              ports:
+                - containerPort: 8090
+                  name: mas
 
     service:
       main:
@@ -75,6 +101,16 @@ spec:
             port: 80
             protocol: http
             targetPort: 80
+      mas:
+        enabled: true
+        ports:
+          mas:
+            enabled: true
+            targetSelector: mas
+            port: 8090
+            protocol: http
+            targetPort: 8090
+
 
     cnpg:
       main:
@@ -199,6 +235,28 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
+                service:
+                  name: matrix-app-template
+                  port:
+                    name: main
+              - path: /_matrix/client/v3/login
+                pathType: Prefix
+                service:
+                  name: matrix-app-template  # name of your release
+                  port:
+                    name: mas
+              - path: /_matrix/client/v3/logout
+                pathType: Prefix
+                service:
+                  name: matrix-app-template
+                  port:
+                    name: mas
+              - path: /_matrix/client/v3/refresh
+                pathType: Prefix
+                service:
+                  name: matrix-app-template
+                  port:
+                    name: mas
         integrations:
           traefik:
             enabled: false
@@ -225,4 +283,9 @@ spec:
     nginx:
       repository: nginx
       tag: latest
+      pullPolicy: IfNotPresent
+
+    mas:
+      repository: ghcr.io/matrix-org/matrix-authentication-service
+      tag: v0.10.1
       pullPolicy: IfNotPresent

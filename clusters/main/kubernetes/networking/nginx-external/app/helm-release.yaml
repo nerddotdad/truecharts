@@ -60,11 +60,6 @@ spec:
         proxy-buffer-size: 16k
         ssl-protocols: TLSv1.3 TLSv1.2
         use-forwarded-headers: "true"
-        server-snippet: |
-          location ~* ^/.well-known/(matrix|element)/ {
-            default_type application/json;
-            add_header Content-Type application/json;
-          }
       metrics:
         enabled: true
       extraArgs:
