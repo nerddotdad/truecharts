@@ -70,6 +70,7 @@ spec:
         enabled: true
         ports:
           sso:
+            enabled: true
             targetSelector: sso
             port: 80
             protocol: http
