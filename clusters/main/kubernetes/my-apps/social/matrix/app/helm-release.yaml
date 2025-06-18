@@ -280,6 +280,6 @@ spec:
       pullPolicy: IfNotPresent
 
     mas:
-      repository: ghcr.io/matrix-org/matrix-authentication-service
-      tag: v0.10.1
+      repository: ghcr.io/element-hq/matrix-authentication-service
+      tag: latest
       pullPolicy: IfNotPresent
