@@ -25,7 +25,7 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${COLTURN_IP}
         ports:
-          turn:
+          main:
             enabled: true
             port: 3478
             protocol: UDP
