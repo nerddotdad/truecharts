@@ -36,6 +36,7 @@ spec:
               # if the image already uses `turnserver` as entrypoint, you only need args:
               args:
                 - -n
+                - --external-ip=${COLTURN_IP}
                 - --log-file=stdout
                 - --min-port=49160
                 - --max-port=49200
@@ -45,9 +46,8 @@ spec:
                 - --no-tlsv1
                 - --realm=matrix.hoth.systems
                 - --use-auth-secret
-                - --static-auth-secret="${COLTURN_STATIC_AUTH_SECRET}"
+                - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
                 - --listening-port=3478
-                - --tls-listening-port=5349
 
     service:
       main:
