@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   # - pixelfed/ks.yaml
-  # - matrix/ks.yaml
+  - matrix/ks.yaml
