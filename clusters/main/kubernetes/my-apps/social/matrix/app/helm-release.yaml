@@ -159,20 +159,25 @@ spec:
         mountPath: /config
       wellknown-data:
         enabled: true
+        type: configmap
         objectName: matrix-wellknown
         targetSelector:
           sso:
             mountPath: /usr/share/nginx/html/.well-known
       nginx-cache:
         enabled: true
+        type: emptyDir
         targetSelector:
-          sso:
-            emptyDir: {}
+          main:
+            sso:
+              mountPath: /var/cache/nginx
       nginx-logs:
         enabled: true
+        type: emptyDir
         targetSelector:
-          sso:
-            emptyDir: {}
+          main:
+            sso:
+              mountPath: /var/log/nginx
 
     ingress:
       main:
