@@ -235,7 +235,7 @@ spec:
               - path: /
                 pathType: Prefix
               - path: /.well-known/matrix/client
-                pathType: Exact
+                pathType: ImplementationSpecific
                 targetSelector:
                   wellknown: wellknown
         integrations:
