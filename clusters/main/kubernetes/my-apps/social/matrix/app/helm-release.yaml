@@ -57,26 +57,6 @@ spec:
                   enabled: false
               imageSelector: nginx
               name: wellknown
-            mas:
-              enabled: true
-              probes:
-                startup:
-                  enabled: false
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-              imageSelector: mas
-              env:
-                MAS_ISSUER: ${MATRIX_SSO_ISSUER}
-                MAS_CLIENT_ID: ${MATRIX_SSO_CLIENT_ID}
-                MAS_CLIENT_SECRET: ${MATRIX_SSO_CLIENT_SECRET}
-                MAS_SERVER_NAME: matrix.${DOMAIN_0}
-                MAS_BIND: 0.0.0.0
-                MAS_PORT: "8090"
-              ports:
-                - containerPort: 8090
-                  name: mas
 
     service:
       main:
@@ -95,16 +75,6 @@ spec:
             port: 80
             protocol: http
             targetPort: 80
-      mas:
-        enabled: true
-        ports:
-          mas:
-            enabled: true
-            targetSelector: mas
-            port: 8090
-            protocol: http
-            targetPort: 8090
-
 
     cnpg:
       main:
@@ -229,28 +199,6 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-                service:
-                  name: matrix-app-template
-                  port:
-                    name: main
-              - path: /_matrix/client/v3/login
-                pathType: Prefix
-                service:
-                  name: matrix-app-template  # name of your release
-                  port:
-                    name: mas
-              - path: /_matrix/client/v3/logout
-                pathType: Prefix
-                service:
-                  name: matrix-app-template
-                  port:
-                    name: mas
-              - path: /_matrix/client/v3/refresh
-                pathType: Prefix
-                service:
-                  name: matrix-app-template
-                  port:
-                    name: mas
         integrations:
           traefik:
             enabled: false
@@ -276,10 +224,5 @@ spec:
                 
     nginx:
       repository: nginx
-      tag: latest
-      pullPolicy: IfNotPresent
-
-    mas:
-      repository: ghcr.io/element-hq/matrix-authentication-service
       tag: latest
       pullPolicy: IfNotPresent
