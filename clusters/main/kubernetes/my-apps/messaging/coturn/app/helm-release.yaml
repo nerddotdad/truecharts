@@ -43,7 +43,6 @@ spec:
                 - --fingerprint
                 - --no-multicast-peers
                 - --no-cli
-                - --no-tlsv1
                 - --realm=matrix.hoth.systems
                 - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
                 - --listening-port=3478
