@@ -221,6 +221,8 @@ spec:
             certificateIssuer: "domain-0-le-prod"
       wellknown:
         enabled: true
+        targetSelector:
+          wellknown: wellknown
         ingressClassName: external
         hosts: 
           - host: matrix.${DOMAIN_0}
