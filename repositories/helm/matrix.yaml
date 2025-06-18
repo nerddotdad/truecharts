@@ -1,9 +1,9 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-    name: ess-helm
+    name: ess
     namespace: flux-system
 spec:
     interval: 10m
-    url: https://element-hq.github.io/ess-helm
+    url: oci://ghcr.io/element-hq/ess-helm/matrix-stack
     timeout: 3m
