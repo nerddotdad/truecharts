@@ -48,6 +48,13 @@ spec:
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
             wellknown:
               enabled: true
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
               imageSelector: nginx
 
 
