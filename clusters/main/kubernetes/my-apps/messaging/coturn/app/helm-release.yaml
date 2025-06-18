@@ -39,7 +39,6 @@ spec:
                 - --log-file=stdout
                 - --min-port=49160
                 - --max-port=49200
-                - --lt-cred-mech
                 - --fingerprint
                 - --no-multicast-peers
                 - --no-cli
