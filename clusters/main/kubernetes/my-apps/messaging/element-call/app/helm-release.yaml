@@ -27,8 +27,8 @@ spec:
         ports:
           main:
             enabled: true
-            port: 80
-            targetPort: 80
+            port: 5000
+            targetPort: 5000
             protocol: tcp
 
     workload:
