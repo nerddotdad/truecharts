@@ -183,11 +183,20 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
-              - path: /.well-known/
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+      sso:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: sso.matrix.${DOMAIN_0}
+            paths:
+              - path: /
                 pathType: Prefix
-                service:
-                  name: matrix-app-template-sso
-                  port: 80  # nginx
         integrations:
           traefik:
             enabled: false
