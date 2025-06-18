@@ -232,12 +232,14 @@ spec:
         hosts:
           - host: matrix.${DOMAIN_0}
             paths:
-              - path: /
-                pathType: Prefix
               - path: /.well-known/matrix/client
                 pathType: ImplementationSpecific
                 targetSelector:
                   wellknown: wellknown
+              - path: /
+                pathType: Prefix
+                targetSelector:
+                  main: main
         integrations:
           traefik:
             enabled: false
