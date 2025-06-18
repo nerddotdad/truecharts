@@ -228,7 +228,7 @@ spec:
           - host: matrix.${DOMAIN_0}
             paths:
               - path: /.well-known/matrix/client
-                pathType: Prefix
+                pathType: Exact
         integrations:
           traefik:
             enabled: false
