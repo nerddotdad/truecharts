@@ -41,7 +41,7 @@ spec:
                 runAsUser: 0
                 readOnlyRootFilesystem: false
 
-    configMap:
+    configmap:
       config:
         enabled: true
         data:
