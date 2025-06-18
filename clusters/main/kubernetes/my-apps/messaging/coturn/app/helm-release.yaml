@@ -24,6 +24,10 @@ spec:
         podSpec:
           containers:
             main:
+              securityContext:
+                runAsNonRoot: false
+                runAsUser: 0
+                readOnlyRootFilesystem: false
               # override the entrypoint (optional) and pass args:
               # if the image already uses `turnserver` as entrypoint, you only need args:
               args:
