@@ -30,6 +30,11 @@ spec:
       pullPolicy: IfNotPresent
       tag: latest
 
+    nginx:
+      repository: nginx
+      pullPolicy: IfNotPresent
+      tag: latest
+
     workload:
       main:
         podSpec:
@@ -41,6 +46,10 @@ spec:
                 SYNAPSE_REPORT_STATS: "yes"
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
+            wellknown:
+              enabled: true
+              imageSelector: nginx
+
 
     service:
       main:
@@ -137,6 +146,23 @@ spec:
                 config:
                   display_name_template: "{{`{{ user.name }}`}}"
                   email_template: "{{`{{ user.email }}`}}"
+      matrix-wellknown:
+        enabled: true
+        data:
+          client: |
+            {
+              "m.homeserver": {
+                "base_url": "https://matrix.hoth.systems"
+              },
+              "org.matrix.msc3861.call": {
+                "url": "https://call.matrix.hoth.systems"
+              },
+              "org.matrix.msc3489.turn": {
+                "url": "turn:turn.matrix.hoth.systems",
+                "username": "user",
+                "password": "signed-token"
+              }
+            }
 
     persistence:
       data:
@@ -150,6 +176,14 @@ spec:
         type: configmap
         objectName: matrix-config
         mountPath: /config
+      wellknown-data:
+        enabled: true
+        type: configmap
+        objectName: matrix-wellknown
+        targetSelector:
+          main:
+            wellknown:
+              mountPath: /usr/share/nginx/html/.well-known/matrix
 
     ingress:
       main:
