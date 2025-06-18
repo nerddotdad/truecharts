@@ -66,6 +66,9 @@ spec:
             protocol: http
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
+      sso:
+        enabled: true
+        ports:
           sso:
             targetSelector: sso
             port: 80
