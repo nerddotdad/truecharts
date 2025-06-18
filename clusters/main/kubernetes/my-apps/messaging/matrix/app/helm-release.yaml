@@ -72,10 +72,11 @@ spec:
       wellknown:
         enabled: true
         ports:
-          main:
+          wellknown:
             protocol: http
             targetPort: 80  # Synapse listens here by default
             port: 80        # External cluster port
+            targetSelector: wellknown
 
     cnpg:
       main:
