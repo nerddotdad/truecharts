@@ -184,7 +184,7 @@ spec:
               - path: /
                 pathType: Prefix
               - path: /.well-known
-                pathType: Prefix
+                pathType: Exact
                 service:
                   name: matrix-app-template-sso
                   port: 80  # nginx
