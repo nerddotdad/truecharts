@@ -56,11 +56,13 @@ spec:
             port: 3478
             protocol: udp
             targetPort: 3478
+            targetSelector: main
           tcp:
             enabled: true
             port: 3478
             protocol: tcp
             targetPort: 3478
+            targetSelector: main
 
     cnpg:
       main:
