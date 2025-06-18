@@ -67,7 +67,7 @@ spec:
         enabled: true
         user: coturn
         database: coturn
-        password: ${COTURN_DB_PASSWORD}
+        password: ${POSTGRES_PASWORD}
         cluster:
           storage:
             size: 8Gi
