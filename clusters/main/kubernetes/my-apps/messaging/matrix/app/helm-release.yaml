@@ -225,10 +225,10 @@ spec:
           wellknown: wellknown
         ingressClassName: external
         hosts: 
-          - host: matrix.${DOMAIN_0}
+          - host: auth.matrix.${DOMAIN_0}
             paths:
-              - path: /.well-known/matrix/client
-                pathType: Exact
+              - path: /
+                pathType: Prefix
         integrations:
           traefik:
             enabled: false
