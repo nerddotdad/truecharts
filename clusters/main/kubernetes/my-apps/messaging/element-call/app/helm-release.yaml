@@ -31,34 +31,6 @@ spec:
             targetPort: 5000
             protocol: tcp
 
-    configmap:
-      rtc-config:
-        enabled: true
-        data:
-          config.json: |
-            {
-              "matrixHomeserverUrl": "http://matrix-app-template.messaging.svc.cluster.local:8008",
-              "listenPort": 5000,
-              "tls": {
-                "enabled": false
-              }
-            }
-
-    persistence:
-      config:
-        enabled: true
-        type: configmap
-        objectName: rtc-config
-        mountPath: /app
-
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              command: ["/app/bin/matrix-rtc"]
-              args: ["--config", "/app/config.json"]
-
     ingress:
       main:
         enabled: true
