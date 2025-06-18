@@ -174,7 +174,7 @@ spec:
         targetSelector:
           main:
             sso:
-              mountPath: /usr/share/nginx/html/.well-known/matrix
+              mountPath: /usr/share/nginx/html/.well-known
       nginx-cache:
         enabled: true
         type: emptyDir
