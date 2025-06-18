@@ -43,8 +43,13 @@ spec:
                 - --fingerprint
                 - --no-cli
                 - --realm=matrix.hoth.systems
+                - --use-auth-secret
                 - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
                 - --listening-port=3478
+                - --no-tcp-relay
+                - --no-multicast-peers
+                - --no-tls
+                - --no-dtls
 
     service:
       main:
