@@ -94,6 +94,7 @@ spec:
           # registration_shared_secret: Needed for shared-secret registration - Required If registering users via CLI or API
           homeserver.yaml: |
             server_name: matrix.hoth.systems
+            public_baseurl: https://matrix.hoth.systems/
             pid_file: /data/homeserver.pid
             enable_registration: false
             registration_shared_secret: ${MATRIX_REG_SECRET}
