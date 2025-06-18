@@ -13,3 +13,4 @@ resources:
   - spegel.yaml
   - truecharts.yaml
   - grafana.yaml
+  - matrix.yaml
