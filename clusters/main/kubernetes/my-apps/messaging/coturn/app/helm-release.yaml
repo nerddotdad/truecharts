@@ -37,7 +37,6 @@ spec:
               args:
                 - -n
                 - --external-ip=${COLTURN_IP}
-                - --log-file=stdout
                 - --min-port=49160
                 - --max-port=49200
                 - --fingerprint
