@@ -80,11 +80,10 @@ spec:
             media_store_path: "/data/media_store"
             macaroon_secret_key: ${MATRIX_REG_SECRET}
             admin_contact: mailto:admin@hoth.systems
-            turn_uris:
-              - "turn:turn.matrix.hoth.systems?transport=udp"
+            turn_uris: [ "turn:turn.matrix.hoth.systems?transport=udp", "turn:turn.matrix.hoth.systems?transport=tcp" ]
             turn_shared_secret: ${COLTURN_STATIC_AUTH_SECRET}
             turn_user_lifetime: 86400000
-            turn_allow_guests: false
+            turn_allow_guests: true
             database:
               name: psycopg2
               args:
