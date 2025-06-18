@@ -29,7 +29,7 @@ spec:
             enabled: true
             port: 443
             targetPort: 443
-            protocol: TCP
+            protocol: tcp
 
     configmap:
       rtc-config:
