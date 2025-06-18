@@ -165,9 +165,8 @@ spec:
         enabled: true
         type: configmap
         objectName: matrix-wellknown
-        targetSelector:
-          sso:
-            mountPath: /usr/share/nginx/html/.well-known
+        targetSelector: sso
+        mountPath: /usr/share/nginx/html/.well-known
       nginx-cache:
         enabled: true
         type: emptyDir
