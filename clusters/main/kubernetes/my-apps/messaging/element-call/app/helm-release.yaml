@@ -31,6 +31,16 @@ spec:
             targetPort: 5000
             protocol: tcp
 
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              securityContext:
+                runAsNonRoot: false
+                runAsUser: 0
+                readOnlyRootFilesystem: false
+
     ingress:
       main:
         enabled: true
