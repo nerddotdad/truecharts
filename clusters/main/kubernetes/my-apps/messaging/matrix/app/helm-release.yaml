@@ -138,12 +138,17 @@ spec:
               authorization_endpoint: ${MATRIX_SSO_AUTH_ENDPOINT}
               token_endpoint: ${MATRIX_SSO_TOKEN_ENDPOINT}
               userinfo_endpoint: ${MATRIX_SSO_USERINFO_ENDPOINT}
-              experimental_features:
-                # MSC3266: Room summary API. Used for knocking over federation
-                msc3266_enabled: true
-                # MSC4222 needed for syncv2 state_after. This allow clients to
-                # correctly track the state of the room.
-                msc4222_enabled: true
+              scopes: ["openid", "profile", "email"]
+              user_mapping_provider:
+                config:
+                  display_name_template: "{{`{{ user.name }}`}}"
+                  email_template: "{{`{{ user.email }}`}}"
+            experimental_features:
+              # MSC3266: Room summary API. Used for knocking over federation
+              msc3266_enabled: true
+              # MSC4222 needed for syncv2 state_after. This allow clients to
+              # correctly track the state of the room.
+              msc4222_enabled: true
 
               # The maximum allowed duration by which sent events can be delayed, as
               # per MSC4140.
@@ -160,11 +165,6 @@ spec:
                 # Currently the heart-beat is every 5 seconds which translates into a rate of 0.2s
                 per_second: 1
                 burst_count: 20
-              scopes: ["openid", "profile", "email"]
-              user_mapping_provider:
-                config:
-                  display_name_template: "{{`{{ user.name }}`}}"
-                  email_template: "{{`{{ user.email }}`}}"
       matrix-wellknown:
         enabled: true
         data:
