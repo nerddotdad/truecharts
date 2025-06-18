@@ -116,8 +116,9 @@ spec:
               type: http
               tls: false
               proxy_protocol: true
+              x_forwarded: true
               resources:
-                - names: [client, federation]
+                - names: [client, federation, openid]
             oidc_providers::
             - idp_id: cloudflare
               idp_name: Cloudflare Access
