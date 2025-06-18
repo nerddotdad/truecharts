@@ -13,7 +13,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: matrix
-  namespace: social
+  namespace: messaging
 spec:
   interval: 1m
   chart:
@@ -79,6 +79,12 @@ spec:
             signing_key_path: "/data/synapse.signing.key"
             media_store_path: "/data/media_store"
             macaroon_secret_key: ${MATRIX_REG_SECRET}
+            admin_contact: mailto:admin@hoth.systems
+            turn_uris:
+              - "turn:turn.matrix.hoth.systems?transport=udp"
+            turn_shared_secret: ${COLTURN_STATIC_AUTH_SECRET}
+            turn_user_lifetime: 86400000
+            turn_allow_guests: false
             database:
               name: psycopg2
               args:
@@ -94,7 +100,7 @@ spec:
               proxy_protocol: true
               x_forwarded: true
               resources:
-                - names: [client, federation, openid]
+                - names: [client, federation, openid, keys, metrics]
             oidc_providers:
             - idp_id: cloudflare
               idp_name: Cloudflare Access

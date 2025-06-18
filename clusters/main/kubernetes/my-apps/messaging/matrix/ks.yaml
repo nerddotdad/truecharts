@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/social/matrix/app
+  path: clusters/main/kubernetes/my-apps/messaging/matrix/app
   prune: true
   sourceRef:
     kind: GitRepository

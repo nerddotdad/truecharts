@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: coturn
+  namespace: social
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  values:
+    image:
+      repository: instrumentisto/coturn
+      tag: latest
+      pullPolicy: IfNotPresent
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${COLTURN_IP}
+        ports:
+          turn:
+            enabled: true
+            port: 3478
+            protocol: UDP
+            targetPort: 3478
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                TURN_REALM: "matrix.hoth.systems"
+                TURN_USER: "user:password"  # Consider using secrets
+                EXTRA_ARGS: "--lt-cred-mech --no-tls --no-dtls --fingerprint --use-auth-secret --static-auth-secret=$(TURN_SECRET) --realm=$(TURN_REALM) --listening-port=3478 --min-port=49160 --max-port=49200"
+                TURN_SECRET: ${COLTURN_STATIC_AUTH_SECRET}
+
+    persistence:
+      config:
+        enabled: true
+        type: emptyDir
+        mountPath: /config
