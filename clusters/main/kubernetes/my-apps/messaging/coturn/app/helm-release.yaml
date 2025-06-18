@@ -22,18 +22,10 @@ spec:
     workload:
       main:
         podSpec:
-          volumes:
-            - name: coturn-config
-              configMap:
-                name: coturn-config
           containers:
             main:
-              # (existing env, ports, etc…)
-              volumeMounts:
-                - name: coturn-config
-                  mountPath: /etc/turnserver.conf
-                  subPath: turnserver.conf
-                  readOnly: true
+              securityContext:
+                readOnlyRootFilesystem: false
 
     service:
       main:
