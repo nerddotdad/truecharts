@@ -36,6 +36,11 @@ spec:
         annotations:
           metallb.io/ip-allocated-from-pool: main
           metallb.io/loadBalancerIPs: ${NGINX_EXTERNAL_IP}
+          nginx.ingress.kubernetes.io/server-snippet: |
+            location ~* ^/.well-known/(matrix|element)/ {
+              default_type application/json;
+              add_header Content-Type application/json;
+            }
       ingressClassByName: true
       watchIngressWithoutClass: false
       ingressClassResource:
