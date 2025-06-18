@@ -41,21 +41,6 @@ spec:
                 SYNAPSE_REPORT_STATS: "yes"
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
-            # sso:
-            #   enabled: true
-            #   securityContext:
-            #     readOnlyRootFilesystem: false
-            #     runAsNonRoot: false
-            #     runAsUser: 0
-            #     runAsGroup: 0
-            #   probes:
-            #     startup:
-            #       enabled: false
-            #     liveness:
-            #       enabled: false
-            #     readiness:
-            #       enabled: false
-            #   imageSelector: nginx
 
     service:
       main:
@@ -65,15 +50,6 @@ spec:
             protocol: http
             targetPort: 8008  # Synapse listens here by default
             port: 8080        # External cluster port
-      # sso:
-      #   enabled: true
-      #   ports:
-      #     sso:
-      #       enabled: true
-      #       targetSelector: sso
-      #       port: 80
-      #       protocol: http
-      #       targetPort: 80
 
     cnpg:
       main:
@@ -134,24 +110,6 @@ spec:
                 config:
                   display_name_template: "{{`{{ user.name }}`}}"
                   email_template: "{{`{{ user.email }}`}}"
-      # matrix-wellknown:
-      #   enabled: true
-      #   data:
-      #     server: |
-      #       {
-      #         "m.homeserver": {
-      #           "base_url": "https://matrix.hoth.systems"
-      #         }
-      #       }
-      #     client: |
-      #       {
-      #         "m.homeserver": {
-      #           "base_url": "https://matrix.hoth.systems"
-      #         },
-      #         "org.matrix.msc3824.authentication_service": {
-      #           "url": "https://sso.matrix.hoth.systems"
-      #         }
-      #       }
 
     persistence:
       data:
@@ -165,28 +123,6 @@ spec:
         type: configmap
         objectName: matrix-config
         mountPath: /config
-      # wellknown-data:
-      #   enabled: true
-      #   type: configmap
-      #   objectName: matrix-wellknown
-      #   targetSelector:
-      #     main:
-      #       sso:
-      #         mountPath: /usr/share/nginx/html/.well-known/matrix
-      # nginx-cache:
-      #   enabled: true
-      #   type: emptyDir
-      #   targetSelector:
-      #     main:
-      #       sso:
-      #         mountPath: /var/cache/nginx
-      # nginx-logs:
-      #   enabled: true
-      #   type: emptyDir
-      #   targetSelector:
-      #     main:
-      #       sso:
-      #         mountPath: /var/log/nginx
 
     ingress:
       main:
@@ -203,24 +139,3 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
-      # sso:
-      #   enabled: true
-      #   targetSelector:
-      #     sso: sso
-      #   ingressClassName: external
-      #   hosts: 
-      #     - host: sso.matrix.${DOMAIN_0}
-      #       paths:
-      #         - path: /
-      #           pathType: Prefix
-      #   integrations:
-      #     traefik:
-      #       enabled: false
-      #     certManager:
-      #       enabled: true
-      #       certificateIssuer: "domain-0-le-prod"
-                
-    # nginx:
-    #   repository: nginx
-    #   tag: latest
-    #   pullPolicy: IfNotPresent
