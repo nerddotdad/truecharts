@@ -25,7 +25,7 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${RTC_FOCUS_IP}      # assign via MetalLB
         ports:
-          http:
+          main:
             enabled: true
             port: 443
             targetPort: 443
