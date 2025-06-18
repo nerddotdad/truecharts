@@ -34,8 +34,8 @@ spec:
     cnpg:
       main:
         enabled: true
-        user: colturn
-        database: colturn
+        user: coturn
+        database: coturn
         password: ${POSTGRES_PASWORD}
         cluster:
           storage:

@@ -59,7 +59,7 @@ spec:
         password: ${POSTGRES_PASWORD}
         cluster:
           storage:
-            size: 8Gi  # or whatever fits your needs
+            size: 8Gi
 
     configmap:
       matrix-config:
