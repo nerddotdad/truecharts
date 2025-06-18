@@ -49,8 +49,6 @@ spec:
                 - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
                 - --listening-port=3478
                 - --tls-listening-port=5349
-                - --userdb=postgresql
-                - --psql-userdb=host=coturn-app-template-cnpg-main-rw\ dbname=coturn\ user=coturn\ password=${POSTGRES_PASWORD}\ sslmode=disable
 
     service:
       main:
@@ -70,13 +68,3 @@ spec:
             protocol: tcp
             targetPort: 3478
             targetSelector: main
-
-    cnpg:
-      main:
-        enabled: true
-        user: coturn
-        database: coturn
-        password: ${POSTGRES_PASWORD}
-        cluster:
-          storage:
-            size: 8Gi
