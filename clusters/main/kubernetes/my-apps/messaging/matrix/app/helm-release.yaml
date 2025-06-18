@@ -216,7 +216,7 @@ spec:
         hosts: 
           - host: matrix.${DOMAIN_0}
             paths:
-              - path: /.well-known
+              - path: /.well-known/
                 pathType: Prefix
         integrations:
           traefik:
