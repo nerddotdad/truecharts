@@ -4,7 +4,6 @@ metadata:
   name: coturn
   namespace: social
 spec:
-  interval: 1m
   chart:
     spec:
       chart: app-template
@@ -15,7 +14,7 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: instrumentisto/coturn
+      repository: coturn/coturn
       tag: latest
       pullPolicy: IfNotPresent
 
@@ -24,8 +23,26 @@ spec:
         podSpec:
           containers:
             main:
-              securityContext:
-                readOnlyRootFilesystem: false
+              # override the entrypoint (optional) and pass args:
+              # if the image already uses `turnserver` as entrypoint, you only need args:
+              args:
+                - -n
+                - --log-file=stdout
+                - --min-port=49160
+                - --max-port=49200
+                - --lt-cred-mech
+                - --fingerprint
+                - --no-multicast-peers
+                - --no-cli
+                - --no-tlsv1
+                - --no-tlsv1_1
+                - --realm=matrix.hoth.systems
+                - --use-auth-secret
+                - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
+                - --listening-port=3478
+                - --tls-listening-port=5349
+                - --userdb=postgresql
+                - --psql-userdb=host=coturn-app-template-cnpg-main-rw\ dbname=coturn\ user=coturn\ password=${POSTGRES_PASWORD}\ sslmode=disable
 
     service:
       main:
@@ -33,10 +50,15 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${COLTURN_IP}
         ports:
-          main:
+          udp3478:
             enabled: true
             port: 3478
-            protocol: udp
+            protocol: UDP
+            targetPort: 3478
+          tcp3478:
+            enabled: true
+            port: 3478
+            protocol: TCP
             targetPort: 3478
 
     cnpg:
@@ -44,39 +66,7 @@ spec:
         enabled: true
         user: coturn
         database: coturn
-        password: ${POSTGRES_PASWORD}
+        password: ${COTURN_DB_PASSWORD}
         cluster:
           storage:
-            size: 8Gi 
-
-    configmap:
-      coturn-config:
-        enabled: true
-        data:
-          turnserver.conf: |
-            listening-port=3478
-            tls-listening-port=5349
-            fingerprint
-            
-            # secret for HMAC auth
-            use-auth-secret
-            static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
-            
-            realm=matrix.hoth.systems
-            
-            # PostgreSQL userdb
-            userdb=postgresql
-            psql-userdb="host=matrix-app-template-cnpg-main-rw \
-             dbname=coturn user=coturn password=${POSTGRES_PASWORD} sslmode=disable"
-            
-            # relay port range
-            min-port=49160
-            max-port=49200
-            relay-threads=4
-
-    persistence:
-      config:
-        enabled: true
-        type: configmap
-        objectName: coturn-config
-        mountPath: /etc
+            size: 8Gi
