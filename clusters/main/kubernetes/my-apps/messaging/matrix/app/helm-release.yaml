@@ -182,6 +182,19 @@ spec:
                 "password": "signed-token"
               }
             }
+      matrix-wellknown-nginx:
+        enabled: true
+        data:
+          default.conf: |
+            server {
+              listen 80;
+              location /.well-known/matrix/client {
+                default_type application/json;
+                add_header Access-Control-Allow-Origin *;
+                root /usr/share/nginx/html;
+                try_files $uri =404;
+              }
+            }
 
     persistence:
       data:
@@ -203,32 +216,28 @@ spec:
           main:
             wellknown:
               mountPath: /usr/share/nginx/html/.well-known/matrix
+      wellknown-nginx-conf:
+        enabled: true
+        type: configmap
+        objectName: matrix-wellknown-nginx
+        targetSelector:
+          main:
+            wellknown:
+              mountPath: /etc/nginx/conf.d
 
     ingress:
       main:
         enabled: true
         ingressClassName: external
-        hosts: 
+        hosts:
           - host: matrix.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-      wellknown:
-        enabled: true
-        targetSelector:
-          wellknown: wellknown
-        ingressClassName: external
-        hosts: 
-          - host: auth.matrix.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
+              - path: /.well-known/matrix/client
+                pathType: Exact
+                targetSelector:
+                  wellknown: wellknown
         integrations:
           traefik:
             enabled: false
