@@ -4,3 +4,4 @@ resources:
   - namespace.yaml
   - matrix/ks.yaml
   - coturn/ks.yaml
+  - matrics-rtc/ks.yaml
