@@ -46,13 +46,18 @@ spec:
         enabled: true
         data:
           config.yaml: |
-            bindAddress: "0.0.0.0"
-            port: 5000
-            turnServers:
-              - urls: ["turn:turn.matrix.hoth.systems:3478?transport=udp", "turn:turn.matrix.hoth.systems:3478?transport=tcp"]
-                secret: "${COLTURN_STATIC_AUTH_SECRET}"
-                realm: "matrix.hoth.systems"
-            homeserverUrl: "https://matrix.hoth.systems"
+          bindAddress: "0.0.0.0"
+          port: 5000
+          homeserverUrl: "https://matrix.hoth.systems"
+          turnServers:
+            - urls:
+                - "turn:turn.matrix.hoth.systems:3478?transport=udp"
+                - "turn:turn.matrix.hoth.systems:3478?transport=tcp"
+              secret: "${COLTURN_STATIC_AUTH_SECRET}"
+              realm: "matrix.hoth.systems"
+          logLevel: "info"
+          enablePrometheus: true
+          metricsPort: 9090
 
     persistence:
       config:
