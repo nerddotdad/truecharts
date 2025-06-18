@@ -37,6 +37,7 @@ spec:
               args:
                 - -n
                 - --external-ip=${COLTURN_IP}
+                - --log-file=stdout
                 - --min-port=49160
                 - --max-port=49200
                 - --fingerprint
@@ -44,7 +45,6 @@ spec:
                 - --no-cli
                 - --no-tlsv1
                 - --realm=matrix.hoth.systems
-                - --use-auth-secret
                 - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
                 - --listening-port=3478
 
