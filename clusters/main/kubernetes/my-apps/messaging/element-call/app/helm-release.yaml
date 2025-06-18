@@ -62,4 +62,4 @@ spec:
         targetSelector:
           main:
             main:
-              mountPath: /app/config.yaml
+              mountPath: /app
