@@ -129,8 +129,8 @@ spec:
                 userinfo_endpoint: ${MATRIX_SSO_USERINFO_ENDPOINT}
                 user_mapping_provider:
                   config:
-                    display_name_template: "{{ user.name }}"
-                    email_template: "{{ user.email }}"
+                    display_name_template: "{{`{{ user.name }}`}}"
+                    email_template: "{{`{{ user.email }}`}}"
       matrix-wellknown:
         enabled: true
         data:
