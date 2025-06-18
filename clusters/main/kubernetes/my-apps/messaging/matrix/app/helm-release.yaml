@@ -47,6 +47,10 @@ spec:
                 SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
                 POSTGRES_PASSWORD: ${POSTGRES_PASWORD}
             wellknown:
+              securityContext:
+                runAsNonRoot: false
+                runAsUser: 0
+                readOnlyRootFilesystem: false
               enabled: true
               probes:
                 startup:
