@@ -45,7 +45,7 @@ spec:
                 - --no-tlsv1
                 - --realm=matrix.hoth.systems
                 - --use-auth-secret
-                - --static-auth-secret=${COLTURN_STATIC_AUTH_SECRET}
+                - --static-auth-secret="${COLTURN_STATIC_AUTH_SECRET}"
                 - --listening-port=3478
                 - --tls-listening-port=5349
 
