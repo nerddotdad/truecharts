@@ -40,3 +40,26 @@ spec:
                 runAsNonRoot: false
                 runAsUser: 0
                 readOnlyRootFilesystem: false
+
+    configMap:
+      config:
+        enabled: true
+        data:
+          config.yaml: |
+            bindAddress: "0.0.0.0"
+            port: 5000
+            turnServers:
+              - urls: ["turn:turn.matrix.hoth.systems:3478?transport=udp", "turn:turn.matrix.hoth.systems:3478?transport=tcp"]
+                secret: "${COLTURN_STATIC_AUTH_SECRET}"
+                realm: "matrix.hoth.systems"
+            homeserverUrl: "https://matrix.hoth.systems"
+
+    persistence:
+      wellknown-nginx-conf:
+        enabled: true
+        type: configmap
+        objectName: config
+        targetSelector:
+          main:
+            main:
+              mountPath: /app/config.yaml
