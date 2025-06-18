@@ -68,18 +68,12 @@ spec:
                   enabled: false
               imageSelector: mas
               env:
-                - name: MAS_ISSUER
-                  value: ${MAS_ISSUER}
-                - name: MAS_CLIENT_ID
-                  value: ${MAS_CLIENT_ID}
-                - name: MAS_CLIENT_SECRET
-                  value: ${MAS_CLIENT_SECRET}
-                - name: MAS_SERVER_NAME
-                  value: matrix.${DOMAIN_0}
-                - name: MAS_BIND
-                  value: 0.0.0.0
-                - name: MAS_PORT
-                  value: "8090"
+                MAS_ISSUER: ${MATRIX_SSO_ISSUER}
+                MAS_CLIENT_ID: ${MATRIX_SSO_CLIENT_ID}
+                MAS_CLIENT_SECRET: ${MATRIX_SSO_CLIENT_SECRET}
+                MAS_SERVER_NAME: matrix.${DOMAIN_0}
+                MAS_BIND: 0.0.0.0
+                MAS_PORT: "8090"
               ports:
                 - containerPort: 8090
                   name: mas
