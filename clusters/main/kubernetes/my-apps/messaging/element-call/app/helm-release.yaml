@@ -73,5 +73,5 @@ spec:
         targetSelector:
           main:
             main:
-              mountPath: /usr/share/nginx/html/config.json
+              mountPath: /app/config.json
               subPath: config.json
