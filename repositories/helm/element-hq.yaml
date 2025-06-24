@@ -5,4 +5,4 @@ metadata:
     namespace: flux-system
 spec:
     interval: 5m
-    url: https://element-hq.github.io/ess-helm
+    url: ghcr.io/element-hq/ess-helm/matrix-stack
