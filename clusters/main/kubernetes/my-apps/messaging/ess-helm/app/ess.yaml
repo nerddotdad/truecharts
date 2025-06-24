@@ -1,0 +1,63 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: ess
+  namespace: messaging
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ess
+      version: 0.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: element-hq
+        namespace: flux-system
+  values:
+    global:
+      ingress:
+        enabled: false # since you're using your own ingress controller
+
+    synapse:
+      serverName: "hoth.systems"
+      config:
+        public_baseurl: "https://matrix.hoth.systems"
+
+    element-web:
+      config:
+        default_server_config:
+          m.homeserver:
+            base_url: "https://matrix.hoth.systems"
+            server_name: "hoth.systems"
+
+    coturn:
+      enabled: false # You already run coturn via TrueCharts
+
+    element-call:
+      config:
+        TURN:
+          urls:
+            - "turn:turn.hoth.systems?transport=udp"
+            - "turn:turn.hoth.systems?transport=tcp"
+          username: your-turn-username
+          credential: your-turn-password
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: synapse
+  namespace: messaging
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  rules:
+    - host: matrix.hoth.systems
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ess-synapse
+                port:
+                  number: 8008
