@@ -40,6 +40,9 @@ spec:
                 runAsNonRoot: false
                 runAsUser: 0
                 readOnlyRootFilesystem: false
+              args:
+                - "--config"
+                - "/app/config.yaml"
 
     configmap:
       config:
@@ -66,5 +69,5 @@ spec:
         objectName: config
         targetSelector:
           main:
-            main:
-              mountPath: /app
+            mountPath: /app/config.yaml
+            subPath: config.yaml
