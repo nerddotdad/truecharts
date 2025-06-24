@@ -41,6 +41,7 @@ spec:
                 runAsUser: 0
                 readOnlyRootFilesystem: false
               args:
+                - "element-call"
                 - "--config"
                 - "/app/config.yaml"
 
