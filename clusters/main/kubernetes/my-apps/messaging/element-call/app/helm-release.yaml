@@ -40,28 +40,30 @@ spec:
                 runAsNonRoot: false
                 runAsUser: 0
                 readOnlyRootFilesystem: false
-              args:
-                - "element-call"
-                - "--config"
-                - "/app/config.yaml"
 
     configmap:
       config:
         enabled: true
         data:
-          config.yaml: |
-            bindAddress: "0.0.0.0"
-            port: 5000
-            homeserverUrl: "https://matrix.hoth.systems"
-            turnServers:
-              - urls:
-                  - "turn:turn.matrix.hoth.systems:3478?transport=udp"
-                  - "turn:turn.matrix.hoth.systems:3478?transport=tcp"
-                secret: "${COLTURN_STATIC_AUTH_SECRET}"
-                realm: "matrix.hoth.systems"
-            logLevel: "info"
-            enablePrometheus: true
-            metricsPort: 9090
+          config.json: |
+            {
+              "bindAddress": "0.0.0.0",
+              "port": 5000,
+              "homeserverUrl": "https://matrix.hoth.systems",
+              "turnServers": [
+                {
+                  "urls": [
+                    "turn:turn.matrix.hoth.systems:3478?transport=udp",
+                    "turn:turn.matrix.hoth.systems:3478?transport=tcp"
+                  ],
+                  "secret": "${COLTURN_STATIC_AUTH_SECRET}",
+                  "realm": "matrix.hoth.systems"
+                }
+              ],
+              "logLevel": "info",
+              "enablePrometheus": true,
+              "metricsPort": 9090
+            }
 
     persistence:
       config:
@@ -70,5 +72,6 @@ spec:
         objectName: config
         targetSelector:
           main:
-            mountPath: /app/config.yaml
-            subPath: config.yaml
+            main:
+              mountPath: /usr/share/nginx/html/config.json
+              subPath: config.json
