@@ -19,67 +19,66 @@ spec:
       persistence:
         enabled: true
 
-    matrix:
-      synapse:
-        enabled: true
-        server_name: "hoth.systems"
-        public_baseurl: "https://matrix.hoth.systems"
-        registration_shared_secret: "your_shared_secret_here" # replace securely
-        enable_metrics: true
-        workers:
-          enabled: false # Enable later for sharding if needed
+    synapse:
+      enabled: true
+      server_name: "hoth.systems"
+      public_baseurl: "https://matrix.hoth.systems"
+      registration_shared_secret: "your_shared_secret_here" # replace securely
+      enable_metrics: true
+      workers:
+        enabled: false # Enable later for sharding if needed
 
-      element-web:
-        enabled: true
-        default_server_config:
-          "m.homeserver":
-            base_url: "https://matrix.hoth.systems"
-            server_name: "hoth.systems"
+    element-web:
+      enabled: true
+      default_server_config:
+        "m.homeserver":
+          base_url: "https://matrix.hoth.systems"
+          server_name: "hoth.systems"
 
-      element-call:
-        enabled: true
-        TURN:
-          urls:
-            - "turn:turn.hoth.systems?transport=udp"
-            - "turn:turn.hoth.systems?transport=tcp"
-          username: "exampleuser"
-          credential: "examplepass"
+    element-call:
+      enabled: true
+      TURN:
+        urls:
+          - "turn:turn.hoth.systems?transport=udp"
+          - "turn:turn.hoth.systems?transport=tcp"
+        username: "exampleuser"
+        credential: "examplepass"
 
-      coturn:
-        enabled: true
-        turn:
-          realm: "hoth.systems"
-          user:
-            name: "exampleuser"
-            password: "examplepass"
-          port: 3478
-          external_ip: "YOUR.PUBLIC.IP.ADDRESS" # replace with your IP
-        ingress:
-          enabled: false # handled by your reverse proxy
+    coturn:
+      enabled: true
+      turn:
+        realm: "hoth.systems"
+        user:
+          name: "exampleuser"
+          password: "examplepass"
+        port: 3478
+        external_ip: "YOUR.PUBLIC.IP.ADDRESS" # replace with your IP
+      ingress:
+        enabled: false # handled by your reverse proxy
 
-      postgres:
-        enabled: true
-        postgresql:
-          auth:
-            postgresPassword: "supersecure"
-            username: "synapse"
-            password: "synapsepass"
-            database: "synapse"
-
-      redis:
-        enabled: true
-        architecture: standalone
+    postgres:
+      enabled: true
+      postgresql:
         auth:
-          enabled: false
+          postgresPassword: "supersecure"
+          username: "synapse"
+          password: "synapsepass"
+          database: "synapse"
 
-      worker:
-        enabled: false # can be enabled for performance later
+    redis:
+      enabled: true
+      architecture: standalone
+      auth:
+        enabled: false
 
-      registration:
-        enabled: true
+    worker:
+      enabled: false # can be enabled for performance later
 
-      admin-api-proxy:
-        enabled: true
+    registration:
+      enabled: true
 
-      synapse-admin:
-        enabled: true
+    admin-api-proxy:
+      enabled: true
+
+    synapse-admin:
+      enabled: true
