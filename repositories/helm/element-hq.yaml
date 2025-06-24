@@ -1,9 +1,9 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-    name: element-hq
-    namespace: flux-system
+  name: element-hq
+  namespace: flux-system
 spec:
-    type: oci
-    interval: 5m
-    url: oci://ghcr.io/element-hq/ess-helm
+  type: oci
+  interval: 5m
+  url: oci://ghcr.io/element-hq/ess-helm
