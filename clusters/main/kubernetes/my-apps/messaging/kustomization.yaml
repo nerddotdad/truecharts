@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
-  - matrix/ks.yaml
-  - coturn/ks.yaml
-  - element-call/ks.yaml
+  # - matrix/ks.yaml
+  # - coturn/ks.yaml
+  # - element-call/ks.yaml
   - ess-helm/ks.yaml
