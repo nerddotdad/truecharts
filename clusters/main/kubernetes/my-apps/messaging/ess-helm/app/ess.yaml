@@ -1,14 +1,13 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: ess
+  name: matrix-stack
   namespace: messaging
 spec:
   interval: 5m
   chart:
     spec:
-      chart: ess
-      version: 0.5.0
+      chart: matrix-stack
       sourceRef:
         kind: HelmRepository
         name: element-hq
