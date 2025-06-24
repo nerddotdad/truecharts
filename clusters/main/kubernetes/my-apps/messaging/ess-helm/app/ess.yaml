@@ -17,29 +17,29 @@ spec:
       ingress:
         enabled: false # since you're using your own ingress controller
 
-    synapse:
-      serverName: "hoth.systems"
-      config:
-        public_baseurl: "https://matrix.hoth.systems"
+    # synapse:
+    #   serverName: "hoth.systems"
+    #   config:
+    #     public_baseurl: "https://matrix.hoth.systems"
 
-    element-web:
-      config:
-        default_server_config:
-          m.homeserver:
-            base_url: "https://matrix.hoth.systems"
-            server_name: "hoth.systems"
+    # element-web:
+    #   config:
+    #     default_server_config:
+    #       m.homeserver:
+    #         base_url: "https://matrix.hoth.systems"
+    #         server_name: "hoth.systems"
 
-    coturn:
-      enabled: false # You already run coturn via TrueCharts
+    # coturn:
+    #   enabled: false # You already run coturn via TrueCharts
 
-    element-call:
-      config:
-        TURN:
-          urls:
-            - "turn:turn.hoth.systems?transport=udp"
-            - "turn:turn.hoth.systems?transport=tcp"
-          username: your-turn-username
-          credential: your-turn-password
+    # element-call:
+    #   config:
+    #     TURN:
+    #       urls:
+    #         - "turn:turn.hoth.systems?transport=udp"
+    #         - "turn:turn.hoth.systems?transport=tcp"
+    #       username: your-turn-username
+    #       credential: your-turn-password
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
