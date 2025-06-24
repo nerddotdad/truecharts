@@ -13,33 +13,34 @@ spec:
         name: element-hq
         namespace: flux-system
   values:
-    global:
-      ingress:
-        enabled: false # since you're using your own ingress controller
+    components:
+      - synapse
+      - element-web
+      - element-call
+      - coturn
 
-    synapse:
-      serverName: "hoth.systems"
-      config:
+    overrides:
+      synapse:
+        server_name: "hoth.systems"
         public_baseurl: "https://matrix.hoth.systems"
 
-    element-web:
-      config:
+      element-web:
         default_server_config:
-          m.homeserver:
+          "m.homeserver":
             base_url: "https://matrix.hoth.systems"
             server_name: "hoth.systems"
 
-    coturn:
-      enabled: false # You already run coturn via TrueCharts
-
-    element-call:
-      config:
+      element-call:
         TURN:
           urls:
             - "turn:turn.hoth.systems?transport=udp"
             - "turn:turn.hoth.systems?transport=tcp"
           username: your-turn-username
           credential: your-turn-password
+
+    global:
+      ingress:
+        enabled: false
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
