@@ -49,9 +49,11 @@ metadata:
   namespace: messaging
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: domain-0-le-prod
+    cert-manager.io/private-key-rotation-policy: Always
 spec:
   rules:
-    - host: matrix.hoth.systems
+    - host: matrix.${DOMAIN_0}
       http:
         paths:
           - path: /
@@ -61,3 +63,7 @@ spec:
                 name: ess-synapse
                 port:
                   number: 8008
+  tls:
+    - hosts:
+      - matrix.${DOMAIN_0}
+      secretName: matrix-tls-0
