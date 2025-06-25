@@ -70,10 +70,19 @@ spec:
         mountPath: /data
         size: 1Gi
 
-    mongodb:
-      enabled: true
-      includeCommon: true
-      password: "PLACEHOLDERPASSWORD"
-      rootPassword: "PLACEHOLDERROOTPASSWORD"
-      # -- can be used to make an easy accessable note which URLS to use to access the DB.
-      creds: {}
+    # Enable and configure built-in MongoDB
+    additionalContainers:
+      mongodb:
+        enabled: true
+        image:
+          repository: tccr.io/truecharts/mongodb
+          tag: latest
+        env:
+          MONGO_INITDB_ROOT_USERNAME: revoltadmin
+          MONGO_INITDB_ROOT_PASSWORD: revoltpw
+        ports:
+          - containerPort: 27017
+            name: mongo
+        volumeMounts:
+          - name: mongodb-data
+            mountPath: /data/db
