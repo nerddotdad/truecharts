@@ -26,11 +26,16 @@ spec:
       CLIENT_URL: https://chat.hoth.systems
       FILE_ENDPOINT: https://chat.hoth.systems/api
 
-    securityContext:
-      container:
-        readOnlyRootFilesystem: false
-        runAsNonRoot: false
-        runAsUser: 0
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              securityContext:
+                  readOnlyRootFilesystem: false
+                  runAsNonRoot: false
+                  runAsUser: 0
 
     service:
       main:
