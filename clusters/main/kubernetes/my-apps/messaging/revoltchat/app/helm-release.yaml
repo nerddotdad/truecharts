@@ -40,9 +40,13 @@ spec:
 
     service:
       main:
+        enabled: true
         ports:
-          http:
+          main:
+            enabled: true
+            protocol: tcp
             port: 3000
+            targetPort: 3000
 
     ingress:
       main:
