@@ -20,8 +20,7 @@ spec:
       pullPolicy: IfNotPresent
 
     env:
-      # Minimal environment vars to bootstrap
-      DATABASE_URI: mongodb://localhost:27017/revolt
+      DATABASE_URI: mongodb://revoltadmin:revoltpw@revoltchat-mongodb.messaging.svc.cluster.local:27017/revolt
       HOST: 0.0.0.0
       PORT: "3000"
       CLIENT_URL: https://chat.hoth.systems
@@ -43,23 +42,6 @@ spec:
         mountPath: /data
         size: 1Gi
 
-    # Enable and configure built-in MongoDB
-    additionalContainers:
-      mongodb:
-        enabled: true
-        image:
-          repository: tccr.io/truecharts/mongodb
-          tag: latest
-        env:
-          MONGO_INITDB_ROOT_USERNAME: revoltadmin
-          MONGO_INITDB_ROOT_PASSWORD: revoltpw
-        ports:
-          - containerPort: 27017
-            name: mongo
-        volumeMounts:
-          - name: mongodb-data
-            mountPath: /data/db
-
     ingress:
       main:
         enabled: true
@@ -75,3 +57,9 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+
+    mongodb:
+      enabled: true
+      includeCommon: false
+      password: revoltpw
+      rootPassword: revoltpw
