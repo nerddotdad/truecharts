@@ -26,6 +26,10 @@ spec:
       CLIENT_URL: https://chat.hoth.systems
       FILE_ENDPOINT: https://chat.hoth.systems/api
 
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+
     service:
       main:
         enabled: true
