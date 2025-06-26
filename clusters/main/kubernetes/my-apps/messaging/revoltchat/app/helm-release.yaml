@@ -19,22 +19,22 @@ spec:
       tag: latest
       pullPolicy: IfNotPresent
 
+    env:
+      DATABASE_URI: mongodb://revoltadmin:revoltpw@localhost:27017/revolt
+      HOST: 0.0.0.0
+      PORT: "3000"
+      CLIENT_URL: https://chat.hoth.systems
+      FILE_ENDPOINT: https://chat.hoth.systems/api
+
     workload:
       main:
         podSpec:
           containers:
             main:
-              enabled: true
-              env:
-                DATABASE_URI: mongodb://revoltadmin:revoltpw@localhost:27017/revolt
-                HOST: 0.0.0.0
-                PORT: "3000"
-                CLIENT_URL: https://chat.hoth.systems
-                FILE_ENDPOINT: https://chat.hoth.systems/api
               securityContext:
-                  readOnlyRootFilesystem: false
-                  runAsNonRoot: false
-                  runAsUser: 0
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
+                runAsUser: 0
 
     service:
       main:
@@ -45,16 +45,6 @@ spec:
             protocol: tcp
             port: 3000
             targetPort: 3000
-
-    persistence:
-      config:
-        enabled: true
-        mountPath: /config
-        size: 256Mi
-      data:
-        enabled: true
-        mountPath: /data
-        size: 1Gi
 
     ingress:
       main:
@@ -71,6 +61,20 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+
+    persistence:
+      config:
+        enabled: true
+        mountPath: /config
+        size: 256Mi
+      data:
+        enabled: true
+        mountPath: /data
+        size: 1Gi
+      mongodb-data:
+        enabled: true
+        mountPath: /data/db
+        size: 1Gi
 
     mongodb:
       enabled: true
