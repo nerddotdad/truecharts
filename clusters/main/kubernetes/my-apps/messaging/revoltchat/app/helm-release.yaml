@@ -35,12 +35,6 @@ spec:
                 readOnlyRootFilesystem: false
                 runAsNonRoot: false
                 runAsUser: 0
-          initContainers:
-            revoltchat-app-template-system-mongodb-wait:
-              enabled: true
-              securityContext:
-                readOnlyRootFilesystem: false
-
 
     service:
       main:
