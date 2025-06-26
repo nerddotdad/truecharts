@@ -20,7 +20,7 @@ spec:
       pullPolicy: IfNotPresent
 
     env:
-      DATABASE_URI: mongodb://revoltadmin:revoltpw@revolt-mongodb:27017/revolt
+      DATABASE_URI: mongodb://revoltadmin:revoltpw@localhost:27017/revolt
       HOST: 0.0.0.0
       PORT: "3000"
       CLIENT_URL: https://chat.hoth.systems
@@ -35,24 +35,7 @@ spec:
                 readOnlyRootFilesystem: false
                 runAsNonRoot: false
                 runAsUser: 0
-              envFrom:
-                - secretRef:
-                    name: revoltchat-env
-          extraVolumes:
-            - name: revoltchat-config
-              configMap:
-                name: revoltchat-config
-            - name: revoltchat-env
-              secret:
-                secretName: revoltchat-env
-          extraVolumeMounts:
-            - name: revoltchat-config
-              mountPath: /config/default.yml
-              subPath: default.yml
-            - name: revoltchat-env
-              mountPath: /config/.env
-              subPath: .env
-
+                
 
     service:
       main:
@@ -93,12 +76,3 @@ spec:
         enabled: true
         mountPath: /data/db
         size: 1Gi
-
-    mongodb:
-      enabled: true
-      includeCommon: true
-      password: revoltpw
-      rootPassword: revoltpw
-      creds:
-        user: revoltadmin
-        database: revolt
