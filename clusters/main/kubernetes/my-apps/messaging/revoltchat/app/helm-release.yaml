@@ -19,19 +19,18 @@ spec:
       tag: latest
       pullPolicy: IfNotPresent
 
-    env:
-      DATABASE_URI: mongodb://revoltadmin:revoltpw@revoltdb-mongodb.messaging:27017/revolt
-      HOST: 0.0.0.0
-      PORT: "3000"
-      CLIENT_URL: https://chat.hoth.systems
-      FILE_ENDPOINT: https://chat.hoth.systems/api
-
-
     workload:
       main:
         podSpec:
           containers:
             main:
+              enabled: true
+              env:
+                DATABASE_URI: mongodb://revoltadmin:revoltpw@revoltdb-mongodb.messaging:27017/revolt
+                HOST: 0.0.0.0
+                PORT: "3000"
+                CLIENT_URL: https://chat.hoth.systems
+                FILE_ENDPOINT: https://chat.hoth.systems/api
               securityContext:
                   readOnlyRootFilesystem: false
                   runAsNonRoot: false
