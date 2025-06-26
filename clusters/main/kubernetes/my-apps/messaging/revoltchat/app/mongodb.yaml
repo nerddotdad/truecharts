@@ -27,3 +27,8 @@ spec:
         data:
           mongodb-password: '{{ ( .Values.password | default "empty" ) }}'
           mongodb-root-password: '{{ ( .Values.rootPassword | default "empty" ) }}'
+    persistence:
+      data:
+        enabled: true
+        mountPath: "/bitnami/mongodb"
+        size: 2Gi
