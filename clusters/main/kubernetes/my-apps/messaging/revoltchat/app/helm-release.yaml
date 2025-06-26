@@ -35,6 +35,24 @@ spec:
                 readOnlyRootFilesystem: false
                 runAsNonRoot: false
                 runAsUser: 0
+              envFrom:
+                - secretRef:
+                    name: revoltchat-env
+          extraVolumes:
+            - name: revoltchat-config
+              configMap:
+                name: revoltchat-config
+            - name: revoltchat-env
+              secret:
+                secretName: revoltchat-env
+          extraVolumeMounts:
+            - name: revoltchat-config
+              mountPath: /config/default.yml
+              subPath: default.yml
+            - name: revoltchat-env
+              mountPath: /config/.env
+              subPath: .env
+
 
     service:
       main:
