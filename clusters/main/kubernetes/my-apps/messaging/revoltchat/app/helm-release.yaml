@@ -78,9 +78,9 @@ spec:
 
     mongodb:
       enabled: true
+      includeCommon: true
       password: revoltpw
       rootPassword: revoltpw
       creds:
         user: revoltadmin
         database: revolt
-        plainhost: localhost
