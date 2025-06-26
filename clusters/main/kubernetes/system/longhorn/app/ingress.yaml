@@ -14,9 +14,11 @@ spec:
       paths:
       - pathType: Prefix
         path: /
-        overrideService:
-          name: longhorn-frontend
-          port: 80
+        backend:
+          service:
+            name: longhorn-frontend
+            port:
+              number: 80
   tls:
     - hosts:
       - longhorn.${DOMAIN_0}
