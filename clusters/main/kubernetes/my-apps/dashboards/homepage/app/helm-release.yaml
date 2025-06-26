@@ -34,6 +34,9 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${HOMEPAGE_IP}
+    persistence:
+      config:
+        size: 10Gi
     ingress:
       main:
         enabled: true
