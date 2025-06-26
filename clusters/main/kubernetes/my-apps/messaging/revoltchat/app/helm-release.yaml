@@ -26,7 +26,7 @@ spec:
             main:
               enabled: true
               env:
-                DATABASE_URI: mongodb://revoltadmin:revoltpw@revoltdb-mongodb.messaging:27017/revolt
+                DATABASE_URI: mongodb://revoltadmin:revoltpw@localhost:27017/revolt
                 HOST: 0.0.0.0
                 PORT: "3000"
                 CLIENT_URL: https://chat.hoth.systems
@@ -74,7 +74,7 @@ spec:
 
     mongodb:
       enabled: true
-      includeCommon: true # << this is important
+      includeCommon: true
       password: revoltpw
       rootPassword: revoltpw
       creds:
