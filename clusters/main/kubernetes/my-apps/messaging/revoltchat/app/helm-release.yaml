@@ -76,5 +76,11 @@ spec:
         mountPath: /data/db
         size: 1Gi
 
-    mariadb:
+    mongodb:
       enabled: true
+      password: revoltpw
+      rootPassword: revoltpw
+      creds:
+        user: revoltadmin
+        database: revolt
+        plainhost: localhost
