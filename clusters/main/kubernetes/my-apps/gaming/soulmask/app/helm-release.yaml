@@ -61,8 +61,6 @@ spec:
                 GAME_ID: "3017300"
                 MAP: "Level01_Main"
                 GAME_PARAMS: '-SteamServerName="Hoth Systems" -MaxPlayers=50 -PSW="Docker" -adminpsw="hothsys123!" -pve -Port=8777 -QueryPort=27015 -EchoPort=18888'
-                UID: 99
-                GID: 100
                 GAME_PORT: 27015
                 VALIDATE: ""
                 USERNAME: ""
