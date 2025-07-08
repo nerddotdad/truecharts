@@ -8,3 +8,4 @@ resources:
   - teamspeak3/ks.yaml
   # - wow/ks.yaml
   - wow-bots/ks.yaml
+  - soulmask/ks.yaml
