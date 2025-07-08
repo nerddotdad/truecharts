@@ -47,6 +47,11 @@ spec:
         mountPath: /serverdata/steamcmd
         path: ${NFS_STEAM_CMD}
         server: ${NAS_IP}
+      opt:
+        enabled: true
+        type: emptydir
+        medium: Memory
+        size: 15Gi
     workload:
       main:
         podSpec:
