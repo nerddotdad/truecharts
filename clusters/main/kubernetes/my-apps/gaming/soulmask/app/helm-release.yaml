@@ -81,11 +81,6 @@ spec:
             port: 8777
             protocol: udp
             targetPort: 8777
-      rcon:
-        type: LoadBalancer
-        loadBalancerIP: ${SOULMASK_IP}
-        enabled: true
-        ports:
           rcon:
             enabled: true
             port: 27015
