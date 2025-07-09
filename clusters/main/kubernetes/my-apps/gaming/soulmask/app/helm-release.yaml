@@ -59,6 +59,8 @@ spec:
             main:
               env:
                 GAME_ID: "3017300"
+                STEAMCMD_DIR: /serverdata/steamcmd
+                SERVER_DIR: /serverdata/serverfiles
                 MAP: "Level01_Main"
                 GAME_PARAMS: '-SteamServerName="Hoth Systems" -MaxPlayers=50 -PSW="${SOULMASK_PASS}" -adminpsw="${ADMIN_PASS}" -pve -Port=8777 -QueryPort=27015 -EchoPort=18888'
                 GAME_PORT: 27015
