@@ -60,7 +60,7 @@ spec:
               env:
                 GAME_ID: "3017300"
                 MAP: "Level01_Main"
-                GAME_PARAMS: '-SteamServerName="Hoth Systems" -MaxPlayers=50 -PSW="Docker" -adminpsw="hothsys123!" -pve -Port=8777 -QueryPort=27015 -EchoPort=18888'
+                GAME_PARAMS: '-SteamServerName="Hoth Systems" -MaxPlayers=50 -PSW="${SOULMASK_PASS}" -adminpsw="${ADMIN_PASS}" -pve -Port=8777 -QueryPort=27015 -EchoPort=18888'
                 GAME_PORT: 27015
                 VALIDATE: ""
                 USERNAME: ""
@@ -86,18 +86,8 @@ spec:
             port: 27015
             protocol: udp
             targetPort: 27015
-    ingress:
-      main:
-        enabled: true
-        ingressClassName: internal
-        hosts:
-          - host: soulmask.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          certManager:
+          echo:
             enabled: true
-            certificateIssuer: domain-0-le-prod
-          traefik:
-              enabled: false
+            port: 18888
+            protocol: udp
+            targetPort: 18888
