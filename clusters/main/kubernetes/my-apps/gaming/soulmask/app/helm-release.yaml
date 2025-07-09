@@ -37,8 +37,8 @@ spec:
     securityContext:
       container:
         readOnlyRootFilesystem: false
-        # runAsGroup: 0
-        # runAsUser: 0
+        runAsGroup: 0
+        runAsUser: 0
     persistence:
       serverfiles:
         enabled: true
@@ -64,8 +64,6 @@ spec:
                 MAP: "Level01_Main"
                 GAME_PARAMS: '-SteamServerName="Hoth Systems" -MaxPlayers=50 -PSW="${SOULMASK_PASS}" -adminpsw="${ADMIN_PASS}" -pve -Port=8777 -QueryPort=27015 -EchoPort=18888'
                 GAME_PORT: 27015
-                UID: "0"
-                GUID: "0"
                 VALIDATE: ""
                 USERNAME: ""
                 PASSWORD: ""
