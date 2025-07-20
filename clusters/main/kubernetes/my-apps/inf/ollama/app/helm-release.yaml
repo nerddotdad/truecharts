@@ -35,12 +35,6 @@ spec:
           runtimeClassName: intel
           containers:
             main:
-              env:
-                OLLAMA_HOST: '{{ printf "http://0.0.0.0:%v" .Values.service.main.ports.main.port }}'
-                OLLAMA_MODELS: "{{.Values.persistence.models.mountPath }}"
-                # OLLAMA_NEW_ENGINE: true
-                OLLAMA_DEBUG: true
-                OLLAMA_ORIGINS: '{{ join "," .Values.ollama.origins }}'
               resources:
                 limits:
                   gpu.intel.com/i915: 1
