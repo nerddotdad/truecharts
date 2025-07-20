@@ -38,7 +38,7 @@ spec:
               Optional: remove GPU limits temporarily
               resources:
                 requests:
-                  memory: 60Gi
+                  memory: 6Gi
                 limits:
                   memory: 10Gi
                   gpu.intel.com/i915: 1
