@@ -29,6 +29,8 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    env:
+      WEBHOOK_URL: https://n8n.hoth.systems
     persistence:
       data:
         enabled: true
