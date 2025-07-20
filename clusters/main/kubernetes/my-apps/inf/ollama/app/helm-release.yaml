@@ -39,6 +39,7 @@ spec:
                 limits:
                   gpu.intel.com/i915: 1
       ingress:
+        enabled: true
         ui:
           primary: true
           enabled: true
