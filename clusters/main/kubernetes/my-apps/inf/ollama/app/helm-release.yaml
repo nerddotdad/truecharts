@@ -65,7 +65,8 @@ spec:
             port: 11434
 
     ingress:
-      ui:
+      main:
+        primary: true
         enabled: true
         ingressClassName: internal
         hosts:
