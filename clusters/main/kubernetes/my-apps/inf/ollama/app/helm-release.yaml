@@ -36,7 +36,6 @@ spec:
     workload:
       main:
         podSpec:
-          runtimeClassName: nvidia
           containers:
             main:
               env:
@@ -49,20 +48,20 @@ spec:
                 limits:
                   gpu.intel.com/i915: 1
 
-      ingress:
-        enabled: true
-        ui:
-          primary: true
-          enabled: true
-          ingressClassName: internal
-          hosts: 
-            - host: ollama.${DOMAIN_0}
-              paths:
-                - path: /
-                  pathType: Prefix
-          integrations:
-            traefik:
-              enabled: false
-            certManager:
-              enabled: true
-              certificateIssuer: "domain-0-le-prod"
+      # ingress:
+      #   enabled: true
+      #   ui:
+      #     primary: true
+      #     enabled: true
+      #     ingressClassName: internal
+      #     hosts: 
+      #       - host: ollama.${DOMAIN_0}
+      #         paths:
+      #           - path: /
+      #             pathType: Prefix
+      #     integrations:
+      #       traefik:
+      #         enabled: false
+      #       certManager:
+      #         enabled: true
+      #         certificateIssuer: "domain-0-le-prod"
