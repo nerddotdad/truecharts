@@ -29,6 +29,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    workload:
+      main:
+        podSpec:
+          # runtimeClassName: "intel-gpu"
+          containers:
+            main:
+              resources:
+                limits:
+                  gpu.intel.com/i915: 1
       ingress:
         ui:
           primary: true
