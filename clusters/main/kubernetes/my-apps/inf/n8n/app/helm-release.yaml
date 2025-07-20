@@ -30,7 +30,7 @@ spec:
     keepHistory: false
   values:
     deployment:
-      N8N_HOST: "https://n8n.hoth.systems"
+      N8N_HOST: "n8n.hoth.systems"
     persistence:
       data:
         enabled: true
