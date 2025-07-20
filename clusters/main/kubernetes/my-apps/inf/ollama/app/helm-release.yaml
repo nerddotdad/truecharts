@@ -55,6 +55,8 @@ spec:
                   type: tcp
                   port: 11434
 
+
+
     service:
       main:
         ports:
@@ -62,6 +64,10 @@ spec:
             port: 11434
 
     ingress:
+      api:
+        enabled: true
+        targetSelector:
+          api: api
       main:
         primary: true
         enabled: true
