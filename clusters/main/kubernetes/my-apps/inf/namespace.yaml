@@ -4,3 +4,6 @@ metadata:
     name: inf
     labels:
         topolvm.io/webhook: ignore
+        pod-security.kubernetes.io/enforce: privileged
+    annotations:
+        volsync.backube/privileged-movers: "true"

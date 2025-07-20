@@ -35,10 +35,13 @@ spec:
         podSpec:
           containers:
             main:
-              # Optional: remove GPU limits temporarily
-              # resources:
-              #   limits:
-              #     gpu.intel.com/i915: 1
+              Optional: remove GPU limits temporarily
+              resources:
+                requests:
+                  memory: 60Gi
+                limits:
+                  memory: 10Gi
+                  gpu.intel.com/i915: 1
               probes:
                 liveness:
                   enabled: false
