@@ -36,6 +36,14 @@ spec:
         mountPath: "/data"
         path: ${NFS_APP_CONFIGS}/n8n
         server: ${NAS_IP}
+    credentials:
+      cloudflare_r2:
+        type: s3
+        url: "${CLOUDFLARE_R2_URL}"
+        bucket: "${CLOUDFLARE_R2_BUCKET_PREFIX}-n8n"
+        accessKey: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
+        secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
+        encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
