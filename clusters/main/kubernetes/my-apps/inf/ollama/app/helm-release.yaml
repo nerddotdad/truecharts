@@ -31,6 +31,7 @@ spec:
   values:
     workload:
       main:
+        type: Deployment
         podSpec:
           # runtimeClassName: intel
           containers:
