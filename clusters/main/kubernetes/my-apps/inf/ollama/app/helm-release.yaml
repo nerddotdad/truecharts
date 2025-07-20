@@ -55,8 +55,6 @@ spec:
                   type: tcp
                   port: 11434
 
-
-
     service:
       main:
         ports:
@@ -65,7 +63,6 @@ spec:
 
     ingress:
       main:
-        primary: true
         enabled: true
         ingressClassName: internal
         hosts:
