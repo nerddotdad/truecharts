@@ -36,6 +36,7 @@ spec:
     workload:
       main:
         podSpec:
+          runtimeClassName: intel
           containers:
             main:
               env:
