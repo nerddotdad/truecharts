@@ -31,6 +31,7 @@ spec:
   values:
       ingress:
         ui:
+          primary: true
           enabled: true
           ingressClassName: internal
           hosts: 
