@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - cloudflared/ks.yaml
-  - n8n/ks.yaml
+  # - n8n/ks.yaml
