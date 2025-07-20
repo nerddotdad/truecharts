@@ -33,34 +33,40 @@ spec:
       main:
         type: Deployment
         podSpec:
-          # runtimeClassName: intel
           containers:
             main:
-              resources:
-                limits:
-                  gpu.intel.com/i915: 1
+              # Optional: remove GPU limits temporarily
+              # resources:
+              #   limits:
+              #     gpu.intel.com/i915: 1
               probes:
                 liveness:
                   enabled: false
                   type: http
                   path: /api/version
-                  port: "{{ .Values.service.api.ports.api.targetPort }}"
+                  port: 11434
                 readiness:
                   enabled: false
                   type: http
                   path: /api/version
-                  port: "{{ .Values.service.api.ports.api.targetPort }}"
+                  port: 11434
                 startup:
                   enabled: false
                   type: tcp
-                  port: "{{ .Values.service.api.ports.api.targetPort }}"
+                  port: 11434
+
+    service:
+      main:
+        ports:
+          main:
+            port: 11434
 
     ingress:
       ui:
         primary: true
         enabled: true
         ingressClassName: internal
-        hosts: 
+        hosts:
           - host: ollama.${DOMAIN_0}
             paths:
               - path: /
