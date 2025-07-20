@@ -29,15 +29,31 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    workload:
-      main:
-        podSpec:
-          # runtimeClassName: "intel-gpu"
-          containers:
-            main:
-              resources:
-                limits:
-                  gpu.intel.com/i915: 1
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          imageSelector: image
+          resources:
+            limits:
+              gpu.intel.com/i915: 1
+          probes:
+            liveness:
+              enabled: true
+              type: http
+              path: /api/version
+              port: "{{ .Values.service.api.ports.api.targetPort }}"
+            readiness:
+              enabled: true
+              type: http
+              path: /api/version
+              port: "{{ .Values.service.api.ports.api.targetPort }}"
+            startup:
+              enabled: true
+              type: tcp
+              port: "{{ .Values.service.api.ports.api.targetPort }}"
+
       ingress:
         enabled: true
         ui:
