@@ -63,19 +63,19 @@ spec:
           main:
             port: 11434
 
-ingress:
-  main:
-    primary: true
-    enabled: true
-    ingressClassName: internal
-    hosts:
-      - host: ollama.hoth.systems
-        paths:
-          - path: /
-            pathType: Prefix
-    integrations:
-      traefik:
-        enabled: false
-      certManager:
+    ingress:
+      main:
+        primary: true
         enabled: true
-        certificateIssuer: domain-0-le-prod
+        ingressClassName: internal
+        hosts:
+          - host: ollama.hoth.systems
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
