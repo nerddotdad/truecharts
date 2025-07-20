@@ -39,6 +39,21 @@ spec:
               resources:
                 limits:
                   gpu.intel.com/i915: 1
+              probes:
+                liveness:
+                  enabled: false
+                  type: http
+                  path: /api/version
+                  port: "{{ .Values.service.api.ports.api.targetPort }}"
+                readiness:
+                  enabled: false
+                  type: http
+                  path: /api/version
+                  port: "{{ .Values.service.api.ports.api.targetPort }}"
+                startup:
+                  enabled: false
+                  type: tcp
+                  port: "{{ .Values.service.api.ports.api.targetPort }}"
 
     ingress:
       ui:
