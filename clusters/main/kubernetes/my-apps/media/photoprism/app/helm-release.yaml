@@ -1,0 +1,60 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: photoprism
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: photoprism
+      version: 20.6.30
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    persistence:
+      originals:
+        enabled: true
+        type: nfs
+        server: ${NAS_IP}
+        path: /mnt/vault/media/tmp-photoprism-original
+        mountPath: "/photoprism/originals"
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                PHOTOPRISM_ADMIN_PASSWORD: "Grandma08032025!"
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: photoprism.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"

@@ -1,0 +1,82 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ollama
+  namespace: inf
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: ollama
+      version: 8.1.1
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    workload:
+      main:
+        type: Deployment
+        podSpec:
+          containers:
+            main:
+              Optional: remove GPU limits temporarily
+              resources:
+                requests:
+                  memory: 6Gi
+                limits:
+                  memory: 10Gi
+                  gpu.intel.com/i915: 1
+              probes:
+                liveness:
+                  enabled: false
+                  type: http
+                  path: /api/version
+                  port: 11434
+                readiness:
+                  enabled: false
+                  type: http
+                  path: /api/version
+                  port: 11434
+                startup:
+                  enabled: false
+                  type: tcp
+                  port: 11434
+
+    service:
+      main:
+        ports:
+          main:
+            port: 11434
+
+    ingress:
+      main:
+        primary: true
+        enabled: true
+        ingressClassName: internal
+        hosts:
+          - host: ollama.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
