@@ -41,6 +41,12 @@ spec:
         podSpec:
           containers:
             main:
+              resources:
+                requests:
+                  memory: 6Gi
+                limits:
+                  memory: 10Gi
+                  gpu.intel.com/i915: 1
               env:
                 PHOTOPRISM_ADMIN_PASSWORD: "Grandma08032025!"
     ingress:
