@@ -9,7 +9,7 @@ spec:
     spec:
       # renovate: registryUrl=https://charts.truechartsoci.org
       chart: nvidia-device-plugin
-      version: 0.17.2
+      version: 0.17.3
       sourceRef:
         kind: HelmRepository
         name: nvdp
@@ -27,7 +27,7 @@ spec:
   values:
     image:
       repository: nvcr.io/nvidia/k8s-device-plugin
-      tag: v0.17.2
+      tag: v0.17.3
     runtimeClassName: nvidia
     config:
       map:
