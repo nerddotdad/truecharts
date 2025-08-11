@@ -191,5 +191,5 @@ spec:
 
     mysqlImage:
       repository: mysql
-      tag: 8.4@sha256:2a0308862d65d06e46c11e1b97be43a5fe1ca4f710e3d7b9b28f20a55ccddbd2
+      tag: 8.4@sha256:ad394eabaf5d728b88fd79732d94091f2165379e9b43e9748364b8c094f26e14
       pullPolicy: IfNotPresent
