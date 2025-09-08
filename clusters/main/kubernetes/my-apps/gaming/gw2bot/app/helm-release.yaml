@@ -19,7 +19,7 @@ spec:
     image:
       repository: nerddotdad/gw2bot
       pullPolicy: IfNotPresent
-      tag: latest
+      tag: v1.0.0
     
     securityContext:
       container:
