@@ -61,8 +61,20 @@ spec:
                 DISCORD_BOT_TOKEN: $GW2BOT_DISCORD_BOT_TOKEN
                 BOT_OWNER_ID: $GW2BOT_BOT_OWNER_ID
                 
-                # Database Configuration (optional - defaults to SQLite)
-                DATABASE_URL: ${GW2_DATABASE_URL}
+                # Database Configuration
+                DATABASE_URL: "postgresql://gw2bot:${POSTGRES_PASWORD}@gw2bot-postgresql:5432/gw2bot"
+                DB_CONNECTION: "pgsql"
+                DB_HOST: "gw2bot-postgresql"
+                DB_PORT: "5432"
+                DB_DATABASE: "gw2bot"
+                DB_USERNAME: "gw2bot"
+                DB_PASSWORD: "${POSTGRES_PASWORD}"
+                
+                # Redis Configuration
+                REDIS_HOST: "gw2bot-redis"
+                REDIS_PORT: "6379"
+                REDIS_PASSWORD: ""
+                REDIS_URL: "redis://gw2bot-redis:6379"
                 
                 # Bot Configuration
                 BOT_DEBUG: "false"
