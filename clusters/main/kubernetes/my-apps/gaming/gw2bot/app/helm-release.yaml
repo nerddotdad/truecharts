@@ -58,8 +58,8 @@ spec:
               tty: true
               env:
                 # Discord Bot Configuration
-                DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
-                BOT_OWNER_ID: ${BOT_OWNER_ID}
+                DISCORD_BOT_TOKEN: $GW2BOT_DISCORD_BOT_TOKEN
+                BOT_OWNER_ID: $GW2BOT_BOT_OWNER_ID
                 
                 # Database Configuration (optional - defaults to SQLite)
                 DATABASE_URL: ${GW2_DATABASE_URL}
@@ -104,24 +104,24 @@ spec:
         storageClass: ""
 
     # Optional: Add PostgreSQL dependency if using external database
-    # postgresql:
-    #   enabled: true
-    #   auth:
-    #     postgresPassword: "gw2bot_password"
-    #     username: "gw2bot"
-    #     password: "gw2bot_password"
-    #     database: "gw2bot"
-    #   primary:
-    #     persistence:
-    #       enabled: true
-    #       size: 8Gi
+    postgresql:
+      enabled: true
+      auth:
+        postgresPassword: $POSTGRES_PASWORD
+        username: "gw2bot"
+        password: $POSTGRES_PASWORD
+        database: "gw2bot"
+      primary:
+        persistence:
+          enabled: true
+          size: 8Gi
 
-    # Optional: Add Redis dependency for caching
-    # redis:
-    #   enabled: true
-    #   auth:
-    #     enabled: false
-    #   master:
-    #     persistence:
-    #       enabled: true
-    #       size: 2Gi
+    #Optional: Add Redis dependency for caching
+    redis:
+      enabled: true
+      auth:
+        enabled: false
+      master:
+        persistence:
+          enabled: true
+          size: 2Gi
