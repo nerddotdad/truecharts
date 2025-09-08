@@ -19,7 +19,7 @@ spec:
     image:
       repository: nerddotdad/gw2bot
       pullPolicy: IfNotPresent
-      tag: v1.0.1
+      tag: v1.0.2
     
     securityContext:
       container:
@@ -58,11 +58,11 @@ spec:
               tty: true
               env:
                 # Discord Bot Configuration
-                DISCORD_BOT_TOKEN: ${GW2BOT_DISCORD_BOT_TOKEN}
-                BOT_OWNER_ID: ${GW2BOT_BOT_OWNER_ID}
+                DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+                BOT_OWNER_ID: ${BOT_OWNER_ID}
                 
                 # Database Configuration (optional - defaults to SQLite)
-                # DATABASE_URL: ${GW2_DATABASE_URL}
+                DATABASE_URL: ${GW2_DATABASE_URL}
                 
                 # Redis Configuration (not needed for standalone operation)
                 # REDIS_URL: "redis://gw2bot-redis:6379/0"
