@@ -1,0 +1,127 @@
+# VARS from clusterenv.yaml
+# DISCORD_BOT_TOKEN, BOT_OWNER_ID, GW2_DATABASE_URL (optional)
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: gw2bot
+  namespace: gaming
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: app-template
+      version: 14.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+  values:
+    image:
+      repository: nerddotdad/gw2bot
+      pullPolicy: IfNotPresent
+      tag: latest
+    
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /health
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /health
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /ready
+                  periodSeconds: 10
+                  failureThreshold: 3
+              stdin: true
+              tty: true
+              env:
+                # Discord Bot Configuration
+                DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+                BOT_OWNER_ID: ${BOT_OWNER_ID}
+                
+                # Database Configuration (optional - defaults to SQLite)
+                DATABASE_URL: ${GW2_DATABASE_URL}
+                
+                # Bot Configuration
+                BOT_DEBUG: "false"
+                BOT_LOG_LEVEL: "INFO"
+                BOT_PREFIX: ">"
+                
+                # Guild Wars 2 API Configuration
+                GW2_API_BASE_URL: "https://api.guildwars2.com/v2/"
+                
+                # Health Check Configuration
+                HEALTH_CHECK_PORT: "8080"
+                
+                # Application Configuration
+                APP_NAME: "GW2Bot"
+                APP_VERSION: "1.0.0"
+                
+                # Python Configuration
+                PYTHONUNBUFFERED: "1"
+                PYTHONDONTWRITEBYTECODE: "1"
+
+    service:
+      main:
+        enabled: true
+        type: ClusterIP
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 8080
+            targetPort: 8080
+
+    persistence:
+      config:
+        enabled: true
+        type: pvc
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        mountPath: /app/data
+        storageClass: ""
+
+    # Optional: Add PostgreSQL dependency if using external database
+    # postgresql:
+    #   enabled: true
+    #   auth:
+    #     postgresPassword: "gw2bot_password"
+    #     username: "gw2bot"
+    #     password: "gw2bot_password"
+    #     database: "gw2bot"
+    #   primary:
+    #     persistence:
+    #       enabled: true
+    #       size: 8Gi
+
+    # Optional: Add Redis dependency for caching
+    # redis:
+    #   enabled: true
+    #   auth:
+    #     enabled: false
+    #   master:
+    #     persistence:
+    #       enabled: true
+    #       size: 2Gi
