@@ -5,9 +5,6 @@ kind: HelmRelease
 metadata:
   name: gw2bot
   namespace: gaming
-  annotations:
-    truecharts.org/name: "GW2 Discord Bot"
-    truecharts.org/description: "Guild Wars 2 Discord bot with web-based setup wizard"
 spec:
   interval: 5m
   chart:
@@ -19,85 +16,82 @@ spec:
         name: truecharts
         namespace: flux-system
   values:
-    # Image Configuration
     image:
       repository: ghcr.io/nerddotdad/gw2-discord-bot
       pullPolicy: IfNotPresent
       tag: latest
     
-    # Container Configuration
-    container:
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+
+    workload:
       main:
-        # Environment variables - setup wizard will configure these
-        env:
-          - name: NODE_ENV
-            value: "production"
-          - name: PORT
-            value: "3000"
-          - name: SETUP_MODE
-            value: "true"
-          - name: ADMIN_USER
-            value: "admin"
-          - name: ADMIN_PASSWORD
-            value: "changeme123"
-        
-        # Resource limits
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        
-        # Health checks
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
-        
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-    
-    # Service Configuration
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 3000
+                  path: /health
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 3000
+                  path: /health
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 3000
+                  path: /health
+                  periodSeconds: 10
+                  failureThreshold: 3
+              env:
+                SETUP_MODE: "true"
+                ADMIN_USER: "admin"
+                ADMIN_PASSWORD: "changeme123"
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+
     service:
       main:
+        enabled: true
         ports:
           http:
+            enabled: true
+            protocol: tcp
             port: 3000
             targetPort: 3000
-            protocol: TCP
-    
-    # Ingress Configuration
+
     ingress:
       main:
         enabled: true
-        className: "traefik"
-        hosts:
-          - host: gw2bot.yourdomain.com
+        ingressClassName: external
+        hosts: 
+          - host: gw2bot.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
-        tls:
-          - secretName: gw2bot-tls
-            hosts:
-              - gw2bot.yourdomain.com
-        
-        # Traefik middleware for security
-        annotations:
-          traefik.ingress.kubernetes.io/router.middlewares: "gaming-gw2bot-headers@kubernetescrd"
-    
-    # Persistence Configuration
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+
     persistence:
       data:
         enabled: true
@@ -114,19 +108,3 @@ spec:
         storageClass: longhorn
         accessMode: ReadWriteOnce
         mountPath: /app/logs
-    
-    # Security Configuration
-    securityContext:
-      runAsNonRoot: true
-      runAsUser: 1001
-      runAsGroup: 1001
-      fsGroup: 1001
-    
-    # Pod Security Context
-    podSecurityContext:
-      runAsNonRoot: true
-      runAsUser: 1001
-      runAsGroup: 1001
-      fsGroup: 1001
-      seccompProfile:
-        type: RuntimeDefault
