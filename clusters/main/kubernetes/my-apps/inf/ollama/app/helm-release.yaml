@@ -33,30 +33,51 @@ spec:
       main:
         type: Deployment
         podSpec:
+          # runtimeClassName: "intel-gpu"
           containers:
             main:
-              # Optional: remove GPU limits temporarily
+              env:
+                - name: OLLAMA_HOST
+                  value: "0.0.0.0:11434"
+                - name: OLLAMA_ORIGINS
+                  value: "*"
+                - name: OLLAMA_GPU_LAYERS
+                  value: "1"
+                - name: OLLAMA_LLM_LIBRARY
+                  value: "cpu"
               resources:
                 requests:
                   memory: 6Gi
+                  gpu.intel.com/i915: 1
                 limits:
                   memory: 10Gi
                   gpu.intel.com/i915: 1
               probes:
                 liveness:
-                  enabled: false
+                  enabled: true
                   type: http
                   path: /api/version
                   port: 11434
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 3
                 readiness:
-                  enabled: false
+                  enabled: true
                   type: http
                   path: /api/version
                   port: 11434
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
                 startup:
-                  enabled: false
+                  enabled: true
                   type: tcp
                   port: 11434
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 10
 
     service:
       main:
