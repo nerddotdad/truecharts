@@ -68,7 +68,7 @@ spec:
       main:
         enabled: true
         ports:
-          http:
+          main:
             enabled: true
             protocol: tcp
             port: 3000
