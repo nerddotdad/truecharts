@@ -39,17 +39,26 @@ spec:
       main:
         type: Deployment
         podSpec:
+          initContainers:
+            - name: init-data
+              image: busybox:1.35
+              command: ['sh', '-c', 'mkdir -p /data/.lmstudio && chmod 777 /data/.lmstudio']
+              volumeMounts:
+                - name: data
+                  mountPath: /data
           containers:
             main:
               ports:
                 - containerPort: 8080
                   name: http
+              workingDir: /data
               env:
                 # LM Studio configuration
                 HOST: "0.0.0.0"
                 PORT: "8080"
                 # Data directory
                 LMSTUDIO_DATA_DIR: "/data"
+                HOME: "/data"
                 # Intel GPU support
                 INTEL_GPU_ENABLED: "1"
                 SYCL_DEVICE_FILTER: "level_zero:gpu"
