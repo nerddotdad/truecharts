@@ -4,5 +4,3 @@ resources:
   - namespace.yaml
   - immich/ks.yaml
   - jellyfin/ks.yaml
-  - photoprism/ks.yaml
-  - navidrome/ks.yaml

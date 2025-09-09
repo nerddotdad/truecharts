@@ -35,7 +35,7 @@ spec:
         podSpec:
           containers:
             main:
-              Optional: remove GPU limits temporarily
+              # Optional: remove GPU limits temporarily
               resources:
                 requests:
                   memory: 6Gi
