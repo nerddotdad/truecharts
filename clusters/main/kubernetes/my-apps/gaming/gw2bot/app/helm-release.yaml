@@ -1,10 +1,13 @@
-# VARS from clusterenv.yaml
-# DISCORD_BOT_TOKEN, BOT_OWNER_ID, GW2_DATABASE_URL (optional)
+# GW2 Discord Bot - TrueCharts App Template Configuration
+# FluxCD deployment with web-based setup wizard
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: gw2bot
   namespace: gaming
+  annotations:
+    truecharts.org/name: "GW2 Discord Bot"
+    truecharts.org/description: "Guild Wars 2 Discord bot with web-based setup wizard"
 spec:
   interval: 5m
   chart:
@@ -16,115 +19,114 @@ spec:
         name: truecharts
         namespace: flux-system
   values:
+    # Image Configuration
     image:
-      repository: nerddotdad/gw2bot
+      repository: ghcr.io/nerddotdad/gw2-discord-bot
       pullPolicy: IfNotPresent
-      tag: v1.0.2
+      tag: latest
     
-    securityContext:
-      container:
-        readOnlyRootFilesystem: false
-
-    workload:
+    # Container Configuration
+    container:
       main:
-        podSpec:
-          containers:
-            main:
-              enabled: true
-              probes:
-                startup:
-                  enabled: true
-                  type: http
-                  port: 8080
-                  path: /health
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
-                  failureThreshold: 10
-                liveness:
-                  enabled: true
-                  type: http
-                  port: 8080
-                  path: /health
-                  periodSeconds: 30
-                  failureThreshold: 3
-                readiness:
-                  enabled: true
-                  type: http
-                  port: 8080
-                  path: /ready
-                  periodSeconds: 10
-                  failureThreshold: 3
-              stdin: true
-              tty: true
-              env:
-                # Discord Bot Configuration
-                DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
-                BOT_OWNER_ID: ${BOT_OWNER_ID}
-                
-                # Database Configuration (optional - defaults to SQLite)
-                DATABASE_URL: ${GW2_DATABASE_URL}
-                
-                # Redis Configuration (not needed for standalone operation)
-                # REDIS_URL: "redis://gw2bot-redis:6379/0"
-                
-                # Bot Configuration
-                BOT_DEBUG: "false"
-                BOT_LOG_LEVEL: "INFO"
-                BOT_PREFIX: ">"
-                
-                # Guild Wars 2 API Configuration
-                GW2_API_BASE_URL: "https://api.guildwars2.com/v2/"
-                
-                # Health Check Configuration
-                HEALTH_CHECK_PORT: "8080"
-                
-                # Application Configuration
-                APP_NAME: "GW2Bot"
-                APP_VERSION: "1.0.0"
-                
-                # Python Configuration
-                PYTHONUNBUFFERED: "1"
-                PYTHONDONTWRITEBYTECODE: "1"
-
+        # Environment variables - setup wizard will configure these
+        env:
+          - name: NODE_ENV
+            value: "production"
+          - name: PORT
+            value: "3000"
+          - name: SETUP_MODE
+            value: "true"
+          - name: ADMIN_USER
+            value: "admin"
+          - name: ADMIN_PASSWORD
+            value: "changeme123"
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+    
+    # Service Configuration
     service:
       main:
-        enabled: true
-        type: ClusterIP
         ports:
-          main:
-            enabled: true
-            protocol: tcp
-            port: 8080
-            targetPort: 8080
-
+          http:
+            port: 3000
+            targetPort: 3000
+            protocol: TCP
+    
+    # Ingress Configuration
+    ingress:
+      main:
+        enabled: true
+        className: "traefik"
+        hosts:
+          - host: gw2bot.yourdomain.com
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: gw2bot-tls
+            hosts:
+              - gw2bot.yourdomain.com
+        
+        # Traefik middleware for security
+        annotations:
+          traefik.ingress.kubernetes.io/router.middlewares: "gaming-gw2bot-headers@kubernetescrd"
+    
+    # Persistence Configuration
     persistence:
-      config:
+      data:
         enabled: true
         type: pvc
+        size: 2Gi
+        storageClass: longhorn
         accessMode: ReadWriteOnce
-        size: 10Gi
         mountPath: /app/data
-        storageClass: ""
-
-    # Optional: Add PostgreSQL dependency if using external database
-    # postgresql:
-    #   enabled: true
-    #   auth:
-    #     postgresPassword: "gw2bot_password"
-    #     username: "gw2bot"
-    #     password: "gw2bot_password"
-    #     database: "gw2bot"
-    #   primary:
-    #     persistence:
-    #       enabled: true
-    #       size: 8Gi
-
-    # Redis dependency disabled - bot uses mock database
-    # redis:
-    #   enabled: true
-    #   auth:
-    #     enabled: false
-    #   master:
-    #     persistence:
-    #       enabled: true
-    #       size: 2Gi
+      
+      logs:
+        enabled: true
+        type: pvc
+        size: 1Gi
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        mountPath: /app/logs
+    
+    # Security Configuration
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+    
+    # Pod Security Context
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+      seccompProfile:
+        type: RuntimeDefault
