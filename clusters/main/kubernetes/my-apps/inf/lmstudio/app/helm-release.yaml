@@ -1,14 +1,14 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ollama
+  name: lmstudio
   namespace: inf
 spec:
   interval: 15m
   chart:
     spec:
-      chart: ollama
-      version: 8.6.1
+      chart: app-template
+      version: 14.5.3
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -29,9 +29,9 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Use standard Ollama image
+    # LM Studio configuration
     image:
-      repository: ollama/ollama
+      repository: lmstudioai/lm-studio
       tag: latest
       pullPolicy: Always
     
@@ -39,23 +39,33 @@ spec:
       main:
         type: Deployment
         podSpec:
-          # runtimeClassName: "intel-gpu"
           containers:
             main:
+              ports:
+                - containerPort: 1234
+                  name: http
               env:
-                OLLAMA_HOST: "0.0.0.0:11434"
-                OLLAMA_ORIGINS: "*"
+                # LM Studio configuration
+                HOST: "0.0.0.0"
+                PORT: "1234"
+                # Intel GPU support
+                INTEL_GPU_ENABLED: "1"
+                SYCL_DEVICE_FILTER: "level_zero:gpu"
+                # Enable debugging
+                DEBUG: "1"
               resources:
                 requests:
-                  memory: 2Gi
-                limits:
                   memory: 4Gi
+                  gpu.intel.com/i915: 1
+                limits:
+                  memory: 8Gi
+                  gpu.intel.com/i915: 1
               probes:
                 liveness:
                   enabled: true
                   type: http
-                  path: /api/version
-                  port: 11434
+                  path: /
+                  port: 1234
                   initialDelaySeconds: 30
                   periodSeconds: 30
                   timeoutSeconds: 10
@@ -63,16 +73,17 @@ spec:
                 readiness:
                   enabled: true
                   type: http
-                  path: /api/version
-                  port: 11434
+                  path: /
+                  port: 1234
                   initialDelaySeconds: 10
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 3
                 startup:
                   enabled: true
-                  type: tcp
-                  port: 11434
+                  type: http
+                  path: /
+                  port: 1234
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 10
@@ -82,12 +93,8 @@ spec:
         ports:
           main:
             enabled: true
-            port: 11434
-            targetPort: 11434
-      
-      # Enable Open WebUI
-      ui:
-        enabled: true
+            port: 1234
+            targetPort: 1234
 
     ingress:
       main:
@@ -95,7 +102,7 @@ spec:
         enabled: true
         ingressClassName: internal
         hosts:
-          - host: ollama.${DOMAIN_0}
+          - host: lmstudio.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
