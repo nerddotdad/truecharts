@@ -41,7 +41,7 @@ spec:
         podSpec:
           initContainers:
             - name: init-data
-              image: busybox:1.35
+              image: busybox:1.37
               command: ['sh', '-c', 'mkdir -p /data/.lmstudio && chmod 777 /data/.lmstudio']
               volumeMounts:
                 - name: data
