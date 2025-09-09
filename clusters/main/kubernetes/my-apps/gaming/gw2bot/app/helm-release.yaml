@@ -17,9 +17,11 @@ spec:
         namespace: flux-system
   values:
     image:
-      repository: ghcr.io/nerddotdad/gw2-discord-bot
+      repository: nginx
       pullPolicy: Always
-      tag: latest
+      tag: alpine
+      # Temporarily using nginx for testing
+      # Original: ghcr.io/nerddotdad/gw2-discord-bot:latest
     
     securityContext:
       container:
