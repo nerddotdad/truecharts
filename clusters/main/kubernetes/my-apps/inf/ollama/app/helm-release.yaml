@@ -29,58 +29,11 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Use standard Ollama image (Intel GPU support via environment)
+    # Use LM Studio for better Intel GPU support
     image:
-      repository: ollama/ollama
+      repository: lmstudioai/lm-studio
       tag: latest
       pullPolicy: Always
-    
-    # Configure Open WebUI with correct port
-    ui:
-      enabled: true
-      workload:
-        main:
-          podSpec:
-            containers:
-              main:
-                ports:
-                  - containerPort: 8080
-                    name: http
-                env:
-                  PORT: "8080"
-                probes:
-                  liveness:
-                    enabled: true
-                    type: http
-                    path: /
-                    port: 8080
-                    initialDelaySeconds: 30
-                    periodSeconds: 30
-                    timeoutSeconds: 5
-                    failureThreshold: 3
-                  readiness:
-                    enabled: true
-                    type: http
-                    path: /
-                    port: 8080
-                    initialDelaySeconds: 10
-                    periodSeconds: 10
-                    timeoutSeconds: 5
-                    failureThreshold: 3
-                  startup:
-                    enabled: true
-                    type: http
-                    path: /
-                    port: 8080
-                    initialDelaySeconds: 10
-                    periodSeconds: 5
-                    failureThreshold: 12
-      service:
-        main:
-          ports:
-            http:
-              port: 8080
-              targetPort: 8080
     
     workload:
       main:
@@ -89,17 +42,21 @@ spec:
           # runtimeClassName: "intel-gpu"
           containers:
             main:
+              ports:
+                - containerPort: 11434
+                  name: http
+                - containerPort: 1234
+                  name: ui
               env:
-                OLLAMA_HOST: "0.0.0.0:11434"
-                OLLAMA_ORIGINS: "*"
-                # Intel GPU support
-                OLLAMA_GPU_LAYERS: "1"
-                OLLAMA_LLM_LIBRARY: "cpu"
-                # Intel GPU environment variables
+                # LM Studio configuration
+                HOST: "0.0.0.0"
+                PORT: "11434"
+                # Intel GPU support for LM Studio
+                CUDA_VISIBLE_DEVICES: ""
                 INTEL_GPU_ENABLED: "1"
                 SYCL_DEVICE_FILTER: "level_zero:gpu"
                 # Enable debugging
-                OLLAMA_DEBUG: "1"
+                DEBUG: "1"
               resources:
                 requests:
                   memory: 6Gi
@@ -139,6 +96,10 @@ spec:
         ports:
           main:
             port: 11434
+            targetPort: 11434
+          ui:
+            port: 1234
+            targetPort: 1234
       
       # Disable Open WebUI to avoid port conflicts
       ui:
