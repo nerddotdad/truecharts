@@ -56,8 +56,6 @@ spec:
                   failureThreshold: 3
               env:
                 SETUP_MODE: "true"
-                ADMIN_USER: "admin"
-                ADMIN_PASSWORD: "changeme123"
               resources:
                 requests:
                   memory: "128Mi"
