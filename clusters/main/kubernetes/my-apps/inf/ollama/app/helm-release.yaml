@@ -29,6 +29,12 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Use Intel GPU-enabled Ollama image
+    image:
+      repository: intel/ipex-llm-ollama
+      tag: latest
+      pullPolicy: Always
+    
     # Configure Open WebUI with correct port
     ui:
       enabled: true
@@ -87,7 +93,15 @@ spec:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
                 OLLAMA_GPU_LAYERS: "1"
-                OLLAMA_LLM_LIBRARY: "cpu"
+                OLLAMA_LLM_LIBRARY: "ipex"
+                IPEX_LLM_GPU: "1"
+                IPEX_LLM_DEVICE: "xpu"
+                IPEX_LLM_ACCELERATE: "1"
+                # Intel GPU specific variables
+                INTEL_GPU_ENABLED: "1"
+                SYCL_DEVICE_FILTER: "level_zero:gpu"
+                # Enable Intel GPU debugging
+                IPEX_LLM_DEBUG: "1"
               resources:
                 requests:
                   memory: 6Gi
