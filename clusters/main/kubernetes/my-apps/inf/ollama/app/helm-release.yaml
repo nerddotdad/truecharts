@@ -37,14 +37,10 @@ spec:
           containers:
             main:
               env:
-                - name: OLLAMA_HOST
-                  value: "0.0.0.0:11434"
-                - name: OLLAMA_ORIGINS
-                  value: "*"
-                - name: OLLAMA_GPU_LAYERS
-                  value: "1"
-                - name: OLLAMA_LLM_LIBRARY
-                  value: "cpu"
+                OLLAMA_HOST: "0.0.0.0:11434"
+                OLLAMA_ORIGINS: "*"
+                OLLAMA_GPU_LAYERS: "1"
+                OLLAMA_LLM_LIBRARY: "cpu"
               resources:
                 requests:
                   memory: 6Gi
