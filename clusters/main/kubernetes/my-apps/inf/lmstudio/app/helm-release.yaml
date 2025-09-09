@@ -48,11 +48,16 @@ spec:
                 # LM Studio configuration
                 HOST: "0.0.0.0"
                 PORT: "8080"
+                # Data directory
+                LMSTUDIO_DATA_DIR: "/data"
                 # Intel GPU support
                 INTEL_GPU_ENABLED: "1"
                 SYCL_DEVICE_FILTER: "level_zero:gpu"
                 # Enable debugging
                 DEBUG: "1"
+              volumeMounts:
+                - name: data
+                  mountPath: /data
               resources:
                 requests:
                   memory: 4Gi
@@ -87,6 +92,10 @@ spec:
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 10
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: lmstudio-data
 
     service:
       main:
