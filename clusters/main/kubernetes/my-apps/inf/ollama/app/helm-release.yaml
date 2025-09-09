@@ -29,9 +29,52 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Disable Open WebUI to avoid port conflicts
+    # Configure Open WebUI with correct port
     ui:
-      enabled: false
+      enabled: true
+      workload:
+        main:
+          podSpec:
+            containers:
+              main:
+                ports:
+                  - containerPort: 8080
+                    name: http
+                env:
+                  PORT: "8080"
+                probes:
+                  liveness:
+                    enabled: true
+                    type: http
+                    path: /
+                    port: 8080
+                    initialDelaySeconds: 30
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+                    failureThreshold: 3
+                  readiness:
+                    enabled: true
+                    type: http
+                    path: /
+                    port: 8080
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 3
+                  startup:
+                    enabled: true
+                    type: http
+                    path: /
+                    port: 8080
+                    initialDelaySeconds: 10
+                    periodSeconds: 5
+                    failureThreshold: 12
+      service:
+        main:
+          ports:
+            http:
+              port: 8080
+              targetPort: 8080
     
     workload:
       main:
