@@ -29,9 +29,9 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # LocalAI with Intel GPU support
+    # LM Studio with Intel GPU support
     image:
-      repository: localai/localai
+      repository: lmstudio/llmster-preview
       tag: latest
       pullPolicy: Always
     
@@ -45,8 +45,9 @@ spec:
                 - containerPort: 8080
                   name: http
               env:
-                # LocalAI configuration
-                MODELS_PATH: "/models"
+                # LM Studio configuration
+                HOST: "0.0.0.0"
+                PORT: "8080"
                 # Intel GPU support
                 INTEL_GPU_ENABLED: "1"
                 SYCL_DEVICE_FILTER: "level_zero:gpu"
@@ -63,7 +64,7 @@ spec:
                 liveness:
                   enabled: true
                   type: http
-                  path: /healthz
+                  path: /
                   port: 8080
                   initialDelaySeconds: 30
                   periodSeconds: 30
@@ -72,7 +73,7 @@ spec:
                 readiness:
                   enabled: true
                   type: http
-                  path: /healthz
+                  path: /
                   port: 8080
                   initialDelaySeconds: 10
                   periodSeconds: 10
@@ -81,7 +82,7 @@ spec:
                 startup:
                   enabled: true
                   type: http
-                  path: /healthz
+                  path: /
                   port: 8080
                   initialDelaySeconds: 30
                   periodSeconds: 10
