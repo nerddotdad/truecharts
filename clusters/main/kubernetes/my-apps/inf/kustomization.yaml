@@ -5,3 +5,4 @@ resources:
   - cloudflared/ks.yaml
   - n8n/ks.yaml
   - ollama/ks.yaml
+  - lmstudio/ks.yaml
