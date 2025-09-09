@@ -29,9 +29,9 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # LM Studio configuration
+    # LM Studio with Intel GPU support
     image:
-      repository: lmstudioai/lm-studio
+      repository: lmstudio/llmster-preview
       tag: latest
       pullPolicy: Always
     
@@ -42,12 +42,12 @@ spec:
           containers:
             main:
               ports:
-                - containerPort: 1234
+                - containerPort: 8080
                   name: http
               env:
                 # LM Studio configuration
                 HOST: "0.0.0.0"
-                PORT: "1234"
+                PORT: "8080"
                 # Intel GPU support
                 INTEL_GPU_ENABLED: "1"
                 SYCL_DEVICE_FILTER: "level_zero:gpu"
@@ -65,7 +65,7 @@ spec:
                   enabled: true
                   type: http
                   path: /
-                  port: 1234
+                  port: 8080
                   initialDelaySeconds: 30
                   periodSeconds: 30
                   timeoutSeconds: 10
@@ -74,7 +74,7 @@ spec:
                   enabled: true
                   type: http
                   path: /
-                  port: 1234
+                  port: 8080
                   initialDelaySeconds: 10
                   periodSeconds: 10
                   timeoutSeconds: 5
@@ -83,7 +83,7 @@ spec:
                   enabled: true
                   type: http
                   path: /
-                  port: 1234
+                  port: 8080
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 10
@@ -93,8 +93,8 @@ spec:
         ports:
           main:
             enabled: true
-            port: 1234
-            targetPort: 1234
+            port: 8080
+            targetPort: 8080
 
     ingress:
       main:
