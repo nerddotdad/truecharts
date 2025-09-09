@@ -6,4 +6,3 @@ resources:
   - n8n/ks.yaml
   - ollama/ks.yaml
   - lmstudio/ks.yaml
-  - localai/ks.yaml
