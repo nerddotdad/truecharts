@@ -10,3 +10,4 @@ resources:
   # - wow/ks.yaml
   # - wow-bots/ks.yaml # This takes up a significant amount of ram
   # - soulmask/ks.yaml
+  - gw2bot-git/ks.yaml
