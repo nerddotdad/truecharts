@@ -29,6 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Disable Open WebUI to avoid port conflicts
+    ui:
+      enabled: false
+    
     workload:
       main:
         type: Deployment
@@ -80,6 +84,10 @@ spec:
         ports:
           main:
             port: 11434
+      
+      # Disable Open WebUI to avoid port conflicts
+      ui:
+        enabled: false
 
     ingress:
       main:
