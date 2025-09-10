@@ -3,12 +3,11 @@ kind: Kustomization
 resources:
   - dashboards
   - downloaders
-  - inf
   - media
   - monitoring
   - gaming
   - websites
   - ai
+  - infrastructure
   # - decomissioned
   # - under_construction
-  - infrastructure
