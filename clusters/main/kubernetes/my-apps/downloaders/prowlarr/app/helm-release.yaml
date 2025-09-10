@@ -62,6 +62,5 @@ spec:
             group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
-              type: prowlarr
-              url: https://prowlarr.hoth.systems
-              key: ${HP_PROWLARR}
+              custom:
+                key: ${HP_PROWLARR}

@@ -3,6 +3,3 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - cloudflared/ks.yaml
-  - n8n/ks.yaml
-  - ollama/ks.yaml
-  - lmstudio/ks.yaml

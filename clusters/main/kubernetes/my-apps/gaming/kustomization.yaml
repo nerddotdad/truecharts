@@ -1,13 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - avorion/ks.yaml
   - namespace.yaml
   - rcon-webadmin/ks.yaml
   - minecraft-java/ks.yaml
-  - teamspeak3/ks.yaml
   - gw2bot/ks.yaml
-  # - wow/ks.yaml
-  # - wow-bots/ks.yaml # This takes up a significant amount of ram
-  # - soulmask/ks.yaml
   - gw2bot-git/ks.yaml

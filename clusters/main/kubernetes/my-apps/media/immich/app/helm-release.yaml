@@ -187,7 +187,7 @@ spec:
             enabled: true
             name: "Immich"
             description: "Immich Instance"
-            group: "Family Media"
+            group: "{{ .Release.Namespace }}"
             widget:
               custom:
                 key: "${HP_IMMICH}"

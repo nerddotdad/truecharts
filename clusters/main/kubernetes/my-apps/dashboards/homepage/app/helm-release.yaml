@@ -37,6 +37,42 @@ spec:
     persistence:
       config:
         size: 10Gi
+    configmap:
+      homepage-config:
+        enabled: true
+        mountPath: /app/config
+        data:
+          widgets.yaml: |
+            - kubernetes:
+                cluster:
+                  show: true
+                  cpu: true
+                  memory: true
+                  showLabel: true
+                  label: "{{ .Release.Namespace }}"
+                nodes:
+                  show: false
+                  cpu: true
+                  memory: true
+                  showLabel: true
+            - longhorn:
+                expanded: true
+                total: true
+                labels: true
+                nodes: true
+                include:
+                  - node1
+                  - node2
+          settings.yaml: |
+            theme: "auto"
+            language: "en"
+            title: "{{ .Release.Namespace }} Dashboard"
+            showStats: true
+            showSearch: true
+            showTime: true
+            providers:
+              longhorn:
+                url: https://longhorn.${DOMAIN_0}
     ingress:
       main:
         enabled: true

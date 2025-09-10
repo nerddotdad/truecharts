@@ -84,7 +84,7 @@ spec:
             enabled: true
             name: Jellyfin
             description: This is a jellyfin instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
               custom:
