@@ -67,7 +67,7 @@ spec:
             enabled: true
             name: NZBget
             description: This is a NZBget instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
                 custom:
