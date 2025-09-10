@@ -48,6 +48,7 @@ spec:
             # https://gethomepage.dev/configs/kubernetes/
 
             mode: cluster
+
           settings.yaml: |
             ---
             # For configuration options and examples, please see:
