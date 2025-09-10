@@ -88,7 +88,7 @@ spec:
             icon: ""
             widget:
               custom:
-                key: ${HP_JELLYFIN}
+                key: "${HP_JELLYFIN}"
                 enableBlocks: true # optional, defaults to false
                 enableNowPlaying: true # optional, defaults to true
                 enableUser: true # optional, defaults to false
