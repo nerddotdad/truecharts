@@ -76,4 +76,5 @@ spec:
             icon: ""
             widget:
               type: radarr
-              url: https://radarr.media.svc.cluster.local
+              url: https://radarr.hoth.systems
+              key: ${HP_RADARR}

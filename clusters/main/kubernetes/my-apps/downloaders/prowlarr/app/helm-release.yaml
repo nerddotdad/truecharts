@@ -63,4 +63,5 @@ spec:
             icon: ""
             widget:
               type: prowlarr
-              url: https://prowlarr.media.svc.cluster.local
+              url: https://prowlarr.hoth.systems
+              key: ${HP_PROWLARR}

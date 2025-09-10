@@ -71,4 +71,6 @@ spec:
             icon: ""
             widget:
               type: nzbget
-              url: https://nzbget.downloaders.svc.cluster.local
+              url: https://nzbget.hoth.systems
+              username: ${NZBGET_USERNAME}
+              password: ${NZBGET_PASSWORD}

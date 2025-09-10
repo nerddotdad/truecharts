@@ -76,4 +76,5 @@ spec:
             icon: ""
             widget:
               type: sonarr
-              url: https://sonarr.media.svc.cluster.local
+              url: https://sonarr.hoth.systems
+              key: ${HP_SONARR}

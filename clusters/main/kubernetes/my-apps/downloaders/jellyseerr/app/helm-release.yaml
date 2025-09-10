@@ -56,4 +56,5 @@ spec:
             icon: ""
             widget:
               type: jellyseerr
-              url: https://jellyseerr.media.svc.cluster.local
+              url: https://jellyseerr.hoth.systems
+              key: ${HP_JELLYSEERR}

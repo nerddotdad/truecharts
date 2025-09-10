@@ -190,6 +190,6 @@ spec:
             group: "Family Media"
             widget:
               type: "immich"
-              url: https://immich.family-media.svc.cluster.local
+              url: https://immich.hoth.systems
               key: "${HP_IMMICH}"
               version: 2
