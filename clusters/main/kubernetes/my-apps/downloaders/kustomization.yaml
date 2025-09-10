@@ -10,3 +10,4 @@ resources:
   # - tdarr/ks.yaml
   # - bazarr/ks.yaml
   - lidarr/ks.yaml
+  - wizarr/ks.yaml
