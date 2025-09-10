@@ -72,9 +72,9 @@ spec:
             enabled: true
             name: Sonarr
             description: This is a sonarr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
-              type: sonarr
-              url: https://sonarr.hoth.systems
-              key: ${HP_SONARR}
+              custom:
+                key: ${HP_SONARR}
+    

@@ -52,7 +52,7 @@ spec:
             enabled: true
             name: jellyseerr
             description: This is a jellyseerr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
               custom:

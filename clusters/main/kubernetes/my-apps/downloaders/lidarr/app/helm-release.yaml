@@ -79,7 +79,7 @@ spec:
             enabled: true
             name: lidarr
             description: This is a lidarr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
               custom:

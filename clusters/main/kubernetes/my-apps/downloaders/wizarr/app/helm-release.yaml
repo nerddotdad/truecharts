@@ -60,8 +60,8 @@ spec:
             enabled: true
             name: Wizarr
             description: This is a wizarr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
-            widget:
-              type: sonarr
-              url: https://wizarr.hoth.systems
+            widget: 
+              custom:
+                key: ${HP_WIZARR}

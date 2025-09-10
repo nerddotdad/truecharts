@@ -59,7 +59,7 @@ spec:
             enabled: true
             name: prowlarr
             description: This is a prowlarr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
               type: prowlarr

@@ -72,9 +72,8 @@ spec:
             enabled: true
             name: radarr
             description: This is a radarr instance
-            group: Media
+            group: "{{ .Release.Namespace }}"
             icon: ""
             widget:
-              type: radarr
-              url: https://radarr.hoth.systems
-              key: ${HP_RADARR}
+              custom:
+                key: ${HP_RADARR}
