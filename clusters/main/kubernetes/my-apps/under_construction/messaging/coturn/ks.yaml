@@ -1,11 +1,11 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: ess-helm
+  name: coturn
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/messaging/ess-helm/app
+  path: clusters/main/kubernetes/my-apps/under_construction/messaging/coturn/app
   prune: true
   sourceRef:
     kind: GitRepository

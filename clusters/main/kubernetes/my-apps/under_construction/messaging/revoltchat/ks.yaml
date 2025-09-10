@@ -1,12 +1,13 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: gw2bot-git
+  name: revoltchat
   namespace: flux-system
 spec:
   interval: 10m
-  path: k8s
+  path: clusters/main/kubernetes/my-apps/under_construction/messaging/revoltchat/app
   prune: true
   sourceRef:
     kind: GitRepository
-    name: gw2-discord-bot
+    name: cluster
+

@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/gaming/soulmask/app
+  path: clusters/main/kubernetes/my-apps/decomissioned/soulmask/app
   prune: true
   sourceRef:
     kind: GitRepository
