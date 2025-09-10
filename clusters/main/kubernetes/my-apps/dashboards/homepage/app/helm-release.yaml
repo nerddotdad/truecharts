@@ -34,12 +34,45 @@ spec:
       main:
         type: LoadBalancer
         loadBalancerIP: ${HOMEPAGE_IP}
+
     configmap:
-      homepage-config:
+      config:
         enabled: true
-        mountPath: /app/config
         data:
+          # https://gethomepage.dev/configs/custom-css-js/
+          custom.js: ""
+          custom.css: ""
+          kubernetes.yaml: |
+            ---
+            # For configuration options and examples, please see:
+            # https://gethomepage.dev/configs/kubernetes/
+
+            mode: cluster
+          settings.yaml: |
+            ---
+            # For configuration options and examples, please see:
+            # https://gethomepage.dev/configs/
+
+            providers:
+              openweathermap: openweathermapapikey
+              weatherapi: weatherapiapikey
+              longhorn:
+                url: https://longhorn.${DOMAIN_0}
+
           widgets.yaml: |
+            ---
+            # For configuration options and examples, please see:
+            # https://gethomepage.dev/widgets/
+
+            - resources:
+                cpu: true
+                memory: true
+                disk: /
+
+            - search:
+                provider: duckduckgo
+                target: _blank
+
             - kubernetes:
                 cluster:
                   show: true
@@ -52,6 +85,7 @@ spec:
                   cpu: true
                   memory: true
                   showLabel: true
+
             - longhorn:
                 expanded: true
                 total: true
@@ -60,16 +94,54 @@ spec:
                 include:
                   - node1
                   - node2
-          settings.yaml: |
-            theme: "auto"
-            language: "en"
-            title: "{{ .Release.Namespace }} Dashboard"
-            showStats: true
-            showSearch: true
-            showTime: true
-            providers:
-              longhorn:
-                url: https://longhorn.${DOMAIN_0}
+
+          services.yaml: |
+            ---
+            # For configuration options and examples, please see:
+            # https://gethomepage.dev/configs/services/
+
+          bookmarks.yaml: |
+            ---
+            # For configuration options and examples, please see:
+            # https://gethomepage.dev/configs/bookmarks/
+
+            - Developer:
+                - Github:
+                    - abbr: GH
+                      href: https://github.com/nerddotdad/truecharts
+
+            - Social:
+                - Reddit:
+                    - abbr: RE
+                      href: https://reddit.com/
+
+            - Entertainment:
+                - YouTube:
+                    - abbr: YT
+                      href: https://youtube.com/
+
+            - TrueCharts:
+                - TrueCharts:
+                  - abbr: TC
+                    icon: https://truecharts.org/svg/favicon.svg
+                    href: https://truecharts.org
+                    description: "TrueCharts Website"
+                - Github:
+                  - abbr: GH
+                    icon: https://github.com/fluidicon.png
+                    href: https://github.com/truecharts
+                    description: "TrueCharts GitHub"
+                - Open Collective:
+                  - abbr: TC
+                    icon: https://opencollective.com/favicon.ico
+                    href: https://opencollective.com/truecharts
+                    description: "TrueCharts Open Collective"
+                - Discord:
+                  - abbr: DC
+                    icon: https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://discord.com&size=32
+                    href: https://truecharts.org/s/discord
+                    description: "TrueCharts Discord"
+                    
     ingress:
       main:
         enabled: true
