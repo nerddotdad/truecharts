@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/inf/cloudflared/app
+  path: clusters/main/kubernetes/my-apps/infrastructure/cloudflared/app
   prune: true
   sourceRef:
     kind: GitRepository
