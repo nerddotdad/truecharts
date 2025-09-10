@@ -50,44 +50,6 @@ spec:
                   memory: 2Gi
                 limits:
                   memory: 4Gi
-              probes:
-                liveness:
-                  enabled: true
-                  type: http
-                  path: /api/version
-                  port: 11434
-                  initialDelaySeconds: 30
-                  periodSeconds: 30
-                  timeoutSeconds: 10
-                  failureThreshold: 3
-                readiness:
-                  enabled: true
-                  type: http
-                  path: /api/version
-                  port: 11434
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 3
-                startup:
-                  enabled: true
-                  type: tcp
-                  port: 11434
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
-                  failureThreshold: 10
-
-    service:
-      main:
-        ports:
-          main:
-            enabled: true
-            port: 11434
-            targetPort: 11434
-      
-      # Enable Open WebUI
-      ui:
-        enabled: true
 
     ingress:
       main:
