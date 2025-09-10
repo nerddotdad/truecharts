@@ -37,10 +37,6 @@ spec:
         mountPath: /data/database
         path: ${NFS_WIZARR_DATABASE}
         server: ${NAS_IP}
-    service:
-      main:
-        type: LoadBalancer
-        loadBalancerIP: ${SONARR_IP}
     ingress:
       main:
         enabled: true
