@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/inf/ollama/app
+  path: clusters/main/kubernetes/my-apps/ai/ollama/app
   prune: true
   sourceRef:
     kind: GitRepository
