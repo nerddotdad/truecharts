@@ -70,7 +70,6 @@ spec:
             group: Media
             icon: ""
             widget:
-              type: nzbget
-              url: https://nzbget.hoth.systems
-              username: ${NZBGET_USERNAME}
-              password: ${NZBGET_PASSWORD}
+                custom:
+                  username: ${NZBGET_USERNAME}
+                  password: ${NZBGET_PASSWORD}

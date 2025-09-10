@@ -82,6 +82,5 @@ spec:
             group: Media
             icon: ""
             widget:
-              type: radarr
-              url: https://lidarr.hoth.systems
-              key: ${HP_LIDARR}
+              custom:
+                key: ${HP_LIDARR}

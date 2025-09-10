@@ -189,7 +189,5 @@ spec:
             description: "Immich Instance"
             group: "Family Media"
             widget:
-              type: "immich"
-              url: https://immich.hoth.systems
-              key: "${HP_IMMICH}"
-              version: 2
+              custom:
+                key: "${HP_IMMICH}"

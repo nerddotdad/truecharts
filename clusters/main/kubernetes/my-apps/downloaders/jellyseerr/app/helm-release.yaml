@@ -55,6 +55,5 @@ spec:
             group: Media
             icon: ""
             widget:
-              type: jellyseerr
-              url: https://jellyseerr.hoth.systems
-              key: ${HP_JELLYSEERR}
+              custom:
+                key: ${HP_JELLYSEERR}
