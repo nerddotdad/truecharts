@@ -11,5 +11,11 @@
         "dependencyDashboardApproval": true
       }
     ]
+  },
+  "automerge": true,
+  "automergeType": "pr",
+  "ignoreTests": true,
+  "docker": {
+    "pinDigests": true
   }
 }
