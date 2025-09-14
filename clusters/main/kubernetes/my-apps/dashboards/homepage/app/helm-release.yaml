@@ -35,6 +35,16 @@ spec:
         type: LoadBalancer
         loadBalancerIP: ${HOMEPAGE_IP}
 
+    workload:
+      main:
+        podSpec:
+          automountServiceAccountToken: true
+          containers:
+            main:
+              env:
+                # Set this to your host (example: home.mydomain.com)
+                HOMEPAGE_ALLOWED_HOSTS: homepage.${DOMAIN_0}
+
     configmap:
       config:
         enabled: true
