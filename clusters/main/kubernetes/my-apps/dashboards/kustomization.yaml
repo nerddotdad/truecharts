@@ -4,3 +4,4 @@ resources:
   - namespace.yaml
   - homepage/ks.yaml
   - kubernetes-dashboard/ks.yaml
+  - lazylibrarian/ks.yaml

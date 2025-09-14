@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - immich/ks.yaml
-  - jellyfin/ks.yaml
+  - jellyfin/ks.yaml  - audiobookshelf/ks.yaml
