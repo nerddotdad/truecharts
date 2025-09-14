@@ -10,3 +10,4 @@ resources:
   - lidarr/ks.yaml
   - wizarr/ks.yaml
   - lazylibrarian/ks.yaml
+  - headphones/ks.yaml
