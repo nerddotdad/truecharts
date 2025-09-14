@@ -68,4 +68,4 @@ spec:
             icon: ""
             widget:
               custom:
-                key: ${HP_JELLYSEERR}
+                key: ${HP_AUDIOBOOKSHELF}
