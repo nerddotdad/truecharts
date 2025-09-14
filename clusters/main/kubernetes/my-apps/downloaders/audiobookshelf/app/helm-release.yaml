@@ -1,0 +1,71 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: audiobookshelf
+  namespace: downloaders
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: audiobookshelf
+      version: 12.8.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    persistence:
+      config:
+        enabled: true
+        mountPath: /config
+        type: nfs
+        path: ${NFS_APP_CONFIGS}/audiobookshelf/config
+        server: ${NAS_IP}
+      audiobooks:
+        enabled: true
+        mountPath: /audiobooks
+        type: nfs
+        path: ${NFS_MEDIA_AUDIOBOOKS}
+        server: ${NAS_IP}
+      metadata:
+        enabled: true
+        mountPath: /metadata
+        type: nfs
+        path: ${NFS_APP_CONFIGS}/audiobookshelf/metadata
+        server: ${NAS_IP}
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: abs.${DOMAIN_0}
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+              enabled: false
+          homepage:
+            enabled: true
+            name: Audiobookshelf
+            description: This is an Audiobookshelf instance
+            group: "{{ .Release.Namespace }}"
+            icon: ""
+            widget:
+              custom:
+                key: ${HP_JELLYSEERR}

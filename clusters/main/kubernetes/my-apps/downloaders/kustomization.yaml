@@ -9,3 +9,4 @@ resources:
   - sonarr/ks.yaml
   - lidarr/ks.yaml
   - wizarr/ks.yaml
+  - audiobookshelf/ks.yaml
