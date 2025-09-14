@@ -29,6 +29,12 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
     persistence:
       config:
         enabled: true
