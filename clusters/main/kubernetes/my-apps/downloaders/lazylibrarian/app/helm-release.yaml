@@ -45,7 +45,7 @@ spec:
       downloads:
         enabled: true
         type: nfs
-        mountPath: /config/downloads
+        mountPath: /downloads
         path: ${NFS_MEDIA_USENET}
         server: ${NAS_IP}
       audiobooks:
