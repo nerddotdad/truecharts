@@ -42,6 +42,12 @@ spec:
         type: nfs
         path: ${NFS_APP_CONFIGS}/lazylibrarian/config
         server: ${NAS_IP}
+      downloads:
+        enabled: true
+        type: nfs
+        mountPath: /config/downloads
+        path: ${NFS_MEDIA_USENET}
+        server: ${NAS_IP}
       audiobooks:
         enabled: true
         mountPath: /audiobooks
