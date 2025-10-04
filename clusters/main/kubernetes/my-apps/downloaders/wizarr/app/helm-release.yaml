@@ -33,7 +33,7 @@ spec:
     image:
       repository: ghcr.io/wizarrrr/wizarr
       pullPolicy: IfNotPresent
-      tag: latest@sha256:0f76eb2b6aaebcfb32f599e8021abc8435dad190fdf0a8792b4f477509ecf88f
+      tag: latest@sha256:a6a5b6d5e3e4a37b2bb60d9bee135717ab5c744fc55775fc1e608cff7e2f929a
     persistence:
       database: # this is the target location for nzbget
         enabled: true
