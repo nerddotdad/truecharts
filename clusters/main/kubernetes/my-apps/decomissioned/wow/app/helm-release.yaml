@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 15.7.2
+      version: 15.16.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -191,5 +191,5 @@ spec:
 
     mysqlImage:
       repository: mysql
-      tag: 9.4@sha256:94254b456a6db9b56c83525a86bff4c7f1e52335f934cbed686fe1ce763116a0
+      tag: 9.4@sha256:91447968e66961302339ec4dc4d385f5e1a957d98e63c7d52ecf8b1de0907346
       pullPolicy: IfNotPresent

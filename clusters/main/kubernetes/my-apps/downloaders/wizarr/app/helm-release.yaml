@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: wizarr
-      version: 11.6.2
+      version: 11.9.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -33,7 +33,7 @@ spec:
     image:
       repository: ghcr.io/wizarrrr/wizarr
       pullPolicy: IfNotPresent
-      tag: latest@sha256:643f4aa551e70379b5399bf73d1c93805b5f8f45d00f1ec305d1f33b79f0b8a3
+      tag: latest@sha256:feb62cd8fa8f067e8da5983731bf5da23ae66cfea32ac6a6b86c1490cf57590f
     persistence:
       database: # this is the target location for nzbget
         enabled: true

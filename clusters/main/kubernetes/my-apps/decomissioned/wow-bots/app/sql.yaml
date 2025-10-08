@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 15.7.2
+      version: 15.16.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -17,7 +17,7 @@ spec:
     image:
       repository: mysql
       pullPolicy: IfNotPresent
-      tag: 8.0-debian@sha256:115a6e05ed2e9e2acb8c80902d482e6b028c613a48f31de691d9d9b32a826957
+      tag: 8.0-debian@sha256:b8b8a73ee0506268172c136eede6bb6819527b941649f6116afc1d7b3d839456
 
     workload:
       main:
