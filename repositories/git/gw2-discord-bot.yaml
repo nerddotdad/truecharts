@@ -18,3 +18,4 @@ spec:
     # include only the k8s manifests
     !/k8s
     !/k8s/**
+
