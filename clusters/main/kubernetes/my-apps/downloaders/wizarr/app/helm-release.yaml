@@ -75,6 +75,8 @@ spec:
                 pathType: Prefix
               - path: /static
                 pathType: Prefix
+              - path: /invitation
+                pathType: Prefix
         integrations:
           certManager:
             enabled: true
