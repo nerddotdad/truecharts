@@ -48,7 +48,7 @@ spec:
         hosts:
           - host: wizarr.${DOMAIN_0}
             paths:
-              - path: /
+              - path: /login
                 pathType: Prefix
         integrations:
           certManager:
@@ -72,6 +72,8 @@ spec:
           - host: wizarr.${DOMAIN_0}
             paths:
               - path: /j
+                pathType: Prefix
+              - path: /static
                 pathType: Prefix
         integrations:
           certManager:
