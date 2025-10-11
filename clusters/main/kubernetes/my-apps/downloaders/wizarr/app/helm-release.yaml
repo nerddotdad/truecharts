@@ -44,7 +44,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: external
+        ingressClassName: internal
         hosts:
           - host: wizarr.${DOMAIN_0}
             paths:
@@ -65,3 +65,17 @@ spec:
             widget: 
               custom:
                 key: ${HP_WIZARR}
+      invite:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: wizarr.${DOMAIN_0}
+            paths:
+              - path: /j
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+              enabled: false
