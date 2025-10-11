@@ -48,7 +48,7 @@ spec:
         hosts:
           - host: wizarr.${DOMAIN_0}
             paths:
-              - path: /login
+              - path: /
                 pathType: Prefix
         integrations:
           certManager:
@@ -65,21 +65,3 @@ spec:
             widget: 
               custom:
                 key: ${HP_WIZARR}
-      invite:
-        enabled: true
-        ingressClassName: external
-        hosts:
-          - host: wizarr.${DOMAIN_0}
-            paths:
-              - path: /j
-                pathType: Prefix
-              - path: /static
-                pathType: Prefix
-              - path: /invitation
-                pathType: Prefix
-        integrations:
-          certManager:
-            enabled: true
-            certificateIssuer: domain-0-le-prod
-          traefik:
-              enabled: false
