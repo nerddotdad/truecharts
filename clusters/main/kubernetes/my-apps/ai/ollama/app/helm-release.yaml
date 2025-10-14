@@ -39,7 +39,8 @@ spec:
       main:
         type: Deployment
         podSpec:
-          # runtimeClassName: "intel-gpu"
+          nodeSelector:
+            kubernetes.io/hostname: k8s-worker-1
           containers:
             main:
               env:

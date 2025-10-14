@@ -65,3 +65,19 @@ spec:
             widget: 
               custom:
                 key: ${HP_WIZARR}
+      admin:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: wizarr.${DOMAIN_0}
+            paths:
+              - path: /admin
+                pathType: Prefix
+        integrations:
+          nginx:
+            ipWhitelist: ["${IP_WHITELIST}"]
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          traefik:
+              enabled: false
