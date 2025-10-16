@@ -28,6 +28,9 @@ nodes:
       nameservers:
         - 1.1.1.1
         - 8.8.8.8
+      installDiskSelector:
+        size: >= 100GB
+        transport: nvme
       networkInterfaces:
         # suffix is the adapter mac adres.
         - interface: eth0
@@ -58,6 +61,9 @@ nodes:
       nameservers:
         - 1.1.1.1
         - 8.8.8.8
+      installDiskSelector:
+        size: >= 100GB
+        transport: nvme
       networkInterfaces:
         # suffix is the adapter mac adres.
         - interface: enp3s0
@@ -79,8 +85,9 @@ nodes:
               - siderolabs/util-linux-tools
               - siderolabs/iscsi-tools
               - siderolabs/qemu-guest-agent
-              - siderolabs/nonfree-kmod-nvidia-lts
-              - siderolabs/nvidia-container-toolkit-lts
+              # Temporarily disabled NVIDIA extensions to test disk detection
+              # - siderolabs/nonfree-kmod-nvidia-lts
+              # - siderolabs/nvidia-container-toolkit-lts
       patches:
         - "@./patches/gpu.yaml"
 controlPlane:
