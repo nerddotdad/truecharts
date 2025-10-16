@@ -14,3 +14,4 @@ resources:
   - truecharts.yaml
   - grafana.yaml
   - element-hq.yaml
+  - nvdp.yaml
