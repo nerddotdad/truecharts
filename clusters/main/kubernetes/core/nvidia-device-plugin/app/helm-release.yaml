@@ -9,10 +9,10 @@ spec:
     spec:
       # renovate: registryUrl=https://charts.truechartsoci.org
       chart: nvidia-device-plugin
-      version: 0.17.4
+      version: 0.17.1
       sourceRef:
         kind: HelmRepository
-        name: nvdp
+        name: home-ops-mirror
         namespace: flux-system
       interval: 5m
   install:
@@ -27,7 +27,7 @@ spec:
   values:
     image:
       repository: nvcr.io/nvidia/k8s-device-plugin
-      tag: v0.17.4
+      tag: v0.17.0
     runtimeClassName: nvidia
     config:
       map:
@@ -44,18 +44,3 @@ spec:
                   replicas: 5
     gfd:
       enabled: true
-    nodeFeatureDiscovery:
-      worker:
-        podSpec:
-          tolerations:
-            - key: ai-only
-              operator: Exists
-              effect: NoSchedule
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: feature.node.kubernetes.io/pci-0300_10de.present
-            operator: In
-            values:
-            - "true"
