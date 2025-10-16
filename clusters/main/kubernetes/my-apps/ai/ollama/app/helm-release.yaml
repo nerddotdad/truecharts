@@ -57,6 +57,7 @@ spec:
                 limits:
                   memory: 4Gi
       ui:
+        type: Deployment
         podSpec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
