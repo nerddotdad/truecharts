@@ -35,6 +35,9 @@ spec:
       tag: latest
       pullPolicy: Always
     
+    resources:
+      limits:
+        nvidia.com/gpu: 1
     workload:
       main:
         type: Deployment
@@ -45,6 +48,7 @@ spec:
             - operator: Exists
               key: ai-only
               effect: NoSchedule
+          runtimeClassName: "nvidia"
           containers:
             main:
               env:
