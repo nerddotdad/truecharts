@@ -38,7 +38,7 @@ spec:
           tolerations:
             - operator: Equal
               key: ai-only
-              value: 'true'
+              value: "1"
               effect: NoSchedule
               
 

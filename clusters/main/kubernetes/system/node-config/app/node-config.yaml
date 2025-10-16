@@ -8,7 +8,7 @@ data:
   apply-taint.sh: |
     #!/bin/bash
     # Apply taint to AI worker node
-    kubectl taint node k8s-worker-1 ai-only=true:NoSchedule --overwrite
+    kubectl taint node k8s-worker-1 ai-only=1:NoSchedule --overwrite
     echo "Applied taint to k8s-worker-1"
 ---
 apiVersion: batch/v1
