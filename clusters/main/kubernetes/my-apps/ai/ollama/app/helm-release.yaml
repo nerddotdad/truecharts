@@ -37,7 +37,12 @@ spec:
     
     resources:
       limits:
+        memory: 4Gi
         nvidia.com/gpu: 1
+      requests:
+        memory: 2Gi
+        nvidia.com/gpu: 1
+        
     workload:
       main:
         type: Deployment
@@ -54,11 +59,6 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
-              resources:
-                requests:
-                  memory: 2Gi
-                limits:
-                  memory: 4Gi
       ui:
         type: Deployment
         podSpec:
