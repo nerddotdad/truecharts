@@ -52,13 +52,11 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
-              resources:
-                limits:
-                  memory: 4Gi
-                  nvidia.com/gpu: 1
-                requests:
-                  memory: 2Gi
-                  nvidia.com/gpu: 1
+    resources:
+      limits:
+        memory: 4Gi
+      requests:
+        memory: 2Gi
       ui:
         type: Deployment
         podSpec:
