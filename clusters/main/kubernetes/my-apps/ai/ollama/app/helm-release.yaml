@@ -42,8 +42,9 @@ spec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
           tolerations:
-            - operator: Exists
+            - operator: Equal
               key: ai-only
+              value: "true"
               effect: NoSchedule
           containers:
             main:
