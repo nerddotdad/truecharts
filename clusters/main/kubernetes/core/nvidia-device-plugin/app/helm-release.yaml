@@ -44,3 +44,10 @@ spec:
                   replicas: 5
     gfd:
       enabled: true
+    nodeFeatureDiscovery:
+      worker:
+        podSpec:
+          tolerations:
+            - key: ai-only
+              operator: Exists
+              effect: NoSchedule
