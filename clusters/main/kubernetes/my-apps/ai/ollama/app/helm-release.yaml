@@ -41,6 +41,10 @@ spec:
         podSpec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
+          tolerations:
+            - operator: Exists
+              key: ai-only
+              effect: NoSchedule
           containers:
             main:
               env:
