@@ -35,11 +35,6 @@ spec:
         podSpec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
-          tolerations:
-            - operator: Equal
-              key: ai-only
-              value: "true"
-              effect: NoSchedule
 
     deployment:
       N8N_HOST: "n8n.hoth.systems"
