@@ -56,6 +56,15 @@ spec:
                   memory: 2Gi
                 limits:
                   memory: 4Gi
+      ui:
+        podSpec:
+          nodeSelector:
+            kubernetes.io/hostname: k8s-worker-1
+          tolerations:
+            - operator: Equal
+              key: ai-only
+              value: "true"
+              effect: NoSchedule
 
     ingress:
       main:
