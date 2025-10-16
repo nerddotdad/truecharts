@@ -44,7 +44,7 @@ spec:
           tolerations:
             - operator: Equal
               key: ai-only
-              value: 'true'
+              value: true
               effect: NoSchedule
           containers:
             main:
