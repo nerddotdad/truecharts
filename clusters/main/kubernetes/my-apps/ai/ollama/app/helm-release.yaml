@@ -52,7 +52,6 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
-                NVIDIA_VISIBLE_DEVICES: "all"
               resources:
                 limits:
                   memory: 4Gi
