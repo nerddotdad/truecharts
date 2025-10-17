@@ -58,6 +58,9 @@ spec:
         keep-alive: 120
         proxy-body-size: 0
         proxy-buffer-size: 16k
+        # Ensure busy buffers are >= max(proxy_buffer_size, one proxy_buffers chunk)
+        proxy-buffers-number: "8"
+        proxy-busy-buffers-size: "64k"
         ssl-protocols: TLSv1.3 TLSv1.2
         use-forwarded-headers: "true"
       metrics:

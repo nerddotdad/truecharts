@@ -1,6 +1,6 @@
 clusterName: ${CLUSTERNAME}
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-talosVersion: v1.9.6
+talosVersion: v1.11.2
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.32.1
 endpoint: https://${VIP}:6443
@@ -29,10 +29,10 @@ nodes:
         - 1.1.1.1
         - 8.8.8.8
       installDiskSelector:
-        size: "<= 1600GB"
+        size: <= 3000GB
       networkInterfaces:
         # suffix is the adapter mac adres.
-        - interface: eth0
+        - interface: ens3
           addresses:
             - ${MASTER1IP_CIDR}
           routes:
@@ -61,8 +61,7 @@ nodes:
         - 1.1.1.1
         - 8.8.8.8
       installDiskSelector:
-        size: >= 100GB
-        transport: nvme
+        size: <= 3000GB
       networkInterfaces:
         # suffix is the adapter mac adres.
         - interface: enp3s0
