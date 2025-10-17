@@ -1,6 +1,6 @@
 # Element Matrix Server Suite - Advanced Deployment
 # Includes: Synapse, Element Web, PostgreSQL, Redis, Jitsi Meet, Coturn
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: element-advanced
