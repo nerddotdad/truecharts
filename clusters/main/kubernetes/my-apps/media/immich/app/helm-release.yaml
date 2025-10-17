@@ -44,7 +44,7 @@ spec:
         mode: recovery
         backups:
           enabled: true
-          revision: "2"
+          revision: "3"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
@@ -54,7 +54,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          revision: "1"
+          revision: "2"
           credentials: cloudflare_r2
     persistence:
       mlcache:
