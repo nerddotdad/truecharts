@@ -28,6 +28,7 @@ spec:
     
     workload:
       main:
+        dbWait: true
         podSpec:
           containers:
             main:
@@ -55,17 +56,33 @@ spec:
                   path: /_matrix/client/versions
                   periodSeconds: 10
                   failureThreshold: 3
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  if [ ! -f /data/homeserver.yaml ]; then
+                    echo "Generating Synapse configuration..."
+                    python -m synapse.app.homeserver \
+                      --server-name matrix.${DOMAIN_0} \
+                      --config-path /data/homeserver.yaml \
+                      --generate-config \
+                      --report-stats=no
+                  fi
+                  echo "Starting Synapse..."
+                  python -m synapse.app.homeserver --config-path /data/homeserver.yaml
               env:
                 # Synapse Configuration
                 SYNAPSE_SERVER_NAME: matrix.${DOMAIN_0}
                 SYNAPSE_REPORT_STATS: "no"
                 SYNAPSE_ENABLE_REGISTRATION: "true"
                 SYNAPSE_ENABLE_REGISTRATION_WITHOUT_VERIFICATION: "true"
+                # Database Configuration (TrueCharts auto-provides these)
                 SYNAPSE_DATABASE_TYPE: "psycopg2"
-                SYNAPSE_DATABASE_ARGS: "host=element-postgresql.communication.svc.cluster.local port=5432 user=synapse password=${ELEMENT_DB_PASSWORD} dbname=synapse"
-                SYNAPSE_REDIS_HOST: "element-redis.communication.svc.cluster.local"
-                SYNAPSE_REDIS_PORT: "6379"
-                SYNAPSE_REDIS_PASSWORD: "${ELEMENT_REDIS_PASSWORD}"
+                SYNAPSE_DATABASE_ARGS: "host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB}"
+                # Redis Configuration (TrueCharts auto-provides these)
+                SYNAPSE_REDIS_HOST: "${REDIS_HOST}"
+                SYNAPSE_REDIS_PORT: "${REDIS_PORT}"
+                SYNAPSE_REDIS_PASSWORD: "${REDIS_PASSWORD}"
                 SYNAPSE_LOG_LEVEL: "INFO"
                 SYNAPSE_LOG_CONFIG: "/data/homeserver.log.config"
                 # Media Repository
@@ -87,30 +104,30 @@ spec:
                   memory: "2Gi"
                   cpu: "1000m"
     
-    # PostgreSQL Database
+    # PostgreSQL Database (using TrueCharts CNPG integration)
     postgresql:
       enabled: true
-      auth:
-        postgresPassword: "${ELEMENT_DB_ROOT_PASSWORD}"
-        username: "synapse"
-        password: "${ELEMENT_DB_PASSWORD}"
-        database: "synapse"
-      primary:
-        persistence:
-          enabled: true
-          size: 20Gi
+      type: postgres
+      pgVersion: 16
+      mode: standalone
+      database: synapse
+      user: synapse
+      password: "${ELEMENT_DB_PASSWORD}"
+      cluster:
+        instances: 1
+        singleNode: true
+        storage:
+          size: "20Gi"
           storageClass: "longhorn"
     
-    # Redis Cache
+    # Redis Cache (using TrueCharts Redis integration)
     redis:
       enabled: true
-      auth:
-        enabled: true
-        password: "${ELEMENT_REDIS_PASSWORD}"
+      password: "${ELEMENT_REDIS_PASSWORD}"
       master:
         persistence:
           enabled: true
-          size: 5Gi
+          size: "5Gi"
           storageClass: "longhorn"
     
     # Persistence for Synapse data
