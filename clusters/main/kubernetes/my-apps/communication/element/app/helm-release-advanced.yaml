@@ -169,7 +169,7 @@ spec:
         enabled: true
         image:
           repository: vectorim/element-web
-          tag: v1.11.60
+          tag: v1.11.112
         service:
           enabled: true
           ports:
