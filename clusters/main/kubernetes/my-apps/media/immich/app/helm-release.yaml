@@ -155,10 +155,6 @@ spec:
             main: {}
           microservices:
             microservices: {}
-    service:
-      main:
-        type: LoadBalancer
-        loadBalancerIP: ${IMMICH_IP}
     workload:
       main:
         podSpec:

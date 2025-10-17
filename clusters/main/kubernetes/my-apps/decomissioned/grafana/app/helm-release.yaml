@@ -29,10 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    service:
-      main:
-        type: LoadBalancer
-        loadBalancerIP: ${GRAFANA_IP}
     grafana:
       sidecar:
         datasources:
