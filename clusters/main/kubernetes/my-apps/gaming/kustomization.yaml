@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - rcon-webadmin/ks.yaml
-  - minecraft-java/ks.yaml

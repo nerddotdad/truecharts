@@ -42,25 +42,6 @@ spec:
       rwa_websocket_url: ""
       rwa_restrict_commands: []
       rwa_restrict_widgets: []
-    service:
-      main:
-        type: LoadBalancer
-        loadBalancerIP: ${RWA_IP}
-        ports:
-          main:
-            port: 4326
-            protocol: http
-            targetPort: 4326
-      websocketaccess:
-        type: LoadBalancer
-        loadBalancerIP: ${RWA_IP}
-        enabled: true
-        ports:
-          websocketaccess:
-            enabled: true
-            port: 4327
-            protocol: tcp
-            targetPort: 4327
     persistence:
       db:
         enabled: true
