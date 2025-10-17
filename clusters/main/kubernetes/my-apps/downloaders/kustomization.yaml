@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
-  - jellyseerr/ks.yaml
+  # - jellyseerr/ks.yaml
   - nzbget/ks.yaml
   - prowlarr/ks.yaml
   - radarr/ks.yaml
