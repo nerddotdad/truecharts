@@ -135,7 +135,7 @@ spec:
             enabled: true
             port: 8008
             targetPort: 8008
-            protocol: HTTP
+            protocol: http
     
     # Ingress Configuration
     ingress:
@@ -176,6 +176,7 @@ spec:
             main:
               port: 80
               targetPort: 80
+              protocol: http
         ingress:
           enabled: true
           ingressClassName: external
@@ -211,6 +212,7 @@ spec:
             main:
               port: 80
               targetPort: 80
+              protocol: http
         ingress:
           enabled: true
           ingressClassName: external
@@ -248,11 +250,11 @@ spec:
             main:
               port: 3478
               targetPort: 3478
-              protocol: UDP
+              protocol: udp
             alt:
               port: 5349
               targetPort: 5349
-              protocol: TCP
+              protocol: tcp
         env:
           TURN_USERNAME: "${ELEMENT_TURN_USERNAME}"
           TURN_PASSWORD: "${ELEMENT_TURN_PASSWORD}"
