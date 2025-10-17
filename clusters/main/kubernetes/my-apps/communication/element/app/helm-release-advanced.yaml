@@ -20,7 +20,7 @@ spec:
     image:
       repository: matrixdotorg/synapse
       pullPolicy: IfNotPresent
-      tag: v1.108.0
+      tag: v1.140.0
     
     securityContext:
       container:
