@@ -27,38 +27,17 @@ spec:
     postgres:
       enabled: true
     
-    # Element Web Configuration with matrix.org RTC support
+    # Element Web Configuration
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
         className: external
-      # Configure matrix.org for voice and video calling (temporary fix)
-      additional:
-        user-config.json: |
-          {
-            "org.matrix.msc4143.rtc_foci": [
-              {
-                "type": "livekit",
-                "livekit_service_url": "https://livekit-jwt.call.matrix.org"
-              }
-            ]
-          }
     
-    # Synapse Configuration with RTC focus
+    # Synapse Configuration
     synapse:
       ingress:
         host: matrix.${DOMAIN_0}
         className: external
-      # Configure server-side RTC focus
-      additional:
-        user-config.yaml:
-          config: |
-            # Configure RTC focus for Element Call
-            experimental_features:
-              msc4143_rtc_foci: true
-            rtc_foci:
-              - type: livekit
-                livekit_service_url: "https://livekit-jwt.call.matrix.org"
     
     # Hostnames configuration
     elementAdmin:
