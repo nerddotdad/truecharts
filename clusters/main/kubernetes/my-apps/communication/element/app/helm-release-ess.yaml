@@ -27,14 +27,23 @@ spec:
     postgres:
       enabled: true
     
+    # Element Web Configuration with Jitsi Meet integration
+    elementWeb:
+      ingress:
+        host: element.${DOMAIN_0}
+      # Configure Jitsi Meet for video calling (ESS Community approach)
+      additional:
+        user-config.json: |
+          {
+            "jitsi": {
+              "preferredDomain": "meet.jit.si"
+            }
+          }
+    
     # Hostnames configuration
     elementAdmin:
       ingress:
         host: admin.${DOMAIN_0}
-    
-    elementWeb:
-      ingress:
-        host: element.${DOMAIN_0}
     
     matrixAuthenticationService:
       ingress:
