@@ -9,7 +9,7 @@ echo ""
 # Function to create a single-use token
 create_single_token() {
     echo "Creating single-use registration token..."
-    kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
 }
 
 # Function to create a multi-use token
@@ -19,13 +19,13 @@ create_multi_token() {
     usage_limit=${usage_limit:-5}
     
     echo "Creating token usable $usage_limit times..."
-    kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --usage-limit "$usage_limit"
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --usage-limit "$usage_limit" | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
 }
 
 # Function to create an unlimited token
 create_unlimited_token() {
     echo "Creating unlimited-use registration token..."
-    kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --unlimited
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --unlimited | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
 }
 
 # Function to create a token with expiration
@@ -36,7 +36,7 @@ create_expiring_token() {
     seconds=$((days * 24 * 60 * 60))
     
     echo "Creating token valid for $days days..."
-    kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --expires-in "$seconds"
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --expires-in "$seconds" | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
 }
 
 # Main menu
@@ -79,7 +79,15 @@ echo "📋 Instructions for your friends/family:"
 echo "1. Go to https://element.hoth.systems"
 echo "2. Click 'Sign In'"
 echo "3. Click 'Create account'"
-echo "4. Enter the registration token when prompted"
+echo "4. Enter the registration token when prompted:"
+echo ""
+echo "🔑 REGISTRATION TOKEN:"
+echo "======================"
+echo "$token"
+echo "======================"
+echo ""
 echo "5. Complete account setup"
 echo ""
 echo "🔒 This ensures only people you invite can join your private server!"
+echo ""
+echo "💡 You can copy the token above and send it to your friend/family member!"
