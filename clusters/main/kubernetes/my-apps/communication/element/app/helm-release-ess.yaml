@@ -27,6 +27,16 @@ spec:
     postgres:
       enabled: true
     
+    # Matrix Authentication Service Configuration
+    matrixAuthenticationService:
+      ingress:
+        host: mas.${DOMAIN_0}
+      # Configure Syn2Mas migration for local authentication
+      syn2mas:
+        enabled: true
+        # Use local Synapse endpoint instead of federation
+        synapseEndpoint: "http://element-server-suite-synapse-main.communication.svc.cluster.local:8008"
+    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -35,10 +45,6 @@ spec:
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
-    
-    matrixAuthenticationService:
-      ingress:
-        host: mas.${DOMAIN_0}
     
     matrixRTC:
       ingress:
