@@ -27,14 +27,6 @@ spec:
     postgres:
       enabled: true
     
-    # Matrix RTC Configuration with proper authentication
-    matrixRTC:
-      ingress:
-        host: mrtc.${DOMAIN_0}
-      # Enable authentication for JWT generation
-      auth:
-        enabled: true
-    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -47,6 +39,10 @@ spec:
     matrixAuthenticationService:
       ingress:
         host: mas.${DOMAIN_0}
+    
+    matrixRTC:
+      ingress:
+        host: mrtc.${DOMAIN_0}
     
     synapse:
       ingress:
