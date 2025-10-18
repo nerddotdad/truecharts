@@ -31,6 +31,7 @@ spec:
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
+        className: external
       # Configure matrix.org for voice and video calling (temporary fix)
       additional:
         user-config.json: |
@@ -47,15 +48,19 @@ spec:
     elementAdmin:
       ingress:
         host: admin.${DOMAIN_0}
+        className: external
     
     matrixAuthenticationService:
       ingress:
         host: mas.${DOMAIN_0}
+        className: external
     
     matrixRTC:
       ingress:
         host: mrtc.${DOMAIN_0}
+        className: external
     
     synapse:
       ingress:
         host: matrix.${DOMAIN_0}
+        className: external
