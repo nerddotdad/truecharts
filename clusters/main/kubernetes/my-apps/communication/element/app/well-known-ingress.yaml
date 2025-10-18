@@ -1,0 +1,34 @@
+# Custom ingress for well-known service to use external class
+# This makes the well-known service accessible through Cloudflare Tunnels
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: element-server-suite-well-known-external
+  namespace: communication
+  annotations:
+    cert-manager.io/cluster-issuer: domain-0-le-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: external
+  tls:
+    - hosts:
+        - ${DOMAIN_0}
+      secretName: well-known-tls
+  rules:
+    - host: ${DOMAIN_0}
+      http:
+        paths:
+          - path: /.well-known/matrix/client
+            pathType: Exact
+            backend:
+              service:
+                name: element-server-suite-well-known
+                port:
+                  number: 8010
+          - path: /.well-known/matrix/server
+            pathType: Exact
+            backend:
+              service:
+                name: element-server-suite-well-known
+                port:
+                  number: 8010
