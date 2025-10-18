@@ -23,31 +23,6 @@ spec:
     certManager:
       clusterIssuer: domain-0-le-prod
     
-    # PostgreSQL configuration
-    synapse:
-      postgres:
-        host: element-server-suite-postgresql.communication.svc.cluster.local
-        port: 5432
-        user: synapse
-        password:
-          value: ${ELEMENT_DB_PASSWORD}
-        database: synapse
-        sslMode: prefer
-      ingress:
-        host: matrix.${DOMAIN_0}
-    
-    matrixAuthenticationService:
-      postgres:
-        host: element-server-suite-postgresql.communication.svc.cluster.local
-        port: 5432
-        user: mas_user
-        password:
-          value: ${ELEMENT_DB_PASSWORD}
-        database: mas
-        sslMode: prefer
-      ingress:
-        host: mas.${DOMAIN_0}
-    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -57,6 +32,14 @@ spec:
       ingress:
         host: element.${DOMAIN_0}
     
+    matrixAuthenticationService:
+      ingress:
+        host: mas.${DOMAIN_0}
+    
     matrixRTC:
       ingress:
         host: mrtc.${DOMAIN_0}
+    
+    synapse:
+      ingress:
+        host: matrix.${DOMAIN_0}
