@@ -60,29 +60,3 @@ spec:
     matrixRTC:
       ingress:
         host: mrtc.${DOMAIN_0}
-    
-    # Enable PostgreSQL subchart
-    postgresql:
-      enabled: true
-      auth:
-        postgresPassword: ${ELEMENT_DB_ROOT_PASSWORD}
-        username: synapse
-        password: ${ELEMENT_DB_PASSWORD}
-        database: synapse
-      primary:
-        persistence:
-          enabled: true
-          size: 20Gi
-          storageClass: longhorn
-    
-    # Enable Redis subchart
-    redis:
-      enabled: true
-      auth:
-        enabled: true
-        password: ${ELEMENT_REDIS_PASSWORD}
-      master:
-        persistence:
-          enabled: true
-          size: 5Gi
-          storageClass: longhorn
