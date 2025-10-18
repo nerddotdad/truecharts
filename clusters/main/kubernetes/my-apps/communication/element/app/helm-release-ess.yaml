@@ -38,10 +38,6 @@ spec:
       ingress:
         host: matrix.${DOMAIN_0}
         className: external
-      # Configure well-known service to use external ingress
-      wellKnown:
-        ingress:
-          className: external
     
     # Hostnames configuration
     elementAdmin:
