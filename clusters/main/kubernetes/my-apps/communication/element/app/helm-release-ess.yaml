@@ -27,17 +27,20 @@ spec:
     postgres:
       enabled: true
     
-    # Element Web Configuration with Jitsi Meet integration
+    # Element Web Configuration with matrix.org RTC support
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
-      # Configure Jitsi Meet for video calling (ESS Community approach)
+      # Configure matrix.org for voice and video calling (temporary fix)
       additional:
         user-config.json: |
           {
-            "jitsi": {
-              "preferredDomain": "meet.jit.si"
-            }
+            "org.matrix.msc4143.rtc_foci": [
+              {
+                "type": "livekit",
+                "livekit_service_url": "https://livekit-jwt.call.matrix.org"
+              }
+            ]
           }
     
     # Hostnames configuration
