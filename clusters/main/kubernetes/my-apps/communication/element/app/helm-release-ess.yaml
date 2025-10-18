@@ -40,10 +40,10 @@ spec:
       postgres:
         host: element-server-suite-postgresql.communication.svc.cluster.local
         port: 5432
-        user: synapse
+        user: mas_user
         password:
           value: ${ELEMENT_DB_PASSWORD}
-        database: synapse
+        database: mas
         sslMode: prefer
       ingress:
         host: mas.${DOMAIN_0}
