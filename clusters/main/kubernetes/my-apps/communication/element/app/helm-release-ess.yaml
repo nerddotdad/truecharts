@@ -60,12 +60,6 @@ spec:
               - type: livekit
                 livekit_service_url: "https://livekit-jwt.call.matrix.org"
     
-    # Well-known configuration for RTC focus discovery
-    wellKnown:
-      ingress:
-        host: ${DOMAIN_0}
-        className: external
-    
     # Hostnames configuration
     elementAdmin:
       ingress:
