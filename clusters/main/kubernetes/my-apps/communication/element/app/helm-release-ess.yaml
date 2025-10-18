@@ -39,6 +39,29 @@ spec:
       ingress:
         host: element.${DOMAIN_0}
         className: external
+      # Custom branding to show it's private
+      additional:
+        user-config.json: |
+          {
+            "brand": "Hoth Private Matrix",
+            "default_server_config": {
+              "m.homeserver": {
+                "base_url": "https://matrix.${DOMAIN_0}"
+              }
+            },
+            "disable_3pid_login": true,
+            "disable_custom_urls": true,
+            "disable_guests": true,
+            "disable_login_language_selector": true,
+            "disable_registration": true,
+            "show_labs_settings": false,
+            "welcomePageUrl": "https://element.${DOMAIN_0}/welcome",
+            "defaultCountryCode": "US",
+            "settingDefaults": {
+              "breadcrumbs": true,
+              "showCallButtonsInComposer": true
+            }
+          }
     
     # Synapse Configuration
     synapse:
@@ -64,6 +87,12 @@ spec:
             receive_federation: false
             # Enable federation discovery (required for client validation)
             federation_enabled: true
+            # Server privacy notice
+            server_notices:
+              system_mxid_localpart: notices
+              room_name: "Server Notices"
+            # Custom server name for privacy indication
+            server_name: "Hoth Private Matrix Server"
     
     # Hostnames configuration
     elementAdmin:
