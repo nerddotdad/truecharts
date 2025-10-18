@@ -27,6 +27,19 @@ spec:
     postgres:
       enabled: true
     
+    # Matrix Authentication Service Configuration
+    matrixAuthenticationService:
+      ingress:
+        host: mas.${DOMAIN_0}
+      # Force local authentication instead of federation
+      config:
+        matrix:
+          # Use local endpoint instead of federation
+          endpoint: "http://element-server-suite-synapse-main.communication.svc.cluster.local:8008"
+          # Disable federation for user lookup
+          federation:
+            enabled: false
+    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -35,10 +48,6 @@ spec:
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
-    
-    matrixAuthenticationService:
-      ingress:
-        host: mas.${DOMAIN_0}
     
     matrixRTC:
       ingress:
