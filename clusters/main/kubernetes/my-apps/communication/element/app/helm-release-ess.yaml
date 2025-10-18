@@ -1,5 +1,5 @@
 # Element Server Suite - Official ESS Helm Chart
-# Using the official element-hq/ess-helm chart
+# Using the official element-hq/ess-helm chart with correct schema
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -16,22 +16,19 @@ spec:
         name: element-hq
         namespace: flux-system
   values:
-    # Hostnames configuration
-    hostnames:
-      baseDomain: ${DOMAIN_0}
-      element: element.${DOMAIN_0}
-      synapse: matrix.${DOMAIN_0}
-      mas: mas.${DOMAIN_0}
-      jitsi: meet.${DOMAIN_0}
+    # Global configuration
+    global:
+      # Base domain for all services
+      domain: ${DOMAIN_0}
+      
+      # TLS configuration
+      tls:
+        enabled: true
+        issuer:
+          name: domain-0-le-prod
+          kind: ClusterIssuer
     
-    # TLS Configuration
-    tls:
-      enabled: true
-      issuer:
-        name: domain-0-le-prod
-        kind: ClusterIssuer
-    
-    # PostgreSQL Configuration
+    # PostgreSQL configuration
     postgresql:
       enabled: true
       auth:
@@ -45,7 +42,7 @@ spec:
           size: 20Gi
           storageClass: longhorn
     
-    # Redis Configuration
+    # Redis configuration
     redis:
       enabled: true
       auth:
@@ -57,21 +54,12 @@ spec:
           size: 5Gi
           storageClass: longhorn
     
-    # Synapse Configuration
+    # Synapse configuration
     synapse:
       enabled: true
       image:
         repository: matrixdotorg/synapse
         tag: v1.140.0
-      persistence:
-        media:
-          enabled: true
-          size: 50Gi
-          storageClass: longhorn
-        config:
-          enabled: true
-          size: 10Gi
-          storageClass: longhorn
       resources:
         requests:
           memory: 512Mi
@@ -79,8 +67,16 @@ spec:
         limits:
           memory: 2Gi
           cpu: 1000m
+      ingress:
+        host: matrix.${DOMAIN_0}
+        className: external
+        annotations:
+          cert-manager.io/cluster-issuer: domain-0-le-prod
+          nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
     
-    # Element Web Configuration
+    # Element Web configuration
     elementWeb:
       enabled: true
       image:
@@ -93,6 +89,11 @@ spec:
         limits:
           memory: 512Mi
           cpu: 500m
+      ingress:
+        host: element.${DOMAIN_0}
+        className: external
+        annotations:
+          cert-manager.io/cluster-issuer: domain-0-le-prod
     
     # Matrix Authentication Service
     matrixAuthenticationService:
@@ -107,8 +108,13 @@ spec:
         limits:
           memory: 512Mi
           cpu: 500m
+      ingress:
+        host: mas.${DOMAIN_0}
+        className: external
+        annotations:
+          cert-manager.io/cluster-issuer: domain-0-le-prod
     
-    # Jitsi Meet Configuration
+    # Jitsi Meet configuration
     jitsi:
       enabled: true
       image:
@@ -121,6 +127,11 @@ spec:
         limits:
           memory: 1Gi
           cpu: 500m
+      ingress:
+        host: meet.${DOMAIN_0}
+        className: external
+        annotations:
+          cert-manager.io/cluster-issuer: domain-0-le-prod
     
     # Coturn TURN Server
     coturn:
@@ -135,24 +146,17 @@ spec:
         limits:
           memory: 256Mi
           cpu: 200m
+      service:
+        type: LoadBalancer
+        ports:
+          turn: 3478
+          turn-tls: 5349
     
-    # Ingress Configuration
-    ingress:
+    # Well-known delegation
+    wellKnownDelegation:
       enabled: true
-      className: external
-      annotations:
-        cert-manager.io/cluster-issuer: domain-0-le-prod
-        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    
-    # Homepage Integration
-    homepage:
-      enabled: true
-      name: Element Matrix
-      description: Secure Matrix communication platform
-      group: "{{ .Release.Namespace }}"
-      icon: matrix
-      widget:
-        custom:
-          key: ${HP_ELEMENT}
+      ingress:
+        host: ${DOMAIN_0}
+        className: external
+        annotations:
+          cert-manager.io/cluster-issuer: domain-0-le-prod
