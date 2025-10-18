@@ -9,7 +9,7 @@ echo ""
 # Function to create a single-use token
 create_single_token() {
     echo "Creating single-use registration token..."
-    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token 2>&1 | grep -o 'Created user registration token: [A-Za-z0-9]*' | sed 's/Created user registration token: //')
 }
 
 # Function to create a multi-use token
@@ -19,13 +19,13 @@ create_multi_token() {
     usage_limit=${usage_limit:-5}
     
     echo "Creating token usable $usage_limit times..."
-    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --usage-limit "$usage_limit" | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --usage-limit "$usage_limit" 2>&1 | grep -o 'Created user registration token: [A-Za-z0-9]*' | sed 's/Created user registration token: //')
 }
 
 # Function to create an unlimited token
 create_unlimited_token() {
     echo "Creating unlimited-use registration token..."
-    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --unlimited | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --unlimited 2>&1 | grep -o 'Created user registration token: [A-Za-z0-9]*' | sed 's/Created user registration token: //')
 }
 
 # Function to create a token with expiration
@@ -36,7 +36,7 @@ create_expiring_token() {
     seconds=$((days * 24 * 60 * 60))
     
     echo "Creating token valid for $days days..."
-    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --expires-in "$seconds" | grep -o 'Created user registration token: [^[:space:]]*' | cut -d' ' -f5)
+    token=$(kubectl exec -n communication deployment/element-server-suite-matrix-authentication-service -- mas-cli manage issue-user-registration-token --expires-in "$seconds" 2>&1 | grep -o 'Created user registration token: [A-Za-z0-9]*' | sed 's/Created user registration token: //')
 }
 
 # Main menu
