@@ -23,8 +23,8 @@ spec:
     certManager:
       clusterIssuer: domain-0-le-prod
     
-    # Enable PostgreSQL subchart
-    postgresql:
+    # Enable PostgreSQL (using correct ESS chart structure)
+    postgres:
       enabled: true
       auth:
         postgresPassword: ${ELEMENT_DB_ROOT_PASSWORD}
