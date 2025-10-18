@@ -1,0 +1,52 @@
+# CNPG PostgreSQL instance for Element Server Suite
+# This replaces the internal PostgreSQL with CNPG for better backup management
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: element-postgresql
+  namespace: communication
+spec:
+  instances: 1
+  
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_preload_libraries: "pg_stat_statements"
+  
+  # Storage configuration
+  storage:
+    size: 20Gi
+    storageClass: longhorn
+  
+  # Backup configuration (same as Immich)
+  backup:
+    enabled: true
+    retentionPolicy: "7d"
+    credentials:
+      name: element-backup-credentials
+      key: credentials
+    scheduledBackups:
+    - name: daily-backup
+      schedule: "0 0 1 * * *"  # Daily at 1 AM
+      backupOwnerReference: self
+      immediate: true
+      suspend: false
+  
+  # Recovery configuration
+  recovery:
+    credentials:
+      name: element-backup-credentials
+      key: credentials
+  
+  # Bootstrap configuration
+  bootstrap:
+    initdb:
+      database: synapse
+      owner: synapse
+      secret:
+        name: element-postgresql-credentials
+      postInitSQL:
+        - |
+          CREATE DATABASE mas OWNER synapse;
+          GRANT ALL PRIVILEGES ON DATABASE mas TO synapse;
