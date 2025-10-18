@@ -20,7 +20,7 @@ spec:
     image:
       repository: matrixdotorg/synapse
       pullPolicy: IfNotPresent
-      tag: v1.140.0
+      tag: v1.108.0
     
     securityContext:
       container:
@@ -30,24 +30,6 @@ spec:
       main:
         dbWait: true
         podSpec:
-          initContainers:
-            setup:
-              enabled: true
-              image:
-                repository: busybox
-                tag: latest
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mkdir -p /data/media_store /data/uploads
-                  chown -R 568:568 /data
-                  chmod -R 755 /data
-              volumeMounts:
-                - name: config
-                  mountPath: /data
-                - name: media
-                  mountPath: /data/media_store
           containers:
             main:
               enabled: true
@@ -78,6 +60,11 @@ spec:
                 - /bin/bash
                 - -c
                 - |
+                  # Create directories with proper permissions
+                  mkdir -p /data/media_store /data/uploads
+                  chown -R 568:568 /data
+                  chmod -R 755 /data
+                  
                   if [ ! -f /data/homeserver.yaml ]; then
                     echo "Generating Synapse configuration..."
                     python -m synapse.app.homeserver \
@@ -202,7 +189,7 @@ spec:
         enabled: true
         image:
           repository: vectorim/element-web
-          tag: v1.12.1
+          tag: v1.11.112
         service:
           enabled: true
           ports:
