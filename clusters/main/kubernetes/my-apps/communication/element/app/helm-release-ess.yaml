@@ -53,7 +53,7 @@ spec:
             "disable_custom_urls": true,
             "disable_guests": true,
             "disable_login_language_selector": true,
-            "disable_registration": true,
+            "disable_registration": false,
             "show_labs_settings": false,
             "welcomePageUrl": "https://element.${DOMAIN_0}/welcome",
             "defaultCountryCode": "US",
@@ -93,6 +93,10 @@ spec:
               room_name: "Server Notices"
             # Custom server name for privacy indication
             server_name: "Hoth Private Matrix Server"
+            # Enable registration tokens for controlled signups
+            registration_shared_secret: ${ELEMENT_REGISTRATION_SECRET}
+            enable_registration: true
+            registration_requires_token: true
     
     # Hostnames configuration
     elementAdmin:
