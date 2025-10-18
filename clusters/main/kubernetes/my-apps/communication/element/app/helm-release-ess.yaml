@@ -23,19 +23,9 @@ spec:
     certManager:
       clusterIssuer: domain-0-le-prod
     
-    # Enable PostgreSQL (using correct ESS chart structure)
+    # Enable PostgreSQL (simple configuration)
     postgres:
       enabled: true
-      auth:
-        postgresPassword: ${ELEMENT_DB_ROOT_PASSWORD}
-        username: synapse
-        password: ${ELEMENT_DB_PASSWORD}
-        database: synapse
-      primary:
-        persistence:
-          enabled: true
-          size: 20Gi
-          storageClass: longhorn
     
     # Hostnames configuration
     elementAdmin:
