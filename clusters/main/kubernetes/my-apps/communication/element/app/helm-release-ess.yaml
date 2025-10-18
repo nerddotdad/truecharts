@@ -1,0 +1,158 @@
+# Element Server Suite - Official ESS Helm Chart
+# Using the official element-hq/ess-helm chart
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: element-server-suite
+  namespace: communication
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: matrix-stack
+      version: 25.10.2
+      sourceRef:
+        kind: HelmRepository
+        name: element-hq
+        namespace: flux-system
+  values:
+    # Hostnames configuration
+    hostnames:
+      baseDomain: ${DOMAIN_0}
+      element: element.${DOMAIN_0}
+      synapse: matrix.${DOMAIN_0}
+      mas: mas.${DOMAIN_0}
+      jitsi: meet.${DOMAIN_0}
+    
+    # TLS Configuration
+    tls:
+      enabled: true
+      issuer:
+        name: domain-0-le-prod
+        kind: ClusterIssuer
+    
+    # PostgreSQL Configuration
+    postgresql:
+      enabled: true
+      auth:
+        postgresPassword: ${ELEMENT_DB_ROOT_PASSWORD}
+        username: synapse
+        password: ${ELEMENT_DB_PASSWORD}
+        database: synapse
+      primary:
+        persistence:
+          enabled: true
+          size: 20Gi
+          storageClass: longhorn
+    
+    # Redis Configuration
+    redis:
+      enabled: true
+      auth:
+        enabled: true
+        password: ${ELEMENT_REDIS_PASSWORD}
+      master:
+        persistence:
+          enabled: true
+          size: 5Gi
+          storageClass: longhorn
+    
+    # Synapse Configuration
+    synapse:
+      enabled: true
+      image:
+        repository: matrixdotorg/synapse
+        tag: v1.140.0
+      persistence:
+        media:
+          enabled: true
+          size: 50Gi
+          storageClass: longhorn
+        config:
+          enabled: true
+          size: 10Gi
+          storageClass: longhorn
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 2Gi
+          cpu: 1000m
+    
+    # Element Web Configuration
+    elementWeb:
+      enabled: true
+      image:
+        repository: vectorim/element-web
+        tag: v1.11.112
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 500m
+    
+    # Matrix Authentication Service
+    matrixAuthenticationService:
+      enabled: true
+      image:
+        repository: elementhq/matrix-authentication-service
+        tag: latest
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 500m
+    
+    # Jitsi Meet Configuration
+    jitsi:
+      enabled: true
+      image:
+        repository: jitsi/web
+        tag: latest
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 1Gi
+          cpu: 500m
+    
+    # Coturn TURN Server
+    coturn:
+      enabled: true
+      image:
+        repository: coturn/coturn
+        tag: latest
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+          cpu: 200m
+    
+    # Ingress Configuration
+    ingress:
+      enabled: true
+      className: external
+      annotations:
+        cert-manager.io/cluster-issuer: domain-0-le-prod
+        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    
+    # Homepage Integration
+    homepage:
+      enabled: true
+      name: Element Matrix
+      description: Secure Matrix communication platform
+      group: "{{ .Release.Namespace }}"
+      icon: matrix
+      widget:
+        custom:
+          key: ${HP_ELEMENT}
