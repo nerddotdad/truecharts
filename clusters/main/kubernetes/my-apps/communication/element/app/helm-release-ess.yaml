@@ -33,6 +33,8 @@ spec:
           value: ${ELEMENT_DB_PASSWORD}
         database: synapse
         sslMode: prefer
+      ingress:
+        host: matrix.${DOMAIN_0}
     
     matrixAuthenticationService:
       postgres:
@@ -43,6 +45,8 @@ spec:
           value: ${ELEMENT_DB_PASSWORD}
         database: synapse
         sslMode: prefer
+      ingress:
+        host: mas.${DOMAIN_0}
     
     # Hostnames configuration
     elementAdmin:
@@ -53,17 +57,9 @@ spec:
       ingress:
         host: element.${DOMAIN_0}
     
-    matrixAuthenticationService:
-      ingress:
-        host: mas.${DOMAIN_0}
-    
     matrixRTC:
       ingress:
         host: mrtc.${DOMAIN_0}
-    
-    synapse:
-      ingress:
-        host: matrix.${DOMAIN_0}
     
     # Enable PostgreSQL subchart
     postgresql:
