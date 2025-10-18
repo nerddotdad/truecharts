@@ -30,6 +30,24 @@ spec:
       main:
         dbWait: true
         podSpec:
+          initContainers:
+            setup:
+              enabled: true
+              image:
+                repository: busybox
+                tag: latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  mkdir -p /data/media_store /data/uploads
+                  chown -R 568:568 /data
+                  chmod -R 755 /data
+              volumeMounts:
+                - name: config
+                  mountPath: /data
+                - name: media
+                  mountPath: /data/media_store
           containers:
             main:
               enabled: true
@@ -76,13 +94,13 @@ spec:
                 SYNAPSE_REPORT_STATS: "no"
                 SYNAPSE_ENABLE_REGISTRATION: "true"
                 SYNAPSE_ENABLE_REGISTRATION_WITHOUT_VERIFICATION: "true"
-                # Database Configuration (TrueCharts auto-provides these)
+                # Database Configuration
                 SYNAPSE_DATABASE_TYPE: "psycopg2"
-                SYNAPSE_DATABASE_ARGS: "host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB}"
-                # Redis Configuration (TrueCharts auto-provides these)
-                SYNAPSE_REDIS_HOST: "${REDIS_HOST}"
-                SYNAPSE_REDIS_PORT: "${REDIS_PORT}"
-                SYNAPSE_REDIS_PASSWORD: "${REDIS_PASSWORD}"
+                SYNAPSE_DATABASE_ARGS: "host=element-advanced-postgresql.communication.svc.cluster.local port=5432 user=synapse password=${ELEMENT_DB_PASSWORD} dbname=synapse"
+                # Redis Configuration
+                SYNAPSE_REDIS_HOST: "element-advanced-redis.communication.svc.cluster.local"
+                SYNAPSE_REDIS_PORT: "6379"
+                SYNAPSE_REDIS_PASSWORD: "${ELEMENT_REDIS_PASSWORD}"
                 SYNAPSE_LOG_LEVEL: "INFO"
                 SYNAPSE_LOG_CONFIG: "/data/homeserver.log.config"
                 # Media Repository
@@ -104,19 +122,17 @@ spec:
                   memory: "2Gi"
                   cpu: "1000m"
     
-    # PostgreSQL Database (using TrueCharts CNPG integration)
+    # PostgreSQL Database (simplified configuration)
     postgresql:
       enabled: true
-      type: postgres
-      pgVersion: 16
-      mode: standalone
-      database: synapse
-      user: synapse
-      password: "${ELEMENT_DB_PASSWORD}"
-      cluster:
-        instances: 1
-        singleNode: true
-        storage:
+      auth:
+        postgresPassword: "${ELEMENT_DB_ROOT_PASSWORD}"
+        username: "synapse"
+        password: "${ELEMENT_DB_PASSWORD}"
+        database: "synapse"
+      primary:
+        persistence:
+          enabled: true
           size: "20Gi"
           storageClass: "longhorn"
     
