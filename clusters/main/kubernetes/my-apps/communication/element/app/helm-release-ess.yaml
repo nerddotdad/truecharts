@@ -38,6 +38,17 @@ spec:
       ingress:
         host: matrix.${DOMAIN_0}
         className: external
+      # Disable federation to make server private
+      additional:
+        user-config.yaml:
+          config: |
+            # Disable federation for private server
+            federation_domain_whitelist: []
+            federation_ip_range_whitelist: []
+            allow_public_rooms_over_federation: false
+            allow_public_rooms_without_auth_over_federation: false
+            send_federation: false
+            receive_federation: false
     
     # Hostnames configuration
     elementAdmin:
