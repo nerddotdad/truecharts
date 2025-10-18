@@ -27,16 +27,6 @@ spec:
     postgres:
       enabled: true
     
-    # Matrix RTC Configuration
-    matrixRTC:
-      ingress:
-        host: mrtc.${DOMAIN_0}
-      # Enable TURN server for NAT traversal
-      turn:
-        enabled: true
-        # Use the same domain for TURN server
-        serverName: ${DOMAIN_0}
-    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -49,6 +39,10 @@ spec:
     matrixAuthenticationService:
       ingress:
         host: mas.${DOMAIN_0}
+    
+    matrixRTC:
+      ingress:
+        host: mrtc.${DOMAIN_0}
     
     synapse:
       ingress:
