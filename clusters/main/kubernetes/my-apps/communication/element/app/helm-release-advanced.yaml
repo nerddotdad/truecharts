@@ -20,7 +20,7 @@ spec:
     image:
       repository: matrixdotorg/synapse
       pullPolicy: IfNotPresent
-      tag: v1.108.0
+      tag: v1.140.0
     
     securityContext:
       container:
@@ -189,7 +189,7 @@ spec:
         enabled: true
         image:
           repository: vectorim/element-web
-          tag: v1.11.112
+          tag: v1.12.1
         service:
           enabled: true
           ports:
