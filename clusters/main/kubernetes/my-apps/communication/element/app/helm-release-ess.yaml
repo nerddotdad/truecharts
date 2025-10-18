@@ -44,6 +44,22 @@ spec:
             ]
           }
     
+    # Synapse Configuration with RTC focus
+    synapse:
+      ingress:
+        host: matrix.${DOMAIN_0}
+        className: external
+      # Configure server-side RTC focus
+      additional:
+        user-config.yaml:
+          config: |
+            # Configure RTC focus for Element Call
+            experimental_features:
+              msc4143_rtc_foci: true
+            rtc_foci:
+              - type: livekit
+                livekit_service_url: "https://livekit-jwt.call.matrix.org"
+    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -58,9 +74,4 @@ spec:
     matrixRTC:
       ingress:
         host: mrtc.${DOMAIN_0}
-        className: external
-    
-    synapse:
-      ingress:
-        host: matrix.${DOMAIN_0}
         className: external
