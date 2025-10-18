@@ -1,5 +1,5 @@
-# Element Server Suite - Official ESS Helm Chart
-# Using the official element-hq/ess-helm chart with correct schema
+# Element Server Suite - Official ESS Helm Chart Configuration
+# Based on the official fragment files from element-hq/ess-helm
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -16,19 +16,56 @@ spec:
         name: element-hq
         namespace: flux-system
   values:
-    # Global configuration
-    global:
-      # Base domain for all services
-      domain: ${DOMAIN_0}
-      
-      # TLS configuration
-      tls:
-        enabled: true
-        issuer:
-          name: domain-0-le-prod
-          kind: ClusterIssuer
+    # Server name (base domain)
+    serverName: ${DOMAIN_0}
+    
+    # Certificate Manager configuration (Let's Encrypt)
+    certManager:
+      clusterIssuer: domain-0-le-prod
     
     # PostgreSQL configuration
+    synapse:
+      postgres:
+        host: element-server-suite-postgresql.communication.svc.cluster.local
+        port: 5432
+        user: synapse
+        password:
+          value: ${ELEMENT_DB_PASSWORD}
+        database: synapse
+        sslMode: prefer
+    
+    matrixAuthenticationService:
+      postgres:
+        host: element-server-suite-postgresql.communication.svc.cluster.local
+        port: 5432
+        user: synapse
+        password:
+          value: ${ELEMENT_DB_PASSWORD}
+        database: synapse
+        sslMode: prefer
+    
+    # Hostnames configuration
+    elementAdmin:
+      ingress:
+        host: admin.${DOMAIN_0}
+    
+    elementWeb:
+      ingress:
+        host: element.${DOMAIN_0}
+    
+    matrixAuthenticationService:
+      ingress:
+        host: mas.${DOMAIN_0}
+    
+    matrixRTC:
+      ingress:
+        host: mrtc.${DOMAIN_0}
+    
+    synapse:
+      ingress:
+        host: matrix.${DOMAIN_0}
+    
+    # Enable PostgreSQL subchart
     postgresql:
       enabled: true
       auth:
@@ -42,7 +79,7 @@ spec:
           size: 20Gi
           storageClass: longhorn
     
-    # Redis configuration
+    # Enable Redis subchart
     redis:
       enabled: true
       auth:
@@ -53,110 +90,3 @@ spec:
           enabled: true
           size: 5Gi
           storageClass: longhorn
-    
-    # Synapse configuration
-    synapse:
-      enabled: true
-      image:
-        repository: matrixdotorg/synapse
-        tag: v1.140.0
-      resources:
-        requests:
-          memory: 512Mi
-          cpu: 250m
-        limits:
-          memory: 2Gi
-          cpu: 1000m
-      ingress:
-        host: matrix.${DOMAIN_0}
-        className: external
-        annotations:
-          cert-manager.io/cluster-issuer: domain-0-le-prod
-          nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-          nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-          nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    
-    # Element Web configuration
-    elementWeb:
-      enabled: true
-      image:
-        repository: vectorim/element-web
-        tag: v1.12.1
-      resources:
-        requests:
-          memory: 128Mi
-          cpu: 100m
-        limits:
-          memory: 512Mi
-          cpu: 500m
-      ingress:
-        host: element.${DOMAIN_0}
-        className: external
-        annotations:
-          cert-manager.io/cluster-issuer: domain-0-le-prod
-    
-    # Matrix Authentication Service
-    matrixAuthenticationService:
-      enabled: true
-      image:
-        repository: elementhq/matrix-authentication-service
-        tag: latest
-      resources:
-        requests:
-          memory: 256Mi
-          cpu: 100m
-        limits:
-          memory: 512Mi
-          cpu: 500m
-      ingress:
-        host: mas.${DOMAIN_0}
-        className: external
-        annotations:
-          cert-manager.io/cluster-issuer: domain-0-le-prod
-    
-    # Jitsi Meet configuration
-    jitsi:
-      enabled: true
-      image:
-        repository: jitsi/web
-        tag: latest
-      resources:
-        requests:
-          memory: 256Mi
-          cpu: 100m
-        limits:
-          memory: 1Gi
-          cpu: 500m
-      ingress:
-        host: meet.${DOMAIN_0}
-        className: external
-        annotations:
-          cert-manager.io/cluster-issuer: domain-0-le-prod
-    
-    # Coturn TURN Server
-    coturn:
-      enabled: true
-      image:
-        repository: coturn/coturn
-        tag: latest
-      resources:
-        requests:
-          memory: 128Mi
-          cpu: 100m
-        limits:
-          memory: 256Mi
-          cpu: 200m
-      service:
-        type: LoadBalancer
-        ports:
-          turn: 3478
-          turn-tls: 5349
-    
-    # Well-known delegation
-    wellKnownDelegation:
-      enabled: true
-      ingress:
-        host: ${DOMAIN_0}
-        className: external
-        annotations:
-          cert-manager.io/cluster-issuer: domain-0-le-prod
