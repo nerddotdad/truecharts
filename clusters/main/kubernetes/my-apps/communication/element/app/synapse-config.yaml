@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synapse-config
+  namespace: communication
+data:
+  homeserver.yaml: |
+    server_name: "matrix.hoth.systems"
+    pid_file: /data/homeserver.pid
+    web_client_location: https://element.hoth.systems/
+    
+    database:
+      name: psycopg2
+      args:
+        user: synapse
+        password: ${ELEMENT_DB_PASSWORD}
+        database: synapse
+        host: element-advanced-postgresql.communication.svc.cluster.local
+        port: 5432
+        cp_min: 5
+        cp_max: 10
+    
+    redis:
+      enabled: true
+      host: element-advanced-redis.communication.svc.cluster.local
+      port: 6379
+      password: ${ELEMENT_REDIS_PASSWORD}
+    
+    media_store_path: /data/media_store
+    uploads_path: /data/uploads
+    
+    registration_shared_secret: ${ELEMENT_REGISTRATION_SECRET}
+    
+    enable_registration: true
+    enable_registration_without_verification: true
+    
+    report_stats: false
+    
+    listeners:
+      - port: 8008
+        tls: false
+        type: http
+        x_forwarded: true
+        bind_addresses: ['::1', '127.0.0.1', '0.0.0.0']
+        resources:
+          - names: [client, federation]
+            compress: false
+    
+    # Federation
+    federation_domain_whitelist: []
+    
+    # Logging
+    log_config: /data/homeserver.log.config
