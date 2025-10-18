@@ -54,13 +54,16 @@ spec:
       additional:
         user-config.yaml:
           config: |
-            # Disable federation for private server
+            # Configure federation for private server (allow discovery, block actual federation)
             federation_domain_whitelist: []
             federation_ip_range_whitelist: []
             allow_public_rooms_over_federation: false
             allow_public_rooms_without_auth_over_federation: false
+            # Allow federation discovery for client validation but block actual federation
             send_federation: false
             receive_federation: false
+            # Enable federation discovery (required for client validation)
+            federation_enabled: true
     
     # Hostnames configuration
     elementAdmin:
