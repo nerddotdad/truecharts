@@ -45,9 +45,10 @@ spec:
       ingress:
         host: matrix.${DOMAIN_0}
         className: external
-      # Use existing NFS PVC for media storage
+      # Use internal storage (backed up via NAS backup strategy)
       storage:
-        existingClaim: element-media-nfs
+        size: 50Gi
+        storageClassName: longhorn
         resourcePolicy: keep
       # Disable federation to make server private
       additional:
@@ -60,14 +61,6 @@ spec:
             allow_public_rooms_without_auth_over_federation: false
             send_federation: false
             receive_federation: false
-            # Use NFS for media storage (backed up via NAS)
-            media_storage_providers:
-            - module: file_system
-              store_local: true
-              store_synchronous: true
-              store_remote: false
-              config:
-                directory: /media/media_store
     
     # Hostnames configuration
     elementAdmin:

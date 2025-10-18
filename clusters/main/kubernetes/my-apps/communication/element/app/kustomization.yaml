@@ -6,4 +6,3 @@ resources:
   - cnpg-postgresql.yaml
   - cnpg-backup-credentials.yaml
   - cnpg-postgresql-credentials.yaml
-  - element-media-nfs-pvc.yaml
