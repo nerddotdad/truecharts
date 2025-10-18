@@ -27,6 +27,31 @@ spec:
     postgres:
       enabled: true
     
+    # Matrix Authentication Service Configuration
+    matrixAuthenticationService:
+      ingress:
+        host: mas.${DOMAIN_0}
+      # Configure MAS to use local authentication instead of federation
+      additional:
+        user-config.yaml:
+          config: |
+            matrix:
+              # Use local Synapse endpoint instead of federation
+              endpoint: "http://element-server-suite-synapse-main.communication.svc.cluster.local:8008"
+              # Disable federation for user lookups
+              federation:
+                enabled: false
+    
+    # Matrix RTC Configuration
+    matrixRTC:
+      ingress:
+        host: mrtc.${DOMAIN_0}
+      # Configure RTC SFU for proper networking
+      sfu:
+        # Use manual IP instead of STUN discovery
+        useStunToDiscoverPublicIP: false
+        manualIP: "192.168.30.151"
+    
     # Hostnames configuration
     elementAdmin:
       ingress:
@@ -35,14 +60,6 @@ spec:
     elementWeb:
       ingress:
         host: element.${DOMAIN_0}
-    
-    matrixAuthenticationService:
-      ingress:
-        host: mas.${DOMAIN_0}
-    
-    matrixRTC:
-      ingress:
-        host: mrtc.${DOMAIN_0}
     
     synapse:
       ingress:
