@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/core/nvidia-device-plugin/app
+  path: clusters/main/kubernetes/system/nvidia-device-plugin/app
   prune: true
   sourceRef:
     kind: GitRepository
