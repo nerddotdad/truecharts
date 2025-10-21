@@ -16,3 +16,4 @@ resources:
   - intel-device-plugin-gpu/ks.yaml
   - intel-device-plugin-operator/ks.yaml
   - namespace.yaml
+  - nvidia-device-plugin/ks.yaml

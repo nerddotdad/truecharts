@@ -34,19 +34,20 @@ spec:
       repository: ollama/ollama
       tag: latest
       pullPolicy: Always
-    
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      tolerations:
+        - operator: Exists
+          key: ai-only
+          effect: NoSchedule
+      runtimeClassName: "nvidia"
 
     workload:
       main:
         type: Deployment
         podSpec:
-          nodeSelector:
-            kubernetes.io/hostname: k8s-worker-1
-          tolerations:
-            - operator: Exists
-              key: ai-only
-              effect: NoSchedule
-          runtimeClassName: "nvidia"
           containers:
             main:
               env:
