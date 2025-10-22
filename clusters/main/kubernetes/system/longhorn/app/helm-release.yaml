@@ -37,3 +37,9 @@ spec:
       defaultClass: true
       # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
       defaultClassReplicaCount: "1"
+    # Restrict Longhorn components to control plane nodes only
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    # Ensure Longhorn system components only run on control plane
+    systemManagedComponentsNodeSelector:
+      node-role.kubernetes.io/control-plane: ""
