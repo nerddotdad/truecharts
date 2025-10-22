@@ -25,8 +25,8 @@ spec:
       retries: 3
   values:
     defaultSettings:
-      # Set to 2 for a 2-node cluster
-      defaultReplicaCount: "2"
+      # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
+      defaultReplicaCount: "1"
       # Reasonable overprovisioning
       storageOverProvisioningPercentage: "200"
       # Enable data locality for better performance
@@ -35,5 +35,5 @@ spec:
     persistence:
       # Set to false to pick another CSI as default
       defaultClass: true
-      # Set to 2 for a 2-node cluster
-      defaultClassReplicaCount: "2"
+      # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
+      defaultClassReplicaCount: "1"
