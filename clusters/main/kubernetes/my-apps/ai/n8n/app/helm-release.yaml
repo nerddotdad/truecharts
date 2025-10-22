@@ -63,7 +63,7 @@ spec:
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
       main:
-        mode: bootstrap
+        mode: standalone
         backups:
           enabled: true
           # revision: 0
