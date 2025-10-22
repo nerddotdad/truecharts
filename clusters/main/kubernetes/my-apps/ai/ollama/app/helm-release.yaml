@@ -73,13 +73,13 @@ spec:
         enabled: true
         type: nfs
         mountPath: "/root/.ollama/models"
-        path: ${NFS_APP_CONFIGS}/ollama/models
+        path: ${NFS_APPS}/ollama/models
         server: ${NAS_IP}
       config:
         enabled: true
         type: nfs
         mountPath: "/root/.ollama"
-        path: ${NFS_APP_CONFIGS}/ollama/config
+        path: ${NFS_APPS}/ollama/config
         server: ${NAS_IP}
 
     ingress:
