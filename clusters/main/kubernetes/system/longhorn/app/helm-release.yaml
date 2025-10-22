@@ -27,8 +27,8 @@ spec:
     defaultSettings:
       # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
       defaultReplicaCount: "1"
-      # Reasonable overprovisioning
-      storageOverProvisioningPercentage: "200"
+      # Reduce overprovisioning from 200% to 150% to prevent overallocation
+      storageOverProvisioningPercentage: "150"
       # Enable data locality for better performance
       defaultDataLocality: "best-effort"
       # v2DataEngine: true
