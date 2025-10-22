@@ -63,10 +63,10 @@ spec:
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
       main:
-        # mode: recovery
+        mode: recovery
         backups:
           enabled: true
-          # revision: 0
+          revision: 0
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
@@ -76,7 +76,7 @@ spec:
             immediate: true
             suspend: false
         recovery:
-          # revision: 0
+          revision: 0
           credentials: cloudflare_r2
     ingress:
       main:
