@@ -29,7 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
@@ -37,7 +36,6 @@ spec:
         - operator: Exists
           key: ai-only
           effect: NoSchedule
-              
 
     deployment:
       N8N_HOST: "n8n.hoth.systems"
