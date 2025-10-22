@@ -29,11 +29,12 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Use standard Ollama image
-    image:
-      repository: ollama/ollama
-      tag: latest
-      pullPolicy: Always
+    securityContext:
+      container:
+        runAsNonRoot: false
+        readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
 
     podOptions:
       nodeSelector:
@@ -69,18 +70,26 @@ spec:
               effect: NoSchedule
 
     persistence:
-      models:
-        enabled: true
-        type: nfs
-        mountPath: "/root/.ollama/models"
-        path: ${NFS_APPS}/ollama/models
-        server: ${NAS_IP}
       config:
         enabled: true
         type: nfs
         mountPath: "/root/.ollama"
         path: ${NFS_APPS}/ollama/config
         server: ${NAS_IP}
+        targetSelector:
+          main:
+            main:
+              mountPath: "/root/.ollama"
+      data:
+        enabled: true
+        type: nfs
+        mountPath: "/app/backend/data"
+        path: ${NFS_APPS}/ollama/data
+        server: ${NAS_IP}
+        targetSelector:
+          ui:
+            ui:
+              mountPath: "/app/backend/data"
 
     ingress:
       main:
