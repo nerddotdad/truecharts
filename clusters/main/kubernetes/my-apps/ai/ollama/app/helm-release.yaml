@@ -45,10 +45,15 @@ spec:
           effect: NoSchedule
       runtimeClassName: "nvidia"
 
+    resources:
+        limits:
+          nvidia.com/gpu: 1
+
     workload:
       main:
         type: Deployment
         podSpec:
+          runtimeClassName: "nvidia"
           containers:
             main:
               env:
