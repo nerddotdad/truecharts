@@ -68,6 +68,20 @@ spec:
               key: ai-only
               effect: NoSchedule
 
+    persistence:
+      models:
+        enabled: true
+        type: nfs
+        mountPath: "/root/.ollama/models"
+        path: ${NFS_APP_CONFIGS}/ollama/models
+        server: ${NAS_IP}
+      config:
+        enabled: true
+        type: nfs
+        mountPath: "/root/.ollama"
+        path: ${NFS_APP_CONFIGS}/ollama/config
+        server: ${NAS_IP}
+
     ingress:
       main:
         primary: true

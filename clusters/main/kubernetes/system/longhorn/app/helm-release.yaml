@@ -25,13 +25,15 @@ spec:
       retries: 3
   values:
     defaultSettings:
-      # Increase to 3 for a multi-node cluster
-      defaultReplicaCount: "3"
-      # Overprovisioning might be needed when using volsync
-      storageOverProvisioningPercentage: "100000"
+      # Set to 2 for a 2-node cluster
+      defaultReplicaCount: "2"
+      # Reasonable overprovisioning
+      storageOverProvisioningPercentage: "200"
+      # Enable data locality for better performance
+      defaultDataLocality: "best-effort"
       # v2DataEngine: true
     persistence:
       # Set to false to pick another CSI as default
       defaultClass: true
-      # Increase to 3 for a multi-node cluster
-      defaultClassReplicaCount: "3"
+      # Set to 2 for a 2-node cluster
+      defaultClassReplicaCount: "2"

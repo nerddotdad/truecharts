@@ -61,7 +61,8 @@ nodes:
         - 1.1.1.1
         - 8.8.8.8
       installDiskSelector:
-        size: <= 3000GB
+        size: '>= 100GB'
+        transport: "nvme"
       networkInterfaces:
         # suffix is the adapter mac adres.
         - interface: enp3s0
