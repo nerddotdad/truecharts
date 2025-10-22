@@ -29,16 +29,14 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    workload:
-      main:
-        type: Deployment
-        podSpec:
-          nodeSelector:
-            kubernetes.io/hostname: k8s-worker-1
-          tolerations:
-            - operator: Exists
-              key: ai-only
-              effect: NoSchedule
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      tolerations:
+        - operator: Exists
+          key: ai-only
+          effect: NoSchedule
               
 
     deployment:

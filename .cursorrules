@@ -1,0 +1,46 @@
+# TrueCharts GitOps Cluster Management Rules
+
+## Core GitOps Principle
+**ALL cluster changes MUST be made through configuration files and committed to the repository. Flux will automatically apply changes to the cluster.**
+
+### Required Workflow for Cluster Changes:
+1. **Modify configuration files** in the repository (YAML manifests, Helm releases, etc.)
+2. **Commit changes** to Git with descriptive commit messages
+3. **Push to repository** (typically `main` branch)
+4. **Monitor Flux reconciliation** using `kubectl get helmrelease` and `kubectl describe` commands
+5. **Validate changes** using `kubectl` commands to verify the desired state
+
+### Prohibited Actions:
+- ❌ **NEVER** use `kubectl apply`, `kubectl patch`, or direct cluster modifications
+- ❌ **NEVER** manually restart deployments or daemonsets via kubectl
+- ❌ **NEVER** edit resources directly in the cluster
+- ❌ **NEVER** use `kubectl scale`, `kubectl rollout restart`, or similar commands
+
+### Required Actions:
+- ✅ **ALWAYS** edit configuration files in the repository
+- ✅ **ALWAYS** commit and push changes to Git
+- ✅ **ALWAYS** monitor Flux reconciliation status
+- ✅ **ALWAYS** validate changes using kubectl describe/get commands
+
+### Validation Commands:
+After making changes, use these commands to verify:
+- `kubectl get helmrelease <name> -n <namespace>` - Check Helm release status
+- `kubectl describe helmrelease <name> -n <namespace>` - Detailed status and events
+- `kubectl get pods -n <namespace>` - Verify pod status
+- `kubectl describe pod <pod-name> -n <namespace>` - Check pod details and events
+- `kubectl get events -n <namespace> --sort-by='.lastTimestamp'` - Recent events
+
+### GitOps Benefits:
+- **Audit trail**: All changes tracked in Git history
+- **Rollback capability**: Easy to revert changes
+- **Consistency**: Same configuration across environments
+- **Automation**: Flux handles deployment automatically
+- **Collaboration**: Team members can review changes via pull requests
+
+## Project Structure
+This is a TrueCharts GitOps repository using Flux for cluster management. Key directories:
+- `clusters/main/kubernetes/` - Kubernetes manifests and Helm releases
+- `repositories/` - Helm repository configurations
+- `clusters/main/talos/` - Talos Linux configuration
+
+Remember: **Configuration as Code** - If it's not in Git, it doesn't exist!
