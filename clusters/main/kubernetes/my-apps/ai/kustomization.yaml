@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - n8n/ks.yaml
-  - ollama/ks.yaml
+  # - ollama/ks.yaml
