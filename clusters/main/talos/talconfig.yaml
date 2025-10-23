@@ -79,6 +79,11 @@ nodes:
         ai-only: "true:NoSchedule"
       schematic:
         customization:
+          extraKernelArgs:
+            # Suppress PCIe bus errors from failing Atheros network adapter
+            - pci=nomsi          # Disable Message Signaled Interrupts
+            - pci=noaer          # Disable Advanced Error Reporting
+            - pcie_aspm=off      # Disable Active State Power Management
           systemExtensions:
             officialExtensions:
               - siderolabs/util-linux-tools
