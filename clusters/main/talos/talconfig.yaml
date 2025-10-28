@@ -54,48 +54,47 @@ nodes:
               # - siderolabs/nvidia-container-toolkit-lts
       # patches:
       #   - "@./patches/gpu.yaml"
-    # - hostname: k8s-worker-1
-    #   ipAddress: ${WORKER1IP_IP}
-    #   controlPlane: false
-    #   nameservers:
-    #     - 1.1.1.1
-    #     - 8.8.8.8
-    #   installDiskSelector:
-    #     size: '>= 100GB'
-    #     transport: "nvme"
-    #   networkInterfaces:
-    #     # suffix is the adapter mac adres.
-    #     - interface: enp3s0
-    #       addresses:
-    #         - ${WORKER1IP_CIDR}
-    #       routes:
-    #         - network: 0.0.0.0/0
-    #           gateway: ${GATEWAY}
-    #   nodeLabels:
-    #     node-type: ai-dedicated
-    #     workload: ai-services
-    #     hardware: gaming-laptop
-    #   nodeTaints:
-    #     ai-only: "true:NoSchedule"
-    #   schematic:
-    #     customization:
-    #       extraKernelArgs:
-    #         # Suppress PCIe bus errors from failing Atheros network adapter
-    #         - pci=nomsi          # Disable Message Signaled Interrupts
-    #         - pci=noaer          # Disable Advanced Error Reporting
-    #         - pcie_aspm=off      # Disable Active State Power Management
-    #       systemExtensions:
-    #         officialExtensions:
-    #           - siderolabs/util-linux-tools
-    #           - siderolabs/iscsi-tools
-    #           - siderolabs/qemu-guest-agent
-    #           - siderolabs/i915
-    #           - siderolabs/intel-ucode
-    #           - siderolabs/mei
-    #           - siderolabs/nonfree-kmod-nvidia-lts
-    #           - siderolabs/nvidia-container-toolkit-lts
-    #   patches:
-    #     - "@./patches/gpu.yaml"
+    - hostname: k8s-worker-1
+      ipAddress: ${WORKER1IP_IP}
+      controlPlane: false
+      nameservers:
+        - 1.1.1.1
+        - 8.8.8.8
+      installDiskSelector:
+        size: '>= 100GB'
+        transport: "nvme"
+        # Alternative: If you have multiple NVMe drives, you can specify by model:
+        # model: "Samsung SSD 980 PRO 1TB"
+        # Or by name if known:
+        # name: "nvme0n1"
+      networkInterfaces:
+        # Realtek 2.5Gbe PCIe adapter
+        # Use "ip link" in Talos installer to find the correct interface name
+        # Common names: enp4s0, enp5s0, enp6s0, etc.
+        - interface: enp3s0
+          addresses:
+            - ${WORKER1IP_CIDR}
+          routes:
+            - network: 0.0.0.0/0
+              gateway: ${GATEWAY}
+      nodeLabels:
+        node-type: ai-dedicated
+        workload: ai-services
+        hardware: ai-machine-1
+      # nodeTaints removed: nodes don't have RBAC permission to modify their own taints
+      # Apply taints via GitOps/Kubernetes manifests instead if needed
+      schematic:
+        customization:
+          systemExtensions:
+            officialExtensions:
+              - siderolabs/util-linux-tools
+              - siderolabs/iscsi-tools
+              - siderolabs/qemu-guest-agent
+              - siderolabs/amd-ucode
+              - siderolabs/nonfree-kmod-nvidia-lts
+              - siderolabs/nvidia-container-toolkit-lts
+      patches:
+        - "@./patches/gpu.yaml"
 controlPlane:
     patches:
         - '@./patches/controlplane.yaml'
@@ -136,6 +135,7 @@ worker:
      - name: nvme_tcp
      - name: vfio_pci
      - name: uio_pci_generic
+     - name: r8169  # Realtek 2.5Gbe network driver
     schematic:
         customization:
             systemExtensions:

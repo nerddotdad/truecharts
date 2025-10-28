@@ -7,7 +7,20 @@ metadata:
 data:
   apply-taint.sh: |
     #!/bin/bash
-    # Apply taint to AI worker node
+    # Apply taint to AI worker node k8s-worker-1
+    # Check if node exists
+    if ! kubectl get node k8s-worker-1 &>/dev/null; then
+      echo "Node k8s-worker-1 not found"
+      exit 0
+    fi
+    
+    # Check if taint already exists
+    if kubectl get node k8s-worker-1 -o jsonpath='{.spec.taints[*].key}' | grep -q "ai-only"; then
+      echo "Taint ai-only already exists on k8s-worker-1"
+      exit 0
+    fi
+    
+    # Apply taint
     kubectl taint node k8s-worker-1 ai-only=1:NoSchedule --overwrite
     echo "Applied taint to k8s-worker-1"
 ---
@@ -17,6 +30,8 @@ metadata:
   name: apply-node-taint
   namespace: system
 spec:
+  ttlSecondsAfterFinished: 300  # Delete job 5 minutes after completion
+  backoffLimit: 3
   template:
     spec:
       serviceAccountName: node-config-sa
