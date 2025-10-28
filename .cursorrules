@@ -10,6 +10,38 @@
 4. **Monitor Flux reconciliation** using `kubectl get helmrelease` and `kubectl describe` commands
 5. **Validate changes** using `kubectl` commands to verify the desired state
 
+### Tools to Use
+
+- **flux version 2.7.2** flux cli is installed and can be used for checking on all things deployment related.
+- **talosctl** my nodes run talos and you can use talosctl to get information about the baremetal os.
+    - **client version**: v1.11.3
+    - **server versions**: v1.11.2
+- **kustomize** is how my repository is mapped
+- **clustertool** is a helper script that wraps common talosctl, kubernetes, flux, and other commands for setting up and managing a truecharts cluster.
+- **truecharts cluster** is used as the helmchart platform.
+    - **truecharts common chart settings** can be found here https://truecharts.org/common/
+    - **truecharts public example clusters** can be used to look up examples on how truecharts is used in the wild.
+        - https://github.com/alfi0812/talos
+        - https://github.com/kqmaverick/cluster
+        - https://github.com/PrivatePuffin/cluster
+        - https://github.com/xstar97/cluster
+        - https://github.com/Boemeltrein/TalosCluster
+- **Files and Folders**
+    - **talconfig.yaml** Contains your Talos Cluster layout
+    - **clusterenv.yaml** Contains configuration options for both your Charts and Talos Cluster
+    - **talsecret.yaml** Contains Talos Cluster encryption keys
+    - **age.agekey** Contains SOPS encryption keys which can be used to encrypt data. It’s IMPERATIVE you save this specific file elsewhere as a backup, not doing so will result in future data loss
+    - **.sops.yaml** Contains specifications on how to decrypt any encrypted files found
+    - **.pre-commit-config.yaml** Contains configurations for users of “pre-commit”
+    - **talconfig.json** Contains the validations “schema” for talconfig.yaml
+    - **/patches/** This folder contains our custom Talos Machine Configuration patches, these should not be altered by any end-user. however, you can add your own here
+    - **/generated/** This folder will contain some pre-generated files that will be used to bootstrap the cluster and, if configured, can be consumed by fluxcd for automatic updates and manual configuration
+    - **.devcontainer** Contains a preconfigured dev-container for vscode usage of clustertool
+    - **.vscode** Contains recommended extensions for your talos cluster in vscode
+    - **/repositories/** Contains all repositories used within fluxcd helm-releases
+    - **/clusters/** Contains all kubernetes clusters you run within the same clustertool github repo
+    - **/kubernetes/** Contains all the files of your kubernetes cluster
+
 ### Prohibited Actions:
 - ❌ **NEVER** use `kubectl apply`, `kubectl patch`, or direct cluster modifications
 - ❌ **NEVER** manually restart deployments or daemonsets via kubectl
