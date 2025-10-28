@@ -30,7 +30,7 @@ machine:
           - rw
   features:
     hostDNS:
-      enabled: false
+      enabled: true
       forwardKubeDNSToHost: true
       resolveMemberNames: true
   sysctls:

@@ -37,12 +37,16 @@ spec:
         runAsGroup: 0
 
     podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
-      tolerations:
-        - operator: Exists
-          key: ai-only
-          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-type
+                    operator: In
+                    values:
+                      - ai-dedicated
       runtimeClassName: "nvidia"
 
     resources:
@@ -67,12 +71,16 @@ spec:
       ui:
         type: Deployment
         podSpec:
-          nodeSelector:
-            kubernetes.io/hostname: k8s-worker-1
-          tolerations:
-            - operator: Exists
-              key: ai-only
-              effect: NoSchedule
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - key: node-type
+                        operator: In
+                        values:
+                          - ai-dedicated
 
     persistence:
       config:

@@ -1,7 +1,7 @@
 machine:
   kubelet:
     extraConfig:
-      registerWithTaints:
-        - key: ai-only
-          value: "true"
-          effect: NoSchedule
+      # No taints - use node labels and affinity instead
+      # Taints prevent other workloads from scheduling, which breaks DNS
+      # Node labels allow affinity-based preferred scheduling instead
+      registerWithTaints: []
