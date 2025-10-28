@@ -25,6 +25,15 @@ spec:
     remediation:
       retries: 3
   values:
+    tolerations:
+      - key: ai-only
+        operator: Exists
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
     image:
       repository: nvcr.io/nvidia/k8s-device-plugin
       tag: v0.18.0
