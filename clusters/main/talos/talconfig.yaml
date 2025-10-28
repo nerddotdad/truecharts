@@ -42,14 +42,14 @@ nodes:
             ip: ${VIP}
       schematic:
         customization:
-          systemExtensions:
-            officialExtensions:
-              - siderolabs/util-linux-tools
-              - siderolabs/iscsi-tools
-              - siderolabs/qemu-guest-agent
-              - siderolabs/i915
-              - siderolabs/intel-ucode
-              - siderolabs/mei
+            systemExtensions:
+              officialExtensions:
+                - siderolabs/util-linux-tools
+                - siderolabs/iscsi-tools
+                - siderolabs/qemu-guest-agent  # Enabled for VM control plane
+                - siderolabs/i915
+                - siderolabs/intel-ucode
+                - siderolabs/mei
               # - siderolabs/nonfree-kmod-nvidia-lts
               # - siderolabs/nvidia-container-toolkit-lts
       # patches:
@@ -89,7 +89,7 @@ nodes:
             officialExtensions:
               - siderolabs/util-linux-tools
               - siderolabs/iscsi-tools
-              - siderolabs/qemu-guest-agent
+              # - siderolabs/qemu-guest-agent  # Disabled for physical hardware
               - siderolabs/amd-ucode
               - siderolabs/nonfree-kmod-nvidia-lts
               - siderolabs/nvidia-container-toolkit-lts
@@ -111,7 +111,7 @@ controlPlane:
                 officialExtensions:
                     - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
-                    - siderolabs/qemu-guest-agent
+                    - siderolabs/qemu-guest-agent  # Enabled for VM control plane
     machineFiles:
     - content: |
         [plugins."io.containerd.cri.v1.images"] 
@@ -143,7 +143,7 @@ worker:
                 officialExtensions:
                     - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
-                    - siderolabs/qemu-guest-agent
+                    # - siderolabs/qemu-guest-agent  # Disabled for physical hardware
     machineFiles:
     - content: |
         [plugins."io.containerd.cri.v1.images"] 
