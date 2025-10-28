@@ -6,8 +6,6 @@ resources:
   - kubernetes-reflector/ks.yaml
   - longhorn/ks.yaml
   - metallb/ks.yaml
-  - node-config/ks.yaml
-  # - openebs/ks.yaml
   - snapshot-controller/ks.yaml
   - spegel/ks.yaml
   - system-upgrade-controller/ks.yaml
