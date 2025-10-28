@@ -30,13 +30,13 @@ spec:
     keepHistory: false
   values:
     # moves pods to the worker node.
-    # podOptions:
-    #   nodeSelector:
-    #     kubernetes.io/hostname: k8s-worker-1
-    #   tolerations:
-    #     - operator: Exists
-    #       key: ai-only
-    #       effect: NoSchedule
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      tolerations:
+        - operator: Exists
+          key: ai-only
+          effect: NoSchedule
 
     deployment:
       N8N_HOST: "n8n.hoth.systems"
