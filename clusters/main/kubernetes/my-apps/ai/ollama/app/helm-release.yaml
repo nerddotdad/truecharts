@@ -92,9 +92,23 @@ spec:
       main:
         primary: true
         enabled: true
-        ingressClassName: internal
+        ingressClassName: external
         hosts:
           - host: ollama.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+      api:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: ollama-api.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
