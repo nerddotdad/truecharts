@@ -1,0 +1,16 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: main
+  namespace: metallb
+  annotations:
+    fluxcd.io/ignore: "false"
+spec:
+  ipAddressPools:
+    - main
+  nodeSelectors:
+    - matchLabels:
+        kubernetes.io/hostname: k8s-worker-1
+  interfaces:
+    - enp3s0
+

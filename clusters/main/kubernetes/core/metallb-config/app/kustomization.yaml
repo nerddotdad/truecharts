@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - helm-release.yaml
+  - l2advertisement.yaml
