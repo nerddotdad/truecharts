@@ -80,7 +80,7 @@ spec:
             enabled: true
             port: 47990
             targetPort: 47990
-            protocol: TCP
+            protocol: tcp
     ingress:
       main:
         enabled: true
