@@ -45,6 +45,10 @@ spec:
         podSpec:
           containers:
             main:
+              ports:
+                - name: sunshine
+                  containerPort: 47990
+                  protocol: TCP
               probes:
                 liveness:
                   enabled: false
@@ -68,11 +72,34 @@ spec:
                 # ENABLE_EVDEV_INPUTS: false
                 # NVIDIA_DRIVER_CAPABILITIES: "all"
                 # NVIDIA_VISIBLE_DEVICES: "all"
+    service:
+      sunshine:
+        enabled: true
+        ports:
+          sunshine:
+            enabled: true
+            port: 47990
+            targetPort: 47990
+            protocol: TCP
     ingress:
       main:
         enabled: true
         ingressClassName: external
         hosts: 
+          - host: vnc.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+      sunshine:
+        enabled: true
+        ingressClassName: external
+        hosts:
           - host: sunshine.${DOMAIN_0}
             paths:
               - path: /
