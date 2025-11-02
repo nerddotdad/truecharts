@@ -73,29 +73,37 @@ spec:
             protocol: http
             port: 8083
           sunshine-web:
+            enabled: true
             port: 47990
+            targetPort: 47990
             protocol: http
           sunshine-tcp-1:
+            enabled: true
             port: 47984
             targetPort: 47984
             protocol: tcp
           sunshine-tcp-2:
+            enabled: true
             port: 47989
             targetPort: 47989
             protocol: tcp 
           sunshine-tcp-3:
+            enabled: true
             port: 48010
             targetPort: 48010
             protocol: tcp 
           sunshine-udp-1:
+            enabled: true
             port: 47998
             targetPort: 47998
             protocol: udp
           sunshine-udp-2:
+            enabled: true
             port: 47999
             targetPort: 47999
             protocol: udp
           sunshine-udp-3:
+            enabled: true
             port: 48000
             targetPort: 48000
             protocol: udp
