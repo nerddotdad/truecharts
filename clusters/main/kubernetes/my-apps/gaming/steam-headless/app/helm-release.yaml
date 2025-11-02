@@ -45,17 +45,6 @@ spec:
         podSpec:
           containers:
             main:
-              ports:
-                - name: sunshine
-                  containerPort: 47990
-                  protocol: tcp
-              probes:
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-                startup:
-                  enabled: false
               env:
                 PORT_NOVNC_WEB: "{{ .Values.service.main.ports.main.port }}"
                 MODE: "primary"
@@ -70,11 +59,14 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 # ENABLE_EVDEV_INPUTS: false
-                # NVIDIA_DRIVER_CAPABILITIES: "all"
-                # NVIDIA_VISIBLE_DEVICES: "all"
     service:
       sunshine:
         enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${STEAM_IP}
+        integrations:
+          metallb:
+            enabled: true
         ports:
           sunshine:
             enabled: true
@@ -86,26 +78,10 @@ spec:
         enabled: true
         ingressClassName: external
         hosts: 
-          - host: vnc.${DOMAIN_0}
+          - host: steam.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-      sunshine:
-        enabled: true
-        ingressClassName: external
-        hosts:
-          - host: sunshine.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        serviceName: sunshine
-        servicePort: 47990
         integrations:
           traefik:
             enabled: false
