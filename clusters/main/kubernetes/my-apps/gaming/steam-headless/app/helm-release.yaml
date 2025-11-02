@@ -48,7 +48,7 @@ spec:
               ports:
                 - name: sunshine
                   containerPort: 47990
-                  protocol: TCP
+                  protocol: tcp
               probes:
                 liveness:
                   enabled: false
@@ -104,6 +104,8 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
+        serviceName: sunshine
+        servicePort: 47990
         integrations:
           traefik:
             enabled: false
