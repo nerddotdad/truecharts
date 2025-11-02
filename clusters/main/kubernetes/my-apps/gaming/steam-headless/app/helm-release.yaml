@@ -63,9 +63,9 @@ spec:
                 SUNSHINE_USER: "admin"
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
-                ENABLE_EVDEV_INPUTS: false
-                NVIDIA_DRIVER_CAPABILITIES: "all"
-                NVIDIA_VISIBLE_DEVICES: "all"
+                # ENABLE_EVDEV_INPUTS: false
+                # NVIDIA_DRIVER_CAPABILITIES: "all"
+                # NVIDIA_VISIBLE_DEVICES: "all"
     ingress:
       main:
         enabled: true
