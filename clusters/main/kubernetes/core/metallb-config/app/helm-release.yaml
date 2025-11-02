@@ -34,6 +34,9 @@ spec:
       - name: main
         addressPools:
           - main
+        interfaces:
+          - ens3
+          - enp3s0
     ipAddressPools:
       - name: main
         autoAssign: false
