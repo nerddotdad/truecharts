@@ -68,11 +68,35 @@ spec:
           metallb:
             enabled: true
         ports:
-          sunshine:
-            enabled: true
+          sunshine-web:
             port: 47990
             targetPort: 47990
             protocol: tcp
+          sunshine-tcp-1:
+            port: 47984
+            targetPort: 47984
+            protocol: tcp
+          sunshine-tcp-2:
+            port: 47989
+            targetPort: 47989
+            protocol: tcp 
+          sunshine-tcp-3:
+            port: 48010
+            targetPort: 48010
+            protocol: tcp 
+          sunshine-udp-1:
+            port: 47998
+            targetPort: 47998
+            protocol: udp
+          sunshine-udp-2:
+            port: 47999
+            targetPort: 47999
+            protocol: udp
+          sunshine-udp-3:
+            port: 48000
+            targetPort: 48000
+            protocol: udp
+
     ingress:
       main:
         enabled: true
