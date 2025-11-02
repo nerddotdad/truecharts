@@ -60,7 +60,7 @@ spec:
                 # USER_PASSWORD: ""
                 # ENABLE_EVDEV_INPUTS: false
     service:
-      sunshine:
+      main:
         enabled: true
         type: LoadBalancer
         loadBalancerIP: ${STEAM_IP}
@@ -68,10 +68,12 @@ spec:
           metallb:
             enabled: true
         ports:
+          main:
+            protocol: http
+            port: 8083
           sunshine-web:
             port: 47990
-            targetPort: 47990
-            protocol: tcp
+            protocol: http
           sunshine-tcp-1:
             port: 47984
             targetPort: 47984
