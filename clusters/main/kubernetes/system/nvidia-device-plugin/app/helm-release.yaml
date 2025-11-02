@@ -44,6 +44,12 @@ spec:
           version: v1
           flags:
             migStrategy: none
+          sharing:
+            timeSlicing:
+              renameByDefault: false
+              resources:
+                - name: nvidia.com/gpu
+                  replicas: 2
     gfd:
       enabled: true
     nodeFeatureDiscovery:
