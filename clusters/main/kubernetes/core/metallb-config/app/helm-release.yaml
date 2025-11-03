@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    L2Advertisements:
+      - name: main
+        addressPools:
+          - main
     ipAddressPools:
       - name: main
         autoAssign: false
