@@ -37,36 +37,16 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
+          cpu: 4000m
+          memory: 8Gi
         limits:
           nvidia.com/gpu: 1
-
-    configmap:
-      init-script:
-        enabled: true
-        data:
-          udevd-init.sh: |
-            #!/bin/bash
-            # Start systemd-udevd daemon for Sunshine input support
-            # See: https://github.com/Steam-Headless/docker-steam-headless/issues/107
-            # This script is executed on container startup from ~/init.d/
-            
-            # Start systemd-udevd daemon
-            /lib/systemd/systemd-udevd --daemon || true
-            
-            # Reload udev rules to ensure proper device recognition
-            udevadm control --reload-rules && udevadm trigger || true
-            
-            # Log that the script ran
-            echo "[$(date)] Started systemd-udevd daemon for Sunshine input support" >> /tmp/udevd-init.log
+          cpu: 4000m
+          memory: 8Gi
 
     workload:
       main:
         podSpec:
-          volumes:
-            - name: init-script
-              configMap:
-                name: steam-headless-init-script
-                defaultMode: 0755
           containers:
             main:
               env:
@@ -83,9 +63,6 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 ENABLE_EVDEV_INPUTS: true
-              volumeMounts:
-                - name: init-script
-                  mountPath: /home/default/init.d
     service:
       main:
         enabled: true
