@@ -51,10 +51,14 @@ spec:
             script-prep:
               enabled: true
               type: init
-              imageSelector: image
-              stdin: true
-              tty: true
-              command: sh -c 'cp /home/default/tmp/*.sh /home/default/init.d/ && chmod 755 /home/default/init.d/*.sh'
+              image: docker.io/library/alpine:3.20
+              command:
+                - sh
+                - -c
+                - >
+                  cp /home/default/tmp/udevd-init.sh /home/default/init.d/ &&
+                  chown root:input /home/default/init.d/udevd-init.sh &&
+                  chmod 755 /home/default/init.d/udevd-init.sh
           containers:
             main:
               env:
@@ -106,12 +110,22 @@ spec:
         enabled: true
         type: configmap
         objectName: init-scripts
-        mountPath: /home/default/tmp/
-        readOnly: false
-        defaultMode: "0777"
-        items:
-          - key: udevd-init.sh
-            path: udevd-init.sh
+        targetSelector:
+          main:
+            script-prep:
+              mountPath: /home/default/tmp
+              readOnly: true
+              defaultMode: "0755"
+              items:
+                - key: udevd-init.sh
+                  path: udevd-init.sh
+
+      home:
+        targetSelector:
+          main:
+            script-prep:
+              mountPath: /home/default
+              readOnly: false
             
     service:
       main:
