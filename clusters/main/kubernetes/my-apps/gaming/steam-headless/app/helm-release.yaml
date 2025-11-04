@@ -98,12 +98,10 @@ spec:
         enabled: true
         type: configmap
         objectName: init-scripts
-        mountPath: /home/default/init.d
-        readOnly: false
+        mountPath: /home/default/init.d/udevd-init.sh
+        subPath: udevd-init.sh
+        readOnly: true
         defaultMode: "0755"
-        items:
-          - key: udevd-init.sh
-            path: udevd-init.sh
             
     service:
       main:
