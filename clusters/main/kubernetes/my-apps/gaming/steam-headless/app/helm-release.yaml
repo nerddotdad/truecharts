@@ -47,11 +47,6 @@ spec:
     workload:
       main:
         podSpec:
-          volumes:
-            - name: uinput
-              hostPath:
-                path: /dev/uinput
-                type: FileOrCreate
           containers:
             main:
               env:
@@ -68,9 +63,6 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 ENABLE_EVDEV_INPUTS: true
-              volumeMounts:
-                - name: uinput
-                  mountPath: /dev/uinput
     service:
       main:
         enabled: true
