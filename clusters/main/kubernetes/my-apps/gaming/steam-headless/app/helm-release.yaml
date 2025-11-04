@@ -32,6 +32,21 @@ spec:
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
+        nvidia.com/gpu: present
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - k8s-worker-1
+                  - key: nvidia.com/gpu
+                    operator: Exists
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       runtimeClassName: "nvidia"
 
     resources:

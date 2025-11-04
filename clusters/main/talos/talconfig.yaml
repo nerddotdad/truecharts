@@ -93,10 +93,10 @@ nodes:
               - siderolabs/amd-ucode
               - siderolabs/nonfree-kmod-nvidia-lts
               - siderolabs/nvidia-container-toolkit-lts
+              - siderolabs/uinput
       patches:
         - "@./patches/gpu.yaml"
         - "@./patches/ai.yaml"
-        - '@./patches/uinput.yaml'
 controlPlane:
     patches:
         - '@./patches/controlplane.yaml'
