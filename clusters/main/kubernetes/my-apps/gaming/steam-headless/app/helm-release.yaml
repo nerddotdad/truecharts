@@ -63,6 +63,47 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 ENABLE_EVDEV_INPUTS: true
+    configmap:
+      init-scripts:
+        enabled: true
+        data:
+          udevd-init.sh: |
+            #!/bin/bash
+            # Start systemd-udevd daemon for Sunshine input support
+            # See: https://github.com/Steam-Headless/docker-steam-headless/issues/107
+            /lib/systemd/systemd-udevd --daemon || true
+            udevadm control --reload-rules && udevadm trigger || true
+            
+            # Ensure /dev/uinput exists and has proper permissions
+            if [ ! -e /dev/uinput ]; then
+                # Create uinput device node (major 10, minor 223)
+                # This requires uinput kernel module to be loaded on the host
+                mknod /dev/uinput c 10 223 2>/dev/null || true
+            fi
+            
+            # Set permissions for uinput (allow input group access)
+            chmod 666 /dev/uinput 2>/dev/null || true
+            chown root:input /dev/uinput 2>/dev/null || true
+            
+            # Log that the script ran
+            echo "[$(date)] Started systemd-udevd and configured /dev/uinput for Sunshine" >> /tmp/udevd-init.log
+            
+            # Restart Sunshine to pick up the new input configuration
+            # Wait a bit for udevd to settle, then restart sunshine service
+            sleep 2
+            supervisorctl restart sunshine 2>/dev/null || true
+
+    persistence:
+      init-scripts:
+        enabled: true
+        type: configmap
+        objectName: init-scripts
+        mountPath: /home/default/init.d
+        defaultMode: "0755"
+        items:
+          - key: udevd-init.sh
+            path: udevd-init.sh
+            
     service:
       main:
         enabled: true
@@ -128,3 +169,6 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+
+
+            
