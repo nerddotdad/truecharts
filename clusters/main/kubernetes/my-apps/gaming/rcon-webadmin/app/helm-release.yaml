@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: rcon-webadmin
-      version: 11.11.1
+      version: 11.11.3
       sourceRef:
         kind: HelmRepository
         name: truecharts
