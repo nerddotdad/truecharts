@@ -47,13 +47,23 @@ spec:
     workload:
       main:
         podSpec:
+          initContainers:
+            init-container-name:
+              enabled: true
+              type: init
+              imageSelector: image
+              stdin: true
+              tty: true
+              command: sh -c 'cp /home/default/tmp/*.sh /home/default/init.d/ && chmod 755 /home/default/init.d/*.sh'
+              volumeMounts:
+                - name: init-scripts
+                  mountPath: /home/default/tmp/
+                  readOnly: false
+                - name: init-scripts
+                  mountPath: /home/default/init.d/
+                  readOnly: false
           containers:
             main:
-              command:
-                - /bin/bash
-                - -c
-                - |
-                  cp /home/default/tmp/*.sh /home/default/init.d/
               env:
                 PORT_NOVNC_WEB: "{{ .Values.service.main.ports.main.port }}"
                 MODE: "primary"
