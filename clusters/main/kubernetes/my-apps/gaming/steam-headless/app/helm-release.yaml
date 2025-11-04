@@ -48,7 +48,7 @@ spec:
       main:
         podSpec:
           initContainers:
-            init-container-name:
+            script-prep:
               enabled: true
               type: init
               imageSelector: image
