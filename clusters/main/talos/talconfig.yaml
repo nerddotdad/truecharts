@@ -97,6 +97,7 @@ nodes:
       patches:
         - "@./patches/gpu.yaml"
         - "@./patches/ai.yaml"
+        - "@./patches/uinput.yaml"
 controlPlane:
     patches:
         - '@./patches/controlplane.yaml'
