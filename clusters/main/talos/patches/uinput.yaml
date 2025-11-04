@@ -1,0 +1,5 @@
+- op: add
+  path: /machine/kernel
+  value:
+    modules:
+     - "name": "uinput"
