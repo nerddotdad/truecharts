@@ -145,6 +145,7 @@ worker:
                 officialExtensions:
                     - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
+                    - siderolabs/uinput  # Required for Sunshine input support (/dev/uinput)
                     # - siderolabs/qemu-guest-agent  # Disabled for physical hardware
     machineFiles:
     - content: |
