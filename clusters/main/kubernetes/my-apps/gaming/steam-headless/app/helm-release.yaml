@@ -55,13 +55,6 @@ spec:
               stdin: true
               tty: true
               command: sh -c 'cp /home/default/tmp/*.sh /home/default/init.d/ && chmod 755 /home/default/init.d/*.sh'
-              volumeMounts:
-                - name: init-scripts
-                  mountPath: /home/default/tmp/
-                  readOnly: false
-                - name: init-scripts
-                  mountPath: /home/default/init.d/
-                  readOnly: false
           containers:
             main:
               env:
