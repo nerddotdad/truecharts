@@ -43,6 +43,11 @@ spec:
     workload:
       main:
         podSpec:
+          volumes:
+            - name: init-script
+              configMap:
+                name: steam-headless-init-script
+                defaultMode: 0755
           containers:
             main:
               env:
@@ -59,18 +64,9 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 ENABLE_EVDEV_INPUTS: true
-              lifecycle:
-                postStart:
-                  exec:
-                    command:
-                      - /bin/sh
-                      - -c
-                      - |
-                        # Start systemd-udevd daemon for Sunshine input support
-                        # See: https://github.com/Steam-Headless/docker-steam-headless/issues/107
-                        /lib/systemd/systemd-udevd --daemon || true
-                        # Reload udev rules to ensure proper device recognition
-                        udevadm control --reload-rules && udevadm trigger || true
+              volumeMounts:
+                - name: init-script
+                  mountPath: /home/default/init.d
     service:
       main:
         enabled: true
