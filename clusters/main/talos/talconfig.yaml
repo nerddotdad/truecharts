@@ -138,6 +138,7 @@ worker:
      - name: vfio_pci
      - name: uio_pci_generic
      - name: r8169  # Realtek 2.5Gbe network driver
+     - name: uinput  # Required for Sunshine input support (/dev/uinput)
     schematic:
         customization:
             systemExtensions:
