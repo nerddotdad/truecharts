@@ -100,7 +100,7 @@ spec:
         objectName: init-scripts
         mountPath: /home/default/init.d/udevd-init.sh
         subPath: udevd-init.sh
-        readOnly: true
+        readOnly: false
         defaultMode: "0755"
             
     service:
