@@ -99,6 +99,7 @@ spec:
         type: configmap
         objectName: init-scripts
         mountPath: /home/default/init.d
+        readOnly: false
         defaultMode: "0755"
         items:
           - key: udevd-init.sh
