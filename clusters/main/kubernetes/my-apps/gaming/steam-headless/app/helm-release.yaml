@@ -126,6 +126,9 @@ spec:
             script-prep:
               mountPath: /home/default
               readOnly: false
+            main:
+              mountPath: /home/default
+              readOnly: false
             
     service:
       main:
