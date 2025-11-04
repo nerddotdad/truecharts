@@ -64,6 +64,7 @@ spec:
         enabled: true
         type: LoadBalancer
         loadBalancerIP: ${STEAM_IP}
+        externalTrafficPolicy: Local
         integrations:
           metallb:
             enabled: true
