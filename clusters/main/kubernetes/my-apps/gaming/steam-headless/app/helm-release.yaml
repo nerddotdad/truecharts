@@ -49,6 +49,11 @@ spec:
         podSpec:
           containers:
             main:
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  cp /home/default/tmp/*.sh /home/default/init.d/
               env:
                 PORT_NOVNC_WEB: "{{ .Values.service.main.ports.main.port }}"
                 MODE: "primary"
@@ -98,10 +103,12 @@ spec:
         enabled: true
         type: configmap
         objectName: init-scripts
-        mountPath: /home/default/init.d/udevd-init.sh
-        subPath: udevd-init.sh
+        mountPath: /home/default/tmp/
         readOnly: false
-        defaultMode: "0755"
+        defaultMode: "0777"
+        items:
+          - key: udevd-init.sh
+            path: udevd-init.sh
             
     service:
       main:
