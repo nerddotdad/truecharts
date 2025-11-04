@@ -58,7 +58,7 @@ spec:
                 SUNSHINE_USER: "admin"
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
-                # ENABLE_EVDEV_INPUTS: false
+                ENABLE_EVDEV_INPUTS: true
     service:
       main:
         enabled: true
