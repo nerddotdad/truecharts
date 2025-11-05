@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - grav/ks.yaml
-  - ghost/ks.yaml
