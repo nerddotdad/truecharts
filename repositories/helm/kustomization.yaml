@@ -15,3 +15,4 @@ resources:
   - grafana.yaml
   - element-hq.yaml
   - nvdp.yaml
+  - metallb.yaml
