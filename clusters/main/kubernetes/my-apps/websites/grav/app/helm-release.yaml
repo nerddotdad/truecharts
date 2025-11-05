@@ -2,14 +2,14 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ghost
+  name: grav
   namespace: websites
 spec:
   interval: 15m
   chart:
     spec:
-      chart: ghost
-      version: 7.0.13
+      chart: grav
+      version: 14.8.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -30,32 +30,14 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Ghost configuration
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              env:
-                # Ghost URL - will be set to tjhoth.me
-                url: "https://${DOMAIN_1}"
     
-    # Database configuration (Ghost uses MariaDB by default in TrueCharts)
-    mariadb:
-      enabled: true
-      auth:
-        rootPassword: "${POSTGRES_PASWORD}"
-        database: ghost
-        username: ghost
-        password: "${POSTGRES_PASWORD}"
-    
-    # Persistence for Ghost content
+    # Persistence for Grav content and configuration
     persistence:
       data:
         enabled: true
         type: nfs
-        mountPath: /var/lib/ghost/content
-        path: ${NFS_APP_CONFIGS}/ghost
+        mountPath: /var/www/html
+        path: ${NFS_APP_CONFIGS}/grav
         server: ${NAS_IP}
     
     # Ingress configuration for external access via Cloudflare tunnels
@@ -76,18 +58,8 @@ spec:
             certificateIssuer: "domain-1-le-prod"
           homepage:
             enabled: true
-            name: Ghost
+            name: Grav
             description: Personal technology blog and portfolio
             group: "{{ .Release.Namespace }}"
-            icon: "https://ghost.org/favicon.ico"
-    
-    # Resource limits (adjust as needed)
-    resources:
-      main:
-        limits:
-          cpu: 1000m
-          memory: 1Gi
-        requests:
-          cpu: 100m
-          memory: 256Mi
-
+            icon: "https://getgrav.org/favicon.ico"
+  
