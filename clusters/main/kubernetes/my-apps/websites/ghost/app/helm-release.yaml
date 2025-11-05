@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: ghost
-      version: 20.8.5
+      version: 7.0.13
       sourceRef:
         kind: HelmRepository
         name: truecharts
