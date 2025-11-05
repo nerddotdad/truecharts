@@ -51,7 +51,7 @@ spec:
             script-prep:
               enabled: true
               type: init
-              image: docker.io/library/alpine:3.20
+              image: docker.io/library/alpine:3.22
               command:
                 - /bin/sh
                 - -c
