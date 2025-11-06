@@ -29,8 +29,9 @@ spec:
       defaultReplicaCount: "1"
       # Reduce overprovisioning from 200% to 150% to prevent overallocation
       storageOverProvisioningPercentage: "150"
-      # Enable data locality for better performance
-      defaultDataLocality: "best-effort"
+      # Use strict-local data locality to ensure volumes are on same node as pod for better performance
+      # This is safe with replicaCount=1 and ensures Steam downloads use local storage on worker node
+      defaultDataLocality: "strict-local"
       # v2DataEngine: true
     persistence:
       # Set to false to pick another CSI as default
