@@ -19,14 +19,14 @@ spec:
       http:
         paths:
           - path: /.well-known/matrix/client
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: element-server-suite-well-known
                 port:
                   number: 8010
           - path: /.well-known/matrix/server
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: element-server-suite-well-known
