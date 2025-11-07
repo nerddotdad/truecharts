@@ -25,20 +25,21 @@ spec:
       retries: 3
   values:
     defaultSettings:
-      # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
+      # Replica count for data redundancy (1 = no redundancy, faster but less safe)
       defaultReplicaCount: "1"
       # Reduce overprovisioning from 200% to 150% to prevent overallocation
       storageOverProvisioningPercentage: "150"
       # Use strict-local data locality to ensure volumes are on same node as pod for better performance
-      # This is safe with replicaCount=1 and ensures Steam downloads use local storage on worker node
+      # This ensures Steam downloads use local storage on worker node
       defaultDataLocality: "strict-local"
       # v2DataEngine: true
     persistence:
       # Set to false to pick another CSI as default
       defaultClass: true
-      # Set to 1 to use only control node for storage (worker node has broken Longhorn disk)
+      # Replica count for default storage class
       defaultClassReplicaCount: "1"
     # Restrict Longhorn components to control plane nodes only
+    # Note: Worker node can still use Longhorn volumes, but Longhorn system components run on control plane
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
     # Ensure Longhorn system components only run on control plane

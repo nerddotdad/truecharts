@@ -119,8 +119,14 @@ spec:
               items:
                 - key: udevd-init.sh
                   path: udevd-init.sh
-
       home:
+        enabled: true
+        type: pvc
+        size: 20Gi
+        storageClass: longhorn
+        mountPath: /home/default
+        # Override default 100Gi to 20Gi - keeps system disk small as requested
+        # Home directory only needs space for user configs, not game data
         targetSelector:
           main:
             script-prep:
@@ -129,6 +135,37 @@ spec:
             main:
               mountPath: /home/default
               readOnly: false
+      games:
+        enabled: true
+        type: nfs
+        mountPath: /mnt/games
+        path: ${NFS_STEAM_GAMES}
+        server: ${NAS_IP}
+        # Use NFS from NAS for games directory - fast, remote storage that survives node loss
+        # NFS provides good performance while ensuring data persistence
+        # 
+        # ALTERNATIVE: If network bandwidth is a concern, use PVC with Longhorn instead:
+        #   type: pvc
+        #   size: 500Gi  # Adjust size as needed
+        #   storageClass: longhorn
+        #   accessMode: ReadWriteOnce
+        #   volsync:
+        #     - name: games
+        #       type: restic
+        #       credentials: cloudflare_r2  # Or your S3 credentials
+        #       dest:
+        #         enabled: true
+        #       src:
+        #         enabled: true
+        #         schedule: "0 0 2 * * *"  # Daily at 2 AM
+      flatpak:
+        enabled: true
+        type: pvc
+        size: 10Gi
+        storageClass: longhorn
+        mountPath: /var/lib/flatpak
+        # Override default size to 10Gi - flatpak apps are typically small
+        # Keep flatpak on Longhorn (small, less I/O intensive)
             
     service:
       main:
