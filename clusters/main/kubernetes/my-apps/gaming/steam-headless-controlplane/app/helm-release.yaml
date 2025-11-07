@@ -29,18 +29,19 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # podOptions:
-    #   nodeSelector:
-    #     kubernetes.io/hostname: k8s-worker-1
-    #   runtimeClassName: "nvidia"
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-control-1
+      # No GPU required for control plane - just testing network performance
+      # runtimeClassName: "nvidia"  # Not needed without GPU
 
     resources:
         requests:
-          nvidia.com/gpu: 1
+          # nvidia.com/gpu: 1  # Control plane doesn't have NVIDIA GPU
           cpu: 6000m
           memory: 12Gi
         limits:
-          nvidia.com/gpu: 1
+          # nvidia.com/gpu: 1  # Control plane doesn't have NVIDIA GPU
           cpu: 8000m
           memory: 16Gi
 
