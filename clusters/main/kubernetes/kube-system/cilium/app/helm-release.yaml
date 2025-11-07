@@ -34,8 +34,11 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # autoDirectNodeRoutes: true
-    # routingMode: native
+    autoDirectNodeRoutes: true
+    routingMode: native
+    # Enable eBPF masquerading for better performance (instead of iptables)
+    enableBpfMasquerade: true
+    enableIPv4Masquerade: true
     hubble:
       enabled: false
     cluster:

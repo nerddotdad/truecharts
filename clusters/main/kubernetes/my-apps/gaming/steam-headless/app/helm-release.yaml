@@ -47,6 +47,26 @@ spec:
     workload:
       main:
         podSpec:
+          # Optimize DNS for Steam downloads - use external DNS servers directly
+          # This fixes slow Steam downloads caused by Kubernetes DNS latency
+          # See: https://www.reddit.com/r/unRAID/comments/1i0rson/poor_performance_in_steamheadless_container/
+          dnsPolicy: "None"
+          dnsConfig:
+            nameservers:
+              - "1.1.1.1"      # Cloudflare DNS (fast)
+              - "8.8.8.8"     # Google DNS (backup)
+              - "172.17.0.10" # Kubernetes DNS (for cluster services)
+            searches:
+              - "gaming.svc.cluster.local"
+              - "svc.cluster.local"
+              - "cluster.local"
+            options:
+              - name: "ndots"
+                value: "2"
+              - name: "timeout"
+                value: "2"
+              - name: "attempts"
+                value: "3"
           initContainers:
             script-prep:
               enabled: true
