@@ -38,12 +38,12 @@ spec:
     resources:
         requests:
           # nvidia.com/gpu: 1  # Control plane doesn't have NVIDIA GPU
-          cpu: 6000m
-          memory: 12Gi
+          cpu: 2000m  # Reduced for control plane - just testing network performance
+          memory: 8Gi
         limits:
           # nvidia.com/gpu: 1  # Control plane doesn't have NVIDIA GPU
-          cpu: 8000m
-          memory: 16Gi
+          cpu: 4000m  # Reduced for control plane
+          memory: 12Gi
 
     workload:
       main:
