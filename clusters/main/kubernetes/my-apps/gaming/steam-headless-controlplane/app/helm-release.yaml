@@ -57,6 +57,7 @@ spec:
                 - /bin/sh
                 - -c
                 - >
+                  mkdir -p /home/default/init.d/ &&
                   cp /home/default/tmp/udevd-init.sh /home/default/init.d/ &&
                   chown root:input /home/default/init.d/udevd-init.sh &&
                   chmod 755 /home/default/init.d/udevd-init.sh
