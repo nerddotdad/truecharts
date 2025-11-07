@@ -1,0 +1,14 @@
+# Scheduled backup for Element PostgreSQL CNPG
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: element-postgresql-daily-backup
+  namespace: communication
+spec:
+  cluster:
+    name: element-postgresql
+  schedule: "0 0 1 * * *"  # Daily at 1 AM
+  backupOwnerReference: self
+  immediate: true
+  suspend: false
+

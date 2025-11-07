@@ -6,3 +6,4 @@ resources:
   - cnpg-postgresql.yaml
   - cnpg-backup-credentials.yaml
   - cnpg-postgresql-credentials.yaml
+  - cnpg-scheduled-backup.yaml

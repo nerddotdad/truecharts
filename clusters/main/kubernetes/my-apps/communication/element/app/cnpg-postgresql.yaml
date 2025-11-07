@@ -19,25 +19,23 @@ spec:
     size: 20Gi
     storageClass: longhorn
   
-  # Backup configuration (same as Immich)
+  # Backup configuration
   backup:
-    enabled: true
-    retentionPolicy: "7d"
-    credentials:
-      name: element-backup-credentials
-      key: credentials
-    scheduledBackups:
-    - name: daily-backup
-      schedule: "0 0 1 * * *"  # Daily at 1 AM
-      backupOwnerReference: self
-      immediate: true
-      suspend: false
-  
-  # Recovery configuration
-  recovery:
-    credentials:
-      name: element-backup-credentials
-      key: credentials
+    barmanObjectStore:
+      destinationPath: s3://${CLOUDFLARE_R2_BUCKET_PREFIX}-element-postgres
+      s3Credentials:
+        accessKeyId:
+          name: element-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: element-backup-credentials
+          key: SECRET_ACCESS_KEY
+        region: auto
+        endpoint: ${CLOUDFLARE_R2_URL}
+      wal:
+        retention: "7d"
+      data:
+        retention: "7d"
   
   # Bootstrap configuration
   bootstrap:
