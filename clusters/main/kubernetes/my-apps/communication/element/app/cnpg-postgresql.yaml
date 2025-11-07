@@ -23,6 +23,7 @@ spec:
   backup:
     barmanObjectStore:
       destinationPath: s3://${CLOUDFLARE_R2_BUCKET_PREFIX}-element-postgres
+      endpointURL: ${CLOUDFLARE_R2_URL}
       s3Credentials:
         accessKeyId:
           name: element-backup-credentials
@@ -30,12 +31,9 @@ spec:
         secretAccessKey:
           name: element-backup-credentials
           key: SECRET_ACCESS_KEY
-        region: auto
-        endpoint: ${CLOUDFLARE_R2_URL}
       wal:
-        retention: "7d"
-      data:
-        retention: "7d"
+        compression: gzip
+    retentionPolicy: "7d"
   
   # Bootstrap configuration
   bootstrap:
