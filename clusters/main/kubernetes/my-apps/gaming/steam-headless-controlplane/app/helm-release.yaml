@@ -166,6 +166,9 @@ spec:
         #       src:
         #         enabled: true
         #         schedule: "0 0 2 * * *"  # Daily at 2 AM
+      # Disable default flatpak persistence to avoid duplicate mountPath
+      flatpak:
+        enabled: false
       flatpak-controlplane:
         enabled: true
         type: pvc
