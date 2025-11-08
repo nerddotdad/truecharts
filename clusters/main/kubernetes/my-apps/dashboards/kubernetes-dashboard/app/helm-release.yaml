@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for kubernetes dashboard
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     service:
       main:
         type: LoadBalancer

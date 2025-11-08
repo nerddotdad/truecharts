@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for sonarr
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     persistence:
       config: # this is the target location for media
         enabled: true

@@ -29,6 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for lazylibrarian
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     securityContext:
       container:
         readOnlyRootFilesystem: false

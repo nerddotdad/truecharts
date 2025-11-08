@@ -29,6 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for jellyseerr
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     persistence:
       config:
         enabled: true

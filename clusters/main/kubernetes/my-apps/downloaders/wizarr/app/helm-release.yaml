@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for wizarr
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     image:
       repository: ghcr.io/wizarrrr/wizarr
       pullPolicy: IfNotPresent

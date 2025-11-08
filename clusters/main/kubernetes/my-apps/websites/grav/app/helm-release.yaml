@@ -30,6 +30,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for grav website
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     
     # Persistence for Grav content and configuration
     persistence:

@@ -29,6 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Prefer control plane for immich (media processing can run on control plane)
+    podOptions:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
     credentials:
       cloudflare_r2:
         type: s3
