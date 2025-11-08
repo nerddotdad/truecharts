@@ -48,20 +48,11 @@ spec:
       main:
         podSpec:
           # Override pod affinity - TrueCharts creates required podAffinity for PVCs,
-          # but since this is the only pod using the flatpak PVC, we need to make it preferred
-          # or remove it to allow scheduling
+          # but since this is the only pod using the flatpak PVC, we need to remove it.
+          # Explicitly set podAffinity to empty to override TrueCharts default.
           affinity:
-            podAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 100
-                podAffinityTerm:
-                  labelSelector:
-                    matchExpressions:
-                    - key: truecharts.org/pvc
-                      operator: In
-                      values:
-                      - flatpak_home
-                  topologyKey: kubernetes.io/hostname
+            podAffinity: {}
+            podAntiAffinity: {}
           # Optimize DNS for Steam downloads - use external DNS servers directly
           # This fixes slow Steam downloads caused by Kubernetes DNS latency
           # See: https://www.reddit.com/r/unRAID/comments/1i0rson/poor_performance_in_steamheadless_container/
@@ -194,14 +185,15 @@ spec:
         #       src:
         #         enabled: true
         #         schedule: "0 0 2 * * *"  # Daily at 2 AM
-      flatpak:
+      flatpak-worker:
         enabled: true
         type: pvc
         size: 10Gi
         storageClass: longhorn
         mountPath: /var/lib/flatpak
-        # Override default size to 10Gi - flatpak apps are typically small
-        # Keep flatpak on Longhorn (small, less I/O intensive)
+        # Renamed from "flatpak" to "flatpak-worker" to avoid pod affinity conflict
+        # with steam-headless-controlplane which uses "flatpak" persistence key
+        # This ensures they get different PVC labels and can schedule independently
             
     service:
       main:

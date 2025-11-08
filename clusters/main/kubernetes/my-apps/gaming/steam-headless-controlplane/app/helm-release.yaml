@@ -48,6 +48,12 @@ spec:
     workload:
       main:
         podSpec:
+          # Override pod affinity - TrueCharts creates required podAffinity for PVCs,
+          # but since controlplane and worker use separate PVCs, they don't need to be
+          # on the same node. Remove pod affinity to allow independent scheduling.
+          affinity:
+            podAffinity: {}
+            podAntiAffinity: {}
           initContainers:
             script-prep:
               enabled: true
@@ -160,14 +166,15 @@ spec:
         #       src:
         #         enabled: true
         #         schedule: "0 0 2 * * *"  # Daily at 2 AM
-      flatpak:
+      flatpak-controlplane:
         enabled: true
         type: pvc
         size: 10Gi
         storageClass: longhorn
         mountPath: /var/lib/flatpak
-        # Override default size to 10Gi - flatpak apps are typically small
-        # Keep flatpak on Longhorn (small, less I/O intensive)
+        # Renamed from "flatpak" to "flatpak-controlplane" to avoid pod affinity conflict
+        # with steam-headless which uses "flatpak-worker" persistence key
+        # This ensures they get different PVC labels and can schedule independently
             
     service:
       main:
