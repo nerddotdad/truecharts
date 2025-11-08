@@ -47,6 +47,21 @@ spec:
     workload:
       main:
         podSpec:
+          # Override pod affinity - TrueCharts creates required podAffinity for PVCs,
+          # but since this is the only pod using the flatpak PVC, we need to make it preferred
+          # or remove it to allow scheduling
+          affinity:
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: truecharts.org/pvc
+                      operator: In
+                      values:
+                      - flatpak_home
+                  topologyKey: kubernetes.io/hostname
           # Optimize DNS for Steam downloads - use external DNS servers directly
           # This fixes slow Steam downloads caused by Kubernetes DNS latency
           # See: https://www.reddit.com/r/unRAID/comments/1i0rson/poor_performance_in_steamheadless_container/
