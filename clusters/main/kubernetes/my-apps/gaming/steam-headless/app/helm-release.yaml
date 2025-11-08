@@ -38,11 +38,11 @@ spec:
         requests:
           nvidia.com/gpu: 1
           cpu: 6000m
-          memory: 12Gi
+          memory: 10Gi  # Reduced from 12Gi to allow scheduling on k8s-worker-1
         limits:
           nvidia.com/gpu: 1
           cpu: 8000m
-          memory: 16Gi
+          memory: 16Gi  # Limit remains at 16Gi so pod can use more if available
 
     workload:
       main:
