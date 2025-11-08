@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - rcon-webadmin/ks.yaml
-  - steam-headless/ks.yaml
+  # - steam-headless/ks.yaml
   # - steam-headless-controlplane/ks.yaml
