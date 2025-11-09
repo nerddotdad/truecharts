@@ -82,6 +82,12 @@ spec:
 
     prometheus-node-exporter:
       fullnameOverride: node-exporter
+      # Tolerate gpu-workloads taint on worker node (node-exporter must run on all nodes)
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
       prometheus:
         monitor:
           enabled: true

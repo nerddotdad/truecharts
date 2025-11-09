@@ -45,3 +45,36 @@ spec:
     # Ensure Longhorn system components only run on control plane
     systemManagedComponentsNodeSelector:
       node-role.kubernetes.io/control-plane: ""
+    # Longhorn CSI plugin must run on all nodes (including worker) for volume mounting
+    # Add toleration so it can run on worker node despite taint
+    csi:
+      attacher:
+        tolerations:
+          - key: gpu-workloads
+            operator: Equal
+            value: "required"
+            effect: NoSchedule
+      provisioner:
+        tolerations:
+          - key: gpu-workloads
+            operator: Equal
+            value: "required"
+            effect: NoSchedule
+      resizer:
+        tolerations:
+          - key: gpu-workloads
+            operator: Equal
+            value: "required"
+            effect: NoSchedule
+      snapshotter:
+        tolerations:
+          - key: gpu-workloads
+            operator: Equal
+            value: "required"
+            effect: NoSchedule
+      plugin:
+        tolerations:
+          - key: gpu-workloads
+            operator: Equal
+            value: "required"
+            effect: NoSchedule

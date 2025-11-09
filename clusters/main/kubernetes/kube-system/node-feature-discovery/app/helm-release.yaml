@@ -30,5 +30,11 @@ spec:
       config:
         core:
           sources: ["pci", "system", "usb"]
+      # Tolerate gpu-workloads taint on worker node (NFD worker must run on all nodes)
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
     prometheus:
       enable: true

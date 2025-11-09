@@ -26,6 +26,10 @@ spec:
       retries: 3
   values:
     tolerations:
+      - key: gpu-workloads
+        operator: Equal
+        value: "required"
+        effect: NoSchedule
       - key: ai-only
         operator: Exists
         effect: NoSchedule
@@ -56,6 +60,10 @@ spec:
       worker:
         podSpec:
           tolerations:
+            - key: gpu-workloads
+              operator: Equal
+              value: "required"
+              effect: NoSchedule
             - key: ai-only
               operator: Exists
               effect: NoSchedule

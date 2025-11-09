@@ -24,3 +24,9 @@ spec:
   values:
     speaker:
       ignoreExcludeLB: true
+      # Tolerate gpu-workloads taint on worker node (MetalLB speaker must run on all nodes)
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule

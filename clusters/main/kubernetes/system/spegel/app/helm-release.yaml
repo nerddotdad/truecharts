@@ -23,4 +23,11 @@ spec:
     remediation:
       strategy: rollback
       retries: 3
-  values: {}
+  values:
+    # Tolerate gpu-workloads taint on worker node (Spegel must run on all nodes as DaemonSet)
+    podOptions:
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
