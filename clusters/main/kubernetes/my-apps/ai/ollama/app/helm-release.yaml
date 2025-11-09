@@ -50,8 +50,11 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
+          memory: 1Gi  # Actual usage is ~272Mi, 1Gi provides headroom
         limits:
           nvidia.com/gpu: 1
+          memory: 2Gi  # Reduced from 4Gi - actual usage is ~272Mi, 2Gi is plenty
+          # This frees up 2Gi of memory limit allocation for the node
 
     workload:
       main:
@@ -65,9 +68,9 @@ spec:
                 OLLAMA_ORIGINS: "*"
               resources:
                 limits:
-                  memory: 4Gi
+                  memory: 2Gi  # Reduced from 4Gi - actual usage is ~272Mi
                 requests:
-                  memory: 2Gi
+                  memory: 1Gi  # Reduced from 2Gi - actual usage is ~272Mi
       ui:
         type: Deployment
         podSpec:

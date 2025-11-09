@@ -44,11 +44,13 @@ spec:
         requests:
           nvidia.com/gpu: 1
           cpu: 6000m
-          memory: 10Gi  # Reduced from 12Gi to allow scheduling on k8s-worker-1
+          memory: 8Gi  # Gaming workload needs more memory - htop shows ~6Gi usage
         limits:
           nvidia.com/gpu: 1
           cpu: 8000m
-          memory: 16Gi  # Limit remains at 16Gi so pod can use more if available
+          memory: 14Gi  # Gaming workloads can spike memory usage (games, GPU buffers, etc.)
+          # Reduced from 16Gi to 14Gi to help with memory overcommitment
+          # Still provides plenty of headroom for game loading and GPU operations
 
     workload:
       main:
