@@ -52,7 +52,6 @@ spec:
             nameservers:
               - "1.1.1.1"      # Cloudflare DNS (fast)
               - "8.8.8.8"     # Google DNS (backup)
-              - "172.17.0.10" # Kubernetes DNS (for cluster services)
             searches:
               - "gaming.svc.cluster.local"
               - "svc.cluster.local"
@@ -179,7 +178,7 @@ spec:
       flatpak:
         enabled: true
         type: pvc
-        size: 10Gi
+        size: 100Gi  # Updated to match existing PVC size (cannot shrink PVCs)
         storageClass: longhorn
         mountPath: /var/lib/flatpak
         # Renamed from "flatpak" to "flatpak-worker" to avoid pod affinity conflict
