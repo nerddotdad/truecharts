@@ -73,6 +73,13 @@ spec:
                 ASR_ENGINE: "faster_whisper"  # Options: faster_whisper, openai_whisper
                 VAD_FILTER: "true"
                 VAD_FILTER_THRESHOLD: "0.5"
+                # Set cache directories to writable locations
+                HF_HOME: "/app/.cache/huggingface"
+                HF_HUB_CACHE: "/app/.cache/huggingface/hub"
+                TRANSFORMERS_CACHE: "/app/.cache/huggingface/transformers"
+                MPLCONFIGDIR: "/app/.config/matplotlib"
+                XDG_CACHE_HOME: "/app/.cache"
+                XDG_CONFIG_HOME: "/app/.config"
               resources:
                 requests:
                   nvidia.com/gpu: 1
@@ -82,6 +89,20 @@ spec:
                   nvidia.com/gpu: 1
                   memory: "4Gi"
                   cpu: "2000m"
+
+    persistence:
+      cache:
+        enabled: true
+        type: nfs
+        mountPath: "/app/.cache"
+        path: ${NFS_APP_CONFIGS}/whisper/cache
+        server: ${NAS_IP}
+      config:
+        enabled: true
+        type: nfs
+        mountPath: "/app/.config"
+        path: ${NFS_APP_CONFIGS}/whisper/config
+        server: ${NAS_IP}
 
     service:
       main:
