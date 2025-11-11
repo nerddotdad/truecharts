@@ -53,7 +53,7 @@ spec:
               renameByDefault: false
               resources:
                 - name: nvidia.com/gpu
-                  replicas: 2
+                  replicas: 4  # Increased to allow more pods to share the GPU via time-slicing
     gfd:
       enabled: true
     nodeFeatureDiscovery:
