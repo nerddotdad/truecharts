@@ -14,20 +14,6 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 5m
-  maxHistory: 3
-  driftDetection:
-    mode: warn
-  install:
-    createNamespace: true
-    remediation:
-      retries: 3
-  upgrade:
-    cleanupOnFail: true
-    remediation:
-      retries: 3
-  uninstall:
-    keepHistory: false
   values:
     image:
       repository: onerahmet/openai-whisper-asr-webservice
@@ -37,9 +23,6 @@ spec:
     securityContext:
       container:
         readOnlyRootFilesystem: false
-        runAsNonRoot: false
-        runAsUser: 0
-        runAsGroup: 0
 
     # Prefer AI workloads on dedicated worker node
     podOptions:
