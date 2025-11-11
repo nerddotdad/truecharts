@@ -22,11 +22,26 @@ spec:
     
     securityContext:
       container:
+        runAsNonRoot: false
         readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      runtimeClassName: "nvidia"
+      # Tolerate gpu-workloads taint on worker node
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
 
     workload:
       main:
         podSpec:
+          runtimeClassName: "nvidia"
           containers:
             main:
               enabled: true
@@ -60,13 +75,13 @@ spec:
                 VAD_FILTER_THRESHOLD: "0.5"
               resources:
                 requests:
+                  nvidia.com/gpu: 1
                   memory: "2Gi"
                   cpu: "1000m"
                 limits:
+                  nvidia.com/gpu: 1
                   memory: "4Gi"
                   cpu: "2000m"
-                # Uncomment if you have GPU available and want to use it
-                # nvidia.com/gpu: 1
 
     service:
       main:
