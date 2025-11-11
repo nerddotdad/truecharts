@@ -1,0 +1,133 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: whisper
+  namespace: ai
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 15.24.36
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: onerahmet/openai-whisper-asr-webservice
+      pullPolicy: IfNotPresent
+      tag: "latest-gpu"  # Use GPU version if available, otherwise use "latest"
+    
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    # Prefer AI workloads on dedicated worker node
+    podOptions:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-type
+                    operator: In
+                    values:
+                      - ai-dedicated
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  periodSeconds: 10
+                  failureThreshold: 3
+              env:
+                ASR_MODEL: "base"  # Options: tiny, base, small, medium, large, large-v2, large-v3
+                ASR_ENGINE: "faster_whisper"  # Options: faster_whisper, openai_whisper
+                VAD_FILTER: "true"
+                VAD_FILTER_THRESHOLD: "0.5"
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "1000m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2000m"
+                # Uncomment if you have GPU available and want to use it
+                # nvidia.com/gpu: 1
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 9000
+            targetPort: 9000
+            protocol: HTTP
+
+    ingress:
+      main:
+        enabled: true
+        # Use internal ingress for cluster-only access (more secure)
+        # n8n can access via: http://whisper-app-template.ai.svc.cluster.local:9000
+        ingressClassName: internal
+        hosts:
+          - host: whisper.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          # Optional: Add basic auth for additional security
+          # annotations:
+          #   nginx.ingress.kubernetes.io/auth-type: basic
+          #   nginx.ingress.kubernetes.io/auth-secret: whisper-auth
+          #   nginx.ingress.kubernetes.io/auth-realm: 'Whisper API - Authentication Required'
+
