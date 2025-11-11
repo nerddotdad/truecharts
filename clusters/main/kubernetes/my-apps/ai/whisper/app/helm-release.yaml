@@ -24,19 +24,6 @@ spec:
       container:
         readOnlyRootFilesystem: false
 
-    # Prefer AI workloads on dedicated worker node
-    podOptions:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-type
-                    operator: In
-                    values:
-                      - ai-dedicated
-
     workload:
       main:
         podSpec:
