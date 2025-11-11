@@ -104,16 +104,14 @@ spec:
         ports:
           main:
             enabled: true
+            protocol: tcp
             port: 9000
             targetPort: 9000
-            protocol: HTTP
 
     ingress:
       main:
         enabled: true
-        # Use internal ingress for cluster-only access (more secure)
-        # n8n can access via: http://whisper-app-template.ai.svc.cluster.local:9000
-        ingressClassName: internal
+        ingressClassName: external
         hosts:
           - host: whisper.${DOMAIN_0}
             paths:
@@ -125,9 +123,4 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
-          # Optional: Add basic auth for additional security
-          # annotations:
-          #   nginx.ingress.kubernetes.io/auth-type: basic
-          #   nginx.ingress.kubernetes.io/auth-secret: whisper-auth
-          #   nginx.ingress.kubernetes.io/auth-realm: 'Whisper API - Authentication Required'
 
