@@ -30,9 +30,9 @@ spec:
     keepHistory: false
   values:
     persistence:
-      data:
+      config:
         enabled: true
         type: nfs
-        mountPath: /etc/searxng
+        mountPath: "/etc/searxng"
         path: ${NFS_APP_CONFIGS}/searxng
         server: ${NAS_IP}
