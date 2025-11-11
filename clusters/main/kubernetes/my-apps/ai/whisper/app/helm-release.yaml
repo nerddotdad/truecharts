@@ -18,7 +18,9 @@ spec:
     image:
       repository: onerahmet/openai-whisper-asr-webservice
       pullPolicy: IfNotPresent
-      tag: "latest-gpu"  # Use GPU version if available, otherwise use "latest"
+      # Using CPU version temporarily - latest-gpu requires CUDA 12.6+ but node has CUDA 12.2
+      # Once CUDA driver is updated, change back to "latest-gpu"
+      tag: "latest"  # CPU version - compatible with current CUDA 12.2
     
     securityContext:
       container:
@@ -30,18 +32,20 @@ spec:
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
-      runtimeClassName: "nvidia"
-      # Tolerate gpu-workloads taint on worker node
-      tolerations:
-        - key: gpu-workloads
-          operator: Equal
-          value: "required"
-          effect: NoSchedule
+      # runtimeClassName and GPU tolerations removed - using CPU version
+      # When switching back to GPU image, uncomment:
+      # runtimeClassName: "nvidia"
+      # tolerations:
+      #   - key: gpu-workloads
+      #     operator: Equal
+      #     value: "required"
+      #     effect: NoSchedule
 
     workload:
       main:
         podSpec:
-          runtimeClassName: "nvidia"
+          # runtimeClassName removed for CPU version
+          # When switching back to GPU, uncomment: runtimeClassName: "nvidia"
           containers:
             main:
               enabled: true
@@ -82,13 +86,14 @@ spec:
                 XDG_CONFIG_HOME: "/app/.config"
               resources:
                 requests:
-                  nvidia.com/gpu: 1
                   memory: "2Gi"
                   cpu: "1000m"
                 limits:
-                  nvidia.com/gpu: 1
                   memory: "4Gi"
                   cpu: "2000m"
+                # GPU resources removed - using CPU version due to CUDA 12.2 compatibility
+                # When switching back to GPU image, uncomment:
+                # nvidia.com/gpu: 1 (in both requests and limits)
 
     persistence:
       cache:
