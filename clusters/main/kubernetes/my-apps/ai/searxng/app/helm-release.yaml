@@ -1,13 +1,13 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: searchxng
+  name: searxng
   namespace: ai
 spec:
   interval: 15m
   chart:
     spec:
-      chart: searchxng
+      chart: searxng
       version: 10.11.14
       sourceRef:
         kind: HelmRepository
@@ -34,5 +34,5 @@ spec:
         enabled: true
         type: nfs
         mountPath: /etc/searxng
-        path: ${NFS_APP_CONFIGS}/searchxng
+        path: ${NFS_APP_CONFIGS}/searxng
         server: ${NAS_IP}

@@ -4,4 +4,4 @@ resources:
   - namespace.yaml
   - n8n/ks.yaml
   - ollama/ks.yaml
-  - searchxng/ks.yaml
+  - searxng/ks.yaml
