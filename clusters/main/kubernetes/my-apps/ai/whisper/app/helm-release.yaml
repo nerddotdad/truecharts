@@ -54,7 +54,7 @@ spec:
                   enabled: true
                   type: http
                   port: 9000
-                  path: /health
+                  path: /docs  # FastAPI Swagger UI endpoint
                   initialDelaySeconds: 60
                   periodSeconds: 10
                   failureThreshold: 10
@@ -62,14 +62,14 @@ spec:
                   enabled: true
                   type: http
                   port: 9000
-                  path: /health
+                  path: /docs  # FastAPI Swagger UI endpoint
                   periodSeconds: 30
                   failureThreshold: 3
                 readiness:
                   enabled: true
                   type: http
                   port: 9000
-                  path: /health
+                  path: /docs  # FastAPI Swagger UI endpoint
                   periodSeconds: 10
                   failureThreshold: 3
               env:
