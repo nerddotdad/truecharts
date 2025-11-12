@@ -16,9 +16,9 @@ spec:
       interval: 15m
   values:
     image:
-      repository: coqui/tts
+      repository: ghcr.io/coqui-ai/tts
       pullPolicy: IfNotPresent
-      tag: "v0.22.0-cuda11.8.0"  # GPU version - CUDA 12.2 driver should support CUDA 11.8 (backward compatible)
+      tag: "latest"  # GPU version - uses CUDA, check available tags at ghcr.io/coqui-ai/tts
     
     securityContext:
       container:
