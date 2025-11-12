@@ -49,22 +49,22 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /health
-                  initialDelaySeconds: 60
+                  path: /docs  # FastAPI Swagger UI endpoint
+                  initialDelaySeconds: 120  # Coqui TTS needs time to download models on first run
                   periodSeconds: 10
-                  failureThreshold: 10
+                  failureThreshold: 30  # Allow up to 5 minutes for startup
                 liveness:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /health
+                  path: /docs  # FastAPI Swagger UI endpoint
                   periodSeconds: 30
                   failureThreshold: 3
                 readiness:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /health
+                  path: /docs  # FastAPI Swagger UI endpoint
                   periodSeconds: 10
                   failureThreshold: 3
               env:
