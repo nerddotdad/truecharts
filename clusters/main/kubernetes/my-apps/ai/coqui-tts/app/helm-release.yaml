@@ -86,7 +86,8 @@ spec:
                 - |
                   # Start Coqui TTS server
                   # The server will download models on first run
-                  tts-server --model_name tts_models/en/ljspeech/tacotron2-DDC --host 0.0.0.0 --port 5002
+                  # Server binds to 0.0.0.0 by default
+                  tts-server --model_name tts_models/en/ljspeech/tacotron2-DDC --port 5002
 
     persistence:
       models:
