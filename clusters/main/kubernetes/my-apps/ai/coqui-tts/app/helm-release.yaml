@@ -18,7 +18,7 @@ spec:
     image:
       repository: coqui/tts
       pullPolicy: IfNotPresent
-      tag: "v0.22.0"  # CPU version - change to "v0.22.0-cuda11.8.0" for GPU when CUDA driver is updated
+      tag: "v0.22.0-cuda11.8.0"  # GPU version - CUDA 12.2 driver should support CUDA 11.8 (backward compatible)
     
     securityContext:
       container:
@@ -30,17 +30,17 @@ spec:
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
-      # Uncomment for GPU support (when CUDA driver is updated)
-      # runtimeClassName: "nvidia"
-      # tolerations:
-      #   - key: gpu-workloads
-      #     operator: Equal
-      #     value: "required"
-      #     effect: NoSchedule
+      runtimeClassName: "nvidia"
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
 
     workload:
       main:
         podSpec:
+          runtimeClassName: "nvidia"
           containers:
             main:
               enabled: true
@@ -75,13 +75,11 @@ spec:
                 requests:
                   memory: "2Gi"
                   cpu: "1000m"
-                  # Uncomment for GPU (when CUDA driver is updated)
-                  # nvidia.com/gpu: 1
+                  nvidia.com/gpu: 1
                 limits:
                   memory: "4Gi"
                   cpu: "2000m"
-                  # Uncomment for GPU (when CUDA driver is updated)
-                  # nvidia.com/gpu: 1
+                  nvidia.com/gpu: 1
               command:
                 - "/bin/bash"
                 - "-c"
