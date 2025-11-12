@@ -49,7 +49,7 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI Swagger UI endpoint
+                  path: /  # Flask web interface root endpoint
                   initialDelaySeconds: 120  # Coqui TTS needs time to download models on first run
                   periodSeconds: 10
                   failureThreshold: 30  # Allow up to 5 minutes for startup
@@ -57,14 +57,14 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI Swagger UI endpoint
+                  path: /  # Flask web interface root endpoint
                   periodSeconds: 30
                   failureThreshold: 3
                 readiness:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI Swagger UI endpoint
+                  path: /  # Flask web interface root endpoint
                   periodSeconds: 10
                   failureThreshold: 3
               env:
