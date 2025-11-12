@@ -96,6 +96,7 @@ spec:
         path: ${NFS_APP_CONFIGS}/coqui-tts/models
         server: ${NAS_IP}
 
+
     service:
       main:
         enabled: true

@@ -4,8 +4,8 @@ metadata:
   name: coqui-tts
   namespace: flux-system
 spec:
-  interval: 15m
-  path: ./clusters/main/kubernetes/my-apps/ai/coqui-tts
+  interval: 10m
+  path: clusters/main/kubernetes/my-apps/ai/coqui-tts/app
   prune: true
   sourceRef:
     kind: GitRepository
