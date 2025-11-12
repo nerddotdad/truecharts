@@ -18,7 +18,7 @@ spec:
     image:
       repository: ghcr.io/coqui-ai/tts
       pullPolicy: IfNotPresent
-      tag: "latest"  # GPU version - uses CUDA, check available tags at ghcr.io/coqui-ai/tts
+      tag: "latest"  # GPU version - pre-pull on node to avoid timeout
     
     securityContext:
       container:
@@ -86,7 +86,7 @@ spec:
                 - |
                   # Start Coqui TTS server
                   # The server will download models on first run
-                  python3 -m TTS.server.server --model_name tts_models/en/ljspeech/tacotron2-DDC --host 0.0.0.0 --port 5002
+                  tts-server --model_name tts_models/en/ljspeech/tacotron2-DDC --host 0.0.0.0 --port 5002
 
     persistence:
       models:
