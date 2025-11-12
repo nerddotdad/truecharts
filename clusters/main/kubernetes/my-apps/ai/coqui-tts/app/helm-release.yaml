@@ -1,0 +1,126 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: coqui-tts
+  namespace: ai
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 15.24.36
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  values:
+    image:
+      repository: coqui/tts
+      pullPolicy: IfNotPresent
+      tag: "v0.22.0"  # CPU version - change to "v0.22.0-cuda11.8.0" for GPU when CUDA driver is updated
+    
+    securityContext:
+      container:
+        runAsNonRoot: false
+        readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      # Uncomment for GPU support (when CUDA driver is updated)
+      # runtimeClassName: "nvidia"
+      # tolerations:
+      #   - key: gpu-workloads
+      #     operator: Equal
+      #     value: "required"
+      #     effect: NoSchedule
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 5002
+                  path: /health
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  failureThreshold: 10
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 5002
+                  path: /health
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 5002
+                  path: /health
+                  periodSeconds: 10
+                  failureThreshold: 3
+              env:
+                # Coqui TTS configuration
+                TTS_MODEL: "tts_models/en/ljspeech/tacotron2-DDC"
+                TTS_VOCAB_MODEL: "vocoder_models/en/ljspeech/hifigan_v2"
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "1000m"
+                  # Uncomment for GPU (when CUDA driver is updated)
+                  # nvidia.com/gpu: 1
+                limits:
+                  memory: "4Gi"
+                  cpu: "2000m"
+                  # Uncomment for GPU (when CUDA driver is updated)
+                  # nvidia.com/gpu: 1
+              command:
+                - "/bin/bash"
+                - "-c"
+                - |
+                  # Start Coqui TTS server
+                  # The server will download models on first run
+                  python3 -m TTS.server.server --model_name tts_models/en/ljspeech/tacotron2-DDC --host 0.0.0.0 --port 5002
+
+    persistence:
+      models:
+        enabled: true
+        type: nfs
+        mountPath: "/root/.local/share/tts"
+        path: ${NFS_APP_CONFIGS}/coqui-tts/models
+        server: ${NAS_IP}
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 5002
+            targetPort: 5002
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        hosts:
+          - host: coqui-tts.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+

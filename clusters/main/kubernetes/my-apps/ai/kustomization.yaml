@@ -6,3 +6,4 @@ resources:
   - ollama/ks.yaml
   - searxng/ks.yaml
   - whisper/ks.yaml
+  - coqui-tts/ks.yaml
