@@ -68,8 +68,9 @@ spec:
                   periodSeconds: 10
                   failureThreshold: 3
               env:
-                # Coqui TTS configuration
-                TTS_MODEL: "tts_models/en/ljspeech/tacotron2-DDC"
+                # Coqui TTS configuration - using faster models for better performance
+                # VITS is faster than Tacotron2 while maintaining good quality
+                TTS_MODEL: "tts_models/en/ljspeech/tacotron2-DDC"  # Can switch to "tts_models/en/ljspeech/vits" for faster synthesis
                 TTS_VOCAB_MODEL: "vocoder_models/en/ljspeech/hifigan_v2"
               resources:
                 requests:
@@ -87,7 +88,8 @@ spec:
                   # Start Coqui TTS server
                   # The server will download models on first run
                   # Server binds to 0.0.0.0 by default
-                  tts-server --model_name tts_models/en/ljspeech/tacotron2-DDC --port 5002
+                  # Using VITS model for faster synthesis (much faster than Tacotron2)
+                  tts-server --model_name tts_models/en/ljspeech/vits --port 5002
 
     persistence:
       models:
