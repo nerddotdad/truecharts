@@ -49,10 +49,10 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask root endpoint
-                  initialDelaySeconds: 30  # Initial delay before first probe
+                  path: /  # Flask root endpoint - returns 503 until model loads
+                  initialDelaySeconds: 10  # Start checking quickly
                   periodSeconds: 10
-                  failureThreshold: 60  # Allow up to 10 minutes for model download (Bark models are large)
+                  failureThreshold: 120  # Allow up to 20 minutes for model download
                 liveness:
                   enabled: true
                   type: http
@@ -64,10 +64,10 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask root endpoint
-                  initialDelaySeconds: 30  # Wait before starting readiness checks
+                  path: /  # Flask root endpoint - returns 503 until model loads
+                  initialDelaySeconds: 10  # Start checking quickly
                   periodSeconds: 10
-                  failureThreshold: 60  # Allow up to 10 minutes for model download
+                  failureThreshold: 120  # Allow up to 20 minutes for model download
               resources:
                 requests:
                   memory: "4Gi"  # Increased for Bark model
@@ -89,39 +89,61 @@ spec:
                   import tempfile
                   import os
                   import shutil
+                  import threading
                   
                   app = Flask(__name__)
+                  tts = None
+                  loading_error = None
                   
-                  # Check if model directory exists but is incomplete
-                  model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark"
-                  if os.path.exists(model_dir) and not os.path.exists(os.path.join(model_dir, "config.json")):
-                      print("Incomplete model download detected. Clearing cache...")
-                      shutil.rmtree(model_dir)
-                  
-                  # Try loading with retry on corruption
-                  print("Loading Bark model...")
-                  for attempt in range(2):
+                  def load_model():
+                      global tts, loading_error
                       try:
-                          tts = TTS("tts_models/multilingual/multi-dataset/bark")
-                          tts.to("cuda" if torch.cuda.is_available() else "cpu")
-                          print("Bark model loaded!")
-                          break
+                          # Check if model directory exists but is incomplete
+                          model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark"
+                          if os.path.exists(model_dir) and not os.path.exists(os.path.join(model_dir, "config.json")):
+                              print("Incomplete model download detected. Clearing cache...")
+                              shutil.rmtree(model_dir)
+                          
+                          # Try loading with retry on corruption
+                          print("Loading Bark model...")
+                          for attempt in range(2):
+                              try:
+                                  tts = TTS("tts_models/multilingual/multi-dataset/bark")
+                                  tts.to("cuda" if torch.cuda.is_available() else "cpu")
+                                  print("Bark model loaded!")
+                                  break
+                              except Exception as e:
+                                  if "invalid load key" in str(e) or "UnpicklingError" in str(e):
+                                      print(f"Corrupted model files detected (attempt {attempt + 1}). Clearing cache...")
+                                      if os.path.exists(model_dir):
+                                          shutil.rmtree(model_dir)
+                                      if attempt == 1:
+                                          loading_error = str(e)
+                                          raise
+                                  else:
+                                      loading_error = str(e)
+                                      raise
                       except Exception as e:
-                          if "invalid load key" in str(e) or "UnpicklingError" in str(e):
-                              print(f"Corrupted model files detected (attempt {attempt + 1}). Clearing cache...")
-                              if os.path.exists(model_dir):
-                                  shutil.rmtree(model_dir)
-                              if attempt == 1:
-                                  raise
-                          else:
-                              raise
+                          loading_error = str(e)
+                          print(f"Failed to load model: {e}")
+                  
+                  # Start model loading in background
+                  threading.Thread(target=load_model, daemon=True).start()
                   
                   @app.route('/')
                   def index():
-                      return "Coqui TTS Server with Bark"
+                      if tts:
+                          return "Coqui TTS Server with Bark - Ready", 200
+                      elif loading_error:
+                          return f"Coqui TTS Server - Error: {loading_error}", 503
+                      else:
+                          return "Coqui TTS Server - Loading model...", 503
                   
                   @app.route('/api/tts', methods=['POST'])
                   def synthesize():
+                      if not tts:
+                          return {"error": "Model still loading"}, 503
+                      
                       text = request.form.get('text') or (request.json or {}).get('text', '')
                       if not text:
                           return {"error": "text parameter required"}, 400
