@@ -98,10 +98,23 @@ spec:
                       print("Incomplete model download detected. Clearing cache...")
                       shutil.rmtree(model_dir)
                   
+                  # Try loading with retry on corruption
                   print("Loading Bark model...")
-                  tts = TTS("tts_models/multilingual/multi-dataset/bark")
-                  tts.to("cuda" if torch.cuda.is_available() else "cpu")
-                  print("Bark model loaded!")
+                  for attempt in range(2):
+                      try:
+                          tts = TTS("tts_models/multilingual/multi-dataset/bark")
+                          tts.to("cuda" if torch.cuda.is_available() else "cpu")
+                          print("Bark model loaded!")
+                          break
+                      except Exception as e:
+                          if "invalid load key" in str(e) or "UnpicklingError" in str(e):
+                              print(f"Corrupted model files detected (attempt {attempt + 1}). Clearing cache...")
+                              if os.path.exists(model_dir):
+                                  shutil.rmtree(model_dir)
+                              if attempt == 1:
+                                  raise
+                          else:
+                              raise
                   
                   @app.route('/')
                   def index():
