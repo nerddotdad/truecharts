@@ -97,13 +97,20 @@ spec:
                   
                   app = Flask(__name__)
                   
-                  # Initialize Bark model (model is already downloaded)
+                  # Initialize Bark model
                   print("Loading Bark model...")
                   try:
-                      tts = TTS("tts_models/multilingual/multi-dataset/bark", gpu=True)
-                      print("Bark model loaded successfully!")
+                      import torch
+                      # Try loading Bark model
+                      # If there's a corrupted cache, it will re-download
+                      tts = TTS("tts_models/multilingual/multi-dataset/bark")
+                      # Use newer API to move to GPU
+                      device = "cuda" if torch.cuda.is_available() else "cpu"
+                      tts.to(device)
+                      print(f"Bark model loaded successfully on {device}!")
                   except Exception as e:
                       print(f"Error loading Bark model: {e}")
+                      print("This might be due to corrupted model files. The model will be re-downloaded on next attempt.")
                       raise
                   
                   @app.route('/')
