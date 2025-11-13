@@ -49,7 +49,7 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI docs endpoint
+                  path: /  # Flask root endpoint
                   initialDelaySeconds: 30  # Initial delay before first probe
                   periodSeconds: 10
                   failureThreshold: 60  # Allow up to 10 minutes for model download (Bark models are large)
@@ -57,21 +57,17 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI docs endpoint
+                  path: /  # Flask root endpoint
                   periodSeconds: 30
                   failureThreshold: 3
                 readiness:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /docs  # FastAPI docs endpoint
+                  path: /  # Flask root endpoint
                   initialDelaySeconds: 30  # Wait before starting readiness checks
                   periodSeconds: 10
                   failureThreshold: 60  # Allow up to 10 minutes for model download
-              env:
-                # Coqui TTS configuration - using Bark model
-                # Bark is multilingual and supports voice cloning, but requires GPU (already enabled)
-                TTS_MODEL: "tts_models/multilingual/multi-dataset/bark"
               resources:
                 requests:
                   memory: "4Gi"  # Increased for Bark model
@@ -82,11 +78,39 @@ spec:
                   cpu: "2000m"
                   nvidia.com/gpu: 1
               command:
-                - "tts-server"
-                - "--model_name"
-                - "tts_models/multilingual/multi-dataset/bark"
-                - "--port"
-                - "5002"
+                - "/bin/bash"
+                - "-c"
+                - |
+                  # tts-server doesn't support Bark, so use TTS API directly
+                  python3 << 'EOF'
+                  from flask import Flask, request, send_file
+                  from TTS.api import TTS
+                  import torch
+                  import tempfile
+                  
+                  app = Flask(__name__)
+                  
+                  print("Loading Bark model...")
+                  tts = TTS("tts_models/multilingual/multi-dataset/bark")
+                  tts.to("cuda" if torch.cuda.is_available() else "cpu")
+                  print("Bark model loaded!")
+                  
+                  @app.route('/')
+                  def index():
+                      return "Coqui TTS Server with Bark"
+                  
+                  @app.route('/api/tts', methods=['POST'])
+                  def synthesize():
+                      text = request.form.get('text') or (request.json or {}).get('text', '')
+                      if not text:
+                          return {"error": "text parameter required"}, 400
+                      
+                      with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
+                          tts.tts_to_file(text=text, file_path=f.name)
+                          return send_file(f.name, mimetype='audio/wav')
+                  
+                  app.run(host='0.0.0.0', port=5002, debug=False)
+                  EOF
 
     persistence:
       models:
