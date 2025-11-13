@@ -293,11 +293,40 @@ spec:
                       # Prepare speaker_wav parameter (XTTS supports single file or list)
                       speaker_wav_param = None
                       if speaker_wav:
-                          # If it's a string, convert to list (XTTS expects list)
+                          # If speaker_wav is a simple name (not a path), look up all files for that voice
                           if isinstance(speaker_wav, str):
-                              speaker_wav_param = [speaker_wav]
+                              # Check if it's a path (starts with /) or just a voice name
+                              if not speaker_wav.startswith('/'):
+                                  # It's a voice name - find all audio files for this voice
+                                  voice_path = os.path.join(VOICE_DIR, speaker_wav)
+                                  if os.path.exists(voice_path) and os.path.isdir(voice_path):
+                                      # Get all audio files in this voice directory
+                                      audio_files = [
+                                          os.path.join(voice_path, f) 
+                                          for f in os.listdir(voice_path) 
+                                          if f.lower().endswith(('.wav', '.mp3', '.flac'))
+                                      ]
+                                      if audio_files:
+                                          speaker_wav_param = sorted(audio_files)  # Sort for consistency
+                                          print(f"Using {len(audio_files)} voice samples for '{speaker_wav}'")
+                                      else:
+                                          return {"error": f"No audio files found for voice '{speaker_wav}'"}, 404
+                                  else:
+                                      return {"error": f"Voice '{speaker_wav}' not found. Upload files first using /api/upload-voice"}, 404
+                              else:
+                                  # It's a file path - use it directly
+                                  if os.path.exists(speaker_wav):
+                                      speaker_wav_param = [speaker_wav]
+                                  else:
+                                      return {"error": f"Voice file not found: {speaker_wav}"}, 404
                           else:
-                              speaker_wav_param = speaker_wav
+                              # It's already a list - use as-is (but verify files exist)
+                              speaker_wav_param = []
+                              for path in speaker_wav:
+                                  if os.path.exists(path):
+                                      speaker_wav_param.append(path)
+                                  else:
+                                      return {"error": f"Voice file not found: {path}"}, 404
                       
                       with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
                           # XTTS API: tts_to_file with speaker_wav (voice cloning) or speaker (built-in)
