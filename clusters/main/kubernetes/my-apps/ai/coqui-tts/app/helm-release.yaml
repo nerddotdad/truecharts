@@ -161,7 +161,11 @@ spec:
                                   # Create a StringIO that will provide 'y' when read
                                   sys.stdin = StringIO('y\n')
                                   try:
-                                      tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=torch.cuda.is_available())
+                                      # Use newer API without deprecated gpu parameter
+                                      tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
+                                      # Move to GPU if available
+                                      device = "cuda" if torch.cuda.is_available() else "cpu"
+                                      tts.to(device)
                                   finally:
                                       # Restore original stdin
                                       sys.stdin = original_stdin
