@@ -87,11 +87,63 @@ spec:
                 - "/bin/bash"
                 - "-c"
                 - |
-                  # Start Coqui TTS server
-                  # The server will download models on first run
-                  # Server binds to 0.0.0.0 by default
-                  # Using Bark model - multilingual, supports voice cloning, requires GPU
-                  tts-server --model_name tts_models/multilingual/multi-dataset/bark --port 5002
+                  # Start custom TTS server with Bark model
+                  # tts-server doesn't fully support Bark, so we use TTS API directly with Flask
+                  python3 << 'EOF'
+                  from flask import Flask, request, send_file
+                  from TTS.api import TTS
+                  import os
+                  import tempfile
+                  
+                  app = Flask(__name__)
+                  
+                  # Initialize Bark model (model is already downloaded)
+                  print("Loading Bark model...")
+                  try:
+                      tts = TTS("tts_models/multilingual/multi-dataset/bark", gpu=True)
+                      print("Bark model loaded successfully!")
+                  except Exception as e:
+                      print(f"Error loading Bark model: {e}")
+                      raise
+                  
+                  @app.route('/')
+                  def index():
+                      return "Coqui TTS Server with Bark - API available at /api/tts"
+                  
+                  @app.route('/api/tts', methods=['POST'])
+                  def synthesize():
+                      try:
+                          # Get text from form-data or JSON
+                          if request.is_json:
+                              text = request.json.get('text', '')
+                          else:
+                              text = request.form.get('text', '')
+                          
+                          if not text:
+                              return {"error": "text parameter required"}, 400
+                          
+                          # Generate audio to temp file
+                          with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+                              output_path = tmp_file.name
+                          
+                          tts.tts_to_file(text=text, file_path=output_path)
+                          
+                          # Return audio file
+                          return send_file(
+                              output_path,
+                              mimetype='audio/wav',
+                              as_attachment=False,
+                              download_name='output.wav'
+                          )
+                      except Exception as e:
+                          import traceback
+                          error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
+                          print(error_msg)
+                          return {"error": str(e)}, 500
+                  
+                  if __name__ == '__main__':
+                      app.run(host='0.0.0.0', port=5002, debug=False)
+                  EOF
 
     persistence:
       models:
