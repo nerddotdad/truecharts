@@ -50,9 +50,9 @@ spec:
                   type: http
                   port: 5002
                   path: /  # Flask web interface root endpoint
-                  initialDelaySeconds: 120  # Coqui TTS needs time to download models on first run
+                  initialDelaySeconds: 30  # Initial delay before first probe
                   periodSeconds: 10
-                  failureThreshold: 30  # Allow up to 5 minutes for startup
+                  failureThreshold: 60  # Allow up to 10 minutes for model download (Bark models are large)
                 liveness:
                   enabled: true
                   type: http
@@ -65,8 +65,9 @@ spec:
                   type: http
                   port: 5002
                   path: /  # Flask web interface root endpoint
+                  initialDelaySeconds: 30  # Wait before starting readiness checks
                   periodSeconds: 10
-                  failureThreshold: 3
+                  failureThreshold: 60  # Allow up to 10 minutes for model download
               env:
                 # Coqui TTS configuration - using Bark model
                 # Bark is multilingual and supports voice cloning, but requires GPU (already enabled)
