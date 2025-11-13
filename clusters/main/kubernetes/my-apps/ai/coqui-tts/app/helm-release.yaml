@@ -259,10 +259,45 @@ spec:
                           for voice_name in os.listdir(VOICE_DIR):
                               voice_path = os.path.join(VOICE_DIR, voice_name)
                               if os.path.isdir(voice_path):
-                                  files = [f for f in os.listdir(voice_path) if f.endswith(('.wav', '.mp3', '.flac'))]
+                                  files = [f for f in os.listdir(voice_path) if f.lower().endswith(('.wav', '.mp3', '.flac', '.aif', '.aiff'))]
                                   if files:
                                       voices[voice_name] = [os.path.join(voice_path, f) for f in files]
                       return {"voices": voices}, 200
+                  
+                  @app.route('/api/delete-voice', methods=['DELETE', 'POST'])
+                  def delete_voice():
+                      """Delete a voice file or entire voice directory"""
+                      if request.is_json:
+                          data = request.json
+                          voice_name = data.get('name', '')
+                          filename = data.get('filename', None)  # Optional: delete specific file
+                      else:
+                          voice_name = request.form.get('name', '')
+                          filename = request.form.get('filename', None)
+                      
+                      if not voice_name:
+                          return {"error": "voice name required"}, 400
+                      
+                      voice_path = os.path.join(VOICE_DIR, voice_name)
+                      
+                      if not os.path.exists(voice_path):
+                          return {"error": f"Voice '{voice_name}' not found"}, 404
+                      
+                      try:
+                          if filename:
+                              # Delete specific file
+                              filepath = os.path.join(voice_path, filename)
+                              if os.path.exists(filepath):
+                                  os.remove(filepath)
+                                  return {"message": f"Deleted file: {filename}"}, 200
+                              else:
+                                  return {"error": f"File '{filename}' not found"}, 404
+                          else:
+                              # Delete entire voice directory
+                              shutil.rmtree(voice_path)
+                              return {"message": f"Deleted voice: {voice_name}"}, 200
+                      except Exception as e:
+                          return {"error": f"Failed to delete: {str(e)}"}, 500
                   
                   @app.route('/api/tts', methods=['POST'])
                   def synthesize():
@@ -304,7 +339,7 @@ spec:
                                       audio_files = [
                                           os.path.join(voice_path, f) 
                                           for f in os.listdir(voice_path) 
-                                          if f.lower().endswith(('.wav', '.mp3', '.flac'))
+                                          if f.lower().endswith(('.wav', '.mp3', '.flac', '.aif', '.aiff'))
                                       ]
                                       if audio_files:
                                           speaker_wav_param = sorted(audio_files)  # Sort for consistency
