@@ -64,7 +64,7 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask root endpoint - returns 503 until model loads
+                  path: /ready  # Returns 200 only when model is loaded
                   initialDelaySeconds: 10  # Start checking quickly
                   periodSeconds: 10
                   failureThreshold: 120  # Allow up to 20 minutes for model download
@@ -132,12 +132,23 @@ spec:
                   
                   @app.route('/')
                   def index():
+                      # Always return 200 - server is running (for startup probe)
                       if tts:
                           return "Coqui TTS Server with Bark - Ready", 200
                       elif loading_error:
-                          return f"Coqui TTS Server - Error: {loading_error}", 503
+                          return f"Coqui TTS Server - Error: {loading_error}", 200
                       else:
-                          return "Coqui TTS Server - Loading model...", 503
+                          return "Coqui TTS Server - Loading model...", 200
+                  
+                  @app.route('/ready')
+                  def ready():
+                      # Return 200 only when model is loaded (for readiness probe)
+                      if tts:
+                          return "Ready", 200
+                      elif loading_error:
+                          return f"Error: {loading_error}", 503
+                      else:
+                          return "Loading...", 503
                   
                   @app.route('/api/tts', methods=['POST'])
                   def synthesize():
