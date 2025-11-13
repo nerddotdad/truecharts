@@ -90,6 +90,8 @@ spec:
                   import os
                   import shutil
                   import threading
+                  import sys
+                  from io import StringIO
                   
                   app = Flask(__name__)
                   tts = None
@@ -188,7 +190,16 @@ spec:
                               try:
                                   # First, trigger download (this will download files)
                                   print(f"Attempt {attempt + 1}: Initializing TTS (this will download model files if needed)...")
-                                  tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=torch.cuda.is_available())
+                                  # XTTS requires license acceptance - automatically accept by redirecting stdin
+                                  # Save original stdin
+                                  original_stdin = sys.stdin
+                                  # Create a StringIO that will provide 'y' when read
+                                  sys.stdin = StringIO('y\n')
+                                  try:
+                                      tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=torch.cuda.is_available())
+                                  finally:
+                                      # Restore original stdin
+                                      sys.stdin = original_stdin
                                   
                                   # Verify files after download completes
                                   if os.path.exists(model_dir):
