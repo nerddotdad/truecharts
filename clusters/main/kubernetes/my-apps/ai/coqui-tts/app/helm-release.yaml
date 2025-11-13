@@ -216,6 +216,54 @@ spec:
                       else:
                           return "Loading...", 503
                   
+                  # Voice storage directory (on persistent volume)
+                  VOICE_DIR = "/root/.local/share/tts/voices"
+                  os.makedirs(VOICE_DIR, exist_ok=True)
+                  
+                  @app.route('/api/upload-voice', methods=['POST'])
+                  def upload_voice():
+                      """Upload a voice file for cloning"""
+                      if not tts:
+                          return {"error": "Model still loading"}, 503
+                      
+                      if 'file' not in request.files:
+                          return {"error": "No file provided"}, 400
+                      
+                      file = request.files['file']
+                      voice_name = request.form.get('name', 'default')
+                      
+                      if file.filename == '':
+                          return {"error": "No file selected"}, 400
+                      
+                      # Create voice directory
+                      voice_path = os.path.join(VOICE_DIR, voice_name)
+                      os.makedirs(voice_path, exist_ok=True)
+                      
+                      # Save file
+                      filename = file.filename or 'voice.wav'
+                      filepath = os.path.join(voice_path, filename)
+                      file.save(filepath)
+                      
+                      return {
+                          "message": "Voice file uploaded successfully",
+                          "voice_name": voice_name,
+                          "filepath": filepath,
+                          "usage": f"Use speaker_wav={filepath} in /api/tts requests"
+                      }, 200
+                  
+                  @app.route('/api/voices', methods=['GET'])
+                  def list_voices():
+                      """List available voice files"""
+                      voices = {}
+                      if os.path.exists(VOICE_DIR):
+                          for voice_name in os.listdir(VOICE_DIR):
+                              voice_path = os.path.join(VOICE_DIR, voice_name)
+                              if os.path.isdir(voice_path):
+                                  files = [f for f in os.listdir(voice_path) if f.endswith(('.wav', '.mp3', '.flac'))]
+                                  if files:
+                                      voices[voice_name] = [os.path.join(voice_path, f) for f in files]
+                      return {"voices": voices}, 200
+                  
                   @app.route('/api/tts', methods=['POST'])
                   def synthesize():
                       if not tts:
