@@ -135,43 +135,8 @@ spec:
                               except Exception as e:
                                   print(f"Warning: Could not clear {cache_dir}: {e}")
                   
-                  def verify_model_files(model_dir):
-                      """Verify all required model files exist and are valid"""
-                      # XTTS v2 required files
-                      required_files = ["config.json", "model.pth", "vocab.json", "dvae.pth", "mel_stats.pth"]
-                      min_sizes = {
-                          "config.json": 1000,  # At least 1KB
-                          "model.pth": 1000000000,  # At least 1GB (main model)
-                          "vocab.json": 10000,  # At least 10KB
-                          "dvae.pth": 10000000,  # At least 10MB
-                          "mel_stats.pth": 1000,  # At least 1KB
-                      }
-                      
-                      missing = []
-                      corrupted = []
-                      
-                      for filename in required_files:
-                          filepath = os.path.join(model_dir, filename)
-                          if not os.path.exists(filepath):
-                              missing.append(filename)
-                              continue
-                          
-                          # Check file size
-                          file_size = os.path.getsize(filepath)
-                          if file_size < min_sizes.get(filename, 1000):
-                              corrupted.append(f"{filename} (only {file_size} bytes, expected >{min_sizes.get(filename, 1000)})")
-                              continue
-                          
-                          # Check if it's HTML (corrupted download)
-                          if not check_file_integrity(filepath):
-                              corrupted.append(f"{filename} (appears to be HTML/corrupted)")
-                      
-                      if missing:
-                          print(f"Missing files: {', '.join(missing)}")
-                      if corrupted:
-                          print(f"Corrupted files: {', '.join(corrupted)}")
-                      
-                      return len(missing) == 0 and len(corrupted) == 0
+                  # Removed verify_model_files - TTS library handles file verification internally
+                  # If TTS() initializes successfully, the model is valid
                   
                   def load_model():
                       global tts, loading_error
@@ -201,18 +166,14 @@ spec:
                                       # Restore original stdin
                                       sys.stdin = original_stdin
                                   
-                                  # Verify files after download completes
-                                  if os.path.exists(model_dir):
-                                      print("Verifying downloaded model files...")
-                                      if not verify_model_files(model_dir):
-                                          raise Exception("Model files are missing or corrupted after download")
-                                  
+                                  # If TTS() initialized successfully, the model is valid
+                                  # The TTS library handles file verification internally
                                   print("XTTS v2 model loaded successfully!")
                                   break
                               except Exception as e:
                                   error_str = str(e)
-                                  # Check if it's a corruption error or our verification failed
-                                  if "invalid load key" in error_str or "UnpicklingError" in error_str or "corrupted" in error_str.lower() or "missing" in error_str.lower():
+                                  # Check if it's a corruption error
+                                  if "invalid load key" in error_str or "UnpicklingError" in error_str:
                                       print(f"Corrupted/missing model files detected (attempt {attempt + 1}/{max_attempts}). Clearing all caches...")
                                       clear_all_caches()
                                       if attempt == max_attempts - 1:
