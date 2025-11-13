@@ -222,14 +222,21 @@ spec:
                           data = request.json
                           text = data.get('text', '')
                           speaker_wav = data.get('speaker_wav', None)  # Optional: path to voice clone audio
+                          speaker = data.get('speaker', None)  # Optional: built-in speaker name
                           language = data.get('language', 'en')  # Default to English
                       else:
                           text = request.form.get('text', '')
                           speaker_wav = request.form.get('speaker_wav', None)
+                          speaker = request.form.get('speaker', None)
                           language = request.form.get('language', 'en')
                       
                       if not text:
                           return {"error": "text parameter required"}, 400
+                      
+                      # XTTS v2 requires either speaker_wav (voice cloning) or speaker (built-in speaker)
+                      # Default to a built-in speaker if neither is provided
+                      if not speaker_wav and not speaker:
+                          speaker = "Ana Florence"  # Default Coqui speaker
                       
                       # Prepare speaker_wav parameter (XTTS supports single file or list)
                       speaker_wav_param = None
@@ -241,7 +248,7 @@ spec:
                               speaker_wav_param = speaker_wav
                       
                       with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
-                          # XTTS API: tts_to_file with optional speaker_wav for voice cloning
+                          # XTTS API: tts_to_file with speaker_wav (voice cloning) or speaker (built-in)
                           if speaker_wav_param:
                               tts.tts_to_file(
                                   text=text,
@@ -251,10 +258,11 @@ spec:
                                   split_sentences=True
                               )
                           else:
-                              # Use default speaker if no voice clone provided
+                              # Use built-in speaker
                               tts.tts_to_file(
                                   text=text,
                                   file_path=f.name,
+                                  speaker=speaker,
                                   language=language,
                                   split_sentences=True
                               )
