@@ -68,7 +68,7 @@ spec:
                   initialDelaySeconds: 10  # Start checking quickly
                   periodSeconds: 10
                   failureThreshold: 120  # Allow up to 20 minutes for model download
-                resources:
+              resources:
                 requests:
                   memory: "4Gi"  # XTTS v2 model size
                   cpu: "1000m"
