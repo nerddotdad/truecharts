@@ -68,17 +68,18 @@ spec:
                   periodSeconds: 10
                   failureThreshold: 3
               env:
-                # Coqui TTS configuration - using faster models for better performance
-                # VITS is faster than Tacotron2 while maintaining good quality
-                TTS_MODEL: "tts_models/en/ljspeech/tacotron2-DDC"  # Can switch to "tts_models/en/ljspeech/vits" for faster synthesis
-                TTS_VOCAB_MODEL: "vocoder_models/en/ljspeech/hifigan_v2"
+                # Coqui TTS configuration - using Bark model
+                # Bark is multilingual and supports voice cloning, but requires GPU (already enabled)
+                # Note: Bark is slower than VITS but offers voice cloning capabilities
+                TTS_MODEL: "tts_models/multilingual/multi-dataset/bark"
+                TTS_VOCAB_MODEL: ""  # Bark doesn't use a separate vocoder
               resources:
                 requests:
-                  memory: "2Gi"
+                  memory: "4Gi"  # Increased for Bark model
                   cpu: "1000m"
                   nvidia.com/gpu: 1
                 limits:
-                  memory: "4Gi"
+                  memory: "8Gi"  # Increased for Bark model
                   cpu: "2000m"
                   nvidia.com/gpu: 1
               command:
@@ -88,8 +89,8 @@ spec:
                   # Start Coqui TTS server
                   # The server will download models on first run
                   # Server binds to 0.0.0.0 by default
-                  # Using VITS model for faster synthesis (much faster than Tacotron2)
-                  tts-server --model_name tts_models/en/ljspeech/vits --port 5002
+                  # Using Bark model - multilingual, supports voice cloning, requires GPU
+                  tts-server --model_name tts_models/multilingual/multi-dataset/bark --port 5002
 
     persistence:
       models:
