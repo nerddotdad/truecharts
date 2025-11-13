@@ -99,19 +99,48 @@ spec:
                   
                   # Initialize Bark model
                   print("Loading Bark model...")
-                  try:
-                      import torch
-                      # Try loading Bark model
-                      # If there's a corrupted cache, it will re-download
-                      tts = TTS("tts_models/multilingual/multi-dataset/bark")
-                      # Use newer API to move to GPU
-                      device = "cuda" if torch.cuda.is_available() else "cpu"
-                      tts.to(device)
-                      print(f"Bark model loaded successfully on {device}!")
-                  except Exception as e:
-                      print(f"Error loading Bark model: {e}")
-                      print("This might be due to corrupted model files. The model will be re-downloaded on next attempt.")
-                      raise
+                  import torch
+                  import shutil
+                  import glob
+                  
+                  # Clear potentially corrupted model cache proactively
+                  # The error suggests corrupted checkpoint files, so clear the entire Bark model cache
+                  cache_base = "/root/.local/share/tts"
+                  main_model_dir = f"{cache_base}/tts_models--multilingual--multi-dataset--bark"
+                  
+                  # Clear corrupted cache if it exists (will force fresh download)
+                  if os.path.exists(main_model_dir):
+                      print(f"Found existing Bark model cache. Clearing to ensure clean download...")
+                      try:
+                          shutil.rmtree(main_model_dir)
+                          print("Cache cleared successfully.")
+                      except Exception as e:
+                          print(f"Warning: Could not clear cache: {e}")
+                  
+                  max_retries = 2
+                  for attempt in range(max_retries):
+                      try:
+                          print(f"Loading attempt {attempt + 1}...")
+                          tts = TTS("tts_models/multilingual/multi-dataset/bark")
+                          # Use newer API to move to GPU
+                          device = "cuda" if torch.cuda.is_available() else "cpu"
+                          tts.to(device)
+                          print(f"Bark model loaded successfully on {device}!")
+                          break
+                      except Exception as e:
+                          error_str = str(e)
+                          if "invalid load key" in error_str or "UnpicklingError" in error_str:
+                              print(f"Attempt {attempt + 1}: Corrupted model files detected. Clearing cache...")
+                              # Clear the model directory again
+                              if os.path.exists(main_model_dir):
+                                  shutil.rmtree(main_model_dir)
+                                  print("Cache cleared. Will re-download on next attempt.")
+                              if attempt == max_retries - 1:
+                                  print(f"Failed to load Bark model after {max_retries} attempts: {e}")
+                                  raise
+                          else:
+                              print(f"Error loading Bark model: {e}")
+                              raise
                   
                   @app.route('/')
                   def index():
