@@ -87,8 +87,16 @@ spec:
                   from TTS.api import TTS
                   import torch
                   import tempfile
+                  import os
+                  import shutil
                   
                   app = Flask(__name__)
+                  
+                  # Check if model directory exists but is incomplete
+                  model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark"
+                  if os.path.exists(model_dir) and not os.path.exists(os.path.join(model_dir, "config.json")):
+                      print("Incomplete model download detected. Clearing cache...")
+                      shutil.rmtree(model_dir)
                   
                   print("Loading Bark model...")
                   tts = TTS("tts_models/multilingual/multi-dataset/bark")
