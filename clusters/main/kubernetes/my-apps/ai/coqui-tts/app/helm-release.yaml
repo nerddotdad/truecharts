@@ -68,20 +68,20 @@ spec:
                   initialDelaySeconds: 10  # Start checking quickly
                   periodSeconds: 10
                   failureThreshold: 120  # Allow up to 20 minutes for model download
-              resources:
+                resources:
                 requests:
-                  memory: "4Gi"  # Increased for Bark model
+                  memory: "4Gi"  # XTTS v2 model size
                   cpu: "1000m"
                   nvidia.com/gpu: 1
                 limits:
-                  memory: "8Gi"  # Increased for Bark model
+                  memory: "8Gi"  # XTTS v2 model size
                   cpu: "2000m"
                   nvidia.com/gpu: 1
               command:
                 - "/bin/bash"
                 - "-c"
                 - |
-                  # tts-server doesn't support Bark, so use TTS API directly
+                  # tts-server doesn't support XTTS v2, so use TTS API directly
                   python3 << 'EOF'
                   from flask import Flask, request, send_file
                   from TTS.api import TTS
@@ -119,7 +119,7 @@ spec:
                   def clear_all_caches():
                       """Clear all model-related caches"""
                       cache_dirs = [
-                          "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark",
+                          "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2",
                           "/root/.cache/torch/hub/checkpoints"
                       ]
                       for cache_dir in cache_dirs:
@@ -133,10 +133,48 @@ spec:
                               except Exception as e:
                                   print(f"Warning: Could not clear {cache_dir}: {e}")
                   
+                  def verify_model_files(model_dir):
+                      """Verify all required model files exist and are valid"""
+                      # XTTS v2 required files
+                      required_files = ["config.json", "model.pth", "vocab.json", "dvae.pth", "mel_stats.pth"]
+                      min_sizes = {
+                          "config.json": 1000,  # At least 1KB
+                          "model.pth": 1000000000,  # At least 1GB (main model)
+                          "vocab.json": 10000,  # At least 10KB
+                          "dvae.pth": 10000000,  # At least 10MB
+                          "mel_stats.pth": 1000,  # At least 1KB
+                      }
+                      
+                      missing = []
+                      corrupted = []
+                      
+                      for filename in required_files:
+                          filepath = os.path.join(model_dir, filename)
+                          if not os.path.exists(filepath):
+                              missing.append(filename)
+                              continue
+                          
+                          # Check file size
+                          file_size = os.path.getsize(filepath)
+                          if file_size < min_sizes.get(filename, 1000):
+                              corrupted.append(f"{filename} (only {file_size} bytes, expected >{min_sizes.get(filename, 1000)})")
+                              continue
+                          
+                          # Check if it's HTML (corrupted download)
+                          if not check_file_integrity(filepath):
+                              corrupted.append(f"{filename} (appears to be HTML/corrupted)")
+                      
+                      if missing:
+                          print(f"Missing files: {', '.join(missing)}")
+                      if corrupted:
+                          print(f"Corrupted files: {', '.join(corrupted)}")
+                      
+                      return len(missing) == 0 and len(corrupted) == 0
+                  
                   def load_model():
                       global tts, loading_error
                       try:
-                          model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark"
+                          model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2"
                           
                           # Check if model directory exists but is incomplete
                           if os.path.exists(model_dir) and not os.path.exists(os.path.join(model_dir, "config.json")):
@@ -144,25 +182,34 @@ spec:
                               clear_all_caches()
                           
                           # Try loading with retry on corruption
-                          print("Loading Bark model...")
+                          print("Loading XTTS v2 model...")
                           max_attempts = 3
                           for attempt in range(max_attempts):
                               try:
-                                  tts = TTS("tts_models/multilingual/multi-dataset/bark")
-                                  tts.to("cuda" if torch.cuda.is_available() else "cpu")
-                                  print("Bark model loaded successfully!")
+                                  # First, trigger download (this will download files)
+                                  print(f"Attempt {attempt + 1}: Initializing TTS (this will download model files if needed)...")
+                                  tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=torch.cuda.is_available())
+                                  
+                                  # Verify files after download completes
+                                  if os.path.exists(model_dir):
+                                      print("Verifying downloaded model files...")
+                                      if not verify_model_files(model_dir):
+                                          raise Exception("Model files are missing or corrupted after download")
+                                  
+                                  print("XTTS v2 model loaded successfully!")
                                   break
                               except Exception as e:
                                   error_str = str(e)
-                                  if "invalid load key" in error_str or "UnpicklingError" in error_str:
-                                      print(f"Corrupted model files detected (attempt {attempt + 1}/{max_attempts}). Clearing all caches...")
+                                  # Check if it's a corruption error or our verification failed
+                                  if "invalid load key" in error_str or "UnpicklingError" in error_str or "corrupted" in error_str.lower() or "missing" in error_str.lower():
+                                      print(f"Corrupted/missing model files detected (attempt {attempt + 1}/{max_attempts}). Clearing all caches...")
                                       clear_all_caches()
                                       if attempt == max_attempts - 1:
                                           loading_error = f"Failed after {max_attempts} attempts: {error_str}"
                                           raise
-                                      print(f"Waiting 5 seconds before retry...")
+                                      print(f"Waiting 10 seconds before retry (to allow network/CDN to recover)...")
                                       import time
-                                      time.sleep(5)
+                                      time.sleep(10)  # Increased delay
                                   else:
                                       loading_error = str(e)
                                       raise
@@ -177,7 +224,7 @@ spec:
                   def index():
                       # Always return 200 - server is running (for startup probe)
                       if tts:
-                          return "Coqui TTS Server with Bark - Ready", 200
+                          return "Coqui TTS Server with XTTS v2 - Ready", 200
                       elif loading_error:
                           return f"Coqui TTS Server - Error: {loading_error}", 200
                       else:
@@ -198,12 +245,47 @@ spec:
                       if not tts:
                           return {"error": "Model still loading"}, 503
                       
-                      text = request.form.get('text') or (request.json or {}).get('text', '')
+                      # Get parameters from form-data or JSON
+                      if request.is_json:
+                          data = request.json
+                          text = data.get('text', '')
+                          speaker_wav = data.get('speaker_wav', None)  # Optional: path to voice clone audio
+                          language = data.get('language', 'en')  # Default to English
+                      else:
+                          text = request.form.get('text', '')
+                          speaker_wav = request.form.get('speaker_wav', None)
+                          language = request.form.get('language', 'en')
+                      
                       if not text:
                           return {"error": "text parameter required"}, 400
                       
+                      # Prepare speaker_wav parameter (XTTS supports single file or list)
+                      speaker_wav_param = None
+                      if speaker_wav:
+                          # If it's a string, convert to list (XTTS expects list)
+                          if isinstance(speaker_wav, str):
+                              speaker_wav_param = [speaker_wav]
+                          else:
+                              speaker_wav_param = speaker_wav
+                      
                       with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
-                          tts.tts_to_file(text=text, file_path=f.name)
+                          # XTTS API: tts_to_file with optional speaker_wav for voice cloning
+                          if speaker_wav_param:
+                              tts.tts_to_file(
+                                  text=text,
+                                  file_path=f.name,
+                                  speaker_wav=speaker_wav_param,
+                                  language=language,
+                                  split_sentences=True
+                              )
+                          else:
+                              # Use default speaker if no voice clone provided
+                              tts.tts_to_file(
+                                  text=text,
+                                  file_path=f.name,
+                                  language=language,
+                                  split_sentences=True
+                              )
                           return send_file(f.name, mimetype='audio/wav')
                   
                   app.run(host='0.0.0.0', port=5002, debug=False)
