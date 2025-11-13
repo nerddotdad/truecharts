@@ -49,7 +49,7 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask web interface root endpoint
+                  path: /docs  # FastAPI docs endpoint
                   initialDelaySeconds: 30  # Initial delay before first probe
                   periodSeconds: 10
                   failureThreshold: 60  # Allow up to 10 minutes for model download (Bark models are large)
@@ -57,23 +57,21 @@ spec:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask web interface root endpoint
+                  path: /docs  # FastAPI docs endpoint
                   periodSeconds: 30
                   failureThreshold: 3
                 readiness:
                   enabled: true
                   type: http
                   port: 5002
-                  path: /  # Flask web interface root endpoint
+                  path: /docs  # FastAPI docs endpoint
                   initialDelaySeconds: 30  # Wait before starting readiness checks
                   periodSeconds: 10
                   failureThreshold: 60  # Allow up to 10 minutes for model download
               env:
                 # Coqui TTS configuration - using Bark model
                 # Bark is multilingual and supports voice cloning, but requires GPU (already enabled)
-                # Note: Bark is slower than VITS but offers voice cloning capabilities
                 TTS_MODEL: "tts_models/multilingual/multi-dataset/bark"
-                TTS_VOCAB_MODEL: ""  # Bark doesn't use a separate vocoder
               resources:
                 requests:
                   memory: "4Gi"  # Increased for Bark model
@@ -84,102 +82,11 @@ spec:
                   cpu: "2000m"
                   nvidia.com/gpu: 1
               command:
-                - "/bin/bash"
-                - "-c"
-                - |
-                  # Start custom TTS server with Bark model
-                  # tts-server doesn't fully support Bark, so we use TTS API directly with Flask
-                  python3 << 'EOF'
-                  from flask import Flask, request, send_file
-                  from TTS.api import TTS
-                  import os
-                  import tempfile
-                  
-                  app = Flask(__name__)
-                  
-                  # Initialize Bark model
-                  print("Loading Bark model...")
-                  import torch
-                  import shutil
-                  import glob
-                  
-                  # Clear potentially corrupted model cache proactively
-                  # The error suggests corrupted checkpoint files, so clear the entire Bark model cache
-                  cache_base = "/root/.local/share/tts"
-                  main_model_dir = f"{cache_base}/tts_models--multilingual--multi-dataset--bark"
-                  
-                  # Clear corrupted cache if it exists (will force fresh download)
-                  if os.path.exists(main_model_dir):
-                      print(f"Found existing Bark model cache. Clearing to ensure clean download...")
-                      try:
-                          shutil.rmtree(main_model_dir)
-                          print("Cache cleared successfully.")
-                      except Exception as e:
-                          print(f"Warning: Could not clear cache: {e}")
-                  
-                  max_retries = 2
-                  for attempt in range(max_retries):
-                      try:
-                          print(f"Loading attempt {attempt + 1}...")
-                          tts = TTS("tts_models/multilingual/multi-dataset/bark")
-                          # Use newer API to move to GPU
-                          device = "cuda" if torch.cuda.is_available() else "cpu"
-                          tts.to(device)
-                          print(f"Bark model loaded successfully on {device}!")
-                          break
-                      except Exception as e:
-                          error_str = str(e)
-                          if "invalid load key" in error_str or "UnpicklingError" in error_str:
-                              print(f"Attempt {attempt + 1}: Corrupted model files detected. Clearing cache...")
-                              # Clear the model directory again
-                              if os.path.exists(main_model_dir):
-                                  shutil.rmtree(main_model_dir)
-                                  print("Cache cleared. Will re-download on next attempt.")
-                              if attempt == max_retries - 1:
-                                  print(f"Failed to load Bark model after {max_retries} attempts: {e}")
-                                  raise
-                          else:
-                              print(f"Error loading Bark model: {e}")
-                              raise
-                  
-                  @app.route('/')
-                  def index():
-                      return "Coqui TTS Server with Bark - API available at /api/tts"
-                  
-                  @app.route('/api/tts', methods=['POST'])
-                  def synthesize():
-                      try:
-                          # Get text from form-data or JSON
-                          if request.is_json:
-                              text = request.json.get('text', '')
-                          else:
-                              text = request.form.get('text', '')
-                          
-                          if not text:
-                              return {"error": "text parameter required"}, 400
-                          
-                          # Generate audio to temp file
-                          with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
-                              output_path = tmp_file.name
-                          
-                          tts.tts_to_file(text=text, file_path=output_path)
-                          
-                          # Return audio file
-                          return send_file(
-                              output_path,
-                              mimetype='audio/wav',
-                              as_attachment=False,
-                              download_name='output.wav'
-                          )
-                      except Exception as e:
-                          import traceback
-                          error_msg = f"Error: {str(e)}\n{traceback.format_exc()}"
-                          print(error_msg)
-                          return {"error": str(e)}, 500
-                  
-                  if __name__ == '__main__':
-                      app.run(host='0.0.0.0', port=5002, debug=False)
-                  EOF
+                - "tts-server"
+                - "--model_name"
+                - "tts_models/multilingual/multi-dataset/bark"
+                - "--port"
+                - "5002"
 
     persistence:
       models:
