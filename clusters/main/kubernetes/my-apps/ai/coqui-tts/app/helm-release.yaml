@@ -95,31 +95,74 @@ spec:
                   tts = None
                   loading_error = None
                   
+                  def check_file_integrity(filepath):
+                      """Check if a file is corrupted (HTML error page instead of binary)"""
+                      if not os.path.exists(filepath):
+                          return False
+                      try:
+                          with open(filepath, 'rb') as f:
+                              first_bytes = f.read(100)
+                              # Check if it starts with HTML tags (error page)
+                              if first_bytes.startswith(b'<') or b'<html' in first_bytes.lower() or b'<!doctype' in first_bytes.lower():
+                                  print(f"Warning: {filepath} appears to be HTML (corrupted download)")
+                                  return False
+                              # Check if file is suspiciously small (likely incomplete)
+                              file_size = os.path.getsize(filepath)
+                              if file_size < 1024:  # Less than 1KB is suspicious for model files
+                                  print(f"Warning: {filepath} is suspiciously small ({file_size} bytes)")
+                                  return False
+                          return True
+                      except Exception as e:
+                          print(f"Error checking {filepath}: {e}")
+                          return False
+                  
+                  def clear_all_caches():
+                      """Clear all model-related caches"""
+                      cache_dirs = [
+                          "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark",
+                          "/root/.cache/torch/hub/checkpoints"
+                      ]
+                      for cache_dir in cache_dirs:
+                          if os.path.exists(cache_dir):
+                              print(f"Clearing cache: {cache_dir}")
+                              try:
+                                  if os.path.isdir(cache_dir):
+                                      shutil.rmtree(cache_dir)
+                                  else:
+                                      os.remove(cache_dir)
+                              except Exception as e:
+                                  print(f"Warning: Could not clear {cache_dir}: {e}")
+                  
                   def load_model():
                       global tts, loading_error
                       try:
-                          # Check if model directory exists but is incomplete
                           model_dir = "/root/.local/share/tts/tts_models--multilingual--multi-dataset--bark"
+                          
+                          # Check if model directory exists but is incomplete
                           if os.path.exists(model_dir) and not os.path.exists(os.path.join(model_dir, "config.json")):
                               print("Incomplete model download detected. Clearing cache...")
-                              shutil.rmtree(model_dir)
+                              clear_all_caches()
                           
                           # Try loading with retry on corruption
                           print("Loading Bark model...")
-                          for attempt in range(2):
+                          max_attempts = 3
+                          for attempt in range(max_attempts):
                               try:
                                   tts = TTS("tts_models/multilingual/multi-dataset/bark")
                                   tts.to("cuda" if torch.cuda.is_available() else "cpu")
-                                  print("Bark model loaded!")
+                                  print("Bark model loaded successfully!")
                                   break
                               except Exception as e:
-                                  if "invalid load key" in str(e) or "UnpicklingError" in str(e):
-                                      print(f"Corrupted model files detected (attempt {attempt + 1}). Clearing cache...")
-                                      if os.path.exists(model_dir):
-                                          shutil.rmtree(model_dir)
-                                      if attempt == 1:
-                                          loading_error = str(e)
+                                  error_str = str(e)
+                                  if "invalid load key" in error_str or "UnpicklingError" in error_str:
+                                      print(f"Corrupted model files detected (attempt {attempt + 1}/{max_attempts}). Clearing all caches...")
+                                      clear_all_caches()
+                                      if attempt == max_attempts - 1:
+                                          loading_error = f"Failed after {max_attempts} attempts: {error_str}"
                                           raise
+                                      print(f"Waiting 5 seconds before retry...")
+                                      import time
+                                      time.sleep(5)
                                   else:
                                       loading_error = str(e)
                                       raise
