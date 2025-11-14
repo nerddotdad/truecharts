@@ -16,10 +16,11 @@ spec:
       interval: 15m
   values:
     image:
-      repository: nvidia/cuda
+      repository: pytorch/pytorch
       pullPolicy: IfNotPresent
-      tag: "12.2.0-devel-ubuntu22.04"  # CUDA devel image with build tools
-      # We'll install Python and dependencies via command
+      tag: "2.1.0-cuda11.8-cudnn8-runtime"  # PyTorch with CUDA 11.8 (widely compatible with CUDA 12.2 driver)
+      # PyTorch images include Python and CUDA libraries pre-installed
+      # CUDA 11.8 toolkit works with CUDA 12.2 drivers (backward compatible)
     
     securityContext:
       container:
@@ -82,22 +83,22 @@ spec:
                 - "/bin/bash"
                 - "-c"
                 - |
-                  # Install system dependencies
+                  # Install system dependencies (PyTorch image already has Python and CUDA)
                   apt-get update && apt-get install -y \
-                    python3.10 python3-pip git wget curl unzip \
+                    git wget curl unzip \
                     espeak-ng libespeak-ng-dev libsndfile1 \
                     && rm -rf /var/lib/apt/lists/*
                   
-                  # Install Python dependencies
-                  pip3 install --no-cache-dir \
-                    SoundFile torch torchaudio munch pydub pyyaml \
+                  # Install Python dependencies (torch/torchaudio already installed in PyTorch image)
+                  pip install --no-cache-dir \
+                    SoundFile munch pydub pyyaml \
                     librosa nltk matplotlib accelerate transformers \
                     phonemizer einops einops-exts tqdm typing-extensions \
                     flask flask-cors \
                     git+https://github.com/resemble-ai/monotonic_align.git
                   
                   # Install StyleTTS2 package
-                  pip3 install --no-cache-dir git+https://github.com/yl4579/StyleTTS2.git
+                  pip install --no-cache-dir git+https://github.com/yl4579/StyleTTS2.git
                   
                   # Create directories
                   mkdir -p /app/models /app/voices
