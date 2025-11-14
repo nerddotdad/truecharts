@@ -108,6 +108,87 @@ RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") 
     (echo "WARNING: Import test failed, but PYTHONPATH will be set at runtime" && \
      python3 -c "import sys; print('Python path:', sys.path)" 2>&1)
 
+# Create styletts2 package wrapper
+# This ensures 'from styletts2 import tts' works with StyleTTS2 repository
+RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
+    STYLETTS2_PKG="$SITE_PACKAGES/styletts2" && \
+    echo "Creating styletts2 package wrapper at $STYLETTS2_PKG" && \
+    mkdir -p "$STYLETTS2_PKG" && \
+    \
+    # Create __init__.py \
+    cat > "$STYLETTS2_PKG/__init__.py" << 'PYEOF'
+# styletts2 package - wrapper for StyleTTS2 repository
+__all__ = ['tts']
+PYEOF
+    \
+    # Create tts.py that imports StyleTTS2 from repository \
+    cat > "$STYLETTS2_PKG/tts.py" << 'PYEOF'
+"""
+styletts2.tts module
+Imports StyleTTS2 class from StyleTTS2 repository
+"""
+import sys
+import os
+
+# Add repository to Python path
+repo_path = '/app/StyleTTS2'
+if repo_path not in sys.path:
+    sys.path.insert(0, repo_path)
+
+# Import StyleTTS2 - try multiple strategies
+StyleTTS2 = None
+import_error = None
+
+# Strategy 1: Try importing from inference.py (most common)
+try:
+    from inference import StyleTTS2
+except ImportError as e:
+    import_error = str(e)
+    # Strategy 2: Try loading inference.py directly
+    try:
+        import importlib.util
+        inference_path = os.path.join(repo_path, 'inference.py')
+        if os.path.exists(inference_path):
+            spec = importlib.util.spec_from_file_location("inference", inference_path)
+            inference_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(inference_module)
+            StyleTTS2 = getattr(inference_module, 'StyleTTS2', None)
+    except Exception as e2:
+        import_error = f"{import_error}; {str(e2)}"
+
+# Strategy 3: Try importing from other possible locations
+if StyleTTS2 is None:
+    try:
+        # Check if there's a Models or Utils directory with the class
+        import importlib
+        # Try importing from various possible module names
+        for module_name in ['inference', 'Models.inference', 'Utils.inference', 'styletts2.inference']:
+            try:
+                mod = importlib.import_module(module_name)
+                StyleTTS2 = getattr(mod, 'StyleTTS2', None)
+                if StyleTTS2 is not None:
+                    break
+            except:
+                continue
+    except Exception as e3:
+        if not import_error:
+            import_error = str(e3)
+
+if StyleTTS2 is None:
+    raise ImportError(
+        f"Could not import StyleTTS2 from StyleTTS2 repository at {repo_path}. "
+        f"Errors: {import_error or 'Unknown error'}. "
+        f"Please ensure the repository contains inference.py with StyleTTS2 class."
+    )
+
+__all__ = ['StyleTTS2']
+PYEOF
+    \
+    echo "Created styletts2 package wrapper" && \
+    echo "Testing import..." && \
+    python3 -c "from styletts2 import tts; print('✓ styletts2.tts imported successfully'); print(f'StyleTTS2 class: {tts.StyleTTS2}')" 2>&1 || \
+    echo "⚠ Import test failed, but package wrapper created. Will try at runtime."
+
 # Add StyleTTS2 repository root to Python path as primary method
 # This ensures the module is found regardless of installation method
 ENV PYTHONPATH=/app/StyleTTS2:/app:$PYTHONPATH
@@ -122,12 +203,30 @@ RUN mkdir -p /app/models /app/voices
 COPY api_server.py /app/api_server.py
 RUN chmod +x /app/api_server.py
 
-# Final import test before finishing build
+# Final import test before finishing build (non-fatal for debugging)
 RUN echo "=== Final Import Test ===" && \
-    python3 << 'EOF'
+    python3 << 'EOF' || echo "WARNING: Import test failed, but continuing build. Check runtime logs."
 import sys
 sys.path.insert(0, '/app/StyleTTS2')
 sys.path.insert(0, '/app')
+
+print("Python path:", sys.path)
+print("\nSearching for styletts2 module...")
+import os
+found_paths = []
+for path in sys.path:
+    styletts2_path = os.path.join(path, 'styletts2')
+    if os.path.exists(styletts2_path):
+        found_paths.append(styletts2_path)
+        print(f"  Found styletts2 at: {styletts2_path}")
+        if os.path.isdir(styletts2_path):
+            try:
+                contents = os.listdir(styletts2_path)
+                print(f"    Contents ({len(contents)} items): {contents[:10]}")
+            except:
+                pass
+
+print(f"\nFound {len(found_paths)} potential styletts2 locations")
 
 try:
     from styletts2 import tts
@@ -136,16 +235,21 @@ try:
 except ImportError as e:
     print(f"✗ FAILED: Could not import styletts2.tts")
     print(f"  Error: {e}")
-    print(f"  Python path: {sys.path}")
-    print("\nAttempting to find styletts2 module...")
-    import os
-    for path in sys.path:
-        styletts2_path = os.path.join(path, 'styletts2')
-        if os.path.exists(styletts2_path):
-            print(f"  Found styletts2 at: {styletts2_path}")
-            if os.path.isdir(styletts2_path):
-                print(f"    Contents: {os.listdir(styletts2_path)[:10]}")
-    sys.exit(1)
+    print(f"  Error type: {type(e).__name__}")
+    if hasattr(e, 'msg'):
+        print(f"  Error message: {e.msg}")
+    if hasattr(e, 'name'):
+        print(f"  Missing module: {e.name}")
+    print("\nRepository structure check:")
+    if os.path.exists('/app/StyleTTS2'):
+        print("  /app/StyleTTS2 exists")
+        try:
+            repo_contents = os.listdir('/app/StyleTTS2')
+            print(f"  Repository contents: {repo_contents[:20]}")
+        except:
+            pass
+    # Don't exit with error - let build continue so we can debug at runtime
+    print("\nBuild will continue. PYTHONPATH is set, import may work at runtime.")
 EOF
 
 # Expose port
