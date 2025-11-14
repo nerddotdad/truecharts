@@ -30,8 +30,28 @@ RUN if [ -f /app/StyleTTS2/requirements.txt ]; then \
         pip install --no-cache-dir -r /app/StyleTTS2/requirements.txt; \
     fi
 
-# Add StyleTTS2 to Python path
-ENV PYTHONPATH=/app/StyleTTS2:$PYTHONPATH
+# Find and install styletts2 module to site-packages so Python can import it
+RUN python3 -c "import site; print(site.getsitepackages())" && \
+    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
+    echo "Site packages location: $SITE_PACKAGES" && \
+    STYLETTS2_MODULE=$(find /app/StyleTTS2 -type d -name "styletts2" 2>/dev/null | head -1) && \
+    if [ -n "$STYLETTS2_MODULE" ]; then \
+        echo "Found styletts2 module at: $STYLETTS2_MODULE" && \
+        echo "Copying to site-packages: $SITE_PACKAGES" && \
+        cp -r "$STYLETTS2_MODULE" "$SITE_PACKAGES/" && \
+        echo "Successfully installed styletts2 to site-packages"; \
+    else \
+        echo "styletts2 directory not found, checking repository structure..." && \
+        echo "Repository contents:" && \
+        ls -la /app/StyleTTS2/ | head -20 && \
+        echo "Searching for styletts2..." && \
+        find /app/StyleTTS2 -name "*styletts2*" -o -name "*tts*" | head -10 && \
+        echo "If styletts2 is at repository root, we'll use PYTHONPATH instead"; \
+    fi
+
+# Add StyleTTS2 repository root to Python path as fallback
+# This ensures Python can find the module even if it's structured differently
+ENV PYTHONPATH=/app/StyleTTS2:/app:$PYTHONPATH
 
 # Install gdown for model downloads (optional, can be done at runtime)
 RUN pip install --no-cache-dir gdown
