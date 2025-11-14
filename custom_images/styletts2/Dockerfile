@@ -1,6 +1,6 @@
 # StyleTTS2 API Server Docker Image
 # Base image with PyTorch and CUDA 11.8
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime@sha256:a355f16160f64219173261456bd5a62a8b99c3fb76ee405c7929a2c8df7dfeb3
+FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime@sha256:971fbeae82c0a5a7a970a264a8b8ce1c3426aa79df7111004ad2bc2640f7d89c
 
 # Set working directory
 WORKDIR /app
