@@ -30,27 +30,86 @@ RUN if [ -f /app/StyleTTS2/requirements.txt ]; then \
         pip install --no-cache-dir -r /app/StyleTTS2/requirements.txt; \
     fi
 
-# Find and install styletts2 module to site-packages so Python can import it
-RUN python3 -c "import site; print(site.getsitepackages())" && \
-    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
-    echo "Site packages location: $SITE_PACKAGES" && \
-    STYLETTS2_MODULE=$(find /app/StyleTTS2 -type d -name "styletts2" 2>/dev/null | head -1) && \
-    if [ -n "$STYLETTS2_MODULE" ]; then \
-        echo "Found styletts2 module at: $STYLETTS2_MODULE" && \
-        echo "Copying to site-packages: $SITE_PACKAGES" && \
-        cp -r "$STYLETTS2_MODULE" "$SITE_PACKAGES/" && \
-        echo "Successfully installed styletts2 to site-packages"; \
-    else \
-        echo "styletts2 directory not found, checking repository structure..." && \
-        echo "Repository contents:" && \
-        ls -la /app/StyleTTS2/ | head -20 && \
-        echo "Searching for styletts2..." && \
-        find /app/StyleTTS2 -name "*styletts2*" -o -name "*tts*" | head -10 && \
-        echo "If styletts2 is at repository root, we'll use PYTHONPATH instead"; \
-    fi
+# Debug: Show repository structure to understand layout
+RUN echo "=== StyleTTS2 Repository Structure ===" && \
+    ls -la /app/StyleTTS2/ && \
+    echo "" && \
+    echo "=== Top-level directories ===" && \
+    find /app/StyleTTS2 -maxdepth 1 -type d && \
+    echo "" && \
+    echo "=== Looking for styletts2 module ===" && \
+    find /app/StyleTTS2 -type d -name "styletts2" 2>/dev/null && \
+    echo "" && \
+    echo "=== Looking for tts.py or similar ===" && \
+    find /app/StyleTTS2 -name "*tts*.py" -type f | head -10
 
-# Add StyleTTS2 repository root to Python path as fallback
-# This ensures Python can find the module even if it's structured differently
+# Install styletts2 module - handle different repository structures
+RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
+    echo "Site packages: $SITE_PACKAGES" && \
+    \
+    # Method 1: Look for styletts2 directory in repository \
+    STYLETTS2_DIR=$(find /app/StyleTTS2 -type d -name "styletts2" 2>/dev/null | head -1) && \
+    \
+    if [ -n "$STYLETTS2_DIR" ]; then \
+        echo "Method 1: Found styletts2 directory at: $STYLETTS2_DIR" && \
+        STYLETTS2_PARENT=$(dirname "$STYLETTS2_DIR") && \
+        echo "Parent directory: $STYLETTS2_PARENT" && \
+        # Copy the entire parent directory structure to preserve imports \
+        if [ "$STYLETTS2_PARENT" != "/app/StyleTTS2" ]; then \
+            # If styletts2 is in a subdirectory, copy parent to site-packages \
+            cp -r "$STYLETTS2_PARENT"/* "$SITE_PACKAGES/" 2>/dev/null || true; \
+        else \
+            # If styletts2 is at root, just copy it \
+            cp -r "$STYLETTS2_DIR" "$SITE_PACKAGES/"; \
+        fi && \
+        echo "Copied styletts2 structure to site-packages"; \
+    else \
+        echo "Method 1 failed: styletts2 directory not found" && \
+        \
+        # Method 2: Check if repository root contains the package files \
+        if [ -f "/app/StyleTTS2/inference.py" ] || [ -d "/app/StyleTTS2/Utils" ] || [ -d "/app/StyleTTS2/Models" ]; then \
+            echo "Method 2: Repository root appears to contain package files" && \
+            # Create styletts2 package and copy everything \
+            mkdir -p "$SITE_PACKAGES/styletts2" && \
+            cp -r /app/StyleTTS2/* "$SITE_PACKAGES/styletts2/" 2>/dev/null || true && \
+            # Ensure __init__.py exists \
+            [ ! -f "$SITE_PACKAGES/styletts2/__init__.py" ] && touch "$SITE_PACKAGES/styletts2/__init__.py" || true && \
+            echo "Created styletts2 package from repository root"; \
+        else \
+            echo "Method 2 failed: Repository root doesn't contain expected files" && \
+            \
+            # Method 3: Look for any Python package structure \
+            echo "Method 3: Searching for Python package structure..." && \
+            find /app/StyleTTS2 -name "__init__.py" -type f | head -5 && \
+            # Try to find the actual package location \
+            PACKAGE_ROOT=$(find /app/StyleTTS2 -name "__init__.py" -type f | head -1 | xargs dirname) && \
+            if [ -n "$PACKAGE_ROOT" ] && [ "$PACKAGE_ROOT" != "/app/StyleTTS2" ]; then \
+                echo "Found package root at: $PACKAGE_ROOT" && \
+                PACKAGE_NAME=$(basename "$PACKAGE_ROOT") && \
+                if [ "$PACKAGE_NAME" = "styletts2" ]; then \
+                    cp -r "$PACKAGE_ROOT" "$SITE_PACKAGES/"; \
+                else \
+                    # Package has different name, create styletts2 and copy \
+                    mkdir -p "$SITE_PACKAGES/styletts2" && \
+                    cp -r "$PACKAGE_ROOT"/* "$SITE_PACKAGES/styletts2/" 2>/dev/null || true; \
+                fi; \
+            fi; \
+        fi; \
+    fi && \
+    \
+    # Final verification \
+    echo "" && \
+    echo "=== Final structure in site-packages ===" && \
+    ls -la "$SITE_PACKAGES/" | grep -i styletts2 || echo "No styletts2 found in site-packages" && \
+    echo "" && \
+    echo "=== Testing import ===" && \
+    python3 -c "import sys; sys.path.insert(0, '/app/StyleTTS2'); from styletts2 import tts; print('SUCCESS: Imported from /app/StyleTTS2')" 2>&1 || \
+    python3 -c "from styletts2 import tts; print('SUCCESS: Imported from site-packages')" 2>&1 || \
+    (echo "WARNING: Import test failed, but PYTHONPATH will be set at runtime" && \
+     python3 -c "import sys; print('Python path:', sys.path)" 2>&1)
+
+# Add StyleTTS2 repository root to Python path as primary method
+# This ensures the module is found regardless of installation method
 ENV PYTHONPATH=/app/StyleTTS2:/app:$PYTHONPATH
 
 # Install gdown for model downloads (optional, can be done at runtime)
@@ -62,6 +121,32 @@ RUN mkdir -p /app/models /app/voices
 # Copy the Flask API server script
 COPY api_server.py /app/api_server.py
 RUN chmod +x /app/api_server.py
+
+# Final import test before finishing build
+RUN echo "=== Final Import Test ===" && \
+    python3 << 'EOF'
+import sys
+sys.path.insert(0, '/app/StyleTTS2')
+sys.path.insert(0, '/app')
+
+try:
+    from styletts2 import tts
+    print("✓ SUCCESS: styletts2.tts imported successfully")
+    print(f"  Module location: {tts.__file__ if hasattr(tts, '__file__') else 'built-in'}")
+except ImportError as e:
+    print(f"✗ FAILED: Could not import styletts2.tts")
+    print(f"  Error: {e}")
+    print(f"  Python path: {sys.path}")
+    print("\nAttempting to find styletts2 module...")
+    import os
+    for path in sys.path:
+        styletts2_path = os.path.join(path, 'styletts2')
+        if os.path.exists(styletts2_path):
+            print(f"  Found styletts2 at: {styletts2_path}")
+            if os.path.isdir(styletts2_path):
+                print(f"    Contents: {os.listdir(styletts2_path)[:10]}")
+    sys.exit(1)
+EOF
 
 # Expose port
 EXPOSE 5003
