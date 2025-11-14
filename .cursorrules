@@ -41,6 +41,54 @@
     - **/repositories/** Contains all repositories used within fluxcd helm-releases
     - **/clusters/** Contains all kubernetes clusters you run within the same clustertool github repo
     - **/kubernetes/** Contains all the files of your kubernetes cluster
+    - **/custom_images/** Contains custom Docker images that need to be built (see Custom Images section below)
+
+### Custom Docker Images
+
+When an application requires a custom Docker image (not available as a pre-built image, or needs custom configuration):
+
+1. **Create image directory**: Place all image files in `custom_images/<image-name>/`
+   - Must include a `Dockerfile`
+   - Include any required source files, scripts, etc.
+   - Optionally add a `README.md` with build/usage instructions
+
+2. **Automatic building**: Images are automatically built and pushed to GitHub Container Registry (GHCR) via GitHub Actions:
+   - **Trigger**: Automatically on push to `main` when files in `custom_images/` change
+   - **Registry**: `ghcr.io/nerddotdad/<image-name>`
+   - **Tags**: `latest` (on main branch) and `main-<sha>` (for versioning)
+   - **Workflow**: `.github/workflows/build-custom-images.yml`
+   - **Manual trigger**: Can be manually triggered via GitHub Actions UI
+
+3. **Using in HelmReleases**: Reference the GHCR image in your HelmRelease:
+   ```yaml
+   image:
+     repository: ghcr.io/nerddotdad/<image-name>
+     pullPolicy: IfNotPresent
+     tag: "latest"  # or use specific tag like "main-abc123"
+   ```
+
+4. **Benefits**:
+   - ✅ Pre-installed dependencies = faster pod startup
+   - ✅ No build failures during pod initialization
+   - ✅ Version controlled Dockerfiles
+   - ✅ Automatic builds on changes
+   - ✅ Free registry (GHCR is free for public repos)
+
+5. **Example structure**:
+   ```
+   custom_images/
+     └── styletts2/
+         ├── Dockerfile
+         ├── api_server.py
+         └── README.md
+   ```
+
+6. **Best practices**:
+   - Keep images focused on a single application
+   - Include only necessary dependencies
+   - Use multi-stage builds when appropriate
+   - Document build requirements in README
+   - Test images locally before committing
 
 ### Prohibited Actions:
 - ❌ **NEVER** use `kubectl apply`, `kubectl patch`, or direct cluster modifications
@@ -74,5 +122,7 @@ This is a TrueCharts GitOps repository using Flux for cluster management. Key di
 - `clusters/main/kubernetes/` - Kubernetes manifests and Helm releases
 - `repositories/` - Helm repository configurations
 - `clusters/main/talos/` - Talos Linux configuration
+- `custom_images/` - Custom Docker images with automatic build via GitHub Actions
+- `.github/workflows/` - GitHub Actions workflows (including custom image builds)
 
 Remember: **Configuration as Code** - If it's not in Git, it doesn't exist!
