@@ -90,6 +90,7 @@ spec:
                     && rm -rf /var/lib/apt/lists/*
                   
                   # Install Python dependencies (torch/torchaudio already installed in PyTorch image)
+                  echo "Installing Python dependencies..."
                   pip install --no-cache-dir \
                     SoundFile munch pydub pyyaml \
                     librosa nltk matplotlib accelerate transformers \
@@ -98,22 +99,36 @@ spec:
                     git+https://github.com/resemble-ai/monotonic_align.git
                   
                   # Install StyleTTS2 package
+                  echo "Installing StyleTTS2..."
                   pip install --no-cache-dir git+https://github.com/yl4579/StyleTTS2.git
                   
                   # Create directories
                   mkdir -p /app/models /app/voices
                   
                   # Download models if not present
-                  if [ ! -f "/app/models/config.json" ]; then
+                  if [ ! -f "/app/models/config.json" ] && [ ! -f "/app/models/Models/LJSpeech/config.yml" ]; then
                     echo "Downloading StyleTTS2 models..."
                     cd /tmp
-                    pip3 install gdown
+                    pip install --no-cache-dir gdown
                     gdown --id 1K3jt1JEbtohBLUA0X75KLw36TW7U1yxq || echo "Download failed, will retry on next startup"
                     if [ -f "Models.zip" ]; then
-                      unzip -q Models.zip -d /app/models/ || echo "Extraction failed"
+                      echo "Extracting models (this may take a few minutes)..."
+                      # Use -o to overwrite without prompting, -q for quiet
+                      unzip -o -q Models.zip -d /tmp/ || { echo "Extraction failed"; exit 1; }
+                      # Move extracted files to /app/models
+                      if [ -d "/tmp/Models" ]; then
+                        mv /tmp/Models/* /app/models/ 2>/dev/null || cp -r /tmp/Models/* /app/models/
+                        rm -rf /tmp/Models
+                      fi
                       rm -f Models.zip
+                      echo "Models extracted successfully"
                     fi
+                  else
+                    echo "Models already present, skipping download"
                   fi
+                  
+                  # Verify Flask is installed
+                  python3 -c "import flask; print('Flask version:', flask.__version__)" || { echo "Flask installation failed!"; exit 1; }
                   
                   # Run Flask API server
                   python3 << 'EOF'
@@ -141,9 +156,20 @@ spec:
                           # Initialize StyleTTS2
                           # Check if we have custom models in /app/models
                           model_path = "/app/models"
+                          # Check for various possible model paths
                           if os.path.exists(os.path.join(model_path, "config.json")):
                               print(f"Loading model from {model_path}")
                               styletts2_model = tts.StyleTTS2(model_path=model_path)
+                          elif os.path.exists(os.path.join(model_path, "Models", "LJSpeech", "config.yml")):
+                              # Models extracted from zip file
+                              ljspeech_path = os.path.join(model_path, "Models", "LJSpeech")
+                              print(f"Loading LJSpeech model from {ljspeech_path}")
+                              styletts2_model = tts.StyleTTS2(model_path=ljspeech_path)
+                          elif os.path.exists(os.path.join(model_path, "LJSpeech", "config.yml")):
+                              # Alternative path structure
+                              ljspeech_path = os.path.join(model_path, "LJSpeech")
+                              print(f"Loading LJSpeech model from {ljspeech_path}")
+                              styletts2_model = tts.StyleTTS2(model_path=ljspeech_path)
                           else:
                               print("Loading default StyleTTS2 model (will download if needed)...")
                               styletts2_model = tts.StyleTTS2()
