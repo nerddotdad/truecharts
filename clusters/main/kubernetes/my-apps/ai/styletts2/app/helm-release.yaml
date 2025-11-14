@@ -87,6 +87,7 @@ spec:
                   apt-get update && apt-get install -y \
                     git wget curl unzip \
                     espeak-ng libespeak-ng-dev libsndfile1 \
+                    build-essential gcc g++ \
                     && rm -rf /var/lib/apt/lists/*
                   
                   # Install Python dependencies (torch/torchaudio already installed in PyTorch image)
