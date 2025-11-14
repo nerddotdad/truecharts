@@ -43,7 +43,11 @@ RUN echo "=== StyleTTS2 Repository Structure ===" && \
     echo "=== Looking for tts.py or similar ===" && \
     find /app/StyleTTS2 -name "*tts*.py" -type f | head -10
 
+# Copy styletts2 wrapper package early (before installation attempts)
+COPY styletts2_wrapper/ /app/styletts2_wrapper/
+
 # Install styletts2 module - handle different repository structures
+# Note: We'll overwrite with our wrapper afterwards
 RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
     echo "Site packages: $SITE_PACKAGES" && \
     \
@@ -72,7 +76,7 @@ RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") 
             # Create styletts2 package and copy everything \
             mkdir -p "$SITE_PACKAGES/styletts2" && \
             cp -r /app/StyleTTS2/* "$SITE_PACKAGES/styletts2/" 2>/dev/null || true && \
-            # Ensure __init__.py exists \
+            # Ensure __init__.py exists (will be overwritten by our wrapper) \
             [ ! -f "$SITE_PACKAGES/styletts2/__init__.py" ] && touch "$SITE_PACKAGES/styletts2/__init__.py" || true && \
             echo "Created styletts2 package from repository root"; \
         else \
@@ -100,108 +104,23 @@ RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") 
     # Final verification \
     echo "" && \
     echo "=== Final structure in site-packages ===" && \
-    ls -la "$SITE_PACKAGES/" | grep -i styletts2 || echo "No styletts2 found in site-packages" && \
-    echo "" && \
-    echo "=== Testing import ===" && \
-    python3 -c "import sys; sys.path.insert(0, '/app/StyleTTS2'); from styletts2 import tts; print('SUCCESS: Imported from /app/StyleTTS2')" 2>&1 || \
-    python3 -c "from styletts2 import tts; print('SUCCESS: Imported from site-packages')" 2>&1 || \
-    (echo "WARNING: Import test failed, but PYTHONPATH will be set at runtime" && \
-     python3 -c "import sys; print('Python path:', sys.path)" 2>&1)
+    ls -la "$SITE_PACKAGES/" | grep -i styletts2 || echo "No styletts2 found in site-packages"
 
-# Create styletts2 package wrapper
+# Install our styletts2 package wrapper (overwrites any files from above)
 # This ensures 'from styletts2 import tts' works with StyleTTS2 repository
-RUN python3 << 'PYTHON_SCRIPT'
-import os
-import site
-
-# Get site-packages directory
-site_packages = site.getsitepackages()[0]
-styletts2_pkg = os.path.join(site_packages, 'styletts2')
-
-print(f"Creating styletts2 package wrapper at {styletts2_pkg}")
-os.makedirs(styletts2_pkg, exist_ok=True)
-
-# Create __init__.py
-init_py = """# styletts2 package - wrapper for StyleTTS2 repository
-__all__ = ['tts']
-"""
-with open(os.path.join(styletts2_pkg, '__init__.py'), 'w') as f:
-    f.write(init_py)
-
-# Create tts.py
-tts_py = '''"""
-styletts2.tts module
-Imports StyleTTS2 class from StyleTTS2 repository
-"""
-import sys
-import os
-
-# Add repository to Python path
-repo_path = '/app/StyleTTS2'
-if repo_path not in sys.path:
-    sys.path.insert(0, repo_path)
-
-# Import StyleTTS2 - try multiple strategies
-StyleTTS2 = None
-import_error = None
-
-# Strategy 1: Try importing from inference.py (most common)
-try:
-    from inference import StyleTTS2
-except ImportError as e:
-    import_error = str(e)
-    # Strategy 2: Try loading inference.py directly
-    try:
-        import importlib.util
-        inference_path = os.path.join(repo_path, 'inference.py')
-        if os.path.exists(inference_path):
-            spec = importlib.util.spec_from_file_location("inference", inference_path)
-            inference_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(inference_module)
-            StyleTTS2 = getattr(inference_module, 'StyleTTS2', None)
-    except Exception as e2:
-        import_error = f"{import_error}; {str(e2)}"
-
-# Strategy 3: Try importing from other possible locations
-if StyleTTS2 is None:
-    try:
-        # Check if there's a Models or Utils directory with the class
-        import importlib
-        # Try importing from various possible module names
-        for module_name in ['inference', 'Models.inference', 'Utils.inference', 'styletts2.inference']:
-            try:
-                mod = importlib.import_module(module_name)
-                StyleTTS2 = getattr(mod, 'StyleTTS2', None)
-                if StyleTTS2 is not None:
-                    break
-            except:
-                continue
-    except Exception as e3:
-        if not import_error:
-            import_error = str(e3)
-
-if StyleTTS2 is None:
-    raise ImportError(
-        f"Could not import StyleTTS2 from StyleTTS2 repository at {repo_path}. "
-        f"Errors: {import_error or 'Unknown error'}. "
-        f"Please ensure the repository contains inference.py with StyleTTS2 class."
-    )
-
-__all__ = ['StyleTTS2']
-'''
-with open(os.path.join(styletts2_pkg, 'tts.py'), 'w') as f:
-    f.write(tts_py)
-
-print("Created styletts2 package wrapper")
-print("Testing import...")
-try:
-    from styletts2 import tts
-    print('✓ styletts2.tts imported successfully')
-    print(f'StyleTTS2 class: {tts.StyleTTS2}')
-except Exception as e:
-    print(f'⚠ Import test failed: {e}')
-    print('Package wrapper created. Will try at runtime.')
-PYTHON_SCRIPT
+RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
+    STYLETTS2_PKG="$SITE_PACKAGES/styletts2" && \
+    echo "=== Installing styletts2 package wrapper ===" && \
+    echo "Package directory: $STYLETTS2_PKG" && \
+    mkdir -p "$STYLETTS2_PKG" && \
+    cp -r /app/styletts2_wrapper/* "$STYLETTS2_PKG/" && \
+    echo "Copied wrapper files to $STYLETTS2_PKG" && \
+    ls -lh "$STYLETTS2_PKG/__init__.py" "$STYLETTS2_PKG/tts.py" && \
+    \
+    # Test import \
+    echo "=== Testing import ===" && \
+    python3 -c "from styletts2 import tts; print('✓ Import successful'); print(f'tts module: {tts}'); print(f'Has StyleTTS2: {hasattr(tts, \"StyleTTS2\")}')" || \
+    (echo "⚠ Import test failed" && python3 -c "import sys; import os; pkg = os.path.join(sys.path[-1], 'styletts2'); print(f'Package: {pkg}'); print(f'Exists: {os.path.exists(pkg)}'); print(f'Contents: {os.listdir(pkg)[:10] if os.path.exists(pkg) else []}')")
 
 # Add StyleTTS2 repository root to Python path as primary method
 # This ensures the module is found regardless of installation method
