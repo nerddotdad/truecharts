@@ -24,10 +24,30 @@ jobs:
       images: ${{ steps.changes.outputs.images }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        with:
+          fetch-depth: 2  # Need at least 2 commits to compare changes
+      
+      - name: Debug workflow trigger
+        run: |
+          echo "Workflow triggered by: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Before SHA: ${{ github.event.before }}"
+          echo ""
+          echo "All custom_images directories:"
+          find custom_images -type d -mindepth 1 -maxdepth 1 2>/dev/null || echo "custom_images directory not found"
+          echo ""
+          echo "All Dockerfiles:"
+          find custom_images -name Dockerfile -type f 2>/dev/null || echo "No Dockerfiles found"
       
       - name: Detect changed images
         id: changes
         run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Before SHA: ${{ github.event.before }}"
+          echo "Current SHA: ${{ github.sha }}"
+          
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.image }}" ]; then
               # Single image specified
@@ -39,25 +59,54 @@ jobs:
               echo "images=$IMAGES" >> $GITHUB_OUTPUT
             fi
           else
-            # Find changed Dockerfiles
+            # For push events, detect which images changed
+            # Since workflow only triggers on custom_images/** path changes, we know something changed
+            CHANGED=""
+            
+            # Try to get the previous commit for comparison
             if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-              CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/.*/Dockerfile$' | sed 's|custom_images/||' | sed 's|/Dockerfile||' | sort -u)
-              if [ -z "$CHANGED" ]; then
-                # If no Dockerfiles changed, check if any files in custom_images changed
-                if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^custom_images/'; then
-                  # Find all directories with Dockerfile in changed paths
-                  CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/' | cut -d'/' -f2 | sort -u)
-                fi
-              fi
+              echo "Comparing ${{ github.event.before }}..${{ github.sha }}"
+              # Get all changed files in custom_images
+              CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/' || true)
             else
-              # First push or no before commit - check all files in custom_images
-              if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^custom_images/'; then
-                CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep '^custom_images/' | cut -d'/' -f2 | sort -u)
+              echo "No before SHA, comparing HEAD~1..HEAD"
+              # Fallback to HEAD~1 if before is not available
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep '^custom_images/' || true)
+            fi
+            
+            echo "Changed files in custom_images:"
+            echo "$CHANGED_FILES"
+            
+            if [ -n "$CHANGED_FILES" ]; then
+              # Extract unique image directories from changed files
+              # This handles changes to Dockerfile, VERSION, or any files in the image directory
+              CHANGED=$(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u)
+              
+              # Filter to only directories that have a Dockerfile
+              VALID_IMAGES=""
+              for img in $CHANGED; do
+                if [ -f "custom_images/$img/Dockerfile" ]; then
+                  if [ -z "$VALID_IMAGES" ]; then
+                    VALID_IMAGES="$img"
+                  else
+                    VALID_IMAGES="$VALID_IMAGES"$'\n'"$img"
+                  fi
+                fi
+              done
+              
+              if [ -n "$VALID_IMAGES" ]; then
+                CHANGED="$VALID_IMAGES"
+              else
+                CHANGED=""
               fi
             fi
+            
             if [ -n "$CHANGED" ]; then
+              echo "Changed images:"
+              echo "$CHANGED"
               IMAGES=$(echo "$CHANGED" | jq -R . | jq -s -c .)
             else
+              echo "No valid images found to build"
               IMAGES="[]"
             fi
             echo "images=$IMAGES" >> $GITHUB_OUTPUT
@@ -90,13 +139,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get image version
+        id: version
+        run: |
+          VERSION_FILE="custom_images/${{ matrix.image }}/VERSION"
+          if [ -f "$VERSION_FILE" ]; then
+            # Use version from VERSION file
+            VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+            echo "Using version from VERSION file: $VERSION"
+          else
+            # Use date-based versioning (YYYY.MM.DD-HHMM)
+            VERSION=$(date +"%Y.%m.%d-%H%M")
+            echo "Using date-based version: $VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Image version: $VERSION"
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
           tags: |
-            type=ref,event=branch
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -111,6 +176,12 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Image digest
-        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+      - name: Image digest and tags
+        run: |
+          echo "Image pushed with digest: ${{ steps.meta.outputs.digest }}"
+          echo "Image tags:"
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
+          echo ""
+          echo "To use this image, update your Helm chart with:"
+          echo "  tag: \"${{ steps.version.outputs.version }}\""
 
