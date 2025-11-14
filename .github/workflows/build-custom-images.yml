@@ -122,12 +122,15 @@ jobs:
       matrix:
         image: ${{ fromJson(needs.detect-changes.outputs.images) }}
     permissions:
-      contents: read
+      contents: write  # Need write to commit VERSION file updates
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Need full history for git operations
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
@@ -139,21 +142,56 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get image version
+      - name: Get and bump image version
         id: version
         run: |
           VERSION_FILE="custom_images/${{ matrix.image }}/VERSION"
+          
+          # Check if VERSION file exists
           if [ -f "$VERSION_FILE" ]; then
-            # Use version from VERSION file
-            VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
-            echo "Using version from VERSION file: $VERSION"
+            CURRENT_VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+            echo "Current version in file: $CURRENT_VERSION"
+            
+            # Check if VERSION file was changed in this commit
+            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              VERSION_CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^$VERSION_FILE$" && echo "yes" || echo "no")
+            else
+              VERSION_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^$VERSION_FILE$" && echo "yes" || echo "no")
+            fi
+            
+            if [ "$VERSION_CHANGED" = "yes" ]; then
+              # VERSION file was manually updated, use that version
+              VERSION="$CURRENT_VERSION"
+              echo "VERSION file was manually updated, using: $VERSION"
+            else
+              # Auto-bump patch version
+              echo "VERSION file unchanged, auto-bumping patch version..."
+              # Extract major.minor.patch
+              if [[ $CURRENT_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+                MAJOR="${BASH_REMATCH[1]}"
+                MINOR="${BASH_REMATCH[2]}"
+                PATCH="${BASH_REMATCH[3]}"
+                NEW_PATCH=$((PATCH + 1))
+                VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+                echo "Bumped version: $CURRENT_VERSION -> $VERSION"
+                
+                # Update VERSION file
+                echo "$VERSION" > "$VERSION_FILE"
+                echo "Updated $VERSION_FILE with new version"
+              else
+                # Version format doesn't match semantic versioning, use as-is
+                VERSION="$CURRENT_VERSION"
+                echo "Version format doesn't match semantic versioning, using as-is: $VERSION"
+              fi
+            fi
           else
-            # Use date-based versioning (YYYY.MM.DD-HHMM)
+            # No VERSION file, use date-based versioning
             VERSION=$(date +"%Y.%m.%d-%H%M")
-            echo "Using date-based version: $VERSION"
+            echo "No VERSION file found, using date-based version: $VERSION"
           fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Image version: $VERSION"
+          echo "Final image version: $VERSION"
 
       - name: Extract metadata (tags, labels)
         id: meta
@@ -176,11 +214,43 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
+      - name: Commit updated VERSION file (if auto-bumped)
+        if: steps.version.outputs.version != ''
+        run: |
+          VERSION_FILE="custom_images/${{ matrix.image }}/VERSION"
+          if [ -f "$VERSION_FILE" ]; then
+            # Check if VERSION file has uncommitted changes
+            if ! git diff --quiet "$VERSION_FILE" 2>/dev/null; then
+              echo "VERSION file was auto-bumped, committing changes..."
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git add "$VERSION_FILE"
+              
+              # Commit the change
+              if git commit -m "chore: auto-bump ${{ matrix.image }} version to ${{ steps.version.outputs.version }} [skip ci]"; then
+                echo "Committed VERSION file update"
+                # Try to push (may fail if branch is protected or has conflicts)
+                if git push origin HEAD:${{ github.ref_name }}; then
+                  echo "Pushed VERSION file update to repository"
+                else
+                  echo "Warning: Failed to push VERSION file update. You may need to commit manually."
+                  echo "New version is: ${{ steps.version.outputs.version }}"
+                fi
+              else
+                echo "No changes to commit (may have been committed already)"
+              fi
+            else
+              echo "VERSION file unchanged, no commit needed"
+            fi
+          fi
+
       - name: Image digest and tags
         run: |
           echo "Image pushed with digest: ${{ steps.meta.outputs.digest }}"
           echo "Image tags:"
           echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
+          echo ""
+          echo "Image version: ${{ steps.version.outputs.version }}"
           echo ""
           echo "To use this image, update your Helm chart with:"
           echo "  tag: \"${{ steps.version.outputs.version }}\""
