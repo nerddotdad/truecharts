@@ -20,8 +20,18 @@ RUN pip install --no-cache-dir \
     flask flask-cors \
     git+https://github.com/resemble-ai/monotonic_align.git
 
-# Install StyleTTS2 package
-RUN pip install --no-cache-dir git+https://github.com/yl4579/StyleTTS2.git
+# Clone StyleTTS2 repository (not installable via pip, needs to be in Python path)
+RUN git clone https://github.com/yl4579/StyleTTS2.git /app/StyleTTS2 && \
+    cd /app/StyleTTS2 && \
+    git checkout 5cedc71c333f8d8b8551ca59378bdcc7af4c9529
+
+# Install StyleTTS2 dependencies if there's a requirements file
+RUN if [ -f /app/StyleTTS2/requirements.txt ]; then \
+        pip install --no-cache-dir -r /app/StyleTTS2/requirements.txt; \
+    fi
+
+# Add StyleTTS2 to Python path
+ENV PYTHONPATH=/app/StyleTTS2:$PYTHONPATH
 
 # Install gdown for model downloads (optional, can be done at runtime)
 RUN pip install --no-cache-dir gdown
