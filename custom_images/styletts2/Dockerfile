@@ -110,20 +110,26 @@ RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") 
 
 # Create styletts2 package wrapper
 # This ensures 'from styletts2 import tts' works with StyleTTS2 repository
-RUN SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])") && \
-    STYLETTS2_PKG="$SITE_PACKAGES/styletts2" && \
-    echo "Creating styletts2 package wrapper at $STYLETTS2_PKG" && \
-    mkdir -p "$STYLETTS2_PKG" && \
-    \
-    # Create __init__.py \
-    cat > "$STYLETTS2_PKG/__init__.py" << 'PYEOF'
-# styletts2 package - wrapper for StyleTTS2 repository
+RUN python3 << 'PYTHON_SCRIPT'
+import os
+import site
+
+# Get site-packages directory
+site_packages = site.getsitepackages()[0]
+styletts2_pkg = os.path.join(site_packages, 'styletts2')
+
+print(f"Creating styletts2 package wrapper at {styletts2_pkg}")
+os.makedirs(styletts2_pkg, exist_ok=True)
+
+# Create __init__.py
+init_py = """# styletts2 package - wrapper for StyleTTS2 repository
 __all__ = ['tts']
-PYEOF
-    \
-    # Create tts.py that imports StyleTTS2 from repository \
-    cat > "$STYLETTS2_PKG/tts.py" << 'PYEOF'
 """
+with open(os.path.join(styletts2_pkg, '__init__.py'), 'w') as f:
+    f.write(init_py)
+
+# Create tts.py
+tts_py = '''"""
 styletts2.tts module
 Imports StyleTTS2 class from StyleTTS2 repository
 """
@@ -182,12 +188,20 @@ if StyleTTS2 is None:
     )
 
 __all__ = ['StyleTTS2']
-PYEOF
-    \
-    echo "Created styletts2 package wrapper" && \
-    echo "Testing import..." && \
-    python3 -c "from styletts2 import tts; print('✓ styletts2.tts imported successfully'); print(f'StyleTTS2 class: {tts.StyleTTS2}')" 2>&1 || \
-    echo "⚠ Import test failed, but package wrapper created. Will try at runtime."
+'''
+with open(os.path.join(styletts2_pkg, 'tts.py'), 'w') as f:
+    f.write(tts_py)
+
+print("Created styletts2 package wrapper")
+print("Testing import...")
+try:
+    from styletts2 import tts
+    print('✓ styletts2.tts imported successfully')
+    print(f'StyleTTS2 class: {tts.StyleTTS2}')
+except Exception as e:
+    print(f'⚠ Import test failed: {e}')
+    print('Package wrapper created. Will try at runtime.')
+PYTHON_SCRIPT
 
 # Add StyleTTS2 repository root to Python path as primary method
 # This ensures the module is found regardless of installation method
