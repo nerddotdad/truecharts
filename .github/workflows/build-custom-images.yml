@@ -1,0 +1,115 @@
+name: Build Custom Docker Images
+
+on:
+  push:
+    paths:
+      - 'custom_images/**'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'Image to build (leave empty for all)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.changes.outputs.images }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Detect changed images
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.image }}" ]; then
+              # Single image specified
+              echo "images=[\"${{ github.event.inputs.image }}\"]" >> $GITHUB_OUTPUT
+            else
+              # Find all directories with Dockerfile
+              IMAGES=$(find custom_images -name Dockerfile -type f | sed 's|custom_images/||' | sed 's|/Dockerfile||' | jq -R . | jq -s .)
+              echo "images=$IMAGES" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Find changed Dockerfiles
+            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/.*/Dockerfile$' | sed 's|custom_images/||' | sed 's|/Dockerfile||' | sort -u)
+              if [ -z "$CHANGED" ]; then
+                # If no Dockerfiles changed, check if any files in custom_images changed
+                if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^custom_images/'; then
+                  # Find all directories with Dockerfile in changed paths
+                  CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/' | cut -d'/' -f2 | sort -u)
+                fi
+              fi
+            else
+              # First push or no before commit - check all files in custom_images
+              if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^custom_images/'; then
+                CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep '^custom_images/' | cut -d'/' -f2 | sort -u)
+              fi
+            fi
+            if [ -n "$CHANGED" ]; then
+              IMAGES=$(echo "$CHANGED" | jq -R . | jq -s .)
+            else
+              IMAGES="[]"
+            fi
+            echo "images=$IMAGES" >> $GITHUB_OUTPUT
+          fi
+          echo "Images to build: $(cat $GITHUB_OUTPUT | grep '^images=' | cut -d'=' -f2-)"
+
+  build:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.images != '' && needs.detect-changes.outputs.images != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.detect-changes.outputs.images) }}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./custom_images/${{ matrix.image }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
