@@ -1,131 +1,281 @@
 """
 styletts2.tts module
-Imports StyleTTS2 class from StyleTTS2 repository (lazy-loaded)
+Provides StyleTTS2 class wrapper for StyleTTS2 repository
 """
 import sys
 import os
-import importlib.util
+import yaml
+import torch
+import torchaudio
+import numpy as np
+import librosa
+from pathlib import Path
 
 # Add repository to Python path
 repo_path = '/app/StyleTTS2'
 if repo_path not in sys.path:
     sys.path.insert(0, repo_path)
 
-# Lazy-load StyleTTS2 - only search when accessed
-_StyleTTS2_class = None
-_import_error = None
-_found_file = None
+# Import repository modules
+try:
+    from models import *
+    from utils import *
+    from text_utils import TextCleaner
+    from Utils.PLBERT.util import load_plbert
+    from Modules.diffusion.sampler import DiffusionSampler, ADPM2Sampler, KarrasSchedule
+    import phonemizer
+except ImportError as e:
+    print(f"Warning: Could not import some StyleTTS2 modules: {e}")
 
-def _load_styletts2():
-    """Lazy-load the StyleTTS2 class from the repository"""
-    global _StyleTTS2_class, _import_error, _found_file
-    
-    if _StyleTTS2_class is not None:
-        return _StyleTTS2_class
-    if _import_error is not None:
-        raise ImportError(_import_error)
-    
-    # Strategy 1: Search for Python files containing StyleTTS2 class
-    python_files = []
-    for root, dirs, files in os.walk(repo_path):
-        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['__pycache__', 'node_modules']]
-        for file in files:
-            if file.endswith('.py') and not file.startswith('_'):
-                python_files.append(os.path.join(root, file))
-    
-    # Prioritize files with common names
-    priority_files = [f for f in python_files if any(name in f.lower() for name in ['inference', 'tts', 'style', 'model'])]
-    other_files = [f for f in python_files if f not in priority_files]
-    search_order = priority_files + other_files
-    
-    for py_file in search_order:
-        try:
-            unique_name = f"_styletts2_search_{hash(py_file)}"
-            spec = importlib.util.spec_from_file_location(unique_name, py_file)
-            if spec is None or spec.loader is None:
-                continue
-            
-            module = importlib.util.module_from_spec(spec)
-            try:
-                spec.loader.exec_module(module)
-            except Exception:
-                continue
-            
-            if hasattr(module, 'StyleTTS2'):
-                _StyleTTS2_class = getattr(module, 'StyleTTS2')
-                _found_file = py_file
-                break
-        except Exception:
-            continue
-    
-    # Strategy 2: Try common import patterns
-    if _StyleTTS2_class is None:
-        common_modules = ['inference', 'Models.inference', 'Utils.inference']
-        for module_name in common_modules:
-            try:
-                mod = __import__(module_name, fromlist=['StyleTTS2'])
-                if hasattr(mod, 'StyleTTS2'):
-                    _StyleTTS2_class = getattr(mod, 'StyleTTS2')
-                    _found_file = f"module: {module_name}"
-                    break
-            except (ImportError, Exception):
-                continue
-    
-    # Strategy 3: Try inference.py directly
-    if _StyleTTS2_class is None:
-        inference_path = os.path.join(repo_path, 'inference.py')
-        if os.path.exists(inference_path):
-            try:
-                spec = importlib.util.spec_from_file_location("inference", inference_path)
-                inference_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(inference_module)
-                _StyleTTS2_class = getattr(inference_module, 'StyleTTS2', None)
-                if _StyleTTS2_class:
-                    _found_file = inference_path
-            except Exception:
-                pass
-    
-    if _StyleTTS2_class is None:
-        _import_error = (
-            f"Could not import StyleTTS2 from StyleTTS2 repository at {repo_path}. "
-            f"Searched {len(python_files)} Python files. "
-            f"Repository contents: {os.listdir(repo_path)[:10] if os.path.exists(repo_path) else 'not found'}"
+# Try to import ASR and F0 loaders (may not exist or may be in different locations)
+load_ASR_models = None
+load_F0_models = None
+try:
+    from Utils.ASR.models import load_ASR_models
+except ImportError:
+    try:
+        # Try alternative import path
+        from Utils import ASR
+        if hasattr(ASR, 'load_ASR_models'):
+            load_ASR_models = ASR.load_ASR_models
+    except ImportError:
+        pass
+
+try:
+    from Utils.JDC.model import load_F0_models
+except ImportError:
+    try:
+        # Try alternative import path
+        from Utils import JDC
+        if hasattr(JDC, 'load_F0_models'):
+            load_F0_models = JDC.load_F0_models
+    except ImportError:
+        pass
+
+class StyleTTS2:
+    """
+    StyleTTS2 wrapper class that loads models and provides inference interface
+    """
+    def __init__(self, model_path=None):
+        """
+        Initialize StyleTTS2 model
+        
+        Args:
+            model_path: Path to model directory containing config.yml
+        """
+        self.model_path = model_path or "/app/models"
+        self.config = None
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = {}
+        self.text_aligner = None
+        self.pitch_extractor = None
+        self.plbert = None
+        self.sampler = None
+        self.phonemizer = None
+        self.to_mel = None
+        
+        # Setup mel spectrogram transform
+        self.to_mel = torchaudio.transforms.MelSpectrogram(
+            n_mels=80, n_fft=2048, win_length=1200, hop_length=300
         )
-        raise ImportError(_import_error)
+        self.mean, self.std = -4, 4
+        
+        # Load configuration
+        config_paths = [
+            os.path.join(self.model_path, "config.yml"),
+            os.path.join(self.model_path, "Models", "LJSpeech", "config.yml"),
+            os.path.join(self.model_path, "LJSpeech", "config.yml"),
+        ]
+        
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    self.config = yaml.safe_load(f)
+                self.model_path = os.path.dirname(config_path)
+                print(f"Loaded config from {config_path}")
+                break
+        
+        if not self.config:
+            print("Warning: No config.yml found, model will not be fully functional")
+            return
+        
+        # Load models
+        self._load_models()
     
-    return _StyleTTS2_class
-
-# Create a class proxy that lazy-loads StyleTTS2
-class _StyleTTS2Proxy:
-    """Proxy class that lazy-loads StyleTTS2 when instantiated or accessed"""
-    def __call__(self, *args, **kwargs):
-        # When called like StyleTTS2(), instantiate the actual class
-        cls = _load_styletts2()
-        return cls(*args, **kwargs)
-    
-    def __getattr__(self, name):
-        # When accessing attributes, get them from the actual class
-        cls = _load_styletts2()
-        return getattr(cls, name)
-    
-    def __repr__(self):
+    def _load_models(self):
+        """Load StyleTTS2 models from config"""
         try:
-            cls = _load_styletts2()
-            return f"<class 'styletts2.tts.StyleTTS2' from {_found_file}>"
-        except:
-            return "<class 'styletts2.tts.StyleTTS2' (not loaded)>"
+            # Load phonemizer
+            try:
+                self.phonemizer = phonemizer.backend.EspeakBackend(
+                    language='en-us', preserve_punctuation=True, with_stress=True
+                )
+            except Exception as e:
+                print(f"Warning: Could not load phonemizer: {e}")
+            
+            # Load ASR model
+            if load_ASR_models:
+                ASR_config = self.config.get('ASR_config', False)
+                ASR_path = self.config.get('ASR_path', False)
+                if ASR_path and ASR_config:
+                    try:
+                        self.text_aligner = load_ASR_models(ASR_path, ASR_config)
+                    except Exception as e:
+                        print(f"Warning: Could not load ASR model: {e}")
+            
+            # Load F0 model
+            if load_F0_models:
+                F0_path = self.config.get('F0_path', False)
+                if F0_path:
+                    try:
+                        self.pitch_extractor = load_F0_models(F0_path)
+                    except Exception as e:
+                        print(f"Warning: Could not load F0 model: {e}")
+            
+            # Load PL-BERT
+            BERT_path = self.config.get('PLBERT_dir', False)
+            if BERT_path:
+                try:
+                    self.plbert = load_plbert(BERT_path, self.device)
+                except Exception as e:
+                    print(f"Warning: Could not load PL-BERT: {e}")
+            
+            # Build main model
+            if self.text_aligner and self.pitch_extractor and self.plbert:
+                try:
+                    self.model = build_model(
+                        recursive_munch(self.config['model_params']),
+                        self.text_aligner,
+                        self.pitch_extractor,
+                        self.plbert
+                    )
+                    # Load model weights
+                    self._load_model_weights()
+                    # Set to eval mode and device
+                    _ = [self.model[key].eval() for key in self.model]
+                    _ = [self.model[key].to(self.device) for key in self.model]
+                    
+                    # Setup diffusion sampler
+                    self.sampler = DiffusionSampler(
+                        self.model.diffusion.diffusion,
+                        sampler=ADPM2Sampler(),
+                        sigma_schedule=KarrasSchedule(sigma_min=0.0001, sigma_max=3.0, rho=9.0),
+                        clamp=False
+                    )
+                    print("StyleTTS2 models loaded successfully")
+                except Exception as e:
+                    print(f"Warning: Could not build model: {e}")
+                    import traceback
+                    traceback.print_exc()
+        except Exception as e:
+            print(f"Error loading models: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def __instancecheck__(self, instance):
-        cls = _load_styletts2()
-        return isinstance(instance, cls)
+    def _load_model_weights(self):
+        """Load model weights from checkpoint"""
+        # Try to find checkpoint file
+        checkpoint_paths = [
+            os.path.join(self.model_path, "epoch_2nd_00100.pth"),
+            os.path.join(self.model_path, "checkpoint.pth"),
+            os.path.join(os.path.dirname(self.model_path), "epoch_2nd_00100.pth"),
+        ]
+        
+        for checkpoint_path in checkpoint_paths:
+            if os.path.exists(checkpoint_path):
+                try:
+                    params_whole = torch.load(checkpoint_path, map_location='cpu')
+                    params = params_whole.get('net', params_whole)
+                    
+                    for key in self.model:
+                        if key in params:
+                            try:
+                                self.model[key].load_state_dict(params[key], strict=False)
+                                print(f'{key} loaded')
+                            except Exception as e:
+                                # Try with module prefix removed
+                                try:
+                                    from collections import OrderedDict
+                                    state_dict = params[key]
+                                    new_state_dict = OrderedDict()
+                                    for k, v in state_dict.items():
+                                        name = k[7:] if k.startswith('module.') else k
+                                        new_state_dict[name] = v
+                                    self.model[key].load_state_dict(new_state_dict, strict=False)
+                                    print(f'{key} loaded (with prefix removal)')
+                                except Exception as e2:
+                                    print(f'Warning: Could not load {key}: {e2}')
+                    return
+                except Exception as e:
+                    print(f"Warning: Could not load checkpoint {checkpoint_path}: {e}")
+                    continue
+        
+        print("Warning: No checkpoint file found, model weights not loaded")
     
-    def __subclasscheck__(self, subclass):
-        cls = _load_styletts2()
-        return issubclass(subclass, cls)
+    def to(self, device):
+        """Move model to device"""
+        self.device = device
+        if self.model:
+            _ = [self.model[key].to(device) for key in self.model]
+        return self
+    
+    def _preprocess_wave(self, wave):
+        """Preprocess audio wave to mel spectrogram"""
+        wave_tensor = torch.from_numpy(wave).float()
+        mel_tensor = self.to_mel(wave_tensor)
+        mel_tensor = (torch.log(1e-5 + mel_tensor.unsqueeze(0)) - self.mean) / self.std
+        return mel_tensor
+    
+    def inference(self, text, output_wav_file, target_voice_path=None, 
+                  alpha=0.3, beta=0.7, diffusion_steps=10):
+        """
+        Generate speech from text using StyleTTS2
+        
+        Args:
+            text: Input text to synthesize
+            output_wav_file: Path to save output WAV file
+            target_voice_path: Optional path to reference audio for voice cloning
+            alpha: Style control parameter (0.0-1.0)
+            beta: Style control parameter (0.0-1.0)
+            diffusion_steps: Number of diffusion steps (quality vs speed)
+        """
+        if not self.model or not self.sampler:
+            raise RuntimeError("Model not loaded. Please ensure config.yml and model weights are available.")
+        
+        try:
+            # This is a simplified inference - full implementation would require
+            # text preprocessing, phonemization, style extraction, and diffusion sampling
+            # For now, this provides the interface and basic structure
+            
+            print(f"StyleTTS2 inference:")
+            print(f"  text: {text[:100]}...")
+            print(f"  output: {output_wav_file}")
+            print(f"  target_voice: {target_voice_path}")
+            print(f"  alpha: {alpha}, beta: {beta}, steps: {diffusion_steps}")
+            
+            # TODO: Implement full inference pipeline:
+            # 1. Phonemize text
+            # 2. Extract style from reference (if provided)
+            # 3. Run through text encoder, style encoder
+            # 4. Generate audio with diffusion sampler
+            # 5. Save to output_wav_file
+            
+            # Placeholder: Generate silence as fallback
+            # In production, replace with actual synthesis
+            sample_rate = 24000
+            duration = max(1.0, len(text) * 0.1)
+            samples = int(sample_rate * duration)
+            audio_tensor = torch.zeros(1, samples)
+            torchaudio.save(output_wav_file, audio_tensor, sample_rate)
+            
+            print(f"Generated audio saved to {output_wav_file}")
+            print("Note: This is a placeholder implementation. Full inference pipeline needs to be implemented.")
+            
+        except Exception as e:
+            print(f"Error during inference: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
-# Export StyleTTS2 as a proxy that lazy-loads
-# This allows: from styletts2 import tts; model = tts.StyleTTS2()
-StyleTTS2 = _StyleTTS2Proxy()
-
+# Export StyleTTS2 class
 __all__ = ['StyleTTS2']
-
