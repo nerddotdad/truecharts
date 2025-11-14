@@ -31,10 +31,11 @@ jobs:
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.image }}" ]; then
               # Single image specified
-              echo "images=[\"${{ github.event.inputs.image }}\"]" >> $GITHUB_OUTPUT
+              IMAGES="[\"${{ github.event.inputs.image }}\"]"
+              echo "images=$IMAGES" >> $GITHUB_OUTPUT
             else
               # Find all directories with Dockerfile
-              IMAGES=$(find custom_images -name Dockerfile -type f | sed 's|custom_images/||' | sed 's|/Dockerfile||' | jq -R . | jq -s .)
+              IMAGES=$(find custom_images -name Dockerfile -type f | sed 's|custom_images/||' | sed 's|/Dockerfile||' | jq -R . | jq -s -c .)
               echo "images=$IMAGES" >> $GITHUB_OUTPUT
             fi
           else
@@ -55,13 +56,13 @@ jobs:
               fi
             fi
             if [ -n "$CHANGED" ]; then
-              IMAGES=$(echo "$CHANGED" | jq -R . | jq -s .)
+              IMAGES=$(echo "$CHANGED" | jq -R . | jq -s -c .)
             else
               IMAGES="[]"
             fi
             echo "images=$IMAGES" >> $GITHUB_OUTPUT
           fi
-          echo "Images to build: $(cat $GITHUB_OUTPUT | grep '^images=' | cut -d'=' -f2-)"
+          echo "Images to build: $IMAGES"
 
   build:
     needs: detect-changes
