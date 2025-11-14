@@ -264,6 +264,58 @@ spec:
                                       voices[voice_name] = [os.path.join(voice_path, f) for f in files]
                       return {"voices": voices}, 200
                   
+                  @app.route('/api/test-voice', methods=['POST'])
+                  def test_voice():
+                      """Test a specific voice file or set of files to see quality"""
+                      if not tts:
+                          return {"error": "Model still loading"}, 503
+                      
+                      if request.is_json:
+                          data = request.json
+                          speaker_wav = data.get('speaker_wav', None)
+                          text = data.get('text', 'Hello, this is a test of the voice quality.')
+                      else:
+                          speaker_wav = request.form.get('speaker_wav', None)
+                          text = request.form.get('text', 'Hello, this is a test of the voice quality.')
+                      
+                      if not speaker_wav:
+                          return {"error": "speaker_wav parameter required"}, 400
+                      
+                      # Handle voice name or path (same logic as main TTS endpoint)
+                      speaker_wav_param = None
+                      if isinstance(speaker_wav, str):
+                          if not speaker_wav.startswith('/'):
+                              voice_path = os.path.join(VOICE_DIR, speaker_wav)
+                              if os.path.exists(voice_path) and os.path.isdir(voice_path):
+                                  audio_files = [
+                                      os.path.join(voice_path, f) 
+                                      for f in os.listdir(voice_path) 
+                                      if f.lower().endswith(('.wav', '.mp3', '.flac', '.aif', '.aiff'))
+                                  ]
+                                  if audio_files:
+                                      speaker_wav_param = sorted(audio_files)
+                                  else:
+                                      return {"error": f"No audio files found for voice '{speaker_wav}'"}, 404
+                              else:
+                                  return {"error": f"Voice '{speaker_wav}' not found"}, 404
+                          else:
+                              if os.path.exists(speaker_wav):
+                                  speaker_wav_param = [speaker_wav]
+                              else:
+                                  return {"error": f"Voice file not found: {speaker_wav}"}, 404
+                      else:
+                          speaker_wav_param = speaker_wav
+                      
+                      with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
+                          tts.tts_to_file(
+                              text=text,
+                              file_path=f.name,
+                              speaker_wav=speaker_wav_param,
+                              language="en",
+                              split_sentences=True
+                          )
+                          return send_file(f.name, mimetype='audio/wav')
+                  
                   @app.route('/api/delete-voice', methods=['DELETE', 'POST'])
                   def delete_voice():
                       """Delete a voice file or entire voice directory"""
