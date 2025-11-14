@@ -18,7 +18,7 @@ spec:
     image:
       repository: nvidia/cuda
       pullPolicy: IfNotPresent
-      tag: "12.2.2-devel-ubuntu22.04"  # CUDA devel image with build tools
+      tag: "12.9.1-devel-ubuntu22.04"  # CUDA devel image with build tools
       # We'll install Python and dependencies via command
     
     securityContext:
