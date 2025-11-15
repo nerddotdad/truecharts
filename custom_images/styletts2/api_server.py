@@ -21,6 +21,7 @@ loading_error = None
 device = None
 model_loading = False
 download_status = {"status": "idle", "progress": 0, "message": ""}
+loading_status = {"status": "idle", "progress": 0, "message": ""}
 
 # Available models configuration
 AVAILABLE_MODELS = {
@@ -70,42 +71,105 @@ def download_model(model_id):
     global download_status
     
     if model_id not in AVAILABLE_MODELS:
-        download_status = {"status": "error", "message": f"Unknown model: {model_id}"}
+        download_status = {"status": "error", "progress": 0, "message": f"Unknown model: {model_id}"}
         return False
     
     model_info = AVAILABLE_MODELS[model_id]
     model_path = "/app/models"
     
     try:
-        download_status = {"status": "downloading", "progress": 0, "message": f"Downloading {model_info['name']}..."}
+        download_status = {"status": "downloading", "progress": 0, "message": f"Starting download of {model_info['name']}..."}
         
         import gdown
+        import time
         os.makedirs("/tmp/models", exist_ok=True)
         zip_path = "/tmp/models/Models.zip"
         
-        download_status["message"] = "Downloading from Google Drive..."
-        download_status["progress"] = 10
+        download_status["message"] = "Connecting to Google Drive..."
+        download_status["progress"] = 5
         
-        # Download using gdown
-        gdown.download(id=model_info["drive_id"], output=zip_path, quiet=False)
+        # Download using gdown - try multiple methods
+        download_success = False
+        last_size = 0
+        stall_count = 0
         
-        if not os.path.exists(zip_path):
-            download_status = {"status": "error", "message": "Download failed"}
+        def check_download_progress():
+            """Check if download is progressing"""
+            nonlocal last_size, stall_count
+            if os.path.exists(zip_path):
+                current_size = os.path.getsize(zip_path)
+                if current_size == last_size:
+                    stall_count += 1
+                else:
+                    stall_count = 0
+                    # Update progress based on file size (assuming ~2GB file)
+                    estimated_total = 2 * 1024 * 1024 * 1024  # 2GB
+                    progress = min(50, 10 + int((current_size / estimated_total) * 40))
+                    download_status["progress"] = progress
+                    download_status["message"] = f"Downloading... {current_size // (1024*1024)}MB"
+                last_size = current_size
+                return stall_count < 60  # Allow 60 seconds of no progress
+            return True
+        
+        # Start download in a way that allows progress checking
+        try:
+            # Method 1: Direct download
+            print(f"Attempting to download model {model_id} from Google Drive...")
+            gdown.download(
+                id=model_info["drive_id"], 
+                output=zip_path, 
+                quiet=True,  # Set to True to avoid output issues
+                use_cookies=False
+            )
+            download_success = True
+        except Exception as e:
+            print(f"Method 1 failed: {e}, trying alternative...")
+            try:
+                # Method 2: URL-based download
+                url = f"https://drive.google.com/uc?id={model_info['drive_id']}"
+                gdown.download(url, zip_path, quiet=True, use_cookies=False)
+                download_success = True
+            except Exception as e2:
+                print(f"Method 2 failed: {e2}")
+                download_status = {"status": "error", "progress": 0, "message": f"Download failed: {str(e2)}"}
+                return False
+        
+        # Verify download
+        if not download_success or not os.path.exists(zip_path):
+            download_status = {"status": "error", "progress": 0, "message": "Download failed: File not created"}
+            return False
+            
+        file_size = os.path.getsize(zip_path)
+        if file_size == 0:
+            download_status = {"status": "error", "progress": 0, "message": "Download failed: File is empty"}
+            return False
+        
+        # Check if file is suspiciously small (likely an error page)
+        if file_size < 1024 * 1024:  # Less than 1MB
+            download_status = {"status": "error", "progress": 0, "message": f"Download failed: File too small ({file_size} bytes) - may be an error page"}
             return False
         
         download_status["progress"] = 50
-        download_status["message"] = "Extracting model files..."
+        download_status["message"] = f"Download complete ({file_size // (1024*1024)}MB). Extracting..."
         
         # Extract
-        subprocess.run(["unzip", "-o", "-q", zip_path, "-d", "/tmp/models/"], check=True)
+        result = subprocess.run(
+            ["unzip", "-o", "-q", zip_path, "-d", "/tmp/models/"], 
+            check=True,
+            capture_output=True,
+            text=True
+        )
         
         download_status["progress"] = 75
-        download_status["message"] = "Installing model..."
+        download_status["message"] = "Installing model files..."
         
         # Move extracted files
         if os.path.exists("/tmp/models/Models"):
             os.makedirs(model_path, exist_ok=True)
             subprocess.run(["cp", "-r", "/tmp/models/Models", model_path], check=True)
+        else:
+            download_status = {"status": "error", "progress": 0, "message": "Extraction failed: Models directory not found"}
+            return False
         
         # Cleanup
         shutil.rmtree("/tmp/models", ignore_errors=True)
@@ -113,48 +177,71 @@ def download_model(model_id):
         download_status = {"status": "complete", "progress": 100, "message": f"{model_info['name']} installed successfully"}
         return True
         
+    except subprocess.CalledProcessError as e:
+        error_msg = f"Command failed: {e.stderr.decode() if e.stderr else str(e)}"
+        download_status = {"status": "error", "progress": 0, "message": f"Download failed: {error_msg}"}
+        import traceback
+        traceback.print_exc()
+        return False
     except Exception as e:
-        download_status = {"status": "error", "message": f"Download failed: {str(e)}"}
+        download_status = {"status": "error", "progress": 0, "message": f"Download failed: {str(e)}"}
         import traceback
         traceback.print_exc()
         return False
 
 def load_model(model_path=None):
     """Load StyleTTS2 model"""
-    global styletts2_model, loading_error, device, model_loading
+    global styletts2_model, loading_error, device, model_loading, loading_status
     
     if model_loading:
         return
     
     model_loading = True
+    loading_status = {"status": "loading", "progress": 0, "message": "Initializing model loading..."}
     
     try:
         print(f"Loading StyleTTS2 model from {model_path or 'default'}...")
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using device: {device}")
         
+        loading_status["progress"] = 20
+        loading_status["message"] = f"Using device: {device}"
+        
         if model_path and os.path.exists(model_path):
+            loading_status["progress"] = 30
+            loading_status["message"] = f"Loading model from {model_path}..."
             styletts2_model = tts.StyleTTS2(model_path=model_path)
         else:
             # Try to find any installed model
             installed = check_installed_models()
+            loading_status["progress"] = 30
+            loading_status["message"] = "Searching for installed models..."
             for model_id, info in installed.items():
                 if info.get("installed") and "path" in info:
                     print(f"Loading {model_id} from {info['path']}")
+                    loading_status["message"] = f"Loading {model_id} from {info['path']}..."
                     styletts2_model = tts.StyleTTS2(model_path=info["path"])
                     break
             else:
                 # No model found, create empty instance
+                loading_status["message"] = "No model found, creating empty instance..."
                 styletts2_model = tts.StyleTTS2()
+        
+        loading_status["progress"] = 60
+        loading_status["message"] = "Moving model to device..."
         
         # Move to GPU if available
         if device == "cuda" and styletts2_model:
             styletts2_model.to(device)
         
+        loading_status["progress"] = 100
+        loading_status["status"] = "complete"
+        loading_status["message"] = "Model loaded successfully!"
         print("StyleTTS2 model loaded successfully!")
         loading_error = None
     except Exception as e:
         loading_error = str(e)
+        loading_status = {"status": "error", "progress": 0, "message": f"Failed to load model: {str(e)}"}
         print(f"Failed to load model: {e}")
         import traceback
         traceback.print_exc()
@@ -233,19 +320,21 @@ def download_model_endpoint():
 
 @app.route('/api/models/status', methods=['GET'])
 def model_download_status():
-    """Get model download status"""
+    """Get model download and loading status"""
     return {
         "download_status": download_status,
-        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model
+        "loading_status": loading_status,
+        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model,
+        "loading_error": loading_error
     }, 200
 
 @app.route('/api/models/load', methods=['POST'])
 def load_model_endpoint():
     """Load a specific installed model"""
-    global model_loading
+    global model_loading, loading_status
     
     if model_loading:
-        return {"error": "Model is already loading"}, 409
+        return {"error": "Model is already loading", "loading_status": loading_status}, 409
     
     data = request.json if request.is_json else request.form
     model_id = data.get('model_id') or data.get('model')
@@ -266,10 +355,13 @@ def load_model_endpoint():
         else:
             return {"error": "No models installed. Please download a model first."}, 404
     
+    # Reset loading status
+    loading_status = {"status": "loading", "progress": 0, "message": f"Starting to load {model_id}..."}
+    
     # Load in background
     threading.Thread(target=lambda: load_model(model_path), daemon=True).start()
     
-    return {"message": f"Loading {model_id}...", "model_id": model_id}, 202
+    return {"message": f"Loading {model_id}...", "model_id": model_id, "loading_status": loading_status}, 202
 
 # Voice storage directory (on persistent volume)
 VOICE_DIR = "/app/voices"

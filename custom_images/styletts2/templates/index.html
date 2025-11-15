@@ -850,6 +850,9 @@
             const progressDiv = document.getElementById('downloadProgress');
             progressDiv.style.display = 'block';
             
+            let pollCount = 0;
+            const maxPollCount = 1800; // 30 minutes max (1800 * 1 second)
+            
             try {
                 const response = await fetch(`${API_BASE}/api/models/download`, {
                     method: 'POST',
@@ -864,6 +867,16 @@
                 
                 // Poll for download status
                 const pollInterval = setInterval(async () => {
+                    pollCount++;
+                    if (pollCount > maxPollCount) {
+                        clearInterval(pollInterval);
+                        progressDiv.style.display = 'none';
+                        showError('Download timeout - this may take longer than expected. Please check server logs.');
+                        btn.disabled = false;
+                        btn.textContent = 'Download';
+                        return;
+                    }
+                    
                     try {
                         const statusResponse = await fetch(`${API_BASE}/api/models/status`);
                         const statusData = await statusResponse.json();
@@ -876,7 +889,7 @@
                         if (status.status === 'complete') {
                             clearInterval(pollInterval);
                             progressDiv.style.display = 'none';
-                            showSuccess('Model downloaded and loaded successfully!');
+                            showSuccess('Model downloaded successfully!');
                             loadModels();
                         } else if (status.status === 'error') {
                             clearInterval(pollInterval);
@@ -899,6 +912,14 @@
         }
         
         async function loadModel(modelId) {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+            
+            let pollCount = 0;
+            const maxPollCount = 300; // 5 minutes max (300 * 1 second)
+            
             try {
                 const response = await fetch(`${API_BASE}/api/models/load`, {
                     method: 'POST',
@@ -907,23 +928,56 @@
                 });
                 
                 const data = await response.json();
-                if (response.ok) {
-                    showSuccess('Model loading...');
-                    // Poll for model loaded status
-                    const pollInterval = setInterval(async () => {
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load model');
+                }
+                
+                // Show loading message
+                showSuccess('Model loading started...');
+                
+                // Poll for model loading status
+                const pollInterval = setInterval(async () => {
+                    pollCount++;
+                    if (pollCount > maxPollCount) {
+                        clearInterval(pollInterval);
+                        showError('Model loading timeout - this may take longer than expected. Please check server logs.');
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        return;
+                    }
+                    
+                    try {
                         const statusResponse = await fetch(`${API_BASE}/api/models/status`);
                         const statusData = await statusResponse.json();
-                        if (statusData.model_loaded) {
+                        
+                        // Check loading status
+                        const loadingStatus = statusData.loading_status || {};
+                        if (loadingStatus.status === 'loading') {
+                            // Update button text with progress
+                            const progress = loadingStatus.progress || 0;
+                            btn.textContent = `Loading... ${progress}%`;
+                        } else if (loadingStatus.status === 'complete' || statusData.model_loaded) {
                             clearInterval(pollInterval);
                             showSuccess('Model loaded successfully!');
+                            btn.disabled = false;
+                            btn.textContent = originalText;
                             loadModels();
+                        } else if (loadingStatus.status === 'error' || statusData.loading_error) {
+                            clearInterval(pollInterval);
+                            const errorMsg = loadingStatus.message || statusData.loading_error || 'Failed to load model';
+                            showError(errorMsg);
+                            btn.disabled = false;
+                            btn.textContent = originalText;
                         }
-                    }, 1000);
-                } else {
-                    showError(data.error || 'Failed to load model');
-                }
+                    } catch (error) {
+                        console.error('Error polling loading status:', error);
+                    }
+                }, 1000);
+                
             } catch (error) {
                 showError(`Error: ${error.message}`);
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
         
