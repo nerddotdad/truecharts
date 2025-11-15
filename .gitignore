@@ -9,3 +9,9 @@ clustertool
 # Binary executables that shouldn't be in the repo
 kompose
 kubectl
+
+# Local backups (not tracked in git)
+.backups/
+
+# SSH public key (backed up in .backups/)
+ssh-public-key.txt
