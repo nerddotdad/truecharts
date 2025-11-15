@@ -268,8 +268,25 @@
         </div>
         
         <div class="content">
+            <!-- Model Setup Section -->
+            <div class="section" id="modelSetupSection">
+                <h2>📦 Model Setup</h2>
+                <div id="modelsList" class="loading">Loading models...</div>
+                <div id="downloadProgress" style="display: none; margin-top: 20px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span id="downloadMessage">Downloading...</span>
+                            <span id="downloadPercent">0%</span>
+                        </div>
+                        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                            <div id="downloadBar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- TTS Section -->
-            <div class="section">
+            <div class="section" id="ttsSection">
                 <h2>Text to Speech</h2>
                 <div class="form-group">
                     <label for="text">Text to Synthesize</label>
@@ -316,29 +333,37 @@
             
             <!-- Voice Cloning Section -->
             <div class="section">
-                <h2>Voice Cloning</h2>
-                <div class="form-group">
-                    <label>Select Voice for Cloning</label>
-                    <div id="voicesList" class="voices-list">
-                        <div class="loading">Loading voices...</div>
+                <h2>🎤 Voice Cloning & Management</h2>
+                
+                <!-- Create New Voice -->
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px dashed #667eea;">
+                    <h3 style="margin-top: 0; color: #667eea;">Create New Voice</h3>
+                    <div class="form-group">
+                        <label for="newVoiceName">Voice Name</label>
+                        <input type="text" id="newVoiceName" placeholder="Enter a name for this voice (e.g., 'John', 'Narrator')" style="margin-bottom: 15px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Voice Samples</label>
+                        <div class="upload-area" id="newVoiceUploadArea" onclick="document.getElementById('newVoiceFileInput').click()">
+                            <p>📁 Click or drag audio files here</p>
+                            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Supports: WAV, MP3, FLAC, AIFF</p>
+                            <p style="font-size: 0.85em; color: #999; margin-top: 5px;">You can upload multiple files at once</p>
+                        </div>
+                        <input type="file" id="newVoiceFileInput" accept="audio/*" multiple style="display: none;" onchange="handleNewVoiceFiles(event)">
+                        <div id="newVoiceFileList" style="margin-top: 10px;"></div>
+                        <button onclick="createNewVoice()" id="createVoiceBtn" style="margin-top: 15px; width: auto; padding: 10px 30px;">Create Voice</button>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Upload New Voice</label>
-                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                        <p>📁 Click or drag audio file here</p>
-                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Supports: WAV, MP3, FLAC</p>
-                    </div>
-                    <input type="file" id="fileInput" accept="audio/*" style="display: none;" onchange="uploadVoice(event)">
-                    <input type="text" id="voiceName" placeholder="Voice name (optional)" style="margin-top: 15px;">
+                <!-- Existing Voices -->
+                <div id="voicesContainer">
+                    <div class="loading">Loading voices...</div>
                 </div>
             </div>
         </div>
     </div>
     
     <script>
-        let selectedVoice = null;
         const API_BASE = window.location.origin;
         
         // Update slider values
@@ -374,41 +399,306 @@
             }
         }
         
-        // Load voices
+        // Voice management
+        let newVoiceFiles = [];
+        
+        function handleNewVoiceFiles(event) {
+            newVoiceFiles = Array.from(event.target.files);
+            const fileList = document.getElementById('newVoiceFileList');
+            
+            if (newVoiceFiles.length === 0) {
+                fileList.innerHTML = '';
+                return;
+            }
+            
+            let html = '<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">';
+            html += `<strong>Selected ${newVoiceFiles.length} file(s):</strong><ul style="margin: 10px 0; padding-left: 20px;">`;
+            newVoiceFiles.forEach(file => {
+                html += `<li>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</li>`;
+            });
+            html += '</ul></div>';
+            fileList.innerHTML = html;
+        }
+        
+        async function createNewVoice() {
+            const voiceName = document.getElementById('newVoiceName').value.trim();
+            if (!voiceName) {
+                showError('Please enter a voice name');
+                return;
+            }
+            
+            if (newVoiceFiles.length === 0) {
+                showError('Please select at least one audio file');
+                return;
+            }
+            
+            const btn = document.getElementById('createVoiceBtn');
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', voiceName);
+                newVoiceFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                const response = await fetch(`${API_BASE}/api/upload-voice`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(`Voice "${voiceName}" created with ${data.files.length} sample(s)!`);
+                    document.getElementById('newVoiceName').value = '';
+                    document.getElementById('newVoiceFileInput').value = '';
+                    document.getElementById('newVoiceFileList').innerHTML = '';
+                    newVoiceFiles = [];
+                    loadVoices();
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                showError(`Upload error: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Voice';
+            }
+        }
+        
+        // Load voices with full interface
         async function loadVoices() {
             try {
                 const response = await fetch(`${API_BASE}/api/voices`);
                 const data = await response.json();
-                const voicesList = document.getElementById('voicesList');
+                const container = document.getElementById('voicesContainer');
                 
                 if (Object.keys(data.voices || {}).length === 0) {
-                    voicesList.innerHTML = '<p style="text-align: center; color: #666;">No voices uploaded yet</p>';
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No voices created yet. Create your first voice above!</p>';
                     return;
                 }
                 
-                voicesList.innerHTML = '';
-                for (const [name, files] of Object.entries(data.voices)) {
-                    const card = document.createElement('div');
-                    card.className = 'voice-card';
-                    card.innerHTML = `
-                        <strong>${name}</strong>
-                        <p style="font-size: 0.9em; color: #666; margin-top: 5px;">${files.length} file(s)</p>
+                let html = '<div style="display: grid; gap: 20px;">';
+                for (const [name, voiceData] of Object.entries(data.voices)) {
+                    const files = voiceData.files || [];
+                    html += `
+                        <div style="background: white; padding: 25px; border-radius: 10px; border: 2px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                                <div>
+                                    <h3 style="margin: 0; color: #667eea; font-size: 1.3em;">${name}</h3>
+                                    <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${files.length} sample(s) uploaded</p>
+                                </div>
+                                <button onclick="deleteVoice('${name}')" style="padding: 5px 15px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">Delete</button>
+                            </div>
+                            
+                            <!-- Upload More Samples -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Add More Samples</label>
+                                <div class="upload-area" id="uploadArea_${name}" onclick="document.getElementById('fileInput_${name}').click()" style="padding: 15px;">
+                                    <p style="margin: 0; font-size: 0.9em;">📁 Click or drag to add more samples</p>
+                                </div>
+                                <input type="file" id="fileInput_${name}" accept="audio/*" multiple style="display: none;" onchange="uploadMoreSamples('${name}', event)">
+                            </div>
+                            
+                            <!-- Sample Files List -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Voice Samples</label>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; max-height: 150px; overflow-y: auto;">
+                                    ${files.length > 0 ? 
+                                        files.map(f => `<div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e0e0e0;">
+                                            <span style="font-size: 0.9em;">${f.filename}</span>
+                                            <span style="font-size: 0.85em; color: #666;">${f.size_mb} MB</span>
+                                        </div>`).join('') :
+                                        '<p style="color: #666; font-size: 0.9em; margin: 0;">No samples yet</p>'
+                                    }
+                                </div>
+                            </div>
+                            
+                            <!-- Tuning Parameters -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 500;">Tuning Parameters</label>
+                                <div class="two-column" style="gap: 15px;">
+                                    <div>
+                                        <label style="font-size: 0.9em;">Alpha (Style Control)</label>
+                                        <div class="slider-group">
+                                            <input type="range" id="alpha_${name}" min="0" max="1" step="0.1" value="0.3" style="flex: 1;">
+                                            <span class="value" id="alphaValue_${name}">0.3</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.9em;">Beta (Style Control)</label>
+                                        <div class="slider-group">
+                                            <input type="range" id="beta_${name}" min="0" max="1" step="0.1" value="0.7" style="flex: 1;">
+                                            <span class="value" id="betaValue_${name}">0.7</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <label style="font-size: 0.9em;">Diffusion Steps</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="steps_${name}" min="5" max="50" step="5" value="10" style="flex: 1;">
+                                        <span class="value" id="stepsValue_${name}">10</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Test Voice -->
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Test Voice</label>
+                                <textarea id="testText_${name}" placeholder="Enter text to test this voice..." style="min-height: 80px; margin-bottom: 10px;"></textarea>
+                                <button onclick="testVoice('${name}')" id="testBtn_${name}" style="width: 100%;">Generate & Play</button>
+                                <div id="audioContainer_${name}" style="display: none; margin-top: 15px;">
+                                    <div class="audio-player">
+                                        <audio id="audioPlayer_${name}" controls style="width: 100%;"></audio>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     `;
-                    card.onclick = () => selectVoice(name);
-                    voicesList.appendChild(card);
                 }
+                html += '</div>';
+                container.innerHTML = html;
+                
+                // Setup slider listeners and drag-drop for each voice
+                for (const name of Object.keys(data.voices)) {
+                    document.getElementById(`alpha_${name}`).addEventListener('input', (e) => {
+                        document.getElementById(`alphaValue_${name}`).textContent = e.target.value;
+                    });
+                    document.getElementById(`beta_${name}`).addEventListener('input', (e) => {
+                        document.getElementById(`betaValue_${name}`).textContent = e.target.value;
+                    });
+                    document.getElementById(`steps_${name}`).addEventListener('input', (e) => {
+                        document.getElementById(`stepsValue_${name}`).textContent = e.target.value;
+                    });
+                    
+                    // Setup drag and drop for this voice's upload area
+                    const uploadArea = document.getElementById(`uploadArea_${name}`);
+                    uploadArea.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadArea.classList.add('dragover');
+                    });
+                    uploadArea.addEventListener('dragleave', () => {
+                        uploadArea.classList.remove('dragover');
+                    });
+                    uploadArea.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadArea.classList.remove('dragover');
+                        const files = Array.from(e.dataTransfer.files);
+                        if (files.length > 0) {
+                            const input = document.getElementById(`fileInput_${name}`);
+                            const dataTransfer = new DataTransfer();
+                            files.forEach(file => dataTransfer.items.add(file));
+                            input.files = dataTransfer.files;
+                            uploadMoreSamples(name, { target: input });
+                        }
+                    });
+                }
+                
             } catch (error) {
-                document.getElementById('voicesList').innerHTML = 
+                document.getElementById('voicesContainer').innerHTML = 
                     `<div class="error">Error loading voices: ${error.message}</div>`;
             }
         }
         
-        function selectVoice(name) {
-            selectedVoice = name;
-            document.querySelectorAll('.voice-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
+        async function uploadMoreSamples(voiceName, event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', voiceName);
+                files.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                const response = await fetch(`${API_BASE}/api/upload-voice`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(`Added ${data.files.length} sample(s) to "${voiceName}"`);
+                    loadVoices();
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                showError(`Upload error: ${error.message}`);
+            }
+        }
+        
+        async function testVoice(voiceName) {
+            const text = document.getElementById(`testText_${voiceName}`).value.trim();
+            if (!text) {
+                showError('Please enter some text to test');
+                return;
+            }
+            
+            const btn = document.getElementById(`testBtn_${voiceName}`);
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            const audioContainer = document.getElementById(`audioContainer_${voiceName}`);
+            audioContainer.style.display = 'none';
+            
+            try {
+                const params = {
+                    text: text,
+                    target_voice_path: voiceName,
+                    alpha: parseFloat(document.getElementById(`alpha_${voiceName}`).value),
+                    beta: parseFloat(document.getElementById(`beta_${voiceName}`).value),
+                    diffusion_steps: parseInt(document.getElementById(`steps_${voiceName}`).value)
+                };
+                
+                const response = await fetch(`${API_BASE}/api/tts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Generation failed');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const audioPlayer = document.getElementById(`audioPlayer_${voiceName}`);
+                audioPlayer.src = url;
+                audioContainer.style.display = 'block';
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate & Play';
+            }
+        }
+        
+        async function deleteVoice(voiceName) {
+            if (!confirm(`Are you sure you want to delete the voice "${voiceName}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/delete-voice`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: voiceName })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(`Voice "${voiceName}" deleted`);
+                    loadVoices();
+                } else {
+                    showError(data.error || 'Delete failed');
+                }
+            } catch (error) {
+                showError(`Delete error: ${error.message}`);
+            }
         }
         
         // Generate TTS
@@ -435,9 +725,7 @@
                     diffusion_steps: parseInt(document.getElementById('diffusionSteps').value)
                 };
                 
-                if (selectedVoice) {
-                    params.target_voice_path = selectedVoice;
-                }
+                // Main TTS section uses default voice (no cloning)
                 
                 const response = await fetch(`${API_BASE}/api/tts`, {
                     method: 'POST',
@@ -465,54 +753,27 @@
             }
         }
         
-        // Upload voice
-        async function uploadVoice(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const voiceName = document.getElementById('voiceName').value || 'default';
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('name', voiceName);
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/upload-voice`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                if (response.ok) {
-                    showSuccess(`Voice uploaded successfully!`);
-                    loadVoices();
-                    document.getElementById('voiceName').value = '';
-                    document.getElementById('fileInput').value = '';
-                } else {
-                    showError(data.error || 'Upload failed');
-                }
-            } catch (error) {
-                showError(`Upload error: ${error.message}`);
-            }
-        }
-        
-        // Drag and drop
-        const uploadArea = document.getElementById('uploadArea');
-        uploadArea.addEventListener('dragover', (e) => {
+        // Drag and drop for new voice
+        const newVoiceUploadArea = document.getElementById('newVoiceUploadArea');
+        newVoiceUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.classList.add('dragover');
+            newVoiceUploadArea.classList.add('dragover');
         });
         
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+        newVoiceUploadArea.addEventListener('dragleave', () => {
+            newVoiceUploadArea.classList.remove('dragover');
         });
         
-        uploadArea.addEventListener('drop', (e) => {
+        newVoiceUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                document.getElementById('fileInput').files = e.dataTransfer.files;
-                uploadVoice({ target: { files: e.dataTransfer.files } });
+            newVoiceUploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                const input = document.getElementById('newVoiceFileInput');
+                const dataTransfer = new DataTransfer();
+                files.forEach(file => dataTransfer.items.add(file));
+                input.files = dataTransfer.files;
+                handleNewVoiceFiles({ target: input });
             }
         });
         
@@ -527,10 +788,151 @@
             setTimeout(() => errorMsg.innerHTML = '', 3000);
         }
         
+        // Model management
+        let modelsData = {};
+        
+        async function loadModels() {
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                const data = await response.json();
+                modelsData = data;
+                
+                const modelsList = document.getElementById('modelsList');
+                if (Object.keys(data.models || {}).length === 0) {
+                    modelsList.innerHTML = '<p>No models available</p>';
+                    return;
+                }
+                
+                let html = '<div style="display: grid; gap: 15px;">';
+                for (const [modelId, model] of Object.entries(data.models)) {
+                    const installed = model.installed;
+                    html += `
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid ${installed ? '#4caf50' : '#e0e0e0'};">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <h3 style="margin: 0; color: #667eea;">${model.name}</h3>
+                                    <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${model.description}</p>
+                                    <p style="margin: 5px 0; color: #999; font-size: 0.85em;">Size: ${model.size}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    ${installed ? 
+                                        `<span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">✓ Installed</span>
+                                         <button onclick="loadModel('${modelId}')" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Model</button>` :
+                                        `<button onclick="downloadModel('${modelId}')" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Download</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                modelsList.innerHTML = html;
+                
+                // Show/hide TTS section based on model status
+                const ttsSection = document.getElementById('ttsSection');
+                if (data.model_loaded) {
+                    ttsSection.style.display = 'block';
+                } else {
+                    ttsSection.style.display = 'none';
+                }
+                
+            } catch (error) {
+                document.getElementById('modelsList').innerHTML = 
+                    `<div class="error">Error loading models: ${error.message}</div>`;
+            }
+        }
+        
+        async function downloadModel(modelId) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Downloading...';
+            
+            const progressDiv = document.getElementById('downloadProgress');
+            progressDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/models/download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_id: modelId })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Download failed');
+                }
+                
+                // Poll for download status
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusResponse = await fetch(`${API_BASE}/api/models/status`);
+                        const statusData = await statusResponse.json();
+                        const status = statusData.download_status;
+                        
+                        document.getElementById('downloadMessage').textContent = status.message || 'Downloading...';
+                        document.getElementById('downloadPercent').textContent = `${status.progress || 0}%`;
+                        document.getElementById('downloadBar').style.width = `${status.progress || 0}%`;
+                        
+                        if (status.status === 'complete') {
+                            clearInterval(pollInterval);
+                            progressDiv.style.display = 'none';
+                            showSuccess('Model downloaded and loaded successfully!');
+                            loadModels();
+                        } else if (status.status === 'error') {
+                            clearInterval(pollInterval);
+                            progressDiv.style.display = 'none';
+                            showError(status.message || 'Download failed');
+                            btn.disabled = false;
+                            btn.textContent = 'Download';
+                        }
+                    } catch (error) {
+                        console.error('Error polling status:', error);
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                progressDiv.style.display = 'none';
+                showError(error.message);
+                btn.disabled = false;
+                btn.textContent = 'Download';
+            }
+        }
+        
+        async function loadModel(modelId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/models/load`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_id: modelId })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess('Model loading...');
+                    // Poll for model loaded status
+                    const pollInterval = setInterval(async () => {
+                        const statusResponse = await fetch(`${API_BASE}/api/models/status`);
+                        const statusData = await statusResponse.json();
+                        if (statusData.model_loaded) {
+                            clearInterval(pollInterval);
+                            showSuccess('Model loaded successfully!');
+                            loadModels();
+                        }
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Failed to load model');
+                }
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            }
+        }
+        
         // Initialize
         checkStatus();
+        loadModels();
         loadVoices();
         setInterval(checkStatus, 5000); // Check status every 5 seconds
+        setInterval(loadModels, 10000); // Refresh models every 10 seconds
     </script>
 </body>
 </html>

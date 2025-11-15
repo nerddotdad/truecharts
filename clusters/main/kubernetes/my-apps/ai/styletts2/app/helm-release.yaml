@@ -18,7 +18,7 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/styletts2
       pullPolicy: IfNotPresent
-      tag: "1.0.5"  # Semantic version - matches custom_images/styletts2/VERSION
+      tag: "1.0.7"  # Semantic version - matches custom_images/styletts2/VERSION
       # Image is built automatically when custom_images/styletts2/ changes
       # See: .github/workflows/build-custom-images.yml
       # To update: bump version in custom_images/styletts2/VERSION and rebuild
@@ -52,10 +52,10 @@ spec:
                   enabled: true
                   type: http
                   port: 5003
-                  path: /
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
-                  failureThreshold: 180  # Allow up to 30 minutes for model download/loading
+                  path: /ready
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  failureThreshold: 12  # Allow up to 1 minute for server startup
                 liveness:
                   enabled: true
                   type: http
@@ -68,9 +68,9 @@ spec:
                   type: http
                   port: 5003
                   path: /ready
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
-                  failureThreshold: 180  # Allow up to 30 minutes for model download/loading
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  failureThreshold: 3  # Server is ready immediately (models loaded separately)
               resources:
                 requests:
                   memory: "6Gi"  # StyleTTS2 model size

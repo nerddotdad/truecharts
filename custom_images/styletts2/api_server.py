@@ -12,96 +12,159 @@ import os
 import threading
 import shutil
 import subprocess
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 styletts2_model = None
 loading_error = None
 device = None
+model_loading = False
+download_status = {"status": "idle", "progress": 0, "message": ""}
 
-def download_models_if_needed():
-    """Download models if they don't exist in /app/models"""
+# Available models configuration
+AVAILABLE_MODELS = {
+    "LJSpeech": {
+        "name": "LJSpeech",
+        "description": "Single-speaker English model trained on LJSpeech dataset",
+        "size": "~2GB",
+        "drive_id": "1K3jt1JEbtohBLUA0X75KLw36TW7U1yxq",
+        "path": "Models/LJSpeech"
+    },
+    "LibriTTS": {
+        "name": "LibriTTS",
+        "description": "Multi-speaker English model trained on LibriTTS dataset",
+        "size": "~2GB",
+        "drive_id": "1K3jt1JEbtohBLUA0X75KLw36TW7U1yxq",  # Same zip, different subfolder
+        "path": "Models/LibriTTS"
+    }
+}
+
+def check_installed_models():
+    """Check which models are installed"""
+    model_path = "/app/models"
+    installed = {}
+    
+    for model_id, model_info in AVAILABLE_MODELS.items():
+        config_paths = [
+            os.path.join(model_path, model_info["path"], "config.yml"),
+            os.path.join(model_path, "Models", model_info["name"], "config.yml"),
+            os.path.join(model_path, model_info["name"], "config.yml"),
+        ]
+        
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                installed[model_id] = {
+                    "installed": True,
+                    "path": os.path.dirname(config_path),
+                    "config": config_path
+                }
+                break
+        else:
+            installed[model_id] = {"installed": False}
+    
+    return installed
+
+def download_model(model_id):
+    """Download a specific model"""
+    global download_status
+    
+    if model_id not in AVAILABLE_MODELS:
+        download_status = {"status": "error", "message": f"Unknown model: {model_id}"}
+        return False
+    
+    model_info = AVAILABLE_MODELS[model_id]
     model_path = "/app/models"
     
-    # Check if models already exist
-    if (os.path.exists(os.path.join(model_path, "config.json")) or
-        os.path.exists(os.path.join(model_path, "Models", "LJSpeech", "config.yml")) or
-        os.path.exists(os.path.join(model_path, "LJSpeech", "config.yml"))):
-        print("Models already present, skipping download")
-        return
-    
-    print("Models not found. Downloading StyleTTS2 models...")
     try:
-        # Download models using gdown
+        download_status = {"status": "downloading", "progress": 0, "message": f"Downloading {model_info['name']}..."}
+        
         import gdown
         os.makedirs("/tmp/models", exist_ok=True)
         zip_path = "/tmp/models/Models.zip"
         
-        print("Downloading models from Google Drive...")
-        gdown.download(id="1K3jt1JEbtohBLUA0X75KLw36TW7U1yxq", output=zip_path, quiet=False)
+        download_status["message"] = "Downloading from Google Drive..."
+        download_status["progress"] = 10
         
-        if os.path.exists(zip_path):
-            print("Extracting models (this may take a few minutes)...")
-            # Extract to /tmp first, then move to /app/models
-            subprocess.run(["unzip", "-o", "-q", zip_path, "-d", "/tmp/models/"], check=True)
-            
-            # Move extracted files to /app/models
-            if os.path.exists("/tmp/models/Models"):
-                subprocess.run(["cp", "-r", "/tmp/models/Models", model_path], check=True)
-                print("Models extracted successfully")
-            
-            # Cleanup
-            shutil.rmtree("/tmp/models", ignore_errors=True)
-        else:
-            print("Warning: Model download failed, will use default models")
+        # Download using gdown
+        gdown.download(id=model_info["drive_id"], output=zip_path, quiet=False)
+        
+        if not os.path.exists(zip_path):
+            download_status = {"status": "error", "message": "Download failed"}
+            return False
+        
+        download_status["progress"] = 50
+        download_status["message"] = "Extracting model files..."
+        
+        # Extract
+        subprocess.run(["unzip", "-o", "-q", zip_path, "-d", "/tmp/models/"], check=True)
+        
+        download_status["progress"] = 75
+        download_status["message"] = "Installing model..."
+        
+        # Move extracted files
+        if os.path.exists("/tmp/models/Models"):
+            os.makedirs(model_path, exist_ok=True)
+            subprocess.run(["cp", "-r", "/tmp/models/Models", model_path], check=True)
+        
+        # Cleanup
+        shutil.rmtree("/tmp/models", ignore_errors=True)
+        
+        download_status = {"status": "complete", "progress": 100, "message": f"{model_info['name']} installed successfully"}
+        return True
+        
     except Exception as e:
-        print(f"Warning: Model download failed: {e}. Will use default models if available.")
+        download_status = {"status": "error", "message": f"Download failed: {str(e)}"}
+        import traceback
+        traceback.print_exc()
+        return False
 
-def load_model():
-    """Load StyleTTS2 model in background"""
-    global styletts2_model, loading_error, device
+def load_model(model_path=None):
+    """Load StyleTTS2 model"""
+    global styletts2_model, loading_error, device, model_loading
+    
+    if model_loading:
+        return
+    
+    model_loading = True
+    
     try:
-        print("Loading StyleTTS2 model...")
+        print(f"Loading StyleTTS2 model from {model_path or 'default'}...")
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using device: {device}")
         
-        # Try to download models if needed (non-blocking)
-        download_thread = threading.Thread(target=download_models_if_needed, daemon=True)
-        download_thread.start()
-        download_thread.join(timeout=60)  # Wait up to 60 seconds for download to start
-        
-        # Initialize StyleTTS2
-        model_path = "/app/models"
-        # Check for various possible model paths
-        if os.path.exists(os.path.join(model_path, "config.json")):
-            print(f"Loading model from {model_path}")
+        if model_path and os.path.exists(model_path):
             styletts2_model = tts.StyleTTS2(model_path=model_path)
-        elif os.path.exists(os.path.join(model_path, "Models", "LJSpeech", "config.yml")):
-            # Models extracted from zip file
-            ljspeech_path = os.path.join(model_path, "Models", "LJSpeech")
-            print(f"Loading LJSpeech model from {ljspeech_path}")
-            styletts2_model = tts.StyleTTS2(model_path=ljspeech_path)
-        elif os.path.exists(os.path.join(model_path, "LJSpeech", "config.yml")):
-            # Alternative path structure
-            ljspeech_path = os.path.join(model_path, "LJSpeech")
-            print(f"Loading LJSpeech model from {ljspeech_path}")
-            styletts2_model = tts.StyleTTS2(model_path=ljspeech_path)
         else:
-            print("Loading default StyleTTS2 model (will download if needed)...")
-            styletts2_model = tts.StyleTTS2()
+            # Try to find any installed model
+            installed = check_installed_models()
+            for model_id, info in installed.items():
+                if info.get("installed") and "path" in info:
+                    print(f"Loading {model_id} from {info['path']}")
+                    styletts2_model = tts.StyleTTS2(model_path=info["path"])
+                    break
+            else:
+                # No model found, create empty instance
+                styletts2_model = tts.StyleTTS2()
         
         # Move to GPU if available
-        if device == "cuda":
+        if device == "cuda" and styletts2_model:
             styletts2_model.to(device)
         
         print("StyleTTS2 model loaded successfully!")
+        loading_error = None
     except Exception as e:
         loading_error = str(e)
         print(f"Failed to load model: {e}")
         import traceback
         traceback.print_exc()
+    finally:
+        model_loading = False
 
-# Start model loading in background
-threading.Thread(target=load_model, daemon=True).start()
+# Initialize device (but don't load models yet)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"StyleTTS2 Server initialized. Device: {device}")
+print("Models will be loaded on-demand or via API")
 
 @app.route('/')
 def index():
@@ -110,16 +173,103 @@ def index():
 
 @app.route('/ready')
 def ready():
-    if styletts2_model:
-        # Check if model is actually loaded and functional
-        if hasattr(styletts2_model, 'model') and styletts2_model.model and styletts2_model.sampler:
-            return "Ready", 200
-        else:
-            return "Model object exists but models not loaded yet", 503
-    elif loading_error:
-        return f"Error: {loading_error}", 503
+    """Health check - server is ready if Flask is running"""
+    # Server is always ready, models are optional
+    return "Ready", 200
+
+@app.route('/api/models', methods=['GET'])
+def list_models():
+    """List available models and their installation status"""
+    installed = check_installed_models()
+    
+    models = {}
+    for model_id, model_info in AVAILABLE_MODELS.items():
+        models[model_id] = {
+            **model_info,
+            "installed": installed.get(model_id, {}).get("installed", False),
+            "path": installed.get(model_id, {}).get("path")
+        }
+    
+    return {
+        "models": models,
+        "download_status": download_status,
+        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model
+    }, 200
+
+@app.route('/api/models/download', methods=['POST'])
+def download_model_endpoint():
+    """Download a specific model"""
+    global download_status
+    
+    if download_status["status"] == "downloading":
+        return {"error": "A download is already in progress"}, 409
+    
+    data = request.json if request.is_json else request.form
+    model_id = data.get('model_id') or data.get('model')
+    
+    if not model_id:
+        return {"error": "model_id parameter required"}, 400
+    
+    if model_id not in AVAILABLE_MODELS:
+        return {"error": f"Unknown model: {model_id}. Available: {list(AVAILABLE_MODELS.keys())}"}, 400
+    
+    # Check if already installed
+    installed = check_installed_models()
+    if installed.get(model_id, {}).get("installed"):
+        return {"message": f"{model_id} is already installed", "model_id": model_id}, 200
+    
+    # Start download in background
+    def download_thread():
+        download_model(model_id)
+        # Auto-load model after download
+        if download_status["status"] == "complete":
+            installed = check_installed_models()
+            if model_id in installed and installed[model_id].get("installed"):
+                load_model(installed[model_id]["path"])
+    
+    threading.Thread(target=download_thread, daemon=True).start()
+    
+    return {"message": f"Download started for {model_id}", "model_id": model_id}, 202
+
+@app.route('/api/models/status', methods=['GET'])
+def model_download_status():
+    """Get model download status"""
+    return {
+        "download_status": download_status,
+        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model
+    }, 200
+
+@app.route('/api/models/load', methods=['POST'])
+def load_model_endpoint():
+    """Load a specific installed model"""
+    global model_loading
+    
+    if model_loading:
+        return {"error": "Model is already loading"}, 409
+    
+    data = request.json if request.is_json else request.form
+    model_id = data.get('model_id') or data.get('model')
+    
+    installed = check_installed_models()
+    
+    if model_id:
+        if model_id not in installed or not installed[model_id].get("installed"):
+            return {"error": f"Model {model_id} is not installed"}, 404
+        model_path = installed[model_id]["path"]
     else:
-        return "Loading...", 503
+        # Load first available model
+        for mid, info in installed.items():
+            if info.get("installed") and "path" in info:
+                model_path = info["path"]
+                model_id = mid
+                break
+        else:
+            return {"error": "No models installed. Please download a model first."}, 404
+    
+    # Load in background
+    threading.Thread(target=lambda: load_model(model_path), daemon=True).start()
+    
+    return {"message": f"Loading {model_id}...", "model_id": model_id}, 202
 
 # Voice storage directory (on persistent volume)
 VOICE_DIR = "/app/voices"
@@ -127,54 +277,80 @@ os.makedirs(VOICE_DIR, exist_ok=True)
 
 @app.route('/api/upload-voice', methods=['POST'])
 def upload_voice():
-    """Upload a voice file for cloning"""
-    if not styletts2_model:
-        return {"error": "Model still loading"}, 503
+    """Upload voice file(s) for cloning - supports multiple files"""
+    if not styletts2_model or not (hasattr(styletts2_model, 'model') and styletts2_model.model):
+        return {"error": "No model loaded. Please download and load a model first."}, 503
     
-    if 'file' not in request.files:
+    if 'files' not in request.files and 'file' not in request.files:
         return {"error": "No file provided"}, 400
     
-    file = request.files['file']
     voice_name = request.form.get('name', 'default')
-    
-    if file.filename == '':
-        return {"error": "No file selected"}, 400
+    if not voice_name or voice_name.strip() == '':
+        return {"error": "Voice name is required"}, 400
     
     # Create voice directory
     voice_path = os.path.join(VOICE_DIR, voice_name)
     os.makedirs(voice_path, exist_ok=True)
     
-    # Save file
-    filename = file.filename or 'voice.wav'
-    filepath = os.path.join(voice_path, filename)
-    file.save(filepath)
+    uploaded_files = []
+    
+    # Handle multiple files (files[]) or single file (file)
+    files = request.files.getlist('files') if 'files' in request.files else [request.files.get('file')]
+    
+    for file in files:
+        if file and file.filename:
+            # Sanitize filename
+            filename = os.path.basename(file.filename)
+            filepath = os.path.join(voice_path, filename)
+            file.save(filepath)
+            uploaded_files.append({
+                "filename": filename,
+                "path": filepath
+            })
+    
+    if not uploaded_files:
+        return {"error": "No valid files uploaded"}, 400
     
     return {
-        "message": "Voice file uploaded successfully",
+        "message": f"Uploaded {len(uploaded_files)} file(s) successfully",
         "voice_name": voice_name,
-        "filepath": filepath,
-        "usage": f"Use target_voice_path={filepath} in /api/tts requests"
+        "files": uploaded_files,
+        "voice_path": voice_path
     }, 200
 
 @app.route('/api/voices', methods=['GET'])
 def list_voices():
-    """List available voice files"""
+    """List available voice files with detailed information"""
     voices = {}
     if os.path.exists(VOICE_DIR):
         for voice_name in os.listdir(VOICE_DIR):
             voice_path = os.path.join(VOICE_DIR, voice_name)
             if os.path.isdir(voice_path):
-                files = [f for f in os.listdir(voice_path) 
-                        if f.lower().endswith(('.wav', '.mp3', '.flac', '.aif', '.aiff'))]
+                files = []
+                for f in os.listdir(voice_path):
+                    if f.lower().endswith(('.wav', '.mp3', '.flac', '.aif', '.aiff')):
+                        filepath = os.path.join(voice_path, f)
+                        file_size = os.path.getsize(filepath)
+                        files.append({
+                            "filename": f,
+                            "path": filepath,
+                            "size": file_size,
+                            "size_mb": round(file_size / (1024 * 1024), 2)
+                        })
                 if files:
-                    voices[voice_name] = [os.path.join(voice_path, f) for f in files]
+                    voices[voice_name] = {
+                        "name": voice_name,
+                        "path": voice_path,
+                        "files": files,
+                        "file_count": len(files)
+                    }
     return {"voices": voices}, 200
 
 @app.route('/api/test-voice', methods=['POST'])
 def test_voice():
     """Test a specific voice file to see quality"""
-    if not styletts2_model:
-        return {"error": "Model still loading"}, 503
+    if not styletts2_model or not (hasattr(styletts2_model, 'model') and styletts2_model.model):
+        return {"error": "No model loaded"}, 503
     
     if request.is_json:
         data = request.json
@@ -257,8 +433,8 @@ def delete_voice():
 
 @app.route('/api/tts', methods=['POST'])
 def synthesize():
-    if not styletts2_model:
-        return {"error": "Model still loading"}, 503
+    if not styletts2_model or not (hasattr(styletts2_model, 'model') and styletts2_model.model):
+        return {"error": "No model loaded. Please download and load a model first."}, 503
     
     # Get parameters from form-data or JSON
     if request.is_json:
@@ -330,4 +506,3 @@ def synthesize():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=False)
-
