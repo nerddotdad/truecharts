@@ -5,3 +5,7 @@ age.agekey
 *clustertool.exe
 clustertool.exe
 clustertool
+
+# Binary executables that shouldn't be in the repo
+kompose
+kubectl
