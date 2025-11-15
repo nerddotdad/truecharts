@@ -97,6 +97,8 @@ class StyleTTS2:
         
         if not self.config:
             print("Warning: No config.yml found, model will not be fully functional")
+            # Initialize empty model dict so we can check if it's loaded
+            self.model = {}
             return
         
         # Load models

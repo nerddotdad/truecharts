@@ -134,6 +134,7 @@ RUN mkdir -p /app/models /app/voices
 
 # Copy the Flask API server script
 COPY api_server.py /app/api_server.py
+COPY templates/ /app/templates/
 RUN chmod +x /app/api_server.py
 
 # Final import test before finishing build (non-fatal for debugging)

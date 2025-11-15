@@ -4,7 +4,7 @@ StyleTTS2 Flask API Server
 Provides REST API for text-to-speech synthesis with voice cloning
 """
 
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 from styletts2 import tts
 import torch
 import tempfile
@@ -105,17 +105,17 @@ threading.Thread(target=load_model, daemon=True).start()
 
 @app.route('/')
 def index():
-    if styletts2_model:
-        return "StyleTTS2 Server - Ready", 200
-    elif loading_error:
-        return f"StyleTTS2 Server - Error: {loading_error}", 200
-    else:
-        return "StyleTTS2 Server - Loading model...", 200
+    """Serve the web UI"""
+    return render_template('index.html')
 
 @app.route('/ready')
 def ready():
     if styletts2_model:
-        return "Ready", 200
+        # Check if model is actually loaded and functional
+        if hasattr(styletts2_model, 'model') and styletts2_model.model and styletts2_model.sampler:
+            return "Ready", 200
+        else:
+            return "Model object exists but models not loaded yet", 503
     elif loading_error:
         return f"Error: {loading_error}", 503
     else:
