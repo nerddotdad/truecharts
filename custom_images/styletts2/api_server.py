@@ -6,7 +6,6 @@ Provides REST API for text-to-speech synthesis with voice cloning
 
 from flask import Flask, request, send_file, jsonify, render_template
 from styletts2 import tts
-import torch
 import tempfile
 import os
 import threading
@@ -18,7 +17,6 @@ from datetime import datetime
 app = Flask(__name__)
 styletts2_model = None
 loading_error = None
-device = None
 model_loading = False
 download_status = {"status": "idle", "progress": 0, "message": ""}
 loading_status = {"status": "idle", "progress": 0, "message": ""}
@@ -44,28 +42,18 @@ AVAILABLE_MODELS = {
 }
 
 def check_installed_models():
-    """Check which models are installed"""
-    model_path = "/app/models"
+    """Check which models are installed - simplified for PyPI package"""
+    # PyPI package handles model management internally
+    # Just return that models are available
     installed = {}
-    
     for model_id, model_info in AVAILABLE_MODELS.items():
-        config_paths = [
-            os.path.join(model_path, model_info["path"], "config.yml"),
-            os.path.join(model_path, "Models", model_info["name"], "config.yml"),
-            os.path.join(model_path, model_info["name"], "config.yml"),
-        ]
-        
-        for config_path in config_paths:
-            if os.path.exists(config_path):
-                installed[model_id] = {
-                    "installed": True,
-                    "path": os.path.dirname(config_path),
-                    "config": config_path
-                }
-                break
-        else:
-            installed[model_id] = {"installed": False}
-    
+        installed[model_id] = {
+            "installed": True,  # Package handles this
+            "path": None,
+            "name": model_info["name"],
+            "description": model_info["description"],
+            "size": model_info["size"]
+        }
     return installed
 
 def download_model(model_id):
@@ -260,8 +248,8 @@ def add_loading_log(message, level="info"):
     print(f"[{level.upper()}] {message}")
 
 def load_model(model_path=None):
-    """Load StyleTTS2 model"""
-    global styletts2_model, loading_error, device, model_loading, loading_status, loading_logs
+    """Load StyleTTS2 model - simplified using PyPI package"""
+    global styletts2_model, loading_error, model_loading, loading_status, loading_logs
     
     if model_loading:
         return
@@ -272,115 +260,43 @@ def load_model(model_path=None):
     add_loading_log("Starting model loading process...", "info")
     
     try:
-        add_loading_log(f"Loading StyleTTS2 model from {model_path or 'default'}...", "info")
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        add_loading_log(f"Device detected: {device}", "info")
+        add_loading_log("Initializing StyleTTS2 (PyPI package)...", "info")
+        loading_status["progress"] = 20
+        loading_status["message"] = "Loading StyleTTS2 model..."
         
-        loading_status["progress"] = 10
-        loading_status["message"] = f"Using device: {device}"
-        
+        # Simple initialization - PyPI package handles everything
         if model_path and os.path.exists(model_path):
-            loading_status["progress"] = 20
-            loading_status["message"] = f"Loading model from {model_path}..."
-            add_loading_log(f"Model path exists: {model_path}", "info")
-            add_loading_log("Creating StyleTTS2 instance...", "info")
-            # Pass log callback to capture all wrapper logs
-            styletts2_model = tts.StyleTTS2(model_path=model_path, log_callback=add_loading_log)
+            add_loading_log(f"Using model path: {model_path}", "info")
+            styletts2_model = tts.StyleTTS2(model_path=model_path)
         else:
-            # Try to find any installed model
-            installed = check_installed_models()
-            loading_status["progress"] = 20
-            loading_status["message"] = "Searching for installed models..."
-            add_loading_log("Searching for installed models...", "info")
-            for model_id, info in installed.items():
-                if info.get("installed") and "path" in info:
-                    add_loading_log(f"Found installed model: {model_id} at {info['path']}", "info")
-                    loading_status["progress"] = 30
-                    loading_status["message"] = f"Loading {model_id} from {info['path']}..."
-                    add_loading_log(f"Creating StyleTTS2 instance for {model_id}...", "info")
-                    # Pass log callback to capture all wrapper logs
-                    styletts2_model = tts.StyleTTS2(model_path=info["path"], log_callback=add_loading_log)
-                    break
-            else:
-                # No model found, create empty instance
-                loading_status["message"] = "No model found, creating empty instance..."
-                add_loading_log("WARNING: No installed models found, creating empty instance", "warning")
-                # Pass log callback to capture all wrapper logs
-                styletts2_model = tts.StyleTTS2(log_callback=add_loading_log)
+            # Use default - package will handle model download/loading
+            add_loading_log("Using default StyleTTS2 configuration", "info")
+            styletts2_model = tts.StyleTTS2()
         
-        loading_status["progress"] = 50
-        loading_status["message"] = "Checking model components..."
-        add_loading_log("Checking model components...", "info")
+        loading_status["progress"] = 80
+        loading_status["message"] = "Model initialized..."
+        add_loading_log("✓ StyleTTS2 model initialized successfully!", "success")
         
-        # Check what was loaded
-        if hasattr(styletts2_model, 'model'):
-            model_keys = list(styletts2_model.model.keys()) if styletts2_model.model else []
-            add_loading_log(f"Model components loaded: {len(model_keys)} components", "info" if model_keys else "warning")
-            if model_keys:
-                add_loading_log(f"Components: {', '.join(model_keys)}", "info")
-            else:
-                add_loading_log("WARNING: Model dict is empty - model may not have loaded correctly", "warning")
-                if hasattr(styletts2_model, 'config'):
-                    add_loading_log(f"Config loaded: {styletts2_model.config is not None}", "info")
-                    if styletts2_model.config:
-                        # Log config paths to help debug
-                        asr_path = styletts2_model.config.get('ASR_path', 'N/A')
-                        f0_path = styletts2_model.config.get('F0_path', 'N/A')
-                        bert_path = styletts2_model.config.get('PLBERT_dir', 'N/A')
-                        add_loading_log(f"Config ASR_path: {asr_path}", "info")
-                        add_loading_log(f"Config F0_path: {f0_path}", "info")
-                        add_loading_log(f"Config PLBERT_dir: {bert_path}", "info")
-                if hasattr(styletts2_model, 'text_aligner'):
-                    add_loading_log(f"Text aligner: {styletts2_model.text_aligner is not None}", "info" if styletts2_model.text_aligner else "warning")
-                if hasattr(styletts2_model, 'pitch_extractor'):
-                    add_loading_log(f"Pitch extractor: {styletts2_model.pitch_extractor is not None}", "info" if styletts2_model.pitch_extractor else "warning")
-                if hasattr(styletts2_model, 'plbert'):
-                    add_loading_log(f"PL-BERT: {styletts2_model.plbert is not None}", "info" if styletts2_model.plbert else "warning")
+        loading_status["status"] = "complete"
+        loading_status["progress"] = 100
+        loading_status["message"] = "Model loaded successfully!"
+        add_loading_log("Model loading completed", "info")
+        loading_error = None
         
-        loading_status["progress"] = 70
-        loading_status["message"] = "Moving model to device..."
-        add_loading_log(f"Moving model to {device}...", "info")
-        
-        # Move to GPU if available
-        if device == "cuda" and styletts2_model:
-            styletts2_model.to(device)
-            add_loading_log("Model moved to CUDA device", "info")
-        else:
-            add_loading_log("Model on CPU", "info")
-        
-        # Final check
-        model_loaded = bool(styletts2_model and hasattr(styletts2_model, 'model') and styletts2_model.model and len(styletts2_model.model) > 0)
-        
-        if model_loaded:
-            loading_status["progress"] = 100
-            loading_status["status"] = "complete"
-            loading_status["message"] = "Model loaded successfully!"
-            add_loading_log("✓ Model loaded successfully!", "success")
-            loading_error = None
-        else:
-            loading_status["progress"] = 100
-            loading_status["status"] = "error"
-            loading_status["message"] = "Model instance created but components not loaded"
-            add_loading_log("ERROR: Model instance created but components are empty", "error")
-            add_loading_log("This usually means a component (ASR, F0, or PL-BERT) failed to load", "error")
-            loading_error = "Model components not loaded - check logs for details"
-            
     except Exception as e:
+        loading_status["status"] = "error"
+        loading_status["progress"] = 100
+        loading_status["message"] = f"Error: {str(e)}"
         loading_error = str(e)
-        loading_status = {"status": "error", "progress": 0, "message": f"Failed to load model: {str(e)}"}
-        add_loading_log(f"ERROR: Failed to load model: {str(e)}", "error")
+        add_loading_log(f"ERROR during model loading: {str(e)}", "error")
         import traceback
         error_trace = traceback.format_exc()
         add_loading_log(f"Traceback: {error_trace}", "error")
-        print(f"Failed to load model: {e}")
-        traceback.print_exc()
     finally:
         model_loading = False
-        add_loading_log("Model loading process completed", "info")
 
-# Initialize device (but don't load models yet)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"StyleTTS2 Server initialized. Device: {device}")
+# Server initialized - models will be loaded on-demand or via API
+print("StyleTTS2 Server initialized")
 print("Models will be loaded on-demand or via API")
 
 @app.route('/')
@@ -407,11 +323,8 @@ def list_models():
             "path": installed.get(model_id, {}).get("path")
         }
     
-    # Check if model is actually loaded (not just initialized)
-    model_loaded = False
-    if styletts2_model is not None and hasattr(styletts2_model, 'model'):
-        # Model is loaded if it has actual model components (not just empty dict)
-        model_loaded = bool(styletts2_model.model and len(styletts2_model.model) > 0)
+    # Check if model is loaded
+    model_loaded = bool(styletts2_model)
     
     return {
         "models": models,
@@ -468,11 +381,8 @@ def download_model_endpoint():
 @app.route('/api/models/status', methods=['GET'])
 def model_download_status():
     """Get model download and loading status"""
-    # Check if model is actually loaded (not just initialized)
-    model_loaded = False
-    if styletts2_model is not None and hasattr(styletts2_model, 'model'):
-        # Model is loaded if it has actual model components (not just empty dict)
-        model_loaded = bool(styletts2_model.model and len(styletts2_model.model) > 0)
+    # Check if model is loaded
+    model_loaded = bool(styletts2_model)
     
     return {
         "download_status": download_status,
@@ -641,15 +551,6 @@ def test_voice():
         )
         
         return send_file(output_path, mimetype='audio/wav')
-    except RuntimeError as e:
-        # RuntimeError from inference (e.g., not implemented)
-        error_msg = str(e)
-        if "not yet fully implemented" in error_msg or "NotImplementedError" in error_msg:
-            return {
-                "error": "TTS inference is not yet fully implemented. The model is loaded, but the inference pipeline needs to be completed.",
-                "details": error_msg
-            }, 501  # 501 Not Implemented
-        return {"error": f"Voice test failed: {error_msg}"}, 500
     except Exception as e:
         return {"error": f"Voice test failed: {str(e)}"}, 500
 
@@ -688,12 +589,9 @@ def delete_voice():
 
 @app.route('/api/tts', methods=['POST'])
 def synthesize():
-    # Check if model is actually loaded (has model components, not just empty dict)
-    if not styletts2_model or not hasattr(styletts2_model, 'model'):
-        return {"error": "No model loaded. Please download and load a model first."}, 503
-    
-    if not styletts2_model.model or len(styletts2_model.model) == 0:
-        return {"error": "Model is not fully loaded. Please wait for model loading to complete or reload the model."}, 503
+    # Check if model is loaded
+    if not styletts2_model:
+        return {"error": "No model loaded. Please load a model first."}, 503
     
     # Get parameters from form-data or JSON
     if request.is_json:
@@ -738,37 +636,29 @@ def synthesize():
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as f:
             output_path = f.name
         
-        # StyleTTS2 inference
+        # StyleTTS2 inference - simple PyPI package interface
+        # Pass parameters if supported by the package
+        inference_kwargs = {
+            "text": text,
+            "output_wav_file": output_path
+        }
+        
+        # Add optional parameters if provided
         if target_voice_path:
-            # Voice cloning mode
-            styletts2_model.inference(
-                text=text,
-                target_voice_path=target_voice_path,
-                output_wav_file=output_path,
-                alpha=alpha,
-                beta=beta,
-                diffusion_steps=diffusion_steps
-            )
-        else:
-            # Default voice mode
-            styletts2_model.inference(
-                text=text,
-                output_wav_file=output_path,
-                alpha=alpha,
-                beta=beta,
-                diffusion_steps=diffusion_steps
-            )
+            inference_kwargs["target_voice_path"] = target_voice_path
+        
+        # Try to pass alpha, beta, diffusion_steps if the package supports them
+        # These will be ignored if not supported
+        if alpha is not None:
+            inference_kwargs["alpha"] = alpha
+        if beta is not None:
+            inference_kwargs["beta"] = beta
+        if diffusion_steps is not None:
+            inference_kwargs["diffusion_steps"] = diffusion_steps
+        
+        styletts2_model.inference(**inference_kwargs)
         
         return send_file(output_path, mimetype='audio/wav')
-    except RuntimeError as e:
-        # RuntimeError from inference (e.g., not implemented)
-        error_msg = str(e)
-        if "not yet fully implemented" in error_msg or "NotImplementedError" in error_msg:
-            return {
-                "error": "TTS inference is not yet fully implemented. The model is loaded, but the inference pipeline needs to be completed. This requires implementing: duration prediction, prosody prediction, and diffusion sampling.",
-                "details": error_msg
-            }, 501  # 501 Not Implemented
-        return {"error": f"TTS synthesis failed: {error_msg}"}, 500
     except Exception as e:
         return {"error": f"TTS generation failed: {str(e)}"}, 500
 

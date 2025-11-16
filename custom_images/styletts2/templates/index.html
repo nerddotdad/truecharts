@@ -751,9 +751,6 @@
                 
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-                    if (response.status === 501) {
-                        throw new Error('TTS inference is not yet fully implemented. ' + (error.details || error.error || 'The model is loaded, but the inference pipeline needs to be completed.'));
-                    }
                     throw new Error(error.error || error.details || 'Generation failed');
                 }
                 
