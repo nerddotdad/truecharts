@@ -104,6 +104,34 @@ class StyleTTS2:
         # Load models
         self._load_models()
     
+    def _resolve_path(self, path):
+        """Resolve a path from config - handles both absolute and relative paths"""
+        if not path:
+            return None
+        
+        # If absolute path, use as-is
+        if os.path.isabs(path):
+            return path if os.path.exists(path) else None
+        
+        # Try relative to StyleTTS2 repository root first (most common case)
+        repo_root = '/app/StyleTTS2'
+        repo_path = os.path.join(repo_root, path)
+        if os.path.exists(repo_path):
+            return repo_path
+        
+        # Try relative to model directory
+        model_path = os.path.join(self.model_path, path)
+        if os.path.exists(model_path):
+            return model_path
+        
+        # Try relative to /app
+        app_path = os.path.join('/app', path)
+        if os.path.exists(app_path):
+            return app_path
+        
+        # Return original path if none found (let the loader handle the error)
+        return path
+    
     def _load_models(self):
         """Load StyleTTS2 models from config"""
         try:
@@ -112,6 +140,7 @@ class StyleTTS2:
                 self.phonemizer = phonemizer.backend.EspeakBackend(
                     language='en-us', preserve_punctuation=True, with_stress=True
                 )
+                print("Phonemizer loaded successfully")
             except Exception as e:
                 print(f"Warning: Could not load phonemizer: {e}")
             
@@ -121,34 +150,72 @@ class StyleTTS2:
                 ASR_path = self.config.get('ASR_path', False)
                 if ASR_path and ASR_config:
                     try:
-                        self.text_aligner = load_ASR_models(ASR_path, ASR_config)
+                        # Resolve paths
+                        resolved_ASR_path = self._resolve_path(ASR_path)
+                        resolved_ASR_config = self._resolve_path(ASR_config)
+                        
+                        print(f"Loading ASR model from {resolved_ASR_path} with config {resolved_ASR_config}")
+                        if not resolved_ASR_path or not os.path.exists(resolved_ASR_path):
+                            print(f"ERROR: ASR model path does not exist: {resolved_ASR_path}")
+                        elif not resolved_ASR_config or not os.path.exists(resolved_ASR_config):
+                            print(f"ERROR: ASR config path does not exist: {resolved_ASR_config}")
+                        else:
+                            self.text_aligner = load_ASR_models(resolved_ASR_path, resolved_ASR_config)
+                            print(f"ASR model loaded successfully")
                     except Exception as e:
                         print(f"Warning: Could not load ASR model: {e}")
+                        import traceback
+                        traceback.print_exc()
+                else:
+                    print(f"ASR paths not found in config: ASR_path={ASR_path}, ASR_config={ASR_config}")
             
             # Load F0 model
             if load_F0_models:
                 F0_path = self.config.get('F0_path', False)
                 if F0_path:
                     try:
-                        self.pitch_extractor = load_F0_models(F0_path)
+                        # Resolve path
+                        resolved_F0_path = self._resolve_path(F0_path)
+                        
+                        print(f"Loading F0 model from {resolved_F0_path}")
+                        if not resolved_F0_path or not os.path.exists(resolved_F0_path):
+                            print(f"ERROR: F0 model path does not exist: {resolved_F0_path}")
+                        else:
+                            self.pitch_extractor = load_F0_models(resolved_F0_path)
+                            print(f"F0 model loaded successfully")
                     except Exception as e:
                         print(f"Warning: Could not load F0 model: {e}")
+                        import traceback
+                        traceback.print_exc()
+                else:
+                    print(f"F0_path not found in config")
+            else:
+                print("load_F0_models function not available")
             
             # Load PL-BERT
             BERT_path = self.config.get('PLBERT_dir', False)
             if BERT_path:
                 try:
-                    # load_plbert only takes one argument (log_dir), device is handled internally
-                    self.plbert = load_plbert(BERT_path)
-                    if self.plbert:
-                        # Move to device after loading
-                        if hasattr(self.plbert, 'to'):
-                            self.plbert = self.plbert.to(self.device)
-                        print(f"PL-BERT loaded from {BERT_path}")
+                    # Resolve path
+                    resolved_BERT_path = self._resolve_path(BERT_path)
+                    
+                    print(f"Loading PL-BERT from {resolved_BERT_path}")
+                    if not resolved_BERT_path or not os.path.exists(resolved_BERT_path):
+                        print(f"ERROR: PL-BERT path does not exist: {resolved_BERT_path}")
+                    else:
+                        # load_plbert only takes one argument (log_dir), device is handled internally
+                        self.plbert = load_plbert(resolved_BERT_path)
+                        if self.plbert:
+                            # Move to device after loading
+                            if hasattr(self.plbert, 'to'):
+                                self.plbert = self.plbert.to(self.device)
+                            print(f"PL-BERT loaded successfully from {resolved_BERT_path}")
                 except Exception as e:
                     print(f"Warning: Could not load PL-BERT: {e}")
                     import traceback
                     traceback.print_exc()
+            else:
+                print(f"PLBERT_dir not found in config")
             
             # Build main model
             if self.text_aligner and self.pitch_extractor and self.plbert:

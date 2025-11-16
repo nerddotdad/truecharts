@@ -265,12 +265,20 @@ def load_model(model_path=None):
                 add_loading_log("WARNING: Model dict is empty - model may not have loaded correctly", "warning")
                 if hasattr(styletts2_model, 'config'):
                     add_loading_log(f"Config loaded: {styletts2_model.config is not None}", "info")
+                    if styletts2_model.config:
+                        # Log config paths to help debug
+                        asr_path = styletts2_model.config.get('ASR_path', 'N/A')
+                        f0_path = styletts2_model.config.get('F0_path', 'N/A')
+                        bert_path = styletts2_model.config.get('PLBERT_dir', 'N/A')
+                        add_loading_log(f"Config ASR_path: {asr_path}", "info")
+                        add_loading_log(f"Config F0_path: {f0_path}", "info")
+                        add_loading_log(f"Config PLBERT_dir: {bert_path}", "info")
                 if hasattr(styletts2_model, 'text_aligner'):
-                    add_loading_log(f"Text aligner: {styletts2_model.text_aligner is not None}", "info")
+                    add_loading_log(f"Text aligner: {styletts2_model.text_aligner is not None}", "info" if styletts2_model.text_aligner else "warning")
                 if hasattr(styletts2_model, 'pitch_extractor'):
-                    add_loading_log(f"Pitch extractor: {styletts2_model.pitch_extractor is not None}", "info")
+                    add_loading_log(f"Pitch extractor: {styletts2_model.pitch_extractor is not None}", "info" if styletts2_model.pitch_extractor else "warning")
                 if hasattr(styletts2_model, 'plbert'):
-                    add_loading_log(f"PL-BERT: {styletts2_model.plbert is not None}", "info")
+                    add_loading_log(f"PL-BERT: {styletts2_model.plbert is not None}", "info" if styletts2_model.plbert else "warning")
         
         loading_status["progress"] = 70
         loading_status["message"] = "Moving model to device..."
