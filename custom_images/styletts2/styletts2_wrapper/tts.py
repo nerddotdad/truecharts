@@ -27,30 +27,34 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import some StyleTTS2 modules: {e}")
 
-# Try to import ASR and F0 loaders (may not exist or may be in different locations)
+# Import ASR and F0 loaders from models.py (they're defined there, not in Utils submodules)
 load_ASR_models = None
 load_F0_models = None
 try:
-    from Utils.ASR.models import load_ASR_models
-except ImportError:
+    from models import load_ASR_models, load_F0_models
+    print("Loaded load_ASR_models and load_F0_models from models.py")
+except ImportError as e:
+    print(f"Warning: Could not import load functions from models: {e}")
+    # Try alternative import paths as fallback
     try:
-        # Try alternative import path
-        from Utils import ASR
-        if hasattr(ASR, 'load_ASR_models'):
-            load_ASR_models = ASR.load_ASR_models
+        from Utils.ASR.models import load_ASR_models
     except ImportError:
-        pass
-
-try:
-    from Utils.JDC.model import load_F0_models
-except ImportError:
+        try:
+            from Utils import ASR
+            if hasattr(ASR, 'load_ASR_models'):
+                load_ASR_models = ASR.load_ASR_models
+        except ImportError:
+            pass
+    
     try:
-        # Try alternative import path
-        from Utils import JDC
-        if hasattr(JDC, 'load_F0_models'):
-            load_F0_models = JDC.load_F0_models
+        from Utils.JDC.model import load_F0_models
     except ImportError:
-        pass
+        try:
+            from Utils import JDC
+            if hasattr(JDC, 'load_F0_models'):
+                load_F0_models = JDC.load_F0_models
+        except ImportError:
+            pass
 
 class StyleTTS2:
     """
