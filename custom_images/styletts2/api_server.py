@@ -16,6 +16,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 styletts2_model = None
+current_loaded_model_id = None  # Track which model is currently loaded
 loading_error = None
 model_loading = False
 download_status = {"status": "idle", "progress": 0, "message": ""}
@@ -247,9 +248,9 @@ def add_loading_log(message, level="info"):
         loading_logs = loading_logs[-MAX_LOGS:]
     print(f"[{level.upper()}] {message}")
 
-def load_model(model_path=None):
+def load_model(model_path=None, model_id=None):
     """Load StyleTTS2 model - simplified using PyPI package"""
-    global styletts2_model, loading_error, model_loading, loading_status, loading_logs
+    global styletts2_model, current_loaded_model_id, loading_error, model_loading, loading_status, loading_logs
     
     if model_loading:
         return
@@ -272,6 +273,9 @@ def load_model(model_path=None):
             # Use default - package will handle model download/loading
             add_loading_log("Using default StyleTTS2 configuration", "info")
             styletts2_model = tts.StyleTTS2()
+        
+        # Track which model is loaded
+        current_loaded_model_id = model_id
         
         loading_status["progress"] = 80
         loading_status["message"] = "Model initialized..."
@@ -320,7 +324,8 @@ def list_models():
         models[model_id] = {
             **model_info,
             "installed": installed.get(model_id, {}).get("installed", False),
-            "path": installed.get(model_id, {}).get("path")
+            "path": installed.get(model_id, {}).get("path"),
+            "loaded": (current_loaded_model_id == model_id)  # Show which model is currently loaded
         }
     
     # Check if model is loaded
@@ -329,7 +334,8 @@ def list_models():
     return {
         "models": models,
         "download_status": download_status,
-        "model_loaded": model_loaded
+        "model_loaded": model_loaded,
+        "current_model": current_loaded_model_id  # Return which model is loaded
     }, 200
 
 @app.route('/api/models/download/reset', methods=['POST'])
@@ -372,7 +378,7 @@ def download_model_endpoint():
         if download_status["status"] == "complete":
             installed = check_installed_models()
             if model_id in installed and installed[model_id].get("installed"):
-                load_model(installed[model_id]["path"])
+                load_model(installed[model_id].get("path"), model_id)
     
     threading.Thread(target=download_thread, daemon=True).start()
     
@@ -395,7 +401,7 @@ def model_download_status():
 @app.route('/api/models/load', methods=['POST'])
 def load_model_endpoint():
     """Load a specific installed model"""
-    global model_loading, loading_status
+    global model_loading, loading_status, current_loaded_model_id
     
     if model_loading:
         return {"error": "Model is already loading", "loading_status": loading_status}, 409
@@ -408,22 +414,22 @@ def load_model_endpoint():
     if model_id:
         if model_id not in installed or not installed[model_id].get("installed"):
             return {"error": f"Model {model_id} is not installed"}, 404
-        model_path = installed[model_id]["path"]
+        model_path = installed[model_id].get("path")  # May be None for PyPI package
     else:
         # Load first available model
         for mid, info in installed.items():
-            if info.get("installed") and "path" in info:
-                model_path = info["path"]
+            if info.get("installed"):
+                model_path = info.get("path")
                 model_id = mid
                 break
         else:
-            return {"error": "No models installed. Please download a model first."}, 404
+            return {"error": "No models available. Please download a model first."}, 404
     
     # Reset loading status
     loading_status = {"status": "loading", "progress": 0, "message": f"Starting to load {model_id}..."}
     
-    # Load in background
-    threading.Thread(target=lambda: load_model(model_path), daemon=True).start()
+    # Load in background - pass model_id to track which model is loaded
+    threading.Thread(target=lambda: load_model(model_path, model_id), daemon=True).start()
     
     return {"message": f"Loading {model_id}...", "model_id": model_id, "loading_status": loading_status}, 202
 
@@ -505,16 +511,30 @@ def list_voices():
 @app.route('/api/test-voice', methods=['POST'])
 def test_voice():
     """Test a specific voice file to see quality"""
-    if not styletts2_model or not (hasattr(styletts2_model, 'model') and styletts2_model.model):
+    if not styletts2_model:
         return {"error": "No model loaded"}, 503
     
     if request.is_json:
         data = request.json
+        voice_name = data.get('voice_name', None)
         target_voice_path = data.get('target_voice_path', None)
         text = data.get('text', 'Hello, this is a test of the voice quality.')
+        alpha = data.get('alpha', 0.3)
+        beta = data.get('beta', 0.7)
+        diffusion_steps = data.get('diffusion_steps', 10)
+        embedding_scale = data.get('embedding_scale', 1.0)
     else:
+        voice_name = request.form.get('voice_name', None)
         target_voice_path = request.form.get('target_voice_path', None)
         text = request.form.get('text', 'Hello, this is a test of the voice quality.')
+        alpha = float(request.form.get('alpha', 0.3))
+        beta = float(request.form.get('beta', 0.7))
+        diffusion_steps = int(request.form.get('diffusion_steps', 10))
+        embedding_scale = float(request.form.get('embedding_scale', 1.0))
+    
+    # Use voice_name if provided, otherwise use target_voice_path
+    if voice_name and not target_voice_path:
+        target_voice_path = voice_name
     
     if not target_voice_path:
         return {"error": "target_voice_path parameter required"}, 400
@@ -544,11 +564,24 @@ def test_voice():
             output_path = f.name
         
         # StyleTTS2 inference with voice cloning
-        styletts2_model.inference(
-            text=text,
-            target_voice_path=target_voice_path,
-            output_wav_file=output_path
-        )
+        # Pass parameters if supported by the package
+        inference_kwargs = {
+            "text": text,
+            "target_voice_path": target_voice_path,
+            "output_wav_file": output_path
+        }
+        
+        # Try to pass alpha, beta, diffusion_steps, embedding_scale if the package supports them
+        if alpha is not None:
+            inference_kwargs["alpha"] = alpha
+        if beta is not None:
+            inference_kwargs["beta"] = beta
+        if diffusion_steps is not None:
+            inference_kwargs["diffusion_steps"] = diffusion_steps
+        if embedding_scale is not None:
+            inference_kwargs["embedding_scale"] = embedding_scale
+        
+        styletts2_model.inference(**inference_kwargs)
         
         return send_file(output_path, mimetype='audio/wav')
     except Exception as e:
@@ -601,12 +634,14 @@ def synthesize():
         alpha = data.get('alpha', 0.3)  # Style control parameter (0.0-1.0)
         beta = data.get('beta', 0.7)  # Style control parameter (0.0-1.0)
         diffusion_steps = data.get('diffusion_steps', 10)  # Quality vs speed tradeoff
+        embedding_scale = data.get('embedding_scale', 1.0)  # Embedding scale (1-10)
     else:
         text = request.form.get('text', '')
         target_voice_path = request.form.get('target_voice_path', None)
         alpha = float(request.form.get('alpha', 0.3))
         beta = float(request.form.get('beta', 0.7))
         diffusion_steps = int(request.form.get('diffusion_steps', 10))
+        embedding_scale = float(request.form.get('embedding_scale', 1.0))
     
     if not text:
         return {"error": "text parameter required"}, 400
@@ -647,7 +682,7 @@ def synthesize():
         if target_voice_path:
             inference_kwargs["target_voice_path"] = target_voice_path
         
-        # Try to pass alpha, beta, diffusion_steps if the package supports them
+        # Try to pass alpha, beta, diffusion_steps, embedding_scale if the package supports them
         # These will be ignored if not supported
         if alpha is not None:
             inference_kwargs["alpha"] = alpha
@@ -655,6 +690,8 @@ def synthesize():
             inference_kwargs["beta"] = beta
         if diffusion_steps is not None:
             inference_kwargs["diffusion_steps"] = diffusion_steps
+        if embedding_scale is not None:
+            inference_kwargs["embedding_scale"] = embedding_scale
         
         styletts2_model.inference(**inference_kwargs)
         

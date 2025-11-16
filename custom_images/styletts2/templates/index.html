@@ -338,6 +338,9 @@
             <!-- Voice Cloning Section -->
             <div class="section">
                 <h2>🎤 Voice Cloning & Management</h2>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 20px; padding: 10px; background: #f0f4ff; border-radius: 5px; border-left: 4px solid #667eea;">
+                    <strong>ℹ️ Note:</strong> Voice cloning uses the currently loaded model. Make sure you have loaded a model in the "Model Setup" section above before testing voices.
+                </p>
                 
                 <!-- Create New Voice -->
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px dashed #667eea;">
@@ -515,9 +518,12 @@
                                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">Voice Samples</label>
                                 <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; max-height: 150px; overflow-y: auto;">
                                     ${files.length > 0 ? 
-                                        files.map(f => `<div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e0e0e0;">
-                                            <span style="font-size: 0.9em;">${f.filename}</span>
-                                            <span style="font-size: 0.85em; color: #666;">${f.size_mb} MB</span>
+                                        files.map(f => `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                            <div style="flex: 1;">
+                                                <span style="font-size: 0.9em; display: block;">${f.filename}</span>
+                                                <span style="font-size: 0.85em; color: #666;">${f.size_mb} MB</span>
+                                            </div>
+                                            <button onclick="deleteSample('${name}', '${f.filename}')" style="padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-left: 10px;" title="Delete this sample">🗑️</button>
                                         </div>`).join('') :
                                         '<p style="color: #666; font-size: 0.9em; margin: 0;">No samples yet</p>'
                                     }
@@ -550,6 +556,16 @@
                                         <span class="value" id="stepsValue_${name}">10</span>
                                     </div>
                                 </div>
+                                <div style="margin-top: 10px;">
+                                    <label style="font-size: 0.9em;">Embedding Scale <span style="color: #f44336;">⚠️</span></label>
+                                    <div class="slider-group">
+                                        <input type="range" id="embeddingScale_${name}" min="1" max="10" step="0.5" value="1" style="flex: 1;">
+                                        <span class="value" id="embeddingScaleValue_${name}">1</span>
+                                    </div>
+                                    <p style="font-size: 0.8em; color: #f44336; margin: 5px 0 0 0; padding: 5px; background: #ffebee; border-radius: 3px;">
+                                        <strong>WARNING:</strong> If you set this too high and generate text that's too short, you will get static!
+                                    </p>
+                                </div>
                             </div>
                             
                             <!-- Test Voice -->
@@ -571,6 +587,14 @@
                 
                 // Setup slider listeners and drag-drop for each voice
                 for (const name of Object.keys(data.voices)) {
+                    // Embedding Scale slider
+                    const embeddingScaleSlider = document.getElementById(`embeddingScale_${name}`);
+                    const embeddingScaleValue = document.getElementById(`embeddingScaleValue_${name}`);
+                    if (embeddingScaleSlider && embeddingScaleValue) {
+                        embeddingScaleSlider.addEventListener('input', (e) => {
+                            embeddingScaleValue.textContent = e.target.value;
+                        });
+                    }
                     document.getElementById(`alpha_${name}`).addEventListener('input', (e) => {
                         document.getElementById(`alphaValue_${name}`).textContent = e.target.value;
                     });
@@ -659,7 +683,8 @@
                     target_voice_path: voiceName,
                     alpha: parseFloat(document.getElementById(`alpha_${voiceName}`).value),
                     beta: parseFloat(document.getElementById(`beta_${voiceName}`).value),
-                    diffusion_steps: parseInt(document.getElementById(`steps_${voiceName}`).value)
+                    diffusion_steps: parseInt(document.getElementById(`steps_${voiceName}`).value),
+                    embedding_scale: parseFloat(document.getElementById(`embeddingScale_${voiceName}`).value)
                 };
                 
                 console.log('Sending voice test request to API:', params);
@@ -692,7 +717,7 @@
         }
         
         async function deleteVoice(voiceName) {
-            if (!confirm(`Are you sure you want to delete the voice "${voiceName}"?`)) {
+            if (!confirm(`Are you sure you want to delete the entire voice "${voiceName}" and all its samples?`)) {
                 return;
             }
             
@@ -706,6 +731,30 @@
                 const data = await response.json();
                 if (response.ok) {
                     showSuccess(`Voice "${voiceName}" deleted`);
+                    loadVoices();
+                } else {
+                    showError(data.error || 'Delete failed');
+                }
+            } catch (error) {
+                showError(`Delete error: ${error.message}`);
+            }
+        }
+        
+        async function deleteSample(voiceName, filename) {
+            if (!confirm(`Are you sure you want to delete the sample "${filename}" from voice "${voiceName}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/delete-voice`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: voiceName, filename: filename })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(`Sample "${filename}" deleted from voice "${voiceName}"`);
                     loadVoices();
                 } else {
                     showError(data.error || 'Delete failed');
@@ -869,8 +918,12 @@
                                 </div>
                                 <div style="text-align: right;">
                                     ${installed ? 
-                                        `<span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">✓ Installed</span>
-                                         <button onclick="loadModel('${modelId}')" id="loadBtn_${modelId}" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Model</button>
+                                        `${model.loaded ? 
+                                            `<span style="background: #2196F3; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; margin-bottom: 5px; display: block;">✓ Currently Loaded</span>
+                                             <span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; display: block;">✓ Installed</span>` :
+                                            `<span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; margin-bottom: 5px; display: block;">✓ Installed</span>
+                                             <button onclick="loadModel('${modelId}')" id="loadBtn_${modelId}" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;">Load Model</button>`
+                                        }
                                          <button onclick="toggleDebug('${modelId}')" style="margin-top: 5px; padding: 5px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; width: 100%;">${preservedDebug && preservedDebug.visible ? 'Hide' : 'Show'} Debug</button>` :
                                         `<button onclick="downloadModel('${modelId}')" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Download</button>`
                                     }
