@@ -230,7 +230,8 @@ def load_model(model_path=None):
             loading_status["message"] = f"Loading model from {model_path}..."
             add_loading_log(f"Model path exists: {model_path}", "info")
             add_loading_log("Creating StyleTTS2 instance...", "info")
-            styletts2_model = tts.StyleTTS2(model_path=model_path)
+            # Pass log callback to capture all wrapper logs
+            styletts2_model = tts.StyleTTS2(model_path=model_path, log_callback=add_loading_log)
         else:
             # Try to find any installed model
             installed = check_installed_models()
@@ -243,13 +244,15 @@ def load_model(model_path=None):
                     loading_status["progress"] = 30
                     loading_status["message"] = f"Loading {model_id} from {info['path']}..."
                     add_loading_log(f"Creating StyleTTS2 instance for {model_id}...", "info")
-                    styletts2_model = tts.StyleTTS2(model_path=info["path"])
+                    # Pass log callback to capture all wrapper logs
+                    styletts2_model = tts.StyleTTS2(model_path=info["path"], log_callback=add_loading_log)
                     break
             else:
                 # No model found, create empty instance
                 loading_status["message"] = "No model found, creating empty instance..."
                 add_loading_log("WARNING: No installed models found, creating empty instance", "warning")
-                styletts2_model = tts.StyleTTS2()
+                # Pass log callback to capture all wrapper logs
+                styletts2_model = tts.StyleTTS2(log_callback=add_loading_log)
         
         loading_status["progress"] = 50
         loading_status["message"] = "Checking model components..."

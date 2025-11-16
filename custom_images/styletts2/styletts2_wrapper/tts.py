@@ -60,12 +60,13 @@ class StyleTTS2:
     """
     StyleTTS2 wrapper class that loads models and provides inference interface
     """
-    def __init__(self, model_path=None):
+    def __init__(self, model_path=None, log_callback=None):
         """
         Initialize StyleTTS2 model
         
         Args:
             model_path: Path to model directory containing config.yml
+            log_callback: Optional function to call for logging (func(message, level))
         """
         self.model_path = model_path or "/app/models"
         self.config = None
@@ -77,12 +78,20 @@ class StyleTTS2:
         self.sampler = None
         self.phonemizer = None
         self.to_mel = None
+        self.log_callback = log_callback  # Callback for logging
         
         # Setup mel spectrogram transform
         self.to_mel = torchaudio.transforms.MelSpectrogram(
             n_mels=80, n_fft=2048, win_length=1200, hop_length=300
         )
         self.mean, self.std = -4, 4
+    
+    def _log(self, message, level="info"):
+        """Log a message - uses callback if available, otherwise prints"""
+        if self.log_callback:
+            self.log_callback(message, level)
+        else:
+            print(f"[{level.upper()}] {message}")
         
         # Load configuration
         config_paths = [
@@ -96,11 +105,11 @@ class StyleTTS2:
                 with open(config_path, 'r') as f:
                     self.config = yaml.safe_load(f)
                 self.model_path = os.path.dirname(config_path)
-                print(f"Loaded config from {config_path}")
+                self._log(f"Loaded config from {config_path}", "info")
                 break
         
         if not self.config:
-            print("Warning: No config.yml found, model will not be fully functional")
+            self._log("No config.yml found, model will not be fully functional", "warning")
             # Initialize empty model dict so we can check if it's loaded
             self.model = {}
             return
@@ -144,9 +153,9 @@ class StyleTTS2:
                 self.phonemizer = phonemizer.backend.EspeakBackend(
                     language='en-us', preserve_punctuation=True, with_stress=True
                 )
-                print("Phonemizer loaded successfully")
+                self._log("Phonemizer loaded successfully", "info")
             except Exception as e:
-                print(f"Warning: Could not load phonemizer: {e}")
+                self._log(f"Could not load phonemizer: {e}", "warning")
             
             # Load ASR model
             if load_ASR_models:
@@ -158,20 +167,21 @@ class StyleTTS2:
                         resolved_ASR_path = self._resolve_path(ASR_path)
                         resolved_ASR_config = self._resolve_path(ASR_config)
                         
-                        print(f"Loading ASR model from {resolved_ASR_path} with config {resolved_ASR_config}")
+                        self._log(f"Loading ASR model from {resolved_ASR_path} with config {resolved_ASR_config}", "info")
                         if not resolved_ASR_path or not os.path.exists(resolved_ASR_path):
-                            print(f"ERROR: ASR model path does not exist: {resolved_ASR_path}")
+                            self._log(f"ASR model path does not exist: {resolved_ASR_path}", "error")
                         elif not resolved_ASR_config or not os.path.exists(resolved_ASR_config):
-                            print(f"ERROR: ASR config path does not exist: {resolved_ASR_config}")
+                            self._log(f"ASR config path does not exist: {resolved_ASR_config}", "error")
                         else:
                             self.text_aligner = load_ASR_models(resolved_ASR_path, resolved_ASR_config)
-                            print(f"ASR model loaded successfully")
+                            self._log(f"ASR model loaded successfully", "success")
                     except Exception as e:
-                        print(f"Warning: Could not load ASR model: {e}")
+                        self._log(f"Could not load ASR model: {e}", "error")
                         import traceback
-                        traceback.print_exc()
+                        error_trace = traceback.format_exc()
+                        self._log(f"ASR loading traceback: {error_trace}", "error")
                 else:
-                    print(f"ASR paths not found in config: ASR_path={ASR_path}, ASR_config={ASR_config}")
+                    self._log(f"ASR paths not found in config: ASR_path={ASR_path}, ASR_config={ASR_config}", "warning")
             
             # Load F0 model
             if load_F0_models:
@@ -181,20 +191,21 @@ class StyleTTS2:
                         # Resolve path
                         resolved_F0_path = self._resolve_path(F0_path)
                         
-                        print(f"Loading F0 model from {resolved_F0_path}")
+                        self._log(f"Loading F0 model from {resolved_F0_path}", "info")
                         if not resolved_F0_path or not os.path.exists(resolved_F0_path):
-                            print(f"ERROR: F0 model path does not exist: {resolved_F0_path}")
+                            self._log(f"F0 model path does not exist: {resolved_F0_path}", "error")
                         else:
                             self.pitch_extractor = load_F0_models(resolved_F0_path)
-                            print(f"F0 model loaded successfully")
+                            self._log(f"F0 model loaded successfully", "success")
                     except Exception as e:
-                        print(f"Warning: Could not load F0 model: {e}")
+                        self._log(f"Could not load F0 model: {e}", "error")
                         import traceback
-                        traceback.print_exc()
+                        error_trace = traceback.format_exc()
+                        self._log(f"F0 loading traceback: {error_trace}", "error")
                 else:
-                    print(f"F0_path not found in config")
+                    self._log(f"F0_path not found in config", "warning")
             else:
-                print("load_F0_models function not available")
+                self._log("load_F0_models function not available", "error")
             
             # Load PL-BERT
             BERT_path = self.config.get('PLBERT_dir', False)
@@ -203,9 +214,9 @@ class StyleTTS2:
                     # Resolve path
                     resolved_BERT_path = self._resolve_path(BERT_path)
                     
-                    print(f"Loading PL-BERT from {resolved_BERT_path}")
+                    self._log(f"Loading PL-BERT from {resolved_BERT_path}", "info")
                     if not resolved_BERT_path or not os.path.exists(resolved_BERT_path):
-                        print(f"ERROR: PL-BERT path does not exist: {resolved_BERT_path}")
+                        self._log(f"PL-BERT path does not exist: {resolved_BERT_path}", "error")
                     else:
                         # load_plbert only takes one argument (log_dir), device is handled internally
                         self.plbert = load_plbert(resolved_BERT_path)
@@ -213,13 +224,14 @@ class StyleTTS2:
                             # Move to device after loading
                             if hasattr(self.plbert, 'to'):
                                 self.plbert = self.plbert.to(self.device)
-                            print(f"PL-BERT loaded successfully from {resolved_BERT_path}")
+                            self._log(f"PL-BERT loaded successfully from {resolved_BERT_path}", "success")
                 except Exception as e:
-                    print(f"Warning: Could not load PL-BERT: {e}")
+                    self._log(f"Could not load PL-BERT: {e}", "error")
                     import traceback
-                    traceback.print_exc()
+                    error_trace = traceback.format_exc()
+                    self._log(f"PL-BERT loading traceback: {error_trace}", "error")
             else:
-                print(f"PLBERT_dir not found in config")
+                self._log(f"PLBERT_dir not found in config", "warning")
             
             # Build main model
             if self.text_aligner and self.pitch_extractor and self.plbert:
@@ -243,15 +255,17 @@ class StyleTTS2:
                         sigma_schedule=KarrasSchedule(sigma_min=0.0001, sigma_max=3.0, rho=9.0),
                         clamp=False
                     )
-                    print("StyleTTS2 models loaded successfully")
+                    self._log("StyleTTS2 models loaded successfully", "success")
                 except Exception as e:
-                    print(f"Warning: Could not build model: {e}")
+                    self._log(f"Could not build model: {e}", "error")
                     import traceback
-                    traceback.print_exc()
+                    error_trace = traceback.format_exc()
+                    self._log(f"Model building traceback: {error_trace}", "error")
         except Exception as e:
-            print(f"Error loading models: {e}")
+            self._log(f"Error loading models: {e}", "error")
             import traceback
-            traceback.print_exc()
+            error_trace = traceback.format_exc()
+            self._log(f"Model loading traceback: {error_trace}", "error")
     
     def _load_model_weights(self):
         """Load model weights from checkpoint"""
@@ -272,7 +286,7 @@ class StyleTTS2:
                         if key in params:
                             try:
                                 self.model[key].load_state_dict(params[key], strict=False)
-                                print(f'{key} loaded')
+                                self._log(f'{key} loaded', "info")
                             except Exception as e:
                                 # Try with module prefix removed
                                 try:
@@ -283,15 +297,15 @@ class StyleTTS2:
                                         name = k[7:] if k.startswith('module.') else k
                                         new_state_dict[name] = v
                                     self.model[key].load_state_dict(new_state_dict, strict=False)
-                                    print(f'{key} loaded (with prefix removal)')
+                                    self._log(f'{key} loaded (with prefix removal)', "info")
                                 except Exception as e2:
-                                    print(f'Warning: Could not load {key}: {e2}')
+                                    self._log(f'Could not load {key}: {e2}', "warning")
                     return
                 except Exception as e:
-                    print(f"Warning: Could not load checkpoint {checkpoint_path}: {e}")
+                    self._log(f"Could not load checkpoint {checkpoint_path}: {e}", "warning")
                     continue
         
-        print("Warning: No checkpoint file found, model weights not loaded")
+        self._log("No checkpoint file found, model weights not loaded", "warning")
     
     def to(self, device):
         """Move model to device"""
