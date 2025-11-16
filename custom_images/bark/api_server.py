@@ -31,40 +31,86 @@ print("Models will be loaded on first request or via API")
 def load_models():
     """Load Bark models"""
     global bark_models_loaded, loading_error, model_loading, loading_status
+    import time
+    import sys
     
     if model_loading or bark_models_loaded:
         return
     
     model_loading = True
     loading_status = {"status": "loading", "progress": 0, "message": "Initializing Bark models..."}
+    start_time = time.time()
     
     try:
-        print("Loading Bark models (this may take a few minutes on first run)...")
-        loading_status["progress"] = 20
-        loading_status["message"] = "Downloading and loading Bark models from Hugging Face..."
+        print("=" * 60)
+        print("Loading Bark models (this may take 5-15 minutes on first run)...")
+        print("Models will be downloaded from Hugging Face (~2-3GB total)")
+        print("=" * 60)
+        sys.stdout.flush()
         
-        # Preload all models
+        loading_status["progress"] = 10
+        loading_status["message"] = "Initializing Bark library..."
+        print(f"[{time.time() - start_time:.1f}s] Initializing Bark library...")
+        sys.stdout.flush()
+        
+        # Check Hugging Face cache location
+        cache_dir = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
+        print(f"[{time.time() - start_time:.1f}s] Hugging Face cache: {cache_dir}")
+        sys.stdout.flush()
+        
+        loading_status["progress"] = 20
+        loading_status["message"] = "Downloading models from Hugging Face (this may take 5-15 minutes)..."
+        print(f"[{time.time() - start_time:.1f}s] Starting model download from Hugging Face...")
+        print(f"[{time.time() - start_time:.1f}s] This is a blocking operation - please be patient...")
+        sys.stdout.flush()
+        
+        # Preload all models - this is a blocking call that downloads models
+        # It can take 5-15 minutes depending on network speed
+        print(f"[{time.time() - start_time:.1f}s] Calling preload_models()...")
+        sys.stdout.flush()
+        
         preload_models()
         
+        elapsed = time.time() - start_time
+        print(f"[{elapsed:.1f}s] ✓ preload_models() completed!")
+        sys.stdout.flush()
+        
         loading_status["progress"] = 80
-        loading_status["message"] = "Models loaded successfully!"
+        loading_status["message"] = "Models downloaded! Finalizing..."
+        print(f"[{elapsed:.1f}s] Models downloaded successfully!")
+        sys.stdout.flush()
+        
+        # Verify models are loaded by checking SAMPLE_RATE
+        try:
+            sample_rate = SAMPLE_RATE
+            print(f"[{elapsed:.1f}s] Sample rate: {sample_rate} Hz")
+            sys.stdout.flush()
+        except Exception as e:
+            print(f"[{elapsed:.1f}s] Warning: Could not verify SAMPLE_RATE: {e}")
+            sys.stdout.flush()
         
         bark_models_loaded = True
         loading_status["status"] = "complete"
         loading_status["progress"] = 100
-        loading_status["message"] = "Bark models ready!"
+        loading_status["message"] = f"Bark models ready! (took {elapsed:.1f} seconds)"
         loading_error = None
         
-        print("✓ Bark models loaded successfully!")
+        print("=" * 60)
+        print(f"✓ Bark models loaded successfully in {elapsed:.1f} seconds!")
+        print("=" * 60)
+        sys.stdout.flush()
         
     except Exception as e:
+        elapsed = time.time() - start_time
         loading_status["status"] = "error"
         loading_status["progress"] = 100
-        loading_status["message"] = f"Error: {str(e)}"
+        loading_status["message"] = f"Error after {elapsed:.1f}s: {str(e)}"
         loading_error = str(e)
-        print(f"ERROR during model loading: {str(e)}")
+        print(f"[{elapsed:.1f}s] ERROR during model loading: {str(e)}")
         import traceback
-        traceback.print_exc()
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        sys.stdout.flush()
     finally:
         model_loading = False
 
@@ -108,13 +154,30 @@ def load_models_endpoint():
 @app.route('/api/tts', methods=['POST'])
 def synthesize():
     """Generate audio from text using Bark"""
-    global bark_models_loaded
+    global bark_models_loaded, model_loading, loading_status
     
-    # Auto-load models if not loaded
+    # Check if models are ready
     if not bark_models_loaded:
+        # Auto-start loading if not already started
         if not model_loading:
             threading.Thread(target=load_models, daemon=True).start()
-        return {"error": "Models are loading. Please wait a moment and try again."}, 503
+            return {
+                "error": "Models are not loaded. Starting model download now...",
+                "message": "Bark models are being downloaded from Hugging Face. This may take 5-15 minutes on first run.",
+                "status": "loading",
+                "loading_status": loading_status,
+                "suggestion": "Check /api/status endpoint for progress, or wait a few minutes and try again."
+            }, 503
+        
+        # Models are currently loading
+        return {
+            "error": "Models are still loading. Please wait and try again.",
+            "message": f"Bark models are being downloaded/loaded. Current status: {loading_status.get('message', 'Loading...')}",
+            "status": "loading",
+            "loading_status": loading_status,
+            "progress": loading_status.get("progress", 0),
+            "suggestion": "Check /api/status endpoint for detailed progress, or wait a few minutes and try again."
+        }, 503
     
     # Get parameters from form-data or JSON
     if request.is_json:
