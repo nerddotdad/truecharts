@@ -79,12 +79,12 @@ spec:
                   failureThreshold: 3
               resources:
                 requests:
-                  memory: "8Gi"  # Bark model size (full models ~12GB VRAM)
-                  cpu: "2000m"
+                  memory: "2Gi"  # System RAM (models run on GPU VRAM, not system RAM)
+                  cpu: "1000m"   # Reduced CPU request
                   nvidia.com/gpu: 1
                 limits:
-                  memory: "16Gi"  # Headroom for model loading
-                  cpu: "4000m"
+                  memory: "4Gi"  # Headroom for Python runtime and audio processing
+                  cpu: "2000m"   # Reduced CPU limit
                   nvidia.com/gpu: 1
 
     persistence:
