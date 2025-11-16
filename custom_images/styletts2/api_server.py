@@ -87,13 +87,15 @@ def download_model(model_id):
         os.makedirs("/tmp/models", exist_ok=True)
         zip_path = "/tmp/models/Models.zip"
         
-        download_status["message"] = "Connecting to Google Drive..."
+        download_status["message"] = "Connecting to Google Drive... (Note: StyleTTS2 models are distributed via Google Drive)"
         download_status["progress"] = 5
         
-        # Download using gdown - try multiple methods
+        # Download using gdown - try multiple methods with timeout
         download_success = False
         last_size = 0
         stall_count = 0
+        start_time = time.time()
+        timeout_seconds = 1800  # 30 minutes max
         
         def check_download_progress():
             """Check if download is progressing"""
@@ -108,32 +110,84 @@ def download_model(model_id):
                     estimated_total = 2 * 1024 * 1024 * 1024  # 2GB
                     progress = min(50, 10 + int((current_size / estimated_total) * 40))
                     download_status["progress"] = progress
-                    download_status["message"] = f"Downloading... {current_size // (1024*1024)}MB"
+                    download_status["message"] = f"Downloading from Google Drive... {current_size // (1024*1024)}MB (Note: This may take 10-20 minutes for ~2GB file)"
                 last_size = current_size
-                return stall_count < 60  # Allow 60 seconds of no progress
+                # Check timeout
+                elapsed = time.time() - start_time
+                if elapsed > timeout_seconds:
+                    return False
+                return stall_count < 120  # Allow 2 minutes of no progress
             return True
         
         # Start download in a way that allows progress checking
         try:
-            # Method 1: Direct download
-            print(f"Attempting to download model {model_id} from Google Drive...")
-            gdown.download(
-                id=model_info["drive_id"], 
-                output=zip_path, 
-                quiet=True,  # Set to True to avoid output issues
-                use_cookies=False
-            )
+            # Method 1: Direct download with timeout
+            print(f"Attempting to download model {model_id} from Google Drive (this may take 10-20 minutes)...")
+            print(f"Note: StyleTTS2 models are distributed via Google Drive. This is the official distribution method.")
+            
+            # Use threading to monitor download progress
+            import threading
+            download_complete = threading.Event()
+            download_error = [None]
+            
+            def download_thread():
+                try:
+                    gdown.download(
+                        id=model_info["drive_id"], 
+                        output=zip_path, 
+                        quiet=True,
+                        use_cookies=False
+                    )
+                    download_complete.set()
+                except Exception as e:
+                    download_error[0] = e
+                    download_complete.set()
+            
+            thread = threading.Thread(target=download_thread, daemon=True)
+            thread.start()
+            
+            # Monitor progress while downloading
+            while not download_complete.wait(2):  # Check every 2 seconds
+                if not check_download_progress():
+                    download_status = {"status": "error", "progress": 0, "message": "Download timeout or stalled. Please try again or check your network connection."}
+                    return False
+            
+            if download_error[0]:
+                raise download_error[0]
+            
             download_success = True
         except Exception as e:
             print(f"Method 1 failed: {e}, trying alternative...")
             try:
                 # Method 2: URL-based download
                 url = f"https://drive.google.com/uc?id={model_info['drive_id']}"
-                gdown.download(url, zip_path, quiet=True, use_cookies=False)
+                download_status["message"] = "Trying alternative download method..."
+                
+                def download_thread2():
+                    try:
+                        gdown.download(url, zip_path, quiet=True, use_cookies=False)
+                        download_complete.set()
+                    except Exception as e:
+                        download_error[0] = e
+                        download_complete.set()
+                
+                download_complete.clear()
+                download_error[0] = None
+                thread = threading.Thread(target=download_thread2, daemon=True)
+                thread.start()
+                
+                while not download_complete.wait(2):
+                    if not check_download_progress():
+                        download_status = {"status": "error", "progress": 0, "message": "Download timeout or stalled. Please try again or check your network connection."}
+                        return False
+                
+                if download_error[0]:
+                    raise download_error[0]
+                
                 download_success = True
             except Exception as e2:
                 print(f"Method 2 failed: {e2}")
-                download_status = {"status": "error", "progress": 0, "message": f"Download failed: {str(e2)}"}
+                download_status = {"status": "error", "progress": 0, "message": f"Download failed: {str(e2)}. Note: StyleTTS2 models are distributed via Google Drive. If downloads fail, check network connectivity or try again later."}
                 return False
         
         # Verify download
@@ -587,8 +641,17 @@ def test_voice():
         )
         
         return send_file(output_path, mimetype='audio/wav')
+    except RuntimeError as e:
+        # RuntimeError from inference (e.g., not implemented)
+        error_msg = str(e)
+        if "not yet fully implemented" in error_msg or "NotImplementedError" in error_msg:
+            return {
+                "error": "TTS inference is not yet fully implemented. The model is loaded, but the inference pipeline needs to be completed.",
+                "details": error_msg
+            }, 501  # 501 Not Implemented
+        return {"error": f"Voice test failed: {error_msg}"}, 500
     except Exception as e:
-        return {"error": f"TTS generation failed: {str(e)}"}, 500
+        return {"error": f"Voice test failed: {str(e)}"}, 500
 
 @app.route('/api/delete-voice', methods=['DELETE', 'POST'])
 def delete_voice():
@@ -697,6 +760,15 @@ def synthesize():
             )
         
         return send_file(output_path, mimetype='audio/wav')
+    except RuntimeError as e:
+        # RuntimeError from inference (e.g., not implemented)
+        error_msg = str(e)
+        if "not yet fully implemented" in error_msg or "NotImplementedError" in error_msg:
+            return {
+                "error": "TTS inference is not yet fully implemented. The model is loaded, but the inference pipeline needs to be completed. This requires implementing: duration prediction, prosody prediction, and diffusion sampling.",
+                "details": error_msg
+            }, 501  # 501 Not Implemented
+        return {"error": f"TTS synthesis failed: {error_msg}"}, 500
     except Exception as e:
         return {"error": f"TTS generation failed: {str(e)}"}, 500
 

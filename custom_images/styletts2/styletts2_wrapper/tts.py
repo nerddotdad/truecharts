@@ -334,42 +334,130 @@ class StyleTTS2:
             beta: Style control parameter (0.0-1.0)
             diffusion_steps: Number of diffusion steps (quality vs speed)
         """
-        if not self.model or not self.sampler:
+        if not self.model or len(self.model) == 0:
             raise RuntimeError("Model not loaded. Please ensure config.yml and model weights are available.")
         
+        if not self.sampler:
+            raise RuntimeError("Model sampler not initialized. Model may not be fully loaded.")
+        
+        if not self.text_aligner or not self.pitch_extractor or not self.plbert:
+            raise RuntimeError("Model components not loaded. Please ensure ASR, F0, and PL-BERT models are available.")
+        
         try:
-            # This is a simplified inference - full implementation would require
-            # text preprocessing, phonemization, style extraction, and diffusion sampling
-            # For now, this provides the interface and basic structure
+            self._log(f"Starting inference: text='{text[:50]}...', alpha={alpha}, beta={beta}, steps={diffusion_steps}", "info")
             
-            print(f"StyleTTS2 inference:")
-            print(f"  text: {text[:100]}...")
-            print(f"  output: {output_wav_file}")
-            print(f"  target_voice: {target_voice_path}")
-            print(f"  alpha: {alpha}, beta: {beta}, steps: {diffusion_steps}")
+            # Step 1: Phonemize text
+            if not self.phonemizer:
+                raise RuntimeError("Phonemizer not loaded. Cannot process text.")
             
-            # TODO: Implement full inference pipeline:
-            # 1. Phonemize text
-            # 2. Extract style from reference (if provided)
-            # 3. Run through text encoder, style encoder
-            # 4. Generate audio with diffusion sampler
-            # 5. Save to output_wav_file
+            self._log("Phonemizing text...", "info")
+            phonemes = self.phonemizer.phonemize([text], strip=True)[0]
+            self._log(f"Phonemes: {phonemes[:100]}...", "info")
             
-            # Placeholder: Generate silence as fallback
-            # In production, replace with actual synthesis
-            sample_rate = 24000
-            duration = max(1.0, len(text) * 0.1)
-            samples = int(sample_rate * duration)
-            audio_tensor = torch.zeros(1, samples)
-            torchaudio.save(output_wav_file, audio_tensor, sample_rate)
+            # Step 2: Convert phonemes to tokens
+            from text_utils import TextCleaner
+            text_cleaner = TextCleaner()
+            phoneme_ids = text_cleaner(phonemes)
+            phoneme_ids = torch.LongTensor(phoneme_ids).unsqueeze(0).to(self.device)
+            self._log(f"Converted to {len(phoneme_ids[0])} tokens", "info")
             
-            print(f"Generated audio saved to {output_wav_file}")
-            print("Note: This is a placeholder implementation. Full inference pipeline needs to be implemented.")
+            # Step 3: Extract style from reference (if provided) or use default
+            style = None
+            if target_voice_path and os.path.exists(target_voice_path):
+                self._log(f"Extracting style from reference: {target_voice_path}", "info")
+                try:
+                    # Load reference audio
+                    ref_audio, ref_sr = librosa.load(target_voice_path, sr=24000)
+                    ref_audio = torch.from_numpy(ref_audio).unsqueeze(0).to(self.device)
+                    
+                    # Extract mel spectrogram
+                    ref_mel = self.to_mel(ref_audio)
+                    ref_mel = (torch.log(1e-5 + ref_mel) - self.mean) / self.std
+                    
+                    # Extract style using style encoder
+                    if 'style_encoder' in self.model:
+                        with torch.no_grad():
+                            style = self.model.style_encoder(ref_mel)
+                    else:
+                        self._log("Style encoder not found, using default style", "warning")
+                except Exception as e:
+                    self._log(f"Could not extract style from reference: {e}. Using default style.", "warning")
             
+            # Step 4: Text encoding
+            self._log("Encoding text...", "info")
+            if 'text_encoder' not in self.model:
+                raise RuntimeError("Text encoder not found in model")
+            
+            with torch.no_grad():
+                # Get text embeddings
+                text_lengths = torch.LongTensor([phoneme_ids.shape[1]]).to(self.device)
+                
+                # Encode text
+                text_encoded = self.model.text_encoder(phoneme_ids, text_lengths)
+                
+                # If no style provided, use default or extract from text
+                if style is None:
+                    # Use a default style vector (zeros or learned default)
+                    style_dim = self.config.get('model_params', {}).get('style_dim', 128)
+                    style = torch.zeros(1, style_dim).to(self.device)
+                    self._log("Using default style", "info")
+            
+            # Step 5: Generate audio with diffusion sampler
+            self._log(f"Generating audio with {diffusion_steps} diffusion steps...", "info")
+            
+            # Prepare conditioning
+            # This is a simplified version - full implementation would need proper conditioning
+            try:
+                # Generate mel spectrogram using diffusion
+                # Note: This is a simplified version. Full implementation requires proper conditioning
+                # including duration prediction, prosody, etc.
+                
+                # For now, generate a basic mel spectrogram
+                # The actual StyleTTS2 pipeline is more complex and requires:
+                # - Duration prediction
+                # - Prosody prediction  
+                # - Proper conditioning for diffusion
+                
+                # Simplified: Generate mel from text encoding
+                mel_length = text_encoded.shape[1] * 2  # Rough estimate
+                
+                # Use diffusion sampler if available
+                if self.sampler and 'diffusion' in self.model:
+                    # Sample from diffusion model
+                    # This is simplified - actual implementation needs proper conditioning
+                    noise = torch.randn(1, 80, mel_length).to(self.device)
+                    
+                    # Sample (simplified - would need proper conditioning)
+                    # For now, raise an informative error
+                    raise NotImplementedError(
+                        "Full StyleTTS2 inference pipeline not yet implemented. "
+                        "This requires: duration prediction, prosody prediction, and proper diffusion conditioning. "
+                        "The model components are loaded, but the inference pipeline needs to be completed."
+                    )
+                else:
+                    raise RuntimeError("Diffusion sampler or model not available")
+                    
+            except NotImplementedError:
+                # Re-raise with better message
+                raise
+            except Exception as e:
+                self._log(f"Error during audio generation: {e}", "error")
+                raise RuntimeError(f"Audio generation failed: {str(e)}")
+            
+        except NotImplementedError as e:
+            # Return a clear error instead of silent audio
+            self._log(f"Inference not fully implemented: {e}", "error")
+            raise RuntimeError(
+                "TTS inference is not yet fully implemented. "
+                "The model is loaded, but the inference pipeline needs to be completed. "
+                "This requires implementing: duration prediction, prosody prediction, and diffusion sampling. "
+                f"Error: {str(e)}"
+            )
         except Exception as e:
-            print(f"Error during inference: {e}")
+            self._log(f"Error during inference: {e}", "error")
             import traceback
-            traceback.print_exc()
+            error_trace = traceback.format_exc()
+            self._log(f"Inference traceback: {error_trace}", "error")
             raise
 
 # Export StyleTTS2 class

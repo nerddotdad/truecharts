@@ -751,11 +751,27 @@
                 
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-                    throw new Error(error.error || 'Generation failed');
+                    if (response.status === 501) {
+                        throw new Error('TTS inference is not yet fully implemented. ' + (error.details || error.error || 'The model is loaded, but the inference pipeline needs to be completed.'));
+                    }
+                    throw new Error(error.error || error.details || 'Generation failed');
                 }
                 
                 const blob = await response.blob();
                 console.log('Received audio blob from API, size:', blob.size, 'bytes');
+                
+                // Check if response is actually audio (not JSON error)
+                if (blob.size < 100 || !blob.type || !blob.type.startsWith('audio/')) {
+                    // Might be JSON error
+                    const text = await blob.text();
+                    try {
+                        const error = JSON.parse(text);
+                        throw new Error(error.error || error.details || 'Failed to generate speech');
+                    } catch {
+                        throw new Error('Failed to generate speech: ' + text.substring(0, 200));
+                    }
+                }
+                
                 const url = URL.createObjectURL(blob);
                 document.getElementById('audioPlayer').src = url;
                 document.getElementById('audioContainer').style.display = 'block';
@@ -808,7 +824,10 @@
         // Note: modelsData is stored but currently unused - kept for potential future use
         let modelsData = {};
         
-        async function loadModels() {
+        // Store debug logs and status per model to preserve them during refresh
+        const modelDebugData = {};
+        
+        async function loadModels(preserveDebugLogs = true) {
             try {
                 const response = await fetch(`${API_BASE}/api/models`);
                 if (!response.ok) {
@@ -824,9 +843,24 @@
                     return;
                 }
                 
+                // Preserve existing debug logs and status before rebuilding
+                if (preserveDebugLogs) {
+                    for (const modelId of Object.keys(data.models || {})) {
+                        const debugLogsEl = document.getElementById(`debugLogs_${modelId}`);
+                        const debugSectionEl = document.getElementById(`debugSection_${modelId}`);
+                        if (debugLogsEl && debugLogsEl.innerHTML && debugLogsEl.innerHTML.trim() !== '<div style="color: #888;">No logs yet. Click "Load Model" to see loading progress...</div>') {
+                            modelDebugData[modelId] = {
+                                logs: debugLogsEl.innerHTML,
+                                visible: debugSectionEl ? debugSectionEl.style.display !== 'none' : false
+                            };
+                        }
+                    }
+                }
+                
                 let html = '<div style="display: grid; gap: 15px;">';
                 for (const [modelId, model] of Object.entries(data.models)) {
                     const installed = model.installed;
+                    const preservedDebug = modelDebugData[modelId];
                     html += `
                         <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid ${installed ? '#4caf50' : '#e0e0e0'};">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
@@ -840,14 +874,14 @@
                                     ${installed ? 
                                         `<span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">✓ Installed</span>
                                          <button onclick="loadModel('${modelId}')" id="loadBtn_${modelId}" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Model</button>
-                                         <button onclick="toggleDebug('${modelId}')" style="margin-top: 5px; padding: 5px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; width: 100%;">Show Debug</button>` :
+                                         <button onclick="toggleDebug('${modelId}')" style="margin-top: 5px; padding: 5px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; width: 100%;">${preservedDebug && preservedDebug.visible ? 'Hide' : 'Show'} Debug</button>` :
                                         `<button onclick="downloadModel('${modelId}')" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Download</button>`
                                     }
                                 </div>
                             </div>
                             
                             <!-- Debug/Status Section -->
-                            <div id="debugSection_${modelId}" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px; border: 1px solid #e0e0e0;">
+                            <div id="debugSection_${modelId}" style="display: ${preservedDebug && preservedDebug.visible ? 'block' : 'none'}; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px; border: 1px solid #e0e0e0;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <strong style="color: #667eea;">🔍 Loading Status & Debug Logs</strong>
                                     <button onclick="toggleDebug('${modelId}')" style="padding: 3px 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.85em;">Hide</button>
@@ -862,7 +896,7 @@
                                     <div style="font-size: 0.85em; color: #666; margin-top: 5px;" id="statusMessage_${modelId}"></div>
                                 </div>
                                 <div id="debugLogs_${modelId}" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.4;">
-                                    <div style="color: #888;">No logs yet. Click "Load Model" to see loading progress...</div>
+                                    ${preservedDebug && preservedDebug.logs ? preservedDebug.logs : '<div style="color: #888;">No logs yet. Click "Load Model" to see loading progress...</div>'}
                                 </div>
                             </div>
                         </div>
@@ -870,6 +904,11 @@
                 }
                 html += '</div>';
                 modelsList.innerHTML = html;
+                
+                // After rebuilding, update status from API if available
+                if (preserveDebugLogs) {
+                    updateAllModelStatuses();
+                }
                 
                 // Always show TTS section, but update button state and message based on model status
                 const ttsSection = document.getElementById('ttsSection');
@@ -1018,7 +1057,9 @@
             if (!logContainer) return;
             
             if (!logs || logs.length === 0) {
-                logContainer.innerHTML = '<div style="color: #888;">No logs yet...</div>';
+                if (!logContainer.innerHTML || logContainer.innerHTML.includes('No logs yet')) {
+                    logContainer.innerHTML = '<div style="color: #888;">No logs yet...</div>';
+                }
                 return;
             }
             
@@ -1042,6 +1083,32 @@
             });
             logContainer.innerHTML = html;
             logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Also store in modelDebugData for persistence
+            if (!modelDebugData[modelId]) {
+                modelDebugData[modelId] = {};
+            }
+            modelDebugData[modelId].logs = html;
+        }
+        
+        async function updateAllModelStatuses() {
+            // Update status for all models without clearing logs
+            try {
+                const statusResponse = await fetch(`${API_BASE}/api/models/status`);
+                const statusData = await statusResponse.json();
+                
+                if (statusData.loading_logs) {
+                    // Find which model is being loaded (if any)
+                    for (const [modelId, model] of Object.entries(modelsData.models || {})) {
+                        if (model.installed) {
+                            updateDebugLogs(modelId, statusData.loading_logs);
+                            updateLoadingStatus(modelId, statusData.loading_status || {});
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating model statuses:', error);
+            }
         }
         
         function updateLoadingStatus(modelId, status) {
@@ -1126,7 +1193,7 @@
                             showSuccess('Model loaded successfully!');
                             btn.disabled = false;
                             btn.textContent = originalText;
-                            loadModels(); // This will refresh the TTS section visibility
+                            loadModels(true); // Preserve debug logs when refreshing
                         } else if (loadingStatus.status === 'error' || statusData.loading_error) {
                             clearInterval(pollInterval);
                             const errorMsg = loadingStatus.message || statusData.loading_error || 'Failed to load model';
