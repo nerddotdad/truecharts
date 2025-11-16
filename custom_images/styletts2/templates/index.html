@@ -287,8 +287,11 @@
             </div>
             
             <!-- TTS Section -->
-            <div class="section" id="ttsSection">
+            <div class="section" id="ttsSection" style="display: block;">
                 <h2>Text to Speech</h2>
+                <div id="modelStatusMsg" style="display: none; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; margin-bottom: 15px; color: #856404;">
+                    <strong>⚠️ Model Not Loaded:</strong> Please load a model from the Model Setup section above before generating speech.
+                </div>
                 <div class="form-group">
                     <label for="text">Text to Synthesize</label>
                     <textarea id="text" placeholder="Enter the text you want to convert to speech..."></textarea>
@@ -395,6 +398,7 @@
                     statusEl.className = 'status loading';
                 }
             } catch (error) {
+                console.error('Status check failed:', error);
                 document.getElementById('status').textContent = '✗ Error';
                 document.getElementById('status').className = 'status error';
             }
@@ -472,7 +476,11 @@
         async function loadVoices() {
             try {
                 const response = await fetch(`${API_BASE}/api/voices`);
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
                 const data = await response.json();
+                console.log('Loaded voices from API:', data);
                 const container = document.getElementById('voicesContainer');
                 
                 if (Object.keys(data.voices || {}).length === 0) {
@@ -597,6 +605,7 @@
                 }
                 
             } catch (error) {
+                console.error('Error loading voices:', error);
                 document.getElementById('voicesContainer').innerHTML = 
                     `<div class="error">Error loading voices: ${error.message}</div>`;
             }
@@ -653,6 +662,8 @@
                     diffusion_steps: parseInt(document.getElementById(`steps_${voiceName}`).value)
                 };
                 
+                console.log('Sending voice test request to API:', params);
+                
                 const response = await fetch(`${API_BASE}/api/tts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -660,17 +671,19 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
+                    const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
                     throw new Error(error.error || 'Generation failed');
                 }
                 
                 const blob = await response.blob();
+                console.log('Received audio blob from API for voice test, size:', blob.size, 'bytes');
                 const url = URL.createObjectURL(blob);
                 const audioPlayer = document.getElementById(`audioPlayer_${voiceName}`);
                 audioPlayer.src = url;
                 audioContainer.style.display = 'block';
                 
             } catch (error) {
+                console.error('Voice test error:', error);
                 showError(error.message);
             } finally {
                 btn.disabled = false;
@@ -726,7 +739,7 @@
                     diffusion_steps: parseInt(document.getElementById('diffusionSteps').value)
                 };
                 
-                // Main TTS section uses default voice (no cloning)
+                console.log('Sending TTS request to API:', params);
                 
                 const response = await fetch(`${API_BASE}/api/tts`, {
                     method: 'POST',
@@ -737,16 +750,18 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
+                    const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
                     throw new Error(error.error || 'Generation failed');
                 }
                 
                 const blob = await response.blob();
+                console.log('Received audio blob from API, size:', blob.size, 'bytes');
                 const url = URL.createObjectURL(blob);
                 document.getElementById('audioPlayer').src = url;
                 document.getElementById('audioContainer').style.display = 'block';
                 
             } catch (error) {
+                console.error('TTS generation error:', error);
                 showError(error.message);
             } finally {
                 btn.disabled = false;
@@ -790,12 +805,17 @@
         }
         
         // Model management
+        // Note: modelsData is stored but currently unused - kept for potential future use
         let modelsData = {};
         
         async function loadModels() {
             try {
                 const response = await fetch(`${API_BASE}/api/models`);
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
                 const data = await response.json();
+                console.log('Loaded models from API:', data);
                 modelsData = data;
                 
                 const modelsList = document.getElementById('modelsList');
@@ -829,15 +849,29 @@
                 html += '</div>';
                 modelsList.innerHTML = html;
                 
-                // Show/hide TTS section based on model status
+                // Always show TTS section, but update button state and message based on model status
                 const ttsSection = document.getElementById('ttsSection');
+                const generateBtn = document.getElementById('generateBtn');
+                const modelStatusMsg = document.getElementById('modelStatusMsg');
+                
                 if (data.model_loaded) {
                     ttsSection.style.display = 'block';
+                    if (modelStatusMsg) modelStatusMsg.style.display = 'none';
+                    if (generateBtn) {
+                        generateBtn.disabled = false;
+                        generateBtn.textContent = 'Generate Speech';
+                    }
                 } else {
-                    ttsSection.style.display = 'none';
+                    ttsSection.style.display = 'block'; // Always show
+                    if (modelStatusMsg) modelStatusMsg.style.display = 'block';
+                    if (generateBtn) {
+                        generateBtn.disabled = true;
+                        generateBtn.textContent = 'Generate Speech (Model Not Loaded)';
+                    }
                 }
                 
             } catch (error) {
+                console.error('Error loading models:', error);
                 document.getElementById('modelsList').innerHTML = 
                     `<div class="error">Error loading models: ${error.message}</div>`;
             }
@@ -998,7 +1032,7 @@
                             showSuccess('Model loaded successfully!');
                             btn.disabled = false;
                             btn.textContent = originalText;
-                            loadModels();
+                            loadModels(); // This will refresh the TTS section visibility
                         } else if (loadingStatus.status === 'error' || statusData.loading_error) {
                             clearInterval(pollInterval);
                             const errorMsg = loadingStatus.message || statusData.loading_error || 'Failed to load model';
