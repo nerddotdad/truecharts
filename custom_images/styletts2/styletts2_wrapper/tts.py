@@ -85,13 +85,6 @@ class StyleTTS2:
             n_mels=80, n_fft=2048, win_length=1200, hop_length=300
         )
         self.mean, self.std = -4, 4
-    
-    def _log(self, message, level="info"):
-        """Log a message - uses callback if available, otherwise prints"""
-        if self.log_callback:
-            self.log_callback(message, level)
-        else:
-            print(f"[{level.upper()}] {message}")
         
         # Load configuration
         config_paths = [
@@ -116,6 +109,13 @@ class StyleTTS2:
         
         # Load models
         self._load_models()
+    
+    def _log(self, message, level="info"):
+        """Log a message - uses callback if available, otherwise prints"""
+        if self.log_callback:
+            self.log_callback(message, level)
+        else:
+            print(f"[{level.upper()}] {message}")
     
     def _resolve_path(self, path):
         """Resolve a path from config - handles both absolute and relative paths"""
