@@ -39,6 +39,23 @@ The image expects:
 - Models are automatically downloaded from Hugging Face on first use
 - Outputs can be saved to `/app/outputs` (optional persistent volume)
 
+### Pre-downloading Models (Recommended)
+
+If Hugging Face downloads are slow, you can pre-download models manually:
+
+```bash
+# Install bark locally
+pip install git+https://github.com/suno-ai/bark.git
+
+# Set cache location to match your NFS path
+export HF_HOME=/path/to/nfs/bark/hf-cache
+
+# Run pre-download script
+python3 preload_models.py
+```
+
+This will download models to the persistent cache, avoiding slow downloads during pod startup.
+
 ## API
 
 The container runs a Flask server on port 5004 with the following endpoints:

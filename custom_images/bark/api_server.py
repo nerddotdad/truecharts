@@ -107,21 +107,32 @@ def load_models():
         cache_dir = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
         print(f"[{time.time() - start_time:.1f}s] Hugging Face cache: {cache_dir}")
         initial_cache_size = get_cache_size(cache_dir)
-        print(f"[{time.time() - start_time:.1f}s] Initial cache size: {initial_cache_size / (1024*1024):.1f} MB")
+        initial_cache_mb = initial_cache_size / (1024 * 1024)
+        print(f"[{time.time() - start_time:.1f}s] Initial cache size: {initial_cache_mb:.1f} MB")
         sys.stdout.flush()
         
-        loading_status["progress"] = 20
-        loading_status["message"] = "Downloading models from Hugging Face (this may take 5-15 minutes)..."
-        print(f"[{time.time() - start_time:.1f}s] Starting model download from Hugging Face...")
-        print(f"[{time.time() - start_time:.1f}s] Starting heartbeat monitor...")
-        sys.stdout.flush()
+        # Check if models might already be cached (rough check - if cache is > 500MB, likely has models)
+        if initial_cache_mb > 500:
+            loading_status["progress"] = 30
+            loading_status["message"] = f"Found existing cache ({initial_cache_mb:.1f} MB) - loading models from cache..."
+            print(f"[{time.time() - start_time:.1f}s] Found existing cache ({initial_cache_mb:.1f} MB) - models may already be downloaded")
+            print(f"[{time.time() - start_time:.1f}s] Loading models from cache (this should be faster)...")
+            sys.stdout.flush()
+        else:
+            loading_status["progress"] = 20
+            loading_status["message"] = "Downloading models from Hugging Face (this may take 10-30 minutes if slow)..."
+            print(f"[{time.time() - start_time:.1f}s] Starting model download from Hugging Face...")
+            print(f"[{time.time() - start_time:.1f}s] WARNING: If download is very slow, consider pre-downloading models manually")
+            print(f"[{time.time() - start_time:.1f}s] See README.md for pre-download instructions")
+            print(f"[{time.time() - start_time:.1f}s] Starting heartbeat monitor...")
+            sys.stdout.flush()
+            
+            # Start heartbeat monitor in background
+            heartbeat_thread = threading.Thread(target=heartbeat_monitor, daemon=True)
+            heartbeat_thread.start()
         
-        # Start heartbeat monitor in background
-        heartbeat_thread = threading.Thread(target=heartbeat_monitor, daemon=True)
-        heartbeat_thread.start()
-        
-        # Preload all models - this is a blocking call that downloads models
-        # It can take 5-15 minutes depending on network speed
+        # Preload all models - this is a blocking call that downloads models if not cached
+        # It can take 5-15 minutes (or much longer if network is slow)
         print(f"[{time.time() - start_time:.1f}s] Calling preload_models()...")
         sys.stdout.flush()
         
