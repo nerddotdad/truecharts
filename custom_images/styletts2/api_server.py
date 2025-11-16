@@ -622,14 +622,11 @@ def delete_voice():
 
 @app.route('/api/tts', methods=['POST'])
 def synthesize():
-    # Check if model is loaded
-    if not styletts2_model:
-        return {"error": "No model loaded. Please load a model first."}, 503
-    
     # Get parameters from form-data or JSON
     if request.is_json:
         data = request.json
         text = data.get('text', '')
+        model_id = data.get('model_id', None)  # Optional: specify which model to use
         target_voice_path = data.get('target_voice_path', None)  # For voice cloning
         alpha = data.get('alpha', 0.3)  # Style control parameter (0.0-1.0)
         beta = data.get('beta', 0.7)  # Style control parameter (0.0-1.0)
@@ -637,11 +634,44 @@ def synthesize():
         embedding_scale = data.get('embedding_scale', 1.0)  # Embedding scale (1-10)
     else:
         text = request.form.get('text', '')
+        model_id = request.form.get('model_id', None)
         target_voice_path = request.form.get('target_voice_path', None)
         alpha = float(request.form.get('alpha', 0.3))
         beta = float(request.form.get('beta', 0.7))
         diffusion_steps = int(request.form.get('diffusion_steps', 10))
         embedding_scale = float(request.form.get('embedding_scale', 1.0))
+    
+    # Handle model loading
+    if model_id:
+        # Check if requested model is already loaded
+        if current_loaded_model_id != model_id:
+            # Need to load the requested model
+            installed = check_installed_models()
+            if model_id not in installed or not installed[model_id].get("installed"):
+                return {"error": f"Model '{model_id}' is not installed. Available models: {', '.join([m for m, info in installed.items() if info.get('installed')])}"}, 404
+            
+            # Check if model is currently loading
+            if model_loading:
+                return {"error": "A model is currently loading. Please wait and try again."}, 409
+            
+            # Start loading the requested model
+            model_path = installed[model_id].get("path")
+            threading.Thread(target=lambda: load_model(model_path, model_id), daemon=True).start()
+            return {"error": f"Loading model '{model_id}'. Please wait a moment and try again."}, 503
+    
+    # Check if model is loaded (either no model_id specified, or model is already loaded)
+    if not styletts2_model:
+        # Try to auto-load first available model if no model_id specified
+        if not model_id:
+            installed = check_installed_models()
+            for mid, info in installed.items():
+                if info.get("installed"):
+                    # Start loading in background
+                    model_path = info.get("path")
+                    threading.Thread(target=lambda: load_model(model_path, mid), daemon=True).start()
+                    return {"error": "No model loaded. Attempting to load model automatically. Please wait a moment and try again, or specify a model_id."}, 503
+        
+        return {"error": "No model loaded. Please wait for the model to finish loading or specify a different model_id."}, 503
     
     if not text:
         return {"error": "text parameter required"}, 400
@@ -697,7 +727,11 @@ def synthesize():
         
         return send_file(output_path, mimetype='audio/wav')
     except Exception as e:
-        return {"error": f"TTS generation failed: {str(e)}"}, 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"TTS Error: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        return {"error": f"TTS generation failed: {str(e)}", "details": error_trace}, 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003, debug=False)

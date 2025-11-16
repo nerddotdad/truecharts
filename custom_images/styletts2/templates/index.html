@@ -289,8 +289,14 @@
             <!-- TTS Section -->
             <div class="section" id="ttsSection" style="display: block;">
                 <h2>Text to Speech</h2>
-                <div id="modelStatusMsg" style="display: none; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; margin-bottom: 15px; color: #856404;">
-                    <strong>⚠️ Model Not Loaded:</strong> Please load a model from the Model Setup section above before generating speech.
+                <div class="form-group">
+                    <label for="modelSelect">Model</label>
+                    <select id="modelSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em;">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        <span id="modelStatusText">Select a model to use</span>
+                    </small>
                 </div>
                 <div class="form-group">
                     <label for="text">Text to Synthesize</label>
@@ -781,8 +787,19 @@
             document.getElementById('audioContainer').style.display = 'none';
             
             try {
+                const modelSelect = document.getElementById('modelSelect');
+                const selectedModelId = modelSelect.value;
+                
+                if (!selectedModelId) {
+                    showError('Please select a model first');
+                    btn.disabled = false;
+                    btn.textContent = 'Generate Speech';
+                    return;
+                }
+                
                 const params = {
                     text: text,
+                    model_id: selectedModelId,
                     alpha: parseFloat(document.getElementById('alpha').value),
                     beta: parseFloat(document.getElementById('beta').value),
                     diffusion_steps: parseInt(document.getElementById('diffusionSteps').value)
@@ -800,7 +817,15 @@
                 
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
-                    throw new Error(error.error || error.details || 'Generation failed');
+                    const errorMsg = error.error || error.details || 'Generation failed';
+                    
+                    // If model is loading, show a helpful message and update status
+                    if (response.status === 503 && errorMsg.includes('Loading model')) {
+                        updateModelStatus();
+                        throw new Error(`Model is loading. Please wait a moment and try again.`);
+                    }
+                    
+                    throw new Error(errorMsg);
                 }
                 
                 const blob = await response.blob();
@@ -960,14 +985,15 @@
                     updateAllModelStatuses();
                 }
                 
+                // Update model dropdown in TTS section
+                updateModelDropdown(data);
+                
                 // Always show TTS section, but update button state and message based on model status
                 const ttsSection = document.getElementById('ttsSection');
                 const generateBtn = document.getElementById('generateBtn');
-                const modelStatusMsg = document.getElementById('modelStatusMsg');
                 
                 if (data.model_loaded) {
                     ttsSection.style.display = 'block';
-                    if (modelStatusMsg) modelStatusMsg.style.display = 'none';
                     if (generateBtn) {
                         generateBtn.disabled = false;
                         generateBtn.textContent = 'Generate Speech';
@@ -1141,6 +1167,67 @@
             modelDebugData[modelId].logs = html;
         }
         
+        function updateModelDropdown(data) {
+            const modelSelect = document.getElementById('modelSelect');
+            const modelStatusText = document.getElementById('modelStatusText');
+            
+            if (!modelSelect) return;
+            
+            // Clear existing options
+            modelSelect.innerHTML = '';
+            
+            // Add installed models to dropdown
+            let hasInstalled = false;
+            for (const [modelId, model] of Object.entries(data.models || {})) {
+                if (model.installed) {
+                    hasInstalled = true;
+                    const option = document.createElement('option');
+                    option.value = modelId;
+                    option.textContent = `${model.name}${model.loaded ? ' (Loaded)' : ''}`;
+                    if (model.loaded) {
+                        option.selected = true;
+                    }
+                    modelSelect.appendChild(option);
+                }
+            }
+            
+            if (!hasInstalled) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No models installed';
+                option.disabled = true;
+                modelSelect.appendChild(option);
+                if (modelStatusText) {
+                    modelStatusText.textContent = 'Please download and install a model first';
+                    modelStatusText.style.color = '#f44336';
+                }
+            } else {
+                // Update status text
+                if (modelStatusText) {
+                    if (data.model_loaded && data.current_model) {
+                        const currentModel = data.models[data.current_model];
+                        modelStatusText.textContent = `Currently using: ${currentModel ? currentModel.name : data.current_model}`;
+                        modelStatusText.style.color = '#4caf50';
+                    } else {
+                        modelStatusText.textContent = 'Select a model - it will load automatically on first use';
+                        modelStatusText.style.color = '#666';
+                    }
+                }
+            }
+        }
+        
+        async function updateModelStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateModelDropdown(data);
+                }
+            } catch (error) {
+                console.error('Failed to update model status:', error);
+            }
+        }
+        
         async function updateAllModelStatuses() {
             // Update status for all models without clearing logs
             try {
@@ -1269,6 +1356,16 @@
         loadVoices();
         setInterval(checkStatus, 5000); // Check status every 5 seconds
         setInterval(loadModels, 10000); // Refresh models every 10 seconds
+        
+        // Setup model dropdown change handler
+        setTimeout(() => {
+            const modelSelect = document.getElementById('modelSelect');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', () => {
+                    updateModelStatus();
+                });
+            }
+        }, 500);
     </script>
 </body>
 </html>
