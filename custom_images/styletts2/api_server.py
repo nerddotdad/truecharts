@@ -519,10 +519,11 @@ def test_voice():
         voice_name = data.get('voice_name', None)
         target_voice_path = data.get('target_voice_path', None)
         text = data.get('text', 'Hello, this is a test of the voice quality.')
-        alpha = data.get('alpha', 0.3)
-        beta = data.get('beta', 0.7)
-        diffusion_steps = data.get('diffusion_steps', 10)
-        embedding_scale = data.get('embedding_scale', 1.0)
+        # Convert to proper types (n8n may send strings)
+        alpha = float(data.get('alpha', 0.3)) if data.get('alpha') is not None else 0.3
+        beta = float(data.get('beta', 0.7)) if data.get('beta') is not None else 0.7
+        diffusion_steps = int(data.get('diffusion_steps', 10)) if data.get('diffusion_steps') is not None else 10
+        embedding_scale = float(data.get('embedding_scale', 1.0)) if data.get('embedding_scale') is not None else 1.0
     else:
         voice_name = request.form.get('voice_name', None)
         target_voice_path = request.form.get('target_voice_path', None)
@@ -628,10 +629,11 @@ def synthesize():
         text = data.get('text', '')
         model_id = data.get('model_id', None)  # Optional: specify which model to use
         target_voice_path = data.get('target_voice_path', None)  # For voice cloning
-        alpha = data.get('alpha', 0.3)  # Style control parameter (0.0-1.0)
-        beta = data.get('beta', 0.7)  # Style control parameter (0.0-1.0)
-        diffusion_steps = data.get('diffusion_steps', 10)  # Quality vs speed tradeoff
-        embedding_scale = data.get('embedding_scale', 1.0)  # Embedding scale (1-10)
+        # Convert to proper types (n8n may send strings)
+        alpha = float(data.get('alpha', 0.3)) if data.get('alpha') is not None else 0.3
+        beta = float(data.get('beta', 0.7)) if data.get('beta') is not None else 0.7
+        diffusion_steps = int(data.get('diffusion_steps', 10)) if data.get('diffusion_steps') is not None else 10
+        embedding_scale = float(data.get('embedding_scale', 1.0)) if data.get('embedding_scale') is not None else 1.0
     else:
         text = request.form.get('text', '')
         model_id = request.form.get('model_id', None)
