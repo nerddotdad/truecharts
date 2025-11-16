@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir \
     styletts2 \
     gdown
 
+# Download required NLTK data
+RUN python3 -c "import nltk; nltk.download('punkt_tab', quiet=True)"
+
 # Create directories for models and voices
 RUN mkdir -p /app/models /app/voices
 
