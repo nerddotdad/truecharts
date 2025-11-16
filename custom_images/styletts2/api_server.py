@@ -277,19 +277,36 @@ def list_models():
             "path": installed.get(model_id, {}).get("path")
         }
     
+    # Check if model is actually loaded (not just initialized)
+    model_loaded = False
+    if styletts2_model is not None and hasattr(styletts2_model, 'model'):
+        # Model is loaded if it has actual model components (not just empty dict)
+        model_loaded = bool(styletts2_model.model and len(styletts2_model.model) > 0)
+    
     return {
         "models": models,
         "download_status": download_status,
-        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model
+        "model_loaded": model_loaded
     }, 200
+
+@app.route('/api/models/download/reset', methods=['POST'])
+def reset_download_status():
+    """Reset stuck download status"""
+    global download_status
+    download_status = {"status": "idle", "progress": 0, "message": ""}
+    return {"message": "Download status reset"}, 200
 
 @app.route('/api/models/download', methods=['POST'])
 def download_model_endpoint():
     """Download a specific model"""
     global download_status
     
+    # Allow resetting stuck downloads - if status is downloading but no actual progress in a while
+    # For now, we'll allow restarting if user explicitly requests it
     if download_status["status"] == "downloading":
-        return {"error": "A download is already in progress"}, 409
+        # Check if it's been stuck (progress hasn't changed in a while)
+        # Since we can't easily track this, allow user to force reset via /api/models/download/reset
+        return {"error": "A download appears to be in progress. If it's stuck, use the reset endpoint first."}, 409
     
     data = request.json if request.is_json else request.form
     model_id = data.get('model_id') or data.get('model')
@@ -321,10 +338,16 @@ def download_model_endpoint():
 @app.route('/api/models/status', methods=['GET'])
 def model_download_status():
     """Get model download and loading status"""
+    # Check if model is actually loaded (not just initialized)
+    model_loaded = False
+    if styletts2_model is not None and hasattr(styletts2_model, 'model'):
+        # Model is loaded if it has actual model components (not just empty dict)
+        model_loaded = bool(styletts2_model.model and len(styletts2_model.model) > 0)
+    
     return {
         "download_status": download_status,
         "loading_status": loading_status,
-        "model_loaded": styletts2_model is not None and hasattr(styletts2_model, 'model') and styletts2_model.model,
+        "model_loaded": model_loaded,
         "loading_error": loading_error
     }, 200
 
@@ -525,8 +548,12 @@ def delete_voice():
 
 @app.route('/api/tts', methods=['POST'])
 def synthesize():
-    if not styletts2_model or not (hasattr(styletts2_model, 'model') and styletts2_model.model):
+    # Check if model is actually loaded (has model components, not just empty dict)
+    if not styletts2_model or not hasattr(styletts2_model, 'model'):
         return {"error": "No model loaded. Please download and load a model first."}, 503
+    
+    if not styletts2_model.model or len(styletts2_model.model) == 0:
+        return {"error": "Model is not fully loaded. Please wait for model loading to complete or reload the model."}, 503
     
     # Get parameters from form-data or JSON
     if request.is_json:
