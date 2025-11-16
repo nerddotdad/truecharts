@@ -392,8 +392,14 @@ class StyleTTS2:
                 # Get text embeddings
                 text_lengths = torch.LongTensor([phoneme_ids.shape[1]]).to(self.device)
                 
-                # Encode text
-                text_encoded = self.model.text_encoder(phoneme_ids, text_lengths)
+                # Create mask m from text_lengths
+                # m is a boolean mask where True indicates valid positions
+                max_len = phoneme_ids.shape[1]
+                m = torch.arange(max_len).unsqueeze(0).expand(phoneme_ids.shape[0], -1).to(self.device)
+                m = (m < text_lengths.unsqueeze(1)).to(self.device)
+                
+                # Encode text (text_encoder requires: phoneme_ids, text_lengths, m)
+                text_encoded = self.model.text_encoder(phoneme_ids, text_lengths, m)
                 
                 # If no style provided, use default or extract from text
                 if style is None:
