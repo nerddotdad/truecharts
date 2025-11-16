@@ -22,6 +22,8 @@ device = None
 model_loading = False
 download_status = {"status": "idle", "progress": 0, "message": ""}
 loading_status = {"status": "idle", "progress": 0, "message": ""}
+loading_logs = []  # Store loading log messages for debugging
+MAX_LOGS = 100  # Maximum number of log entries to keep
 
 # Available models configuration
 AVAILABLE_MODELS = {
@@ -189,64 +191,127 @@ def download_model(model_id):
         traceback.print_exc()
         return False
 
+def add_loading_log(message, level="info"):
+    """Add a log message to loading_logs"""
+    global loading_logs
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "level": level,
+        "message": message
+    }
+    loading_logs.append(log_entry)
+    # Keep only the last MAX_LOGS entries
+    if len(loading_logs) > MAX_LOGS:
+        loading_logs = loading_logs[-MAX_LOGS:]
+    print(f"[{level.upper()}] {message}")
+
 def load_model(model_path=None):
     """Load StyleTTS2 model"""
-    global styletts2_model, loading_error, device, model_loading, loading_status
+    global styletts2_model, loading_error, device, model_loading, loading_status, loading_logs
     
     if model_loading:
         return
     
     model_loading = True
+    loading_logs = []  # Clear previous logs
     loading_status = {"status": "loading", "progress": 0, "message": "Initializing model loading..."}
+    add_loading_log("Starting model loading process...", "info")
     
     try:
-        print(f"Loading StyleTTS2 model from {model_path or 'default'}...")
+        add_loading_log(f"Loading StyleTTS2 model from {model_path or 'default'}...", "info")
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Using device: {device}")
+        add_loading_log(f"Device detected: {device}", "info")
         
-        loading_status["progress"] = 20
+        loading_status["progress"] = 10
         loading_status["message"] = f"Using device: {device}"
         
         if model_path and os.path.exists(model_path):
-            loading_status["progress"] = 30
+            loading_status["progress"] = 20
             loading_status["message"] = f"Loading model from {model_path}..."
+            add_loading_log(f"Model path exists: {model_path}", "info")
+            add_loading_log("Creating StyleTTS2 instance...", "info")
             styletts2_model = tts.StyleTTS2(model_path=model_path)
         else:
             # Try to find any installed model
             installed = check_installed_models()
-            loading_status["progress"] = 30
+            loading_status["progress"] = 20
             loading_status["message"] = "Searching for installed models..."
+            add_loading_log("Searching for installed models...", "info")
             for model_id, info in installed.items():
                 if info.get("installed") and "path" in info:
-                    print(f"Loading {model_id} from {info['path']}")
+                    add_loading_log(f"Found installed model: {model_id} at {info['path']}", "info")
+                    loading_status["progress"] = 30
                     loading_status["message"] = f"Loading {model_id} from {info['path']}..."
+                    add_loading_log(f"Creating StyleTTS2 instance for {model_id}...", "info")
                     styletts2_model = tts.StyleTTS2(model_path=info["path"])
                     break
             else:
                 # No model found, create empty instance
                 loading_status["message"] = "No model found, creating empty instance..."
+                add_loading_log("WARNING: No installed models found, creating empty instance", "warning")
                 styletts2_model = tts.StyleTTS2()
         
-        loading_status["progress"] = 60
+        loading_status["progress"] = 50
+        loading_status["message"] = "Checking model components..."
+        add_loading_log("Checking model components...", "info")
+        
+        # Check what was loaded
+        if hasattr(styletts2_model, 'model'):
+            model_keys = list(styletts2_model.model.keys()) if styletts2_model.model else []
+            add_loading_log(f"Model components loaded: {len(model_keys)} components", "info" if model_keys else "warning")
+            if model_keys:
+                add_loading_log(f"Components: {', '.join(model_keys)}", "info")
+            else:
+                add_loading_log("WARNING: Model dict is empty - model may not have loaded correctly", "warning")
+                if hasattr(styletts2_model, 'config'):
+                    add_loading_log(f"Config loaded: {styletts2_model.config is not None}", "info")
+                if hasattr(styletts2_model, 'text_aligner'):
+                    add_loading_log(f"Text aligner: {styletts2_model.text_aligner is not None}", "info")
+                if hasattr(styletts2_model, 'pitch_extractor'):
+                    add_loading_log(f"Pitch extractor: {styletts2_model.pitch_extractor is not None}", "info")
+                if hasattr(styletts2_model, 'plbert'):
+                    add_loading_log(f"PL-BERT: {styletts2_model.plbert is not None}", "info")
+        
+        loading_status["progress"] = 70
         loading_status["message"] = "Moving model to device..."
+        add_loading_log(f"Moving model to {device}...", "info")
         
         # Move to GPU if available
         if device == "cuda" and styletts2_model:
             styletts2_model.to(device)
+            add_loading_log("Model moved to CUDA device", "info")
+        else:
+            add_loading_log("Model on CPU", "info")
         
-        loading_status["progress"] = 100
-        loading_status["status"] = "complete"
-        loading_status["message"] = "Model loaded successfully!"
-        print("StyleTTS2 model loaded successfully!")
-        loading_error = None
+        # Final check
+        model_loaded = bool(styletts2_model and hasattr(styletts2_model, 'model') and styletts2_model.model and len(styletts2_model.model) > 0)
+        
+        if model_loaded:
+            loading_status["progress"] = 100
+            loading_status["status"] = "complete"
+            loading_status["message"] = "Model loaded successfully!"
+            add_loading_log("✓ Model loaded successfully!", "success")
+            loading_error = None
+        else:
+            loading_status["progress"] = 100
+            loading_status["status"] = "error"
+            loading_status["message"] = "Model instance created but components not loaded"
+            add_loading_log("ERROR: Model instance created but components are empty", "error")
+            add_loading_log("This usually means a component (ASR, F0, or PL-BERT) failed to load", "error")
+            loading_error = "Model components not loaded - check logs for details"
+            
     except Exception as e:
         loading_error = str(e)
         loading_status = {"status": "error", "progress": 0, "message": f"Failed to load model: {str(e)}"}
-        print(f"Failed to load model: {e}")
+        add_loading_log(f"ERROR: Failed to load model: {str(e)}", "error")
         import traceback
+        error_trace = traceback.format_exc()
+        add_loading_log(f"Traceback: {error_trace}", "error")
+        print(f"Failed to load model: {e}")
         traceback.print_exc()
     finally:
         model_loading = False
+        add_loading_log("Model loading process completed", "info")
 
 # Initialize device (but don't load models yet)
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -348,7 +413,8 @@ def model_download_status():
         "download_status": download_status,
         "loading_status": loading_status,
         "model_loaded": model_loaded,
-        "loading_error": loading_error
+        "loading_error": loading_error,
+        "loading_logs": loading_logs[-20:]  # Return last 20 log entries
     }, 200
 
 @app.route('/api/models/load', methods=['POST'])

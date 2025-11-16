@@ -834,13 +834,35 @@
                                     <h3 style="margin: 0; color: #667eea;">${model.name}</h3>
                                     <p style="margin: 5px 0; color: #666; font-size: 0.9em;">${model.description}</p>
                                     <p style="margin: 5px 0; color: #999; font-size: 0.85em;">Size: ${model.size}</p>
+                                    ${installed ? `<p style="margin: 5px 0; color: #666; font-size: 0.85em;">Path: ${model.path || 'N/A'}</p>` : ''}
                                 </div>
                                 <div style="text-align: right;">
                                     ${installed ? 
                                         `<span style="background: #4caf50; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">✓ Installed</span>
-                                         <button onclick="loadModel('${modelId}')" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Model</button>` :
+                                         <button onclick="loadModel('${modelId}')" id="loadBtn_${modelId}" style="margin-top: 10px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Load Model</button>
+                                         <button onclick="toggleDebug('${modelId}')" style="margin-top: 5px; padding: 5px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; width: 100%;">Show Debug</button>` :
                                         `<button onclick="downloadModel('${modelId}')" style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Download</button>`
                                     }
+                                </div>
+                            </div>
+                            
+                            <!-- Debug/Status Section -->
+                            <div id="debugSection_${modelId}" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px; border: 1px solid #e0e0e0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="color: #667eea;">🔍 Loading Status & Debug Logs</strong>
+                                    <button onclick="toggleDebug('${modelId}')" style="padding: 3px 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.85em;">Hide</button>
+                                </div>
+                                <div id="loadingStatus_${modelId}" style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 3px;">
+                                    <div style="font-size: 0.9em; margin-bottom: 5px;">
+                                        <strong>Status:</strong> <span id="statusText_${modelId}">Idle</span>
+                                    </div>
+                                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px;">
+                                        <div id="statusBar_${modelId}" style="background: #667eea; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                    </div>
+                                    <div style="font-size: 0.85em; color: #666; margin-top: 5px;" id="statusMessage_${modelId}"></div>
+                                </div>
+                                <div id="debugLogs_${modelId}" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.4;">
+                                    <div style="color: #888;">No logs yet. Click "Load Model" to see loading progress...</div>
                                 </div>
                             </div>
                         </div>
@@ -982,11 +1004,76 @@
             }
         }
         
+        function toggleDebug(modelId) {
+            const debugSection = document.getElementById(`debugSection_${modelId}`);
+            if (debugSection.style.display === 'none') {
+                debugSection.style.display = 'block';
+            } else {
+                debugSection.style.display = 'none';
+            }
+        }
+        
+        function updateDebugLogs(modelId, logs) {
+            const logContainer = document.getElementById(`debugLogs_${modelId}`);
+            if (!logContainer) return;
+            
+            if (!logs || logs.length === 0) {
+                logContainer.innerHTML = '<div style="color: #888;">No logs yet...</div>';
+                return;
+            }
+            
+            let html = '';
+            logs.forEach(log => {
+                const level = log.level || 'info';
+                const message = log.message || '';
+                const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '';
+                
+                let color = '#d4d4d4';
+                if (level === 'error') color = '#f48771';
+                else if (level === 'warning') color = '#dcdcaa';
+                else if (level === 'success') color = '#4ec9b0';
+                else if (level === 'info') color = '#569cd6';
+                
+                html += `<div style="color: ${color}; margin-bottom: 2px;">
+                    <span style="color: #808080;">[${timestamp}]</span> 
+                    <span style="color: ${color}; font-weight: ${level === 'error' ? 'bold' : 'normal'};">[${level.toUpperCase()}]</span> 
+                    ${message.replace(/\n/g, '<br>')}
+                </div>`;
+            });
+            logContainer.innerHTML = html;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function updateLoadingStatus(modelId, status) {
+            const statusText = document.getElementById(`statusText_${modelId}`);
+            const statusBar = document.getElementById(`statusBar_${modelId}`);
+            const statusMessage = document.getElementById(`statusMessage_${modelId}`);
+            
+            if (statusText) {
+                statusText.textContent = status.status || 'idle';
+                statusText.style.color = status.status === 'complete' ? '#4caf50' : 
+                                        status.status === 'error' ? '#f44336' : '#667eea';
+            }
+            if (statusBar) {
+                statusBar.style.width = `${status.progress || 0}%`;
+                statusBar.style.background = status.status === 'error' ? '#f44336' : '#667eea';
+            }
+            if (statusMessage) {
+                statusMessage.textContent = status.message || '';
+            }
+        }
+        
         async function loadModel(modelId) {
-            const btn = event.target;
+            const btn = document.getElementById(`loadBtn_${modelId}`) || event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = 'Loading...';
+            
+            // Show debug section
+            const debugSection = document.getElementById(`debugSection_${modelId}`);
+            if (debugSection) {
+                debugSection.style.display = 'block';
+            }
             
             let pollCount = 0;
             const maxPollCount = 300; // 5 minutes max (300 * 1 second)
@@ -1021,8 +1108,15 @@
                         const statusResponse = await fetch(`${API_BASE}/api/models/status`);
                         const statusData = await statusResponse.json();
                         
+                        // Update debug logs
+                        if (statusData.loading_logs) {
+                            updateDebugLogs(modelId, statusData.loading_logs);
+                        }
+                        
                         // Check loading status
                         const loadingStatus = statusData.loading_status || {};
+                        updateLoadingStatus(modelId, loadingStatus);
+                        
                         if (loadingStatus.status === 'loading') {
                             // Update button text with progress
                             const progress = loadingStatus.progress || 0;
@@ -1043,7 +1137,7 @@
                     } catch (error) {
                         console.error('Error polling loading status:', error);
                     }
-                }, 1000);
+                }, 500); // Poll every 500ms for more responsive updates
                 
             } catch (error) {
                 showError(`Error: ${error.message}`);

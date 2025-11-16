@@ -138,9 +138,17 @@ class StyleTTS2:
             BERT_path = self.config.get('PLBERT_dir', False)
             if BERT_path:
                 try:
-                    self.plbert = load_plbert(BERT_path, self.device)
+                    # load_plbert only takes one argument (log_dir), device is handled internally
+                    self.plbert = load_plbert(BERT_path)
+                    if self.plbert:
+                        # Move to device after loading
+                        if hasattr(self.plbert, 'to'):
+                            self.plbert = self.plbert.to(self.device)
+                        print(f"PL-BERT loaded from {BERT_path}")
                 except Exception as e:
                     print(f"Warning: Could not load PL-BERT: {e}")
+                    import traceback
+                    traceback.print_exc()
             
             # Build main model
             if self.text_aligner and self.pitch_extractor and self.plbert:
