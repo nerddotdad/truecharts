@@ -53,6 +53,10 @@ spec:
                 SUNO_USE_SMALL_MODELS: "False"
                 # Offload to CPU when needed
                 SUNO_OFFLOAD_CPU: "False"
+                # Hugging Face cache location - use persistent volume so models persist
+                HF_HOME: "/app/.cache/huggingface"
+                HF_HUB_CACHE: "/app/.cache/huggingface/hub"
+                TRANSFORMERS_CACHE: "/app/.cache/huggingface/transformers"
               probes:
                 startup:
                   enabled: true
@@ -101,6 +105,12 @@ spec:
         type: nfs
         mountPath: "/app/outputs"
         path: ${NFS_APP_CONFIGS}/bark/outputs
+        server: ${NAS_IP}
+      hf-cache:
+        enabled: true
+        type: nfs
+        mountPath: "/app/.cache"
+        path: ${NFS_APP_CONFIGS}/bark/hf-cache
         server: ${NAS_IP}
 
     service:
