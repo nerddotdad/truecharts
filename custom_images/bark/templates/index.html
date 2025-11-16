@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bark - Text to Audio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .status.ready {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .status.loading {
+            background: rgba(255, 193, 7, 0.3);
+        }
+        
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .audio-player {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .audio-player audio {
+            width: 100%;
+        }
+        
+        .error {
+            color: #f44336;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .success {
+            color: #4caf50;
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .voices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .voice-card {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .voice-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .voice-card.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐶 Bark</h1>
+            <p>Text-Prompted Generative Audio Model</p>
+            <div class="status" id="status">Checking...</div>
+        </div>
+        
+        <div class="content">
+            <!-- Model Status Section -->
+            <div class="section" id="modelSection">
+                <h2>📦 Model Status</h2>
+                <div id="modelStatus">Checking model status...</div>
+                <button id="loadModelsBtn" onclick="loadModels()" style="margin-top: 15px; width: auto; padding: 10px 30px;">Preload Models</button>
+            </div>
+            
+            <!-- TTS Section -->
+            <div class="section">
+                <h2>Text to Audio</h2>
+                
+                <div class="info-box">
+                    <strong>💡 Text Formatting Tips:</strong>
+                    <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
+                        <li><code>[laughter]</code> or <code>[laughs]</code> - Laughing</li>
+                        <li><code>[sighs]</code> - Sighing</li>
+                        <li><code>[music]</code> - Music generation</li>
+                        <li><code>[gasps]</code> - Gasping</li>
+                        <li><code>—</code> or <code>...</code> - Hesitations</li>
+                        <li><code>♪</code> - Song lyrics</li>
+                        <li><strong>CAPITALIZATION</strong> - Emphasis</li>
+                        <li><code>[MAN]</code> and <code>[WOMAN]</code> - Gender bias</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label for="text">Text to Synthesize</label>
+                    <textarea id="text" placeholder="Enter the text you want to convert to audio...&#10;&#10;Example: Hello, my name is Suno. And, uh — and I like pizza. [laughs]"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="voicePreset">Voice Preset</label>
+                    <select id="voicePreset">
+                        <option value="v2/en_speaker_1">English Speaker 1 (Default)</option>
+                    </select>
+                </div>
+                
+                <button id="generateBtn" onclick="generateTTS()">Generate Audio</button>
+                
+                <div id="audioContainer" style="display: none;">
+                    <div class="audio-player">
+                        <audio id="audioPlayer" controls></audio>
+                    </div>
+                </div>
+                
+                <div id="errorMsg"></div>
+            </div>
+            
+            <!-- Voice Presets Section -->
+            <div class="section">
+                <h2>🎤 Available Voice Presets</h2>
+                <div id="voicesContainer">Loading voices...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = window.location.origin;
+        
+        // Check server status
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/ready`);
+                const statusEl = document.getElementById('status');
+                
+                if (response.status === 200) {
+                    statusEl.textContent = '✓ Ready';
+                    statusEl.className = 'status ready';
+                } else {
+                    statusEl.textContent = 'Loading...';
+                    statusEl.className = 'status loading';
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+                document.getElementById('status').textContent = '✗ Error';
+                document.getElementById('status').className = 'status error';
+            }
+        }
+        
+        // Check model status
+        async function checkModelStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/status`);
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const statusDiv = document.getElementById('modelStatus');
+                const loadBtn = document.getElementById('loadModelsBtn');
+                
+                if (data.models_loaded) {
+                    statusDiv.innerHTML = '<div class="success">✓ Models loaded and ready!</div>';
+                    loadBtn.disabled = true;
+                    loadBtn.textContent = 'Models Already Loaded';
+                } else if (data.loading_status.status === 'loading') {
+                    statusDiv.innerHTML = `<div class="info-box">Loading models... ${data.loading_status.progress || 0}%<br><small>${data.loading_status.message || ''}</small></div>`;
+                    loadBtn.disabled = true;
+                    loadBtn.textContent = 'Loading...';
+                } else {
+                    statusDiv.innerHTML = '<div style="color: #666;">Models not loaded. Click "Preload Models" to load them now.</div>';
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Preload Models';
+                }
+            } catch (error) {
+                console.error('Error checking model status:', error);
+            }
+        }
+        
+        // Load models
+        async function loadModels() {
+            const btn = document.getElementById('loadModelsBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/models/load`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess('Models are loading... This may take a few minutes.');
+                    // Poll for status
+                    const pollInterval = setInterval(async () => {
+                        await checkModelStatus();
+                        const statusResponse = await fetch(`${API_BASE}/api/status`);
+                        if (statusResponse.ok) {
+                            const statusData = await statusResponse.json();
+                            if (statusData.models_loaded || statusData.loading_status.status === 'error') {
+                                clearInterval(pollInterval);
+                                checkModelStatus();
+                            }
+                        }
+                    }, 2000);
+                } else {
+                    showError(data.error || 'Failed to load models');
+                    btn.disabled = false;
+                    btn.textContent = 'Preload Models';
+                }
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+                btn.disabled = false;
+                btn.textContent = 'Preload Models';
+            }
+        }
+        
+        // Load voices
+        async function loadVoices() {
+            try {
+                const response = await fetch(`${API_BASE}/api/voices`);
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                const container = document.getElementById('voicesContainer');
+                const select = document.getElementById('voicePreset');
+                
+                // Update dropdown
+                select.innerHTML = '';
+                for (const [preset, description] of Object.entries(data.voices)) {
+                    const option = document.createElement('option');
+                    option.value = preset;
+                    option.textContent = `${preset} - ${description}`;
+                    if (preset === data.default) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                }
+                
+                // Update voice cards
+                let html = '<div class="voices-grid">';
+                for (const [preset, description] of Object.entries(data.voices)) {
+                    html += `
+                        <div class="voice-card" onclick="selectVoice('${preset}')" id="voice_${preset}">
+                            <strong>${preset}</strong>
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #666;">${description}</p>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading voices:', error);
+            }
+        }
+        
+        function selectVoice(preset) {
+            document.getElementById('voicePreset').value = preset;
+            document.querySelectorAll('.voice-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById(`voice_${preset}`).classList.add('selected');
+        }
+        
+        // Generate TTS
+        async function generateTTS() {
+            const text = document.getElementById('text').value.trim();
+            if (!text) {
+                showError('Please enter some text to synthesize');
+                return;
+            }
+            
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerHTML = '';
+            document.getElementById('audioContainer').style.display = 'none';
+            
+            try {
+                const voicePreset = document.getElementById('voicePreset').value;
+                
+                const response = await fetch(`${API_BASE}/api/tts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        voice_preset: voicePreset
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+                    throw new Error(error.error || 'Generation failed');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                document.getElementById('audioPlayer').src = url;
+                document.getElementById('audioContainer').style.display = 'block';
+                
+            } catch (error) {
+                console.error('TTS generation error:', error);
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate Audio';
+            }
+        }
+        
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerHTML = `<div class="error">${msg}</div>`;
+        }
+        
+        function showSuccess(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerHTML = `<div class="success">${msg}</div>`;
+            setTimeout(() => errorMsg.innerHTML = '', 5000);
+        }
+        
+        // Initialize
+        checkStatus();
+        checkModelStatus();
+        loadVoices();
+        setInterval(checkStatus, 5000);
+        setInterval(checkModelStatus, 3000);
+    </script>
+</body>
+</html>
+

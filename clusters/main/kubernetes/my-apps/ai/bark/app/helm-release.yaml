@@ -1,0 +1,129 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bark
+  namespace: ai
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 15.24.41
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  values:
+    image:
+      repository: ghcr.io/nerddotdad/bark
+      pullPolicy: IfNotPresent
+      tag: "1.0.0"  # Semantic version - matches custom_images/bark/VERSION
+      # Image is built automatically when custom_images/bark/ changes
+      # See: .github/workflows/build-custom-images.yml
+      # To update: bump version in custom_images/bark/VERSION and rebuild
+    
+    securityContext:
+      container:
+        runAsNonRoot: false
+        readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+      runtimeClassName: "nvidia"
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
+
+    workload:
+      main:
+        podSpec:
+          runtimeClassName: "nvidia"
+          containers:
+            main:
+              enabled: true
+              env:
+                # Use smaller models if needed (<4GB VRAM)
+                # Set to "True" for lower VRAM usage
+                SUNO_USE_SMALL_MODELS: "False"
+                # Offload to CPU when needed
+                SUNO_OFFLOAD_CPU: "False"
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 5004
+                  path: /ready
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  failureThreshold: 30  # Allow up to 5 minutes for model loading
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 5004
+                  path: /
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 5004
+                  path: /ready
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  failureThreshold: 3
+              resources:
+                requests:
+                  memory: "8Gi"  # Bark model size (full models ~12GB VRAM)
+                  cpu: "2000m"
+                  nvidia.com/gpu: 1
+                limits:
+                  memory: "16Gi"  # Headroom for model loading
+                  cpu: "4000m"
+                  nvidia.com/gpu: 1
+
+    persistence:
+      models:
+        enabled: true
+        type: nfs
+        mountPath: "/app/models"
+        path: ${NFS_APP_CONFIGS}/bark/models
+        server: ${NAS_IP}
+      outputs:
+        enabled: true
+        type: nfs
+        mountPath: "/app/outputs"
+        path: ${NFS_APP_CONFIGS}/bark/outputs
+        server: ${NAS_IP}
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            protocol: tcp
+            port: 5004
+            targetPort: 5004
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: internal
+        hosts:
+          - host: bark.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+
