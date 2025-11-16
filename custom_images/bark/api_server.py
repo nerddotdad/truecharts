@@ -28,11 +28,28 @@ DEFAULT_VOICE_PRESET = "v2/en_speaker_1"
 print("Bark Server initialized")
 print("Models will be loaded on first request or via API")
 
+def get_cache_size(cache_dir):
+    """Get total size of Hugging Face cache directory"""
+    total_size = 0
+    try:
+        if os.path.exists(cache_dir):
+            for dirpath, dirnames, filenames in os.walk(cache_dir):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    try:
+                        total_size += os.path.getsize(filepath)
+                    except (OSError, FileNotFoundError):
+                        pass
+    except Exception:
+        pass
+    return total_size
+
 def load_models():
     """Load Bark models"""
     global bark_models_loaded, loading_error, model_loading, loading_status
     import time
     import sys
+    import threading
     
     if model_loading or bark_models_loaded:
         return
@@ -40,6 +57,39 @@ def load_models():
     model_loading = True
     loading_status = {"status": "loading", "progress": 0, "message": "Initializing Bark models..."}
     start_time = time.time()
+    last_cache_size = 0
+    last_update_time = start_time
+    
+    # Heartbeat function to monitor download progress
+    def heartbeat_monitor():
+        nonlocal last_cache_size, last_update_time
+        cache_dir = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
+        
+        while model_loading and not bark_models_loaded:
+            elapsed = time.time() - start_time
+            current_cache_size = get_cache_size(cache_dir)
+            cache_size_mb = current_cache_size / (1024 * 1024)
+            
+            # Update progress based on cache growth (rough estimate)
+            if current_cache_size > last_cache_size:
+                # Cache is growing - download is progressing
+                # Rough estimate: models are ~2-3GB, so estimate progress
+                estimated_total = 2.5 * 1024 * 1024 * 1024  # 2.5GB
+                estimated_progress = min(90, 20 + int((current_cache_size / estimated_total) * 70))
+                loading_status["progress"] = estimated_progress
+                loading_status["message"] = f"Downloading models... ({cache_size_mb:.1f} MB downloaded, {elapsed:.0f}s elapsed)"
+                last_cache_size = current_cache_size
+                last_update_time = time.time()
+                print(f"[{elapsed:.1f}s] Cache size: {cache_size_mb:.1f} MB (estimated {estimated_progress}% complete)")
+                sys.stdout.flush()
+            elif elapsed - last_update_time > 30:
+                # No progress for 30 seconds - still show we're alive
+                loading_status["message"] = f"Downloading models... ({cache_size_mb:.1f} MB, {elapsed:.0f}s elapsed) - Still working..."
+                print(f"[{elapsed:.1f}s] Still downloading... (cache: {cache_size_mb:.1f} MB)")
+                sys.stdout.flush()
+                last_update_time = time.time()
+            
+            time.sleep(5)  # Check every 5 seconds
     
     try:
         print("=" * 60)
@@ -56,13 +106,19 @@ def load_models():
         # Check Hugging Face cache location
         cache_dir = os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
         print(f"[{time.time() - start_time:.1f}s] Hugging Face cache: {cache_dir}")
+        initial_cache_size = get_cache_size(cache_dir)
+        print(f"[{time.time() - start_time:.1f}s] Initial cache size: {initial_cache_size / (1024*1024):.1f} MB")
         sys.stdout.flush()
         
         loading_status["progress"] = 20
         loading_status["message"] = "Downloading models from Hugging Face (this may take 5-15 minutes)..."
         print(f"[{time.time() - start_time:.1f}s] Starting model download from Hugging Face...")
-        print(f"[{time.time() - start_time:.1f}s] This is a blocking operation - please be patient...")
+        print(f"[{time.time() - start_time:.1f}s] Starting heartbeat monitor...")
         sys.stdout.flush()
+        
+        # Start heartbeat monitor in background
+        heartbeat_thread = threading.Thread(target=heartbeat_monitor, daemon=True)
+        heartbeat_thread.start()
         
         # Preload all models - this is a blocking call that downloads models
         # It can take 5-15 minutes depending on network speed
@@ -72,7 +128,9 @@ def load_models():
         preload_models()
         
         elapsed = time.time() - start_time
+        final_cache_size = get_cache_size(cache_dir)
         print(f"[{elapsed:.1f}s] ✓ preload_models() completed!")
+        print(f"[{elapsed:.1f}s] Final cache size: {final_cache_size / (1024*1024):.1f} MB")
         sys.stdout.flush()
         
         loading_status["progress"] = 80
@@ -87,6 +145,21 @@ def load_models():
             sys.stdout.flush()
         except Exception as e:
             print(f"[{elapsed:.1f}s] Warning: Could not verify SAMPLE_RATE: {e}")
+            sys.stdout.flush()
+        
+        # Check GPU memory usage if CUDA is available
+        try:
+            import torch
+            if torch.cuda.is_available():
+                gpu_memory_allocated = torch.cuda.memory_allocated() / (1024**3)  # GB
+                gpu_memory_reserved = torch.cuda.memory_reserved() / (1024**3)  # GB
+                print(f"[{elapsed:.1f}s] GPU Memory - Allocated: {gpu_memory_allocated:.2f} GB, Reserved: {gpu_memory_reserved:.2f} GB")
+                sys.stdout.flush()
+            else:
+                print(f"[{elapsed:.1f}s] Warning: CUDA not available - models may be running on CPU")
+                sys.stdout.flush()
+        except Exception as e:
+            print(f"[{elapsed:.1f}s] Could not check GPU memory: {e}")
             sys.stdout.flush()
         
         bark_models_loaded = True

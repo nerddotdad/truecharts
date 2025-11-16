@@ -18,7 +18,7 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/bark
       pullPolicy: IfNotPresent
-      tag: "1.0.2"  # Semantic version - matches custom_images/bark/VERSION
+      tag: "1.0.3"  # Semantic version - matches custom_images/bark/VERSION
       # Image is built automatically when custom_images/bark/ changes
       # See: .github/workflows/build-custom-images.yml
       # To update: bump version in custom_images/bark/VERSION and rebuild
@@ -61,14 +61,15 @@ spec:
                   path: /ready
                   initialDelaySeconds: 10
                   periodSeconds: 10
-                  failureThreshold: 30  # Allow up to 5 minutes for model loading
+                  failureThreshold: 120  # Allow up to 20 minutes for model download (120 * 10s = 20min)
                 liveness:
                   enabled: true
                   type: http
                   port: 5004
-                  path: /
-                  periodSeconds: 30
-                  failureThreshold: 3
+                  path: /ready  # Use /ready instead of / to avoid blocking during download
+                  periodSeconds: 60  # Check less frequently during download
+                  failureThreshold: 10  # More lenient during long downloads
+                  timeoutSeconds: 10  # Give more time for response
                 readiness:
                   enabled: true
                   type: http
@@ -76,14 +77,15 @@ spec:
                   path: /ready
                   initialDelaySeconds: 10
                   periodSeconds: 10
-                  failureThreshold: 3
+                  failureThreshold: 120  # Allow up to 20 minutes for model download
+                  timeoutSeconds: 5
               resources:
                 requests:
-                  memory: "2Gi"  # System RAM (models run on GPU VRAM, not system RAM)
+                  memory: "4Gi"  # Increased for model download/loading process
                   cpu: "1000m"   # Reduced CPU request
                   nvidia.com/gpu: 1
                 limits:
-                  memory: "4Gi"  # Headroom for Python runtime and audio processing
+                  memory: "8Gi"  # Increased to prevent OOM during model download (models need RAM during download before GPU transfer)
                   cpu: "2000m"   # Reduced CPU limit
                   nvidia.com/gpu: 1
 
