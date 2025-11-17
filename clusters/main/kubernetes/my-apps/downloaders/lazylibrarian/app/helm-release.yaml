@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: lazylibrarian
-      version: 21.11.10
+      version: 21.11.11
       sourceRef:
         kind: HelmRepository
         name: truecharts
