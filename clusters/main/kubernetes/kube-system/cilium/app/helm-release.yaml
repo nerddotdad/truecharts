@@ -88,8 +88,9 @@ spec:
           effect: NoSchedule
     rollOutCiliumPods: true
     # Tolerate gpu-workloads taint on worker node (Cilium agent must run on all nodes)
-    tolerations:
-      - key: gpu-workloads
-        operator: Equal
-        value: "required"
-        effect: NoSchedule
+    agent:
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
