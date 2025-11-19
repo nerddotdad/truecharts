@@ -96,10 +96,9 @@ spec:
           metallb:
             enabled: true
         ports:
-          game:
+          main:
             enabled: true
             port: 15636
-            targetPort: 15636
             protocol: udp
           query:
             enabled: true
