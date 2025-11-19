@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: enshrouded
@@ -90,7 +90,7 @@ spec:
       main:
         enabled: true
         type: LoadBalancer
-        loadBalancerIP: $ENSHROUDED_IP  # Add to clusterenv.yaml if needed
+        loadBalancerIP: ${ENSHROUDED_IP}  # Add to clusterenv.yaml if needed
         externalTrafficPolicy: Local
         integrations:
           metallb:
