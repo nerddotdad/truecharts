@@ -71,7 +71,7 @@ nodes:
         # Realtek 2.5Gbe PCIe adapter
         # Use "ip link" in Talos installer to find the correct interface name
         # Common names: enp4s0, enp5s0, enp6s0, etc.
-        - interface: enp3s0
+        - interface: enp1s0
           addresses:
             - ${WORKER1IP_CIDR}
           routes:

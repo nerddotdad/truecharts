@@ -1,0 +1,122 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: enshrouded
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 15.24.43
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: itzg/enshrouded-server
+      pullPolicy: IfNotPresent
+      tag: latest
+    
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+
+    # podOptions:
+    #   nodeSelector:
+    #     kubernetes.io/hostname: k8s-worker-1
+    #   # Tolerate gpu-workloads taint on worker node if needed
+    #   tolerations:
+    #     - key: gpu-workloads
+    #       operator: Equal
+    #       value: "required"
+    #       effect: NoSchedule
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              # Enshrouded server doesn't typically need health probes
+              # but we can add them if the image supports it
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              env:
+                # Enshrouded server environment variables
+                # See: https://github.com/itzg/docker-enshrouded-server
+                UID: "1000"
+                GID: "1000"
+                # Server name
+                SERVER_NAME: "Hoth Enshrouded Server"
+                # Server password (optional - leave empty for public server)
+                SERVER_PASSWORD: "$ADMIN_PASS"
+                # Max players (default: 16)
+                MAX_PLAYERS: "16"
+                # Game port (default: 15636)
+                GAME_PORT: "15636"
+                # Query port (default: 15637)
+                QUERY_PORT: "15637"
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "1000m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "4000m"
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: $ENSHROUDED_IP  # Add to clusterenv.yaml if needed
+        externalTrafficPolicy: Local
+        integrations:
+          metallb:
+            enabled: true
+        ports:
+          game:
+            enabled: true
+            port: 15636
+            targetPort: 15636
+            protocol: UDP
+          query:
+            enabled: true
+            port: 15637
+            targetPort: 15637
+            protocol: UDP
+
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        mountPath: /enshrouded
+        path: ${NFS_GAME_SERVERS}/enshrouded
+        server: ${NAS_IP}
+        # Alternative: Use PVC if you prefer local storage
+        # type: pvc
+        # size: 20Gi
+        # storageClass: longhorn
+        # accessMode: ReadWriteOnce
+
