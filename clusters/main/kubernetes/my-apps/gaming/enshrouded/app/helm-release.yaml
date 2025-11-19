@@ -100,12 +100,12 @@ spec:
             enabled: true
             port: 15636
             targetPort: 15636
-            protocol: UDP
+            protocol: udp
           query:
             enabled: true
             port: 15637
             targetPort: 15637
-            protocol: UDP
+            protocol: udp
 
     persistence:
       data:
