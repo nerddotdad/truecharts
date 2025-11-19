@@ -30,7 +30,7 @@ spec:
     keepHistory: false
   values:
     image:
-      repository: itzg/enshrouded-server
+      repository: mbround18/enshrouded-docker
       pullPolicy: IfNotPresent
       tag: latest
     
@@ -65,13 +65,11 @@ spec:
                   enabled: false
               env:
                 # Enshrouded server environment variables
-                # See: https://github.com/itzg/docker-enshrouded-server
-                UID: "1000"
-                GID: "1000"
+                # See: https://github.com/mbround18/enshrouded-docker
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
                 # Server password (optional - leave empty for public server)
-                SERVER_PASSWORD: "$ADMIN_PASS"
+                SERVER_PASSWORD: "${ADMIN_PASS}"
                 # Max players (default: 16)
                 MAX_PLAYERS: "16"
                 # Game port (default: 15636)
@@ -110,7 +108,7 @@ spec:
       data:
         enabled: true
         type: nfs
-        mountPath: /enshrouded
+        mountPath: /home/steam/enshrouded
         path: ${NFS_GAME_SERVERS}/enshrouded
         server: ${NAS_IP}
         # Alternative: Use PVC if you prefer local storage
