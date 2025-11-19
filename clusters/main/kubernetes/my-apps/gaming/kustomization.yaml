@@ -4,4 +4,4 @@ resources:
   - namespace.yaml
   - rcon-webadmin/ks.yaml
   - steam-headless/ks.yaml
-  # - enshrouded/ks.yaml
+  - enshrouded/ks.yaml
