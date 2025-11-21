@@ -81,19 +81,27 @@ spec:
     operator:
       rollOutPods: true
       # Tolerate gpu-workloads taint on worker node (Cilium operator may need to run on all nodes)
+      # Tolerate node.kubernetes.io/not-ready so operator can run on new nodes
       tolerations:
         - key: gpu-workloads
           operator: Equal
           value: "required"
           effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
     rollOutCiliumPods: true
     # Tolerate gpu-workloads taint on worker node (Cilium agent must run on all nodes)
     # Also include Cilium-specific toleration for agent-not-ready taint
+    # Tolerate node.kubernetes.io/not-ready so Cilium can initialize on new nodes
     tolerations:
       - key: gpu-workloads
         operator: Equal
         value: "required"
         effect: NoSchedule
       - key: node.cilium.io/agent-not-ready
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
