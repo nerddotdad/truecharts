@@ -49,6 +49,9 @@ spec:
       repository: nvcr.io/nvidia/k8s-device-plugin
       tag: v0.18.0
     runtimeClassName: nvidia
+    # Override nodeSelector to match actual NFD label format (pci-0300_10de instead of pci-10de)
+    nodeSelector:
+      feature.node.kubernetes.io/pci-0300_10de.present: "true"
     config:
       map:
         default: |-
