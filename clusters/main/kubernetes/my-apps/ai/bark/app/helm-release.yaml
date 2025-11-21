@@ -34,11 +34,6 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
       runtimeClassName: "nvidia"
-      tolerations:
-        - key: gpu-workloads
-          operator: Equal
-          value: "required"
-          effect: NoSchedule
 
     workload:
       main:
