@@ -32,14 +32,14 @@ spec:
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
-      # runtimeClassName and GPU tolerations removed - using CPU version
-      # When switching back to GPU image, uncomment:
-      # runtimeClassName: "nvidia"
-      # tolerations:
-      #   - key: gpu-workloads
-      #     operator: Equal
-      #     value: "required"
-      #     effect: NoSchedule
+      # runtimeClassName removed - using CPU version
+      # When switching back to GPU image, uncomment: runtimeClassName: "nvidia"
+      # Tolerate gpu-workloads taint on worker node (required even for CPU workloads scheduled on this node)
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
 
     workload:
       main:

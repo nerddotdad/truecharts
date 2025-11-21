@@ -40,6 +40,12 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
       runtimeClassName: "nvidia"
+      # Tolerate gpu-workloads taint on worker node
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
 
     resources:
         requests:
@@ -70,7 +76,7 @@ spec:
         podSpec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
-          # Tolerate gpu-workloads taint on worker node
+          # Tolerate gpu-workloads taint on worker node (also in podOptions, but kept here for explicit workload config)
           tolerations:
             - key: gpu-workloads
               operator: Equal
