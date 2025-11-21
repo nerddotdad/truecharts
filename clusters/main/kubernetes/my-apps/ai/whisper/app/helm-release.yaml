@@ -35,10 +35,17 @@ spec:
       # runtimeClassName removed - using CPU version
       # When switching back to GPU image, uncomment: runtimeClassName: "nvidia"
       # Tolerate gpu-workloads taint on worker node (required even for CPU workloads scheduled on this node)
+      # Also tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)
       tolerations:
         - key: gpu-workloads
           operator: Equal
           value: "required"
+          effect: NoSchedule
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
           effect: NoSchedule
 
     workload:
