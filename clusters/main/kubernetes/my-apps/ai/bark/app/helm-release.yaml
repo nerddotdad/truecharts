@@ -14,6 +14,7 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
+  timeout: 10m
   values:
     image:
       repository: ghcr.io/nerddotdad/bark
