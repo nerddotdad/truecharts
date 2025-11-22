@@ -85,6 +85,11 @@ spec:
               env:
                 # Enshrouded server environment variables
                 # See: https://github.com/mbround18/enshrouded-docker
+                # Enable automatic game updates
+                AUTO_UPDATE: "true"
+                # Schedule for automatic updates (cron format: minute hour day month weekday)
+                # This runs daily at 3 AM UTC
+                AUTO_UPDATE_SCHEDULE: "0 3 * * *"
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
                 # Server password (optional - leave empty for public server)
@@ -102,6 +107,28 @@ spec:
                 limits:
                   memory: "4Gi"
                   cpu: "4000m"
+            backups:
+              enabled: true
+              image: mbround18/backup-cron:latest
+              env:
+                # Backup schedule (runs every 6 hours)
+                SCHEDULE: "0 */6 * * *"
+                # Input folder: savegame directory
+                INPUT_FOLDER: "/home/steam/enshrouded/savegame"
+                # Output folder: backups directory
+                OUTPUT_FOLDER: "/home/steam/backups"
+                # Output file ownership
+                OUTPUT_USER: "1000"
+                OUTPUT_GROUP: "1000"
+                # Keep backups for 5 days
+                KEEP_N_DAYS: "5"
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "200m"
 
     service:
       main:
@@ -135,4 +162,10 @@ spec:
         # size: 20Gi
         # storageClass: longhorn
         # accessMode: ReadWriteOnce
+      backups:
+        enabled: true
+        type: nfs
+        mountPath: /home/steam/backups
+        path: ${NFS_GAME_SERVERS}/enshrouded-backups
+        server: ${NAS_IP}
 
