@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: immich
-      version: 19.55.0
+      version: 25.9.4
       sourceRef:
         kind: HelmRepository
         name: truecharts
