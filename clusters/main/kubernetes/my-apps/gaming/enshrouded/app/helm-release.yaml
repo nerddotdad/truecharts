@@ -30,7 +30,7 @@ spec:
     keepHistory: false
   values:
     image:
-      repository: mbround18/enshrouded-docker
+      repository: mornedhels/enshrouded-server
       pullPolicy: IfNotPresent
       tag: latest
     
@@ -65,30 +65,8 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  chown -R 1000:1000 /home/steam || true
-                  chmod -R 755 /home/steam || true
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
-            force-game-update:
-              enabled: true
-              type: init
-              image: docker.io/library/alpine:3.22
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  # Delete game files to force SteamCMD to re-download latest version
-                  # This ensures the server gets the latest game version after client updates
-                  # Preserve savegame, config, logs, and steamapps directories
-                  cd /home/steam/enshrouded || exit 0
-                  if [ -f enshrouded_server.exe ]; then
-                    echo "Deleting game files to force update..."
-                    # Delete game executable and data files (not steamapps - that contains the actual game)
-                    rm -f enshrouded_server.exe enshrouded_server_*.dat steam*.dll steam*.txt 2>/dev/null || true
-                    echo "Game files deleted. Container will re-download latest version."
-                  fi
-                  # Keep savegame, config, logs, steamapps directories intact
+                  chown -R 1000:1000 /opt/enshrouded || true
+                  chmod -R 755 /opt/enshrouded || true
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
@@ -106,25 +84,22 @@ spec:
                   enabled: false
               env:
                 # Enshrouded server environment variables
-                # See: https://github.com/mbround18/enshrouded-docker
-                # Enable automatic game updates
-                AUTO_UPDATE: "true"
-                UPDATE_ON_START: "true"
-                # Schedule for automatic updates (cron format: minute hour day month weekday)
-                # This runs daily at 3 AM UTC
-                AUTO_UPDATE_SCHEDULE: "0 3 * * *"
-                # Set preset to Custom to enable gameSettings
-                PRESET: "Custom"
+                # See: https://hub.docker.com/r/mornedhels/enshrouded-server
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
                 # Server password (optional - leave empty for public server)
                 SERVER_PASSWORD: "${ADMIN_PASS}"
-                # Max players (default: 16)
-                MAX_PLAYERS: "16"
-                # Game port (default: 15636)
-                GAME_PORT: "15636"
-                # Query port (default: 15637)
-                QUERY_PORT: "15637"
+                # Auto-update schedule (cron format: minute hour day month weekday)
+                # This runs every 30 minutes to keep server updated
+                UPDATE_CRON: "*/30 * * * *"
+                # Backup schedule (cron format: minute hour day month weekday)
+                # This runs every 6 hours to backup savegame
+                BACKUP_CRON: "0 */6 * * *"
+                # Maximum number of backups to keep
+                BACKUP_MAX_COUNT: "20"
+                # User and group IDs (match securityContext)
+                PUID: "1000"
+                PGID: "1000"
               resources:
                 requests:
                   memory: "2Gi"
@@ -132,35 +107,6 @@ spec:
                 limits:
                   memory: "4Gi"
                   cpu: "4000m"
-            backups:
-              enabled: true
-              image: mbround18/backup-cron:latest
-              probes:
-                startup:
-                  enabled: false
-                liveness:
-                  enabled: false
-                readiness:
-                  enabled: false
-              env:
-                # Backup schedule (runs every 6 hours)
-                SCHEDULE: "0 */6 * * *"
-                # Input folder: savegame directory
-                INPUT_FOLDER: "/home/steam/enshrouded/savegame"
-                # Output folder: backups directory (within data mount)
-                OUTPUT_FOLDER: "/home/steam/enshrouded/backups"
-                # Output file ownership
-                OUTPUT_USER: "1000"
-                OUTPUT_GROUP: "1000"
-                # Keep backups for 5 days
-                KEEP_N_DAYS: "5"
-              resources:
-                requests:
-                  memory: "128Mi"
-                  cpu: "100m"
-                limits:
-                  memory: "256Mi"
-                  cpu: "200m"
 
     service:
       main:
@@ -186,7 +132,7 @@ spec:
       data:
         enabled: true
         type: nfs
-        mountPath: /home/steam/enshrouded
+        mountPath: /opt/enshrouded
         path: ${NFS_GAME_SERVERS}/enshrouded
         server: ${NAS_IP}
         # Alternative: Use PVC if you prefer local storage
