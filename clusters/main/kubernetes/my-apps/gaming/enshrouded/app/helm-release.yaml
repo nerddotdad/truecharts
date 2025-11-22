@@ -37,11 +37,12 @@ spec:
     securityContext:
       container:
         readOnlyRootFilesystem: false
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
+        # Image needs to run as root initially to set up user, then drops privileges
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
       pod:
-        fsGroup: 1000
+        fsGroup: 0
 
     # podOptions:
     #   nodeSelector:
