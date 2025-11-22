@@ -45,9 +45,9 @@ spec:
       pod:
         fsGroup: 568
 
-    # podOptions:
-    #   nodeSelector:
-    #     kubernetes.io/hostname: k8s-worker-1
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
     #   # Tolerate gpu-workloads taint on worker node if needed
     #   tolerations:
     #     - key: gpu-workloads
