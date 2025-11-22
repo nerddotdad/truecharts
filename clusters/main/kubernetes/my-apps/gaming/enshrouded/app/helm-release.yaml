@@ -87,6 +87,7 @@ spec:
                 # See: https://github.com/mbround18/enshrouded-docker
                 # Enable automatic game updates
                 AUTO_UPDATE: "true"
+                UPDATE_ON_START: "true"
                 # Schedule for automatic updates (cron format: minute hour day month weekday)
                 # This runs daily at 3 AM UTC
                 AUTO_UPDATE_SCHEDULE: "0 3 * * *"
