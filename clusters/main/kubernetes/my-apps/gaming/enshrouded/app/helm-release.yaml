@@ -122,8 +122,8 @@ spec:
                 SCHEDULE: "0 */6 * * *"
                 # Input folder: savegame directory
                 INPUT_FOLDER: "/home/steam/enshrouded/savegame"
-                # Output folder: backups directory
-                OUTPUT_FOLDER: "/home/steam/backups"
+                # Output folder: backups directory (within data mount)
+                OUTPUT_FOLDER: "/home/steam/enshrouded/backups"
                 # Output file ownership
                 OUTPUT_USER: "1000"
                 OUTPUT_GROUP: "1000"
@@ -169,10 +169,4 @@ spec:
         # size: 20Gi
         # storageClass: longhorn
         # accessMode: ReadWriteOnce
-      backups:
-        enabled: true
-        type: nfs
-        mountPath: /home/steam/backups
-        path: ${NFS_GAME_SERVERS}/enshrouded-backups
-        server: ${NAS_IP}
 
