@@ -98,9 +98,7 @@ spec:
                 BACKUP_CRON: "0 */6 * * *"
                 # Maximum number of backups to keep
                 BACKUP_MAX_COUNT: "20"
-                # User and group IDs (match securityContext)
-                PUID: "1000"
-                PGID: "1000"
+                # Note: PUID and PGID are automatically set by the chart based on securityContext
               resources:
                 requests:
                   memory: "2Gi"
