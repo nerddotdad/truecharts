@@ -42,10 +42,13 @@ spec:
         secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
+    # backup process as follows
+    ## incriment backup.revsision and recovery.revision +1
       main:
-        # Using default CNPG configuration - chart should handle pgvecto.rs/vectorchord automatically
+        mode: recovery
         backups:
           enabled: true
+          revision: "2"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
@@ -54,6 +57,9 @@ spec:
             backupOwnerReference: self
             immediate: true
             suspend: false
+        recovery:
+          revision: "2"
+          credentials: cloudflare_r2
     persistence:
       mlcache:
         enabled: true
