@@ -69,9 +69,9 @@ spec:
                 - |
                   # Create required runtime directory
                   mkdir -p /var/run/enshrouded
-                  chown -R 1000:1000 /var/run/enshrouded || true
-                  # Fix ownership of all game files
-                  chown -R 1000:1000 /opt/enshrouded || true
+                  chown -R 568:568 /var/run/enshrouded || true
+                  # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
+                  chown -R 568:568 /opt/enshrouded || true
                   chmod -R 755 /opt/enshrouded || true
               securityContext:
                 runAsUser: 0
@@ -109,8 +109,9 @@ spec:
                 # Maximum number of backups to keep
                 BACKUP_MAX_COUNT: "20"
                 # User and group IDs - image will drop to this user after setup
-                PUID: "1000"
-                PGID: "1000"
+                # Match NFS share owner (apps user, UID/GID 568)
+                PUID: "568"
+                PGID: "568"
               resources:
                 requests:
                   memory: "2Gi"
