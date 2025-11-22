@@ -110,6 +110,13 @@ spec:
             backups:
               enabled: true
               image: mbround18/backup-cron:latest
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
               env:
                 # Backup schedule (runs every 6 hours)
                 SCHEDULE: "0 */6 * * *"
