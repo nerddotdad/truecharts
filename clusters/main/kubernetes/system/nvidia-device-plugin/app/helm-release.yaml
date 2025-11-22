@@ -49,9 +49,9 @@ spec:
       repository: nvcr.io/nvidia/k8s-device-plugin
       tag: v0.18.0
     runtimeClassName: nvidia
-    # Override nodeSelector to match actual NFD label format (pci-0300_10de instead of pci-10de)
-    nodeSelector:
-      feature.node.kubernetes.io/pci-0300_10de.present: "true"
+    # Chart uses nodeAffinity by default which matches pci-10de.present label
+    # Node has both pci-10de.present and pci-0300_10de.present labels
+    # Removing explicit nodeSelector to allow chart's default nodeAffinity to work properly
     config:
       map:
         default: |-
