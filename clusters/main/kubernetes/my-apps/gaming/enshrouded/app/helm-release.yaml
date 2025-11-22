@@ -70,6 +70,28 @@ spec:
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
+            force-game-update:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.22
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Delete game files to force SteamCMD to re-download latest version
+                  # This ensures the server gets the latest game version after client updates
+                  # Preserve savegame, config, logs, and steamapps directories
+                  cd /home/steam/enshrouded || exit 0
+                  if [ -f enshrouded_server.exe ]; then
+                    echo "Deleting game files to force update..."
+                    # Delete game executable and data files (not steamapps - that contains the actual game)
+                    rm -f enshrouded_server.exe enshrouded_server_*.dat steam*.dll steam*.txt 2>/dev/null || true
+                    echo "Game files deleted. Container will re-download latest version."
+                  fi
+                  # Keep savegame, config, logs, steamapps directories intact
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
           containers:
             main:
               enabled: true
@@ -91,6 +113,8 @@ spec:
                 # Schedule for automatic updates (cron format: minute hour day month weekday)
                 # This runs daily at 3 AM UTC
                 AUTO_UPDATE_SCHEDULE: "0 3 * * *"
+                # Set preset to Custom to enable gameSettings
+                PRESET: "Custom"
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
                 # Server password (optional - leave empty for public server)
