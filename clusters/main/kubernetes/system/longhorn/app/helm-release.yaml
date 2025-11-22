@@ -78,3 +78,24 @@ spec:
             operator: Equal
             value: "required"
             effect: NoSchedule
+          # Tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)
+          - key: node.cilium.io/agent-not-ready
+            operator: Exists
+            effect: NoSchedule
+          - key: node.kubernetes.io/not-ready
+            operator: Exists
+            effect: NoSchedule
+    # Longhorn CSI plugin DaemonSet must run on all nodes (including worker) for volume mounting
+    # Add tolerations so it can run on worker node despite taints
+    csiPlugin:
+      tolerations:
+        - key: gpu-workloads
+          operator: Equal
+          value: "required"
+          effect: NoSchedule
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule

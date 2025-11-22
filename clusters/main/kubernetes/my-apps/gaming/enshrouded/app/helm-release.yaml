@@ -31,7 +31,7 @@ spec:
   values:
     image:
       repository: mbround18/enshrouded-docker
-      pullPolicy: IfNotPresent
+      pullPolicy: Always
       tag: latest
     
     securityContext:
