@@ -161,7 +161,7 @@ spec:
             microservices: {}
     workload:
       main:
-        replicas: 0  # Scaled down for VectorChord migration
+        replicas: 1  # Scaled down for VectorChord migration
         podSpec:
           # runtimeClassName: "intel-gpu"
           containers:
