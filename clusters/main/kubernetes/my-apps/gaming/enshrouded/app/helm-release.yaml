@@ -99,9 +99,11 @@ spec:
                 # See: https://github.com/mornedhels/enshrouded-server/blob/main/docs/SERVER_ROLES.md
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
-                # Server Role 0 (Admin role with password)
+                # Preset must be set to "Custom" for gameSettings to be applied
+                PRESET: "Custom"
+                # Server Role 0 (Admins role with password)
                 # SERVER_PASSWORD is deprecated - use Server Roles instead
-                SERVER_ROLE_0_NAME: "Admin"
+                SERVER_ROLE_0_NAME: "Admins"
                 SERVER_ROLE_0_PASSWORD: "${ADMIN_PASS}"
                 SERVER_ROLE_0_CAN_KICK_BAN: "true"
                 SERVER_ROLE_0_CAN_ACCESS_INVENTORIES: "true"
@@ -109,15 +111,14 @@ spec:
                 SERVER_ROLE_0_CAN_EDIT_BASE: "true"
                 SERVER_ROLE_0_CAN_EXTEND_BASE: "true"
                 SERVER_ROLE_0_RESERVED_SLOTS: "1"
-                # Server Role 1 (Member role)
-                SERVER_ROLE_1_NAME: "Member"
+                # Server Role 1 (Friends role)
+                SERVER_ROLE_1_NAME: "Friends"
                 SERVER_ROLE_1_PASSWORD: "${ENSHROUDED_MEMBER_PASS}"
-                SERVER_ROLE_1_CAN_KICK_BAN: "false"
                 SERVER_ROLE_1_CAN_ACCESS_INVENTORIES: "true"
-                SERVER_ROLE_1_CAN_EDIT_WORLD: "false"
+                SERVER_ROLE_1_CAN_EDIT_WORLD: "true"
                 SERVER_ROLE_1_CAN_EDIT_BASE: "true"
                 SERVER_ROLE_1_CAN_EXTEND_BASE: "true"
-                SERVER_ROLE_1_RESERVED_SLOTS: "0"
+                SERVER_ROLE_1_RESERVED_SLOTS: "3"
                 # Auto-update schedule (cron format: minute hour day month weekday)
                 # This runs every 30 minutes to keep server updated
                 UPDATE_CRON: "*/30 * * * *"
