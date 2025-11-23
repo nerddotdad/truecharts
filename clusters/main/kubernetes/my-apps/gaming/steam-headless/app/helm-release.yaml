@@ -29,6 +29,12 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    securityContext:
+      pod:
+        # Set fsGroup to 568 to match NFS share ownership (default user)
+        # This ensures the pod can read/write/execute files on the NFS mount
+        fsGroup: 568
+
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
@@ -79,6 +85,22 @@ spec:
               - name: "attempts"
                 value: "3"
           initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.22
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Fix ownership of NFS mount to ensure games can read/write/execute files
+                  # The NFS share is owned by UID 568 (default user), so we ensure proper permissions
+                  chown -R 568:568 /mnt/games || true
+                  chmod -R 755 /mnt/games || true
+                  echo "[$(date)] Fixed permissions on /mnt/games NFS mount" >> /tmp/permissions-fix.log
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
             script-prep:
               enabled: true
               type: init
