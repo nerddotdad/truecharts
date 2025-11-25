@@ -93,11 +93,25 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  # Fix ownership of NFS mount to ensure games can read/write/execute files
-                  # The NFS share is owned by UID 568 (default user), so we ensure proper permissions
-                  chown -R 568:568 /mnt/games || true
-                  chmod -R 755 /mnt/games || true
-                  echo "[$(date)] Fixed permissions on /mnt/games NFS mount" >> /tmp/permissions-fix.log
+                  # Fix ownership and permissions on NFS mount
+                  # Note: If TrueNAS NFS share uses Mapall User/Group, chown may not persist
+                  # Best solution: Configure TrueNAS NFS share to map all users to UID 568
+                  # This init container ensures permissions are correct on pod startup
+                  echo "[$(date)] Starting permission fix for /mnt/games" >> /tmp/permissions-fix.log
+                  
+                  # Ensure directories are readable/writable/executable by all
+                  # This works even if ownership can't be changed (NFS root squash)
+                  find /mnt/games -type d -exec chmod 777 {} \; 2>/dev/null || true
+                  find /mnt/games -type f -exec chmod 666 {} \; 2>/dev/null || true
+                  
+                  # Try to change ownership (may fail if NFS doesn't allow it)
+                  chown -R 568:568 /mnt/games 2>/dev/null || echo "chown failed (expected if NFS uses root mapping)" >> /tmp/permissions-fix.log
+                  
+                  # Set executable bit on directories and game binaries
+                  find /mnt/games -type d -exec chmod 755 {} \; 2>/dev/null || true
+                  find /mnt/games -name "*.so" -o -name "*.bin" -o -name "*.exe" -o -name "*.sh" | xargs chmod +x 2>/dev/null || true
+                  
+                  echo "[$(date)] Completed permission fix for /mnt/games" >> /tmp/permissions-fix.log
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
