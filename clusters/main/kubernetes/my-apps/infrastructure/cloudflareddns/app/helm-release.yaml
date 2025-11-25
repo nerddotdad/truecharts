@@ -1,13 +1,13 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: cloudflared
+  name: cloudflareddns
   namespace: infrastructure
 spec:
   interval: 15m
   chart:
     spec:
-      chart: cloudflared
+      chart: cloudflareddns
       version: 14.15.0
       sourceRef:
         kind: HelmRepository
@@ -29,10 +29,16 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    workload:
-      main:
-        podSpec:
-          containers:
-            main:
-              env:
-                TUNNEL_TOKEN: ${CLOUDFLARED_TOKEN}
+    cloudflareddns:
+      user: ${DOMAIN_0_EMAIL}
+      api_token: ${DOMAIN_0_CLOUDFLARE_TOKEN}
+      api_key: ${DOMAIN_0_CLOUDFLARE_TOKEN}
+      api_token_zone: ${DOMAIN_0_CLOUDFLARE_TOKEN}
+      interval: 300
+      detect_mode: dig-whoami.cloudflare
+      detect_override: ""
+      log_level: 3
+      host_zone_record:
+      - domain: ${DOMAIN_0}
+        zone: ${DOMAIN_0}
+        record: A
