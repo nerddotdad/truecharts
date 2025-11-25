@@ -80,10 +80,16 @@ spec:
             main:
               enabled: true
               # Override securityContext to allow root, preventing chart from setting PUID/PGID
+              # Add capabilities needed for supervisor to kill/restart processes during updates
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
                 runAsNonRoot: false
+                capabilities:
+                  add:
+                    - SYS_PTRACE  # Required for supervisor to trace and kill processes
+                    - SYS_ADMIN   # Required for process management and namespace operations
+                    - CHOWN       # May be needed for file ownership changes during updates
               # Enshrouded server doesn't typically need health probes
               # but we can add them if the image supports it
               probes:
