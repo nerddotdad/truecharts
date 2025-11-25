@@ -89,7 +89,7 @@ spec:
                   add:
                     - SYS_PTRACE  # Required for supervisor to trace and kill processes
                     - SYS_ADMIN   # Required for process management and namespace operations
-                    - CHOWN       # May be needed for file ownership changes during updates
+                    # Note: CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE are already added by the chart
               # Enshrouded server doesn't typically need health probes
               # but we can add them if the image supports it
               probes:
