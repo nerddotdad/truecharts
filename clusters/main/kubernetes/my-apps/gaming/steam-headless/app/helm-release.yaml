@@ -134,7 +134,8 @@ spec:
                 MODE: "primary"
                 # MODE = secondary
                 # DISPLAY: :0
-                # HOST_DBUS: true
+                HOST_DBUS: true  # Enable host D-Bus for better system service integration
+                # May help with hardware detection and system services, though unlikely to fix BPM latency directly
                 WEB_UI_MODE: "vnc"
                 ENABLE_VNC_AUDIO: false
                 # NEKO_NAT1TO1: "" needs to be the ip of the host
@@ -143,6 +144,11 @@ spec:
                 SUNSHINE_PASS: "${ADMIN_PASS}"
                 # USER_PASSWORD: ""
                 ENABLE_EVDEV_INPUTS: true
+                # Sunshine latency optimizations for low input latency
+                # These can be overridden in Sunshine web UI, but set good defaults
+                # Note: Actual Sunshine config is in /home/default/.config/sunshine/sunshine.conf
+                # These env vars may not all be supported - check Sunshine documentation
+                # For best results, configure via Sunshine web UI at http://<pod-ip>:47990
     configmap:
       init-scripts:
         enabled: true

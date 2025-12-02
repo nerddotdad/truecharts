@@ -52,11 +52,10 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
-          memory: 1Gi  # Actual usage is ~272Mi, 1Gi provides headroom
+          memory: 2Gi
         limits:
           nvidia.com/gpu: 1
-          memory: 2Gi  # Reduced from 4Gi - actual usage is ~272Mi, 2Gi is plenty
-          # This frees up 2Gi of memory limit allocation for the node
+          memory: 10Gi
 
     workload:
       main:
