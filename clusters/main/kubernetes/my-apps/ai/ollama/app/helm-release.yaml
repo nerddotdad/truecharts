@@ -67,6 +67,7 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
+                OLLAMA_CONTEXT_LENGTH: "16000"
       ui:
         type: Deployment
         podSpec:
