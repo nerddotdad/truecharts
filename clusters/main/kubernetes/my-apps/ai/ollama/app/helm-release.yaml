@@ -52,10 +52,10 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
-          memory: 2Gi
+          memory: 4Gi
         limits:
           nvidia.com/gpu: 1
-          memory: 10Gi
+          memory: 20Gi
 
     workload:
       main:
