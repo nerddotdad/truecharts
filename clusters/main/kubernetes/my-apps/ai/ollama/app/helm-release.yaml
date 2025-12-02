@@ -67,17 +67,11 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
-              resources:
-                limits:
-                  memory: 2Gi  # Reduced from 4Gi - actual usage is ~272Mi
-                requests:
-                  memory: 1Gi  # Reduced from 2Gi - actual usage is ~272Mi
       ui:
         type: Deployment
         podSpec:
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-1
-          # Tolerations are now in podOptions (applies to all workloads)
 
     persistence:
       config:
