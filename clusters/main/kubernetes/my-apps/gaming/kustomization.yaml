@@ -5,3 +5,4 @@ resources:
   - rcon-webadmin/ks.yaml
   - steam-headless/ks.yaml
   - enshrouded/ks.yaml
+  - minecraft-1/ks.yaml
