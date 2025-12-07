@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: minecraft-java
-      version: 23.46.1
+      version: 23.45.1
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -29,6 +29,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    securityContext:
+      container:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      pod:
+        fsGroup: 1000
     workload:
       main:
         podSpec:
@@ -82,7 +89,7 @@ spec:
                 LEVEL_TYPE: DEFAULT
                 LEVEL: world
                 ONLINE_MODE: true
-                MEMORY: 2048M
+                MEMORY: 6144M
                 RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
@@ -139,6 +146,13 @@ spec:
                 # CF_OVERRIDES_SKIP_EXISTING
                 # CF_PARALLEL_DOWNLOADS
                 # CF_SET_LEVEL_FROM
+              resources:
+                requests:
+                  memory: "6Gi"
+                  cpu: "2000m"
+                limits:
+                  memory: "8Gi"
+                  cpu: "4000m"
             mcbackup:
               enabled: true
               imageSelector: mcBackupImage
