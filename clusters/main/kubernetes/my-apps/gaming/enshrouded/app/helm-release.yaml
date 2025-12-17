@@ -137,7 +137,7 @@ spec:
                 # based on securityContext.runAsUser: 568
               resources:
                 requests:
-                  memory: "10Gi"
+                  memory: "11Gi"
                   cpu: "4000m"
                 limits:
                   memory: "16Gi"
