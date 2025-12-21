@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: matrix-stack
-      version: 25.12.1
+      version: 25.12.2
       sourceRef:
         kind: HelmRepository
         name: element-hq
