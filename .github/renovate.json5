@@ -1,21 +1,29 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "github>truecharts/public//.github/renovate/main.json5"
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    'github>truecharts/public//.github/renovate/main.json5',
   ],
-  "minor": {
-    "packageRules": [
+  minor: {
+    packageRules: [
       {
-        "matchPackageNames": ["ghcr.io/siderolabs/kubelet", "ghcr.io/siderolabs/installer"],
-        "dependencyDashboardApproval": true
-      }
-    ]
+        matchPackageNames: [
+          'ghcr.io/siderolabs/kubelet',
+          'ghcr.io/siderolabs/installer',
+        ],
+        dependencyDashboardApproval: true,
+      },
+    ],
   },
-  "automerge": true,
-  "automergeType": "pr",
-  "ignoreTests": true,
-  "docker": {
-    "pinDigests": true
-  }
+  automerge: true,
+  automergeType: 'pr',
+  ignoreTests: true,
+  packageRules: [
+    {
+      matchCategories: [
+        'docker',
+      ],
+      pinDigests: true,
+    },
+  ],
 }
