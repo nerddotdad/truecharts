@@ -129,6 +129,7 @@ spec:
                 # FTB_LEGACYJAVAFIXER: false
                 WHITELIST: |
                   echobasemama
+                  itzDad
                 # Geeray7612
                 # OPS: ""
                 # ICON: ""
