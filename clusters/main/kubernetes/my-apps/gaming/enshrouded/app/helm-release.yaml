@@ -105,6 +105,9 @@ spec:
                 # See: https://github.com/mornedhels/enshrouded-server/blob/main/docs/SERVER_ROLES.md
                 # Server name
                 SERVER_NAME: "Hoth Enshrouded Server"
+                SERVER_ENABLE_VOICE_CHAT: "true"
+                SERVER_VOICE_CHAT_MODE: "Proximity"
+                SERVER_ENABLE_TEXT_CHAT: "true"
                 # Preset must be set to "Custom" for gameSettings to be applied
                 PRESET: "Custom"
                 # Server Role 0 (Admins role with password)
@@ -128,6 +131,7 @@ spec:
                 # Auto-update schedule (cron format: minute hour day month weekday)
                 # This runs every 30 minutes to keep server updated
                 UPDATE_CRON: "*/30 * * * *"
+                UPDATE_CHECK_PLAYERS: "true"
                 # Backup schedule (cron format: minute hour day month weekday)
                 # This runs every 6 hours to backup savegame
                 BACKUP_CRON: "0 */6 * * *"

@@ -94,7 +94,7 @@ spec:
                 LEVEL: world
                 ONLINE_MODE: true
                 MEMORY: 6144M
-                RCON_PASSWORD: "secretrconpass"
+                # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
                 # QUILT_LOADER_VERSION: ""
@@ -129,6 +129,7 @@ spec:
                 # FTB_LEGACYJAVAFIXER: false
                 WHITELIST: |
                   echobasemama
+                  Geeray7612
                 # OPS: ""
                 # ICON: ""
                 # SEED: ""
