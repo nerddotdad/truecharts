@@ -94,6 +94,8 @@ spec:
                 LEVEL: world
                 ONLINE_MODE: true
                 MEMORY: 6144M
+                MODRINTH_PROJECTS: |
+                  Cz6msz34:1.25.0
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
@@ -131,7 +133,8 @@ spec:
                   echobasemama
                   itzDad
                   Geeray7612
-                # OPS: ""
+                OPS: |
+                  itzDad
                 # ICON: ""
                 # SEED: ""
                 # GENERATOR_SETTINGS: ""
@@ -231,6 +234,19 @@ spec:
               mountPath: /data
             mcbackup:
               mountPath: /data
+              readOnly: true
+      plugins:
+        enabled: true
+        type: nfs
+        mountPath: /plugins
+        path: ${NFS_MINECRAFT_DATA}/plugins
+        server: ${NAS_IP}
+        targetSelector:
+          main:
+            main:
+              mountPath: /plugins
+            mcbackup:
+              mountPath: /plugins
               readOnly: true
       backups:
         enabled: true
