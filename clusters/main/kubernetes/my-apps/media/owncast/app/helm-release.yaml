@@ -29,6 +29,11 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    securityContext:
+      pod:
+        # Set fsGroup to 568 to match NFS share ownership (default user)
+        # This ensures the pod can read/write/execute files on the NFS mount
+        fsGroup: 568
     podOptions:
       nodeSelector:
         kubernetes.io/hostname: k8s-worker-1
@@ -61,6 +66,20 @@ spec:
         ingressClassName: external
         hosts: 
           - host: owncast.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+      rtmp:
+        enabled: true
+        ingressClassName: external
+        hosts: 
+          - host: stream.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
