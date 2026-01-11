@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-services
+  namespace: nginx-external
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+data:
+  # RTMP streaming for owncast
+  # Maps TCP port 1935 on nginx ingress controller to owncast RTMP service
+  "1935": "media/owncast-rtmp:1935"

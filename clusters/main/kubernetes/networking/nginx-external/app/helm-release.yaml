@@ -36,6 +36,12 @@ spec:
         annotations:
           metallb.io/ip-allocated-from-pool: main
           metallb.io/loadBalancerIPs: ${NGINX_EXTERNAL_IP}
+        # Add RTMP port (1935) for TCP stream support
+        # This allows RTMP streaming through the ingress controller
+        ports:
+          http: 80
+          https: 443
+          rtmp: 1935
       ingressClassByName: true
       watchIngressWithoutClass: false
       ingressClassResource:
@@ -75,6 +81,8 @@ spec:
       extraArgs:
         default-ssl-certificate: "clusterissuer/certificate-issuer-domain-0-wildcard"
         publish-status-address: ${NGINX_EXTERNAL_IP}
+        # Enable TCP services for RTMP streaming
+        tcp-services-configmap: "nginx-external/tcp-services"
       terminationGracePeriodSeconds: 120
       publishService:
         enabled: false
