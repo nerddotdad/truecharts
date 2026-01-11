@@ -44,10 +44,8 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
-          memory: 4Gi
         limits:
           nvidia.com/gpu: 1
-          memory: 20Gi
 
     persistence:
       config:

@@ -52,6 +52,7 @@ spec:
     # Chart uses nodeAffinity by default which matches pci-10de.present label
     # Node has both pci-10de.present and pci-0300_10de.present labels
     # Removing explicit nodeSelector to allow chart's default nodeAffinity to work properly
+    # Increased replicas to allow more pods to share the GPU via time-slicing
     config:
       map:
         default: |-
@@ -63,7 +64,7 @@ spec:
               renameByDefault: false
               resources:
                 - name: nvidia.com/gpu
-                  replicas: 4  # Increased to allow more pods to share the GPU via time-slicing
+                  replicas: 12
     gfd:
       enabled: true
     nodeFeatureDiscovery:
