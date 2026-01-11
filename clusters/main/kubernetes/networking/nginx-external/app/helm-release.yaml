@@ -63,6 +63,13 @@ spec:
         proxy-busy-buffers-size: "64k"
         ssl-protocols: TLSv1.3 TLSv1.2
         use-forwarded-headers: "true"
+        # WebSocket support map block for owncast and other WebSocket applications
+        # See: https://owncast.online/docs/sslproxies/nginx/
+        http-snippet: |
+          map $http_upgrade $connection_upgrade {
+              default upgrade;
+              ''      close;
+          }
       metrics:
         enabled: true
       extraArgs:

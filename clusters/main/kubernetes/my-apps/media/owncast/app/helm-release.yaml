@@ -69,6 +69,20 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
+        annotations:
+          # WebSocket support required for owncast chat functionality
+          # See: https://owncast.online/docs/sslproxies/nginx/
+          # The map block for $connection_upgrade is configured in nginx-external controller
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+          nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Authorization $http_authorization;
+            proxy_pass_header Authorization;
+          # Increase timeouts for long-running connections (streaming)
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
         integrations:
           traefik:
             enabled: false
