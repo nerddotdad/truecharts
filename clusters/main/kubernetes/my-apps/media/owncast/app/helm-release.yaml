@@ -52,6 +52,23 @@ spec:
         limits:
           nvidia.com/gpu: 1
 
+    service:
+      main:
+        ports:
+          main:
+            port: 10088
+            targetPort: 8080
+      rtmp:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${OWNCAST_IP}
+        # externalTrafficPolicy: Local
+        ports:
+          rtmp:
+            enabled: true
+            port: 1935
+            targetPort: 1935
+
     persistence:
       config:
         enabled: true
