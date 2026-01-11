@@ -5,3 +5,4 @@ resources:
   # - immich/ks.yaml # removed since vectore store migration broke database
   - jellyfin/ks.yaml
   - audiobookshelf/ks.yaml
+  - owncast/ks.yaml
