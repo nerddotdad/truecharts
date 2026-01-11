@@ -38,10 +38,15 @@ spec:
           metallb.io/loadBalancerIPs: ${NGINX_EXTERNAL_IP}
         # Add RTMP port (1935) for TCP stream support
         # This allows RTMP streaming through the ingress controller
-        ports:
-          http: 80
-          https: 443
-          rtmp: 1935
+        # Custom TCP ports need to be added to the service
+        # Note: The ingress-nginx chart may require this to be configured differently
+        # If this doesn't work, we may need to patch the service directly
+        enableHttp: true
+        enableHttps: true
+        # Custom TCP port for RTMP
+        # This format may need adjustment based on chart version
+        tcp:
+          "1935": "media/owncast-rtmp:1935"
       ingressClassByName: true
       watchIngressWithoutClass: false
       ingressClassResource:
