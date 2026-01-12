@@ -98,6 +98,7 @@ spec:
                 MODRINTH_PROJECTS: |
                   axgraves
                   simple-voice-chat
+                  chestsorter
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
