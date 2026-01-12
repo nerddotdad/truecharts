@@ -95,7 +95,8 @@ spec:
                 ONLINE_MODE: true
                 MEMORY: 6144M
                 MODRINTH_PROJECTS: |
-                  Cz6msz34:1.25.0
+                  axgraves
+                  simple-voice-chat
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
