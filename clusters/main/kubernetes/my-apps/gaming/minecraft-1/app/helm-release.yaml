@@ -238,19 +238,6 @@ spec:
             mcbackup:
               mountPath: /data
               readOnly: true
-      plugins:
-        enabled: true
-        type: nfs
-        mountPath: /plugins
-        path: ${NFS_MINECRAFT_DATA}/plugins
-        server: ${NAS_IP}
-        targetSelector:
-          main:
-            main:
-              mountPath: /plugins
-            mcbackup:
-              mountPath: /plugins
-              readOnly: true
       backups:
         enabled: true
         type: nfs
