@@ -229,7 +229,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /data
-        path: ${NFS_MINECRAFT_DATA}/data
+        path: ${NFS_MINECRAFT_DATA}
         server: ${NAS_IP}
         targetSelector:
           main:
@@ -242,7 +242,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /data
-        path: ${NFS_MINECRAFT_DATA}/plugins
+        path: ${NFS_MINECRAFT_PLUGINS}
         server: ${NAS_IP}
         targetSelector:
           main:
@@ -255,7 +255,7 @@ spec:
         enabled: true
         type: nfs
         mountPath: /backups
-        path: ${NFS_MINECRAFT_DATA}/backups
+        path: ${NFS_MINECRAFT_BACKUPS}
         server: ${NAS_IP}
         targetSelector:
           main:
