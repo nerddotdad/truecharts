@@ -94,6 +94,7 @@ spec:
                 LEVEL: world
                 ONLINE_MODE: true
                 MEMORY: 6144M
+                MODRINTH_LOADER: PAPER
                 MODRINTH_PROJECTS: |
                   axgraves
                   simple-voice-chat
