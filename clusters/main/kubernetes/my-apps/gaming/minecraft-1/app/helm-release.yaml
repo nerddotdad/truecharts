@@ -98,7 +98,7 @@ spec:
                 MODRINTH_PROJECTS: |
                   axgraves
                   simple-voice-chat
-                  chestsorter
+                  quicksortx
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
@@ -223,6 +223,15 @@ spec:
             enabled: true
             port: 25575
             protocol: tcp
+      voicechat:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${MINECRAFT_1_IP}
+        ports:
+          voicechat:
+            enabled: true
+            protocol: udp
+            port: 24454
 
     persistence:
       data:
