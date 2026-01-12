@@ -241,7 +241,7 @@ spec:
       plugins:
         enabled: true
         type: nfs
-        mountPath: /data
+        mountPath: /plugins
         path: ${NFS_MINECRAFT_PLUGINS}
         server: ${NAS_IP}
         targetSelector:
