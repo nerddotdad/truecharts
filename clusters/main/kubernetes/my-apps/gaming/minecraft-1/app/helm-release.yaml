@@ -94,8 +94,8 @@ spec:
                 LEVEL: world
                 ONLINE_MODE: true
                 MEMORY: 6144M
-                # MODRINTH_PROJECTS: |
-                #   Cz6msz34:1.25.0
+                MODRINTH_PROJECTS: |
+                  Cz6msz34:1.25.0
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
