@@ -71,7 +71,7 @@ spec:
                 GUI: "FALSE"
                 OVERRIDE_SERVER_PROPERTIES: true
                 VERSION: "LATEST"
-                TYPE: "VANILLA"
+                TYPE: "PAPER"
                 DIFFICULTY: "Normal"
                 MAX_PLAYERS: 20
                 MAX_WORLD_SIZE: 10000
