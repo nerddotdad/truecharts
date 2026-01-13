@@ -277,6 +277,7 @@ spec:
 
     ingress:
       dynmap:
+        primary: true
         enabled: true
         ingressClassName: external
         hosts:
