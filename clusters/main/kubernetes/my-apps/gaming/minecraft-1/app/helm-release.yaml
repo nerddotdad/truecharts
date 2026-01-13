@@ -232,7 +232,7 @@ spec:
         enabled: true
         type: ClusterIP
         ports:
-          rcon:
+          dynmap:
             enabled: true
             port: 8123
             protocol: tcp
