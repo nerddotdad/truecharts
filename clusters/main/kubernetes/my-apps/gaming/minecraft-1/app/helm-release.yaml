@@ -215,6 +215,10 @@ spec:
             port: 25565
             targetPort: 25565
             protocol: udp
+          voicechat:
+            enabled: true
+            protocol: udp
+            port: 24454
       rcon:
         enabled: true
         type: ClusterIP
@@ -223,15 +227,6 @@ spec:
             enabled: true
             port: 25575
             protocol: tcp
-      voicechat:
-        enabled: true
-        type: LoadBalancer
-        loadBalancerIP: ${MINECRAFT_1_IP}
-        ports:
-          voicechat:
-            enabled: true
-            protocol: udp
-            port: 24454
 
     persistence:
       data:
