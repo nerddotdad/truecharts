@@ -99,7 +99,7 @@ spec:
                   axgraves
                   simple-voice-chat
                   quicksortx
-                  dynmap
+                  bluemap
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
