@@ -278,6 +278,7 @@ spec:
       bluemap:
         enabled: true
         primary: true
+        ingressClassName: external
         targetSelector:
           bluemap: bluemap
         hosts:
