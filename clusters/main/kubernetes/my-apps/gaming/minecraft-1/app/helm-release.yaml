@@ -228,13 +228,12 @@ spec:
             enabled: true
             port: 25575
             protocol: tcp
-      dynmap:
+      bluemap:
         enabled: true
-        type: ClusterIP
         ports:
-          dynmap:
+          bluemap:
             enabled: true
-            port: 8123
+            port: 8100
             protocol: tcp
 
     persistence:
@@ -276,12 +275,13 @@ spec:
               mountPath: /backups
 
     ingress:
-      dynmap:
-        primary: true
+      bluemap:
         enabled: true
-        ingressClassName: external
+        primary: true
+        targetSelector:
+          bluemap: bluemap
         hosts:
-          - host: dynmap.${DOMAIN_0}
+          -  host: bluemap.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
