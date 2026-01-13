@@ -281,7 +281,7 @@ spec:
         targetSelector:
           bluemap: bluemap
         hosts:
-          -  host: bluemap.${DOMAIN_0}
+          - host: bluemap.${DOMAIN_0}
             paths:
               - path: /
                 pathType: Prefix
