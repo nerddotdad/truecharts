@@ -101,6 +101,7 @@ spec:
                   quicksortx
                   bluemap
                   pxplayersleep
+                  bmarker
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
