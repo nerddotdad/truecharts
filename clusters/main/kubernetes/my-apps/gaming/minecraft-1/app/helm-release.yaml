@@ -220,10 +220,6 @@ spec:
             enabled: true
             protocol: udp
             port: 24454
-          bluemap:
-            enabled: true
-            port: 8100
-            protocol: tcp
       rcon:
         enabled: true
         type: ClusterIP
@@ -232,6 +228,14 @@ spec:
             enabled: true
             port: 25575
             protocol: tcp
+      bluemap:
+        enabled: true
+        type: ClusterIP
+        ports:
+          bluemap:
+            enabled: true
+            protocol: tcp
+            port: 8100
 
     persistence:
       data:
@@ -272,9 +276,12 @@ spec:
               mountPath: /backups
 
     ingress:
-      main:
+      bluemap:
         enabled: true
+        primary: true
         ingressClassName: external
+        targetSelector:
+          bluemap: bluemap
         hosts:
           - host: bluemap.${DOMAIN_0}
             paths:
