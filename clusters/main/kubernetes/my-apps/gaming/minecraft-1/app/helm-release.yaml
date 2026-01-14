@@ -100,7 +100,6 @@ spec:
                   simple-voice-chat
                   quicksortx
                   bluemap
-                  waypoints
                   pxplayersleep
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
