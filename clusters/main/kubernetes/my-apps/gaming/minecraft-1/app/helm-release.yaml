@@ -88,7 +88,9 @@ spec:
                 SPAWN_NPCS: true
                 VIEW_DISTANCE: 16
                 MODE: survival
-                MOTD: "Welcome to Minecraft on Hoth Systems!"
+                MOTD: |
+                  Welcome to Minecraft on Hoth Systems!
+                  Map: https://bluemap.${DOMAIN_0}
                 PVP: false
                 LEVEL_TYPE: DEFAULT
                 LEVEL: world
