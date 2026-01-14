@@ -84,7 +84,6 @@ spec:
               env:
                 # Hytale server environment variables
                 # See: https://github.com/indifferentbroccoli/hytale-server-docker
-                # Note: TZ is automatically set by the app-template chart's fixedEnv
                 PUID: "568"
                 PGID: "568"
                 SERVER_NAME: "Hoth Hytale Server"
