@@ -63,8 +63,26 @@ spec:
     workload:
       main:
         podSpec:
-          # No init container needed - NFS mount is owned by 568:568
-          # and container runs as 568 via PUID/PGID and securityContext
+          initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Ensure /home/hytale/server-files exists and is writable
+                  mkdir -p /home/hytale/server-files
+                  # Set ownership to 568:568 (matches NFS mount and container user)
+                  chown -R 568:568 /home/hytale/server-files 2>/dev/null || true
+                  # Ensure directories are executable and files are readable
+                  # This is needed for the image's init.sh script to work
+                  find /home/hytale/server-files -type d -exec chmod 755 {} \; 2>/dev/null || true
+                  find /home/hytale/server-files -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
           containers:
             main:
               enabled: true
