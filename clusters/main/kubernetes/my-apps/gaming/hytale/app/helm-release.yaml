@@ -36,14 +36,25 @@ spec:
     
     securityContext:
       container:
-        readOnlyRootFilesystem: false
-        # Set to 568 so chart sets PUID/PGID to 568 in fixedEnv
-        # Container-level override will still allow root execution
+        PUID: 568
+        UMASK: "002"
         runAsNonRoot: true
         runAsUser: 568
         runAsGroup: 568
+        readOnlyRootFilesystem: false  # Hytale server needs to write to /home/hytale/server-files
+        allowPrivilegeEscalation: false
+        privileged: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          add: []
+          drop:
+            - ALL
       pod:
         fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups: []
+        sysctls: []
 
     podOptions:
       nodeSelector:
