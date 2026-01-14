@@ -100,6 +100,8 @@ spec:
                   simple-voice-chat
                   quicksortx
                   bluemap
+                  waypoints
+                  pxplayersleep
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
@@ -236,6 +238,7 @@ spec:
             enabled: true
             protocol: tcp
             port: 8100
+            targetPort: 8100
 
     persistence:
       data:
