@@ -97,11 +97,6 @@ spec:
                   enabled: false
                 readiness:
                   enabled: false
-              # Enable stdin/tty for interactive authentication
-              # Required for: hytale-downloader auth and /auth commands
-              # See: https://deinfreu.github.io/hytale-server-container/installation/running_server/
-              stdin: true
-              tty: true
               env:
                 # Hytale server environment variables
                 # See: https://hub.docker.com/r/deinfreu/hytale-server
