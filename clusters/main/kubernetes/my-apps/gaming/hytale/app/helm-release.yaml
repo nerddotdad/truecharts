@@ -30,9 +30,9 @@ spec:
     keepHistory: false
   values:
     image:
-      repository: deinfreu/hytale-server
+      repository: indifferentbroccoli/hytale-server-docker
       pullPolicy: IfNotPresent
-      tag: experimental
+      tag: latest
     
     securityContext:
       container:
@@ -64,31 +64,27 @@ spec:
                   # Create required runtime directory
                   mkdir -p /var/run/hytale
                   chown -R 568:568 /var/run/hytale || true
-                  # Ensure /home/container exists and is writable
-                  mkdir -p /home/container
+                  # Ensure /home/hytale/server-files exists and is writable
+                  mkdir -p /home/hytale/server-files
                   # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
-                  chown -R 568:568 /home/container 2>/dev/null || echo "chown failed (expected if NFS uses root mapping)" >&2
+                  chown -R 568:568 /home/hytale/server-files 2>/dev/null || echo "chown failed (expected if NFS uses root mapping)" >&2
                   # Make directories world-writable to handle NFS root squash
                   # This ensures root (even if mapped to nobody) can write
-                  find /home/container -type d -exec chmod 777 {} \; 2>/dev/null || true
-                  find /home/container -type f -exec chmod 666 {} \; 2>/dev/null || true
+                  find /home/hytale/server-files -type d -exec chmod 777 {} \; 2>/dev/null || true
+                  find /home/hytale/server-files -type f -exec chmod 666 {} \; 2>/dev/null || true
                   # Ensure the directory itself is world-writable
-                  chmod 777 /home/container || true
+                  chmod 777 /home/hytale/server-files || true
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
           containers:
             main:
               enabled: true
-              # Override securityContext to allow root, preventing chart from setting PUID/PGID
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
-                runAsNonRoot: false
-                capabilities:
-                  add:
-                    - SYS_PTRACE  # Required for supervisor to trace and kill processes
-                    - SYS_ADMIN   # Required for process management and namespace operations
+              # Image uses PUID/PGID env vars to set user, so we can use the chart's securityContext
+              # Enable stdin/tty for interactive authentication
+              # See: https://github.com/indifferentbroccoli/hytale-server-docker
+              stdin: true
+              tty: true
               # Hytale server doesn't typically need health probes
               probes:
                 startup:
@@ -99,12 +95,21 @@ spec:
                   enabled: false
               env:
                 # Hytale server environment variables
-                # See: https://hub.docker.com/r/deinfreu/hytale-server
+                # See: https://github.com/indifferentbroccoli/hytale-server-docker
                 # Note: TZ is automatically set by the app-template chart's fixedEnv
-                SERVER_IP: "0.0.0.0"
-                SERVER_PORT: "5520"
-                PROD: "FALSE"
-                DEBUG: "FALSE"
+                PUID: "568"
+                PGID: "568"
+                SERVER_NAME: "Hoth Hytale Server"
+                DEFAULT_PORT: "5520"
+                MAX_PLAYERS: "20"
+                VIEW_DISTANCE: "12"
+                AUTH_MODE: "authenticated"
+                ENABLE_BACKUPS: "false"
+                DISABLE_SENTRY: "true"
+                USE_AOT_CACHE: "true"
+                ACCEPT_EARLY_PLUGINS: "false"
+                MAX_MEMORY: "8G"
+                DOWNLOAD_ON_START: "true"
               resources:
                 requests:
                   memory: "4Gi"
@@ -132,7 +137,7 @@ spec:
       data:
         enabled: true
         type: nfs
-        mountPath: /home/container
+        mountPath: /home/hytale/server-files
         path: ${NFS_GAME_SERVERS}/hytale
         server: ${NAS_IP}
         # Alternative: Use PVC if you prefer local storage
