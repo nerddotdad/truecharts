@@ -93,11 +93,11 @@ spec:
               env:
                 # Hytale server environment variables
                 # See: https://hub.docker.com/r/deinfreu/hytale-server
+                # Note: TZ is automatically set by the app-template chart's fixedEnv
                 SERVER_IP: "0.0.0.0"
                 SERVER_PORT: "5520"
                 PROD: "FALSE"
                 DEBUG: "FALSE"
-                TZ: "America/New_York"
               resources:
                 requests:
                   memory: "4Gi"
