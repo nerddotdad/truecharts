@@ -52,31 +52,8 @@ spec:
     workload:
       main:
         podSpec:
-          initContainers:
-            fix-permissions:
-              enabled: true
-              type: init
-              image: docker.io/library/alpine:3.23
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  # Create required runtime directory
-                  mkdir -p /var/run/hytale
-                  chown -R 568:568 /var/run/hytale || true
-                  # Ensure /home/hytale/server-files exists and is writable
-                  mkdir -p /home/hytale/server-files
-                  # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
-                  chown -R 568:568 /home/hytale/server-files 2>/dev/null || echo "chown failed (expected if NFS uses root mapping)" >&2
-                  # Make directories world-writable to handle NFS root squash
-                  # This ensures root (even if mapped to nobody) can write
-                  find /home/hytale/server-files -type d -exec chmod 777 {} \; 2>/dev/null || true
-                  find /home/hytale/server-files -type f -exec chmod 666 {} \; 2>/dev/null || true
-                  # Ensure the directory itself is world-writable
-                  chmod 777 /home/hytale/server-files || true
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
+          # No init container needed - NFS mount is owned by 568:568
+          # and container runs as 568 via PUID/PGID and securityContext
           containers:
             main:
               enabled: true
