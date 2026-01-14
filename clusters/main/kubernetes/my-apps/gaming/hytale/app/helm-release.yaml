@@ -1,0 +1,135 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hytale
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 15.29.54
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: deinfreu/hytale-server
+      pullPolicy: IfNotPresent
+      tag: experimental
+    
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        # Set to 568 so chart sets PUID/PGID to 568 in fixedEnv
+        # Container-level override will still allow root execution
+        runAsNonRoot: true
+        runAsUser: 568
+        runAsGroup: 568
+      pod:
+        fsGroup: 568
+
+    podOptions:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker-1
+
+    workload:
+      main:
+        podSpec:
+          initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Create required runtime directory
+                  mkdir -p /var/run/hytale
+                  chown -R 568:568 /var/run/hytale || true
+                  # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
+                  chown -R 568:568 /home/container || true
+                  chmod -R 755 /home/container || true
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+          containers:
+            main:
+              enabled: true
+              # Override securityContext to allow root, preventing chart from setting PUID/PGID
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+                runAsNonRoot: false
+                capabilities:
+                  add:
+                    - SYS_PTRACE  # Required for supervisor to trace and kill processes
+                    - SYS_ADMIN   # Required for process management and namespace operations
+              # Hytale server doesn't typically need health probes
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              env:
+                # Hytale server environment variables
+                # See: https://hub.docker.com/r/deinfreu/hytale-server
+                SERVER_IP: "0.0.0.0"
+                SERVER_PORT: "5520"
+                PROD: "FALSE"
+                DEBUG: "FALSE"
+                TZ: "America/New_York"
+              resources:
+                requests:
+                  memory: "4Gi"
+                  cpu: "2000m"
+                limits:
+                  memory: "8Gi"
+                  cpu: "4000m"
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${HYTALE_IP}  # Add to clusterenv.yaml if needed
+        externalTrafficPolicy: Local
+        integrations:
+          metallb:
+            enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 5520
+            protocol: udp
+
+    persistence:
+      data:
+        enabled: true
+        type: nfs
+        mountPath: /home/container
+        path: ${NFS_GAME_SERVERS}/hytale
+        server: ${NAS_IP}
+        # Alternative: Use PVC if you prefer local storage
+        # type: pvc
+        # size: 20Gi
+        # storageClass: longhorn
+        # accessMode: ReadWriteOnce

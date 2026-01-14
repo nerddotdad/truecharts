@@ -6,3 +6,4 @@ resources:
   - steam-headless/ks.yaml
   - enshrouded/ks.yaml
   - minecraft-1/ks.yaml
+  - hytale/ks.yaml
