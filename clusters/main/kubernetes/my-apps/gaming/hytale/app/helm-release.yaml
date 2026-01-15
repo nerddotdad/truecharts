@@ -37,10 +37,11 @@ spec:
     securityContext:
       container:
         readOnlyRootFilesystem: false
-        # Allow container to run as root initially - the image uses PUID/PGID to drop privileges
-        runAsNonRoot: false
-        runAsUser: 0
-        runAsGroup: 0
+        # Set to 568 so chart sets PUID/PGID=568 in fixedEnv
+        # Container-level override will still allow root execution
+        runAsNonRoot: true
+        runAsUser: 568
+        runAsGroup: 568
       pod:
         fsGroup: 568
 
@@ -89,8 +90,7 @@ spec:
               env:
                 # Hytale server environment variables
                 # See: https://github.com/indifferentbroccoli/hytale-server-docker
-                PUID: "568"
-                PGID: "568"
+                # PUID and PGID are set automatically by TrueCharts based on securityContext
                 SERVER_NAME: "Hoth Hytale Server"
                 DEFAULT_PORT: "5520"
                 MAX_PLAYERS: "20"
