@@ -36,22 +36,13 @@ spec:
     
     securityContext:
       container:
-        PUID: 568
-        UMASK: "002"
-        runAsNonRoot: true
-        runAsUser: 568
-        runAsGroup: 568
-        readOnlyRootFilesystem: false  # Hytale server needs to write to /home/hytale/server-files
-        allowPrivilegeEscalation: false
-        privileged: false
-        seccompProfile:
-          type: RuntimeDefault
-
+        readOnlyRootFilesystem: false
+        # Allow container to run as root initially - the image uses PUID/PGID to drop privileges
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
       pod:
         fsGroup: 568
-        fsGroupChangePolicy: OnRootMismatch
-        supplementalGroups: []
-        sysctls: []
 
     podOptions:
       nodeSelector:
@@ -60,14 +51,33 @@ spec:
     workload:
       main:
         podSpec:
+          initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Fix ownership of server-files directory to match PUID/PGID (568)
+                  # TrueCharts auto-mounts persistence volumes to init containers
+                  chown -R 568:568 /home/hytale/server-files || true
+                  chmod -R 755 /home/hytale/server-files || true
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
           containers:
             main:
               enabled: true
-              # Image uses PUID/PGID env vars to set user, so we can use the chart's securityContext
               # Enable stdin/tty for interactive authentication
-              # See: https://github.com/indifferentbroccoli/hytale-server-docker
               stdin: true
               tty: true
+              # Override securityContext to allow root execution (image drops to PUID/PGID internally)
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+                runAsNonRoot: false
               # Hytale server doesn't typically need health probes
               probes:
                 startup:
