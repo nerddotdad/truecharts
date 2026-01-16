@@ -104,6 +104,7 @@ spec:
                   bluemap
                   pxplayersleep
                   bmarker
+                  bluemap-sign-markers
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
