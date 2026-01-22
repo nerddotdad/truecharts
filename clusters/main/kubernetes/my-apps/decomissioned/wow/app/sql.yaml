@@ -17,7 +17,7 @@ spec:
     image:
       repository: mysql
       pullPolicy: IfNotPresent
-      tag: 8.0-debian@sha256:707f5c087531fde2fe4cd0fa3a125c7467e99b7f6282a3e6ed338604aedb8c25
+      tag: 8.0-debian@sha256:5284868db9fd4c480d37e8394fb37316ba29b1bdbec31185676faaf42cd82612
 
     workload:
       main:
