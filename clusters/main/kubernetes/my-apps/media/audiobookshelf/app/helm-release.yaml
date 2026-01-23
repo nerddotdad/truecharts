@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: audiobookshelf
-      version: 12.20.9
+      version: 12.20.10
       sourceRef:
         kind: HelmRepository
         name: truecharts
