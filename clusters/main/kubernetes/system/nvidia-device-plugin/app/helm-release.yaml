@@ -9,7 +9,7 @@ spec:
     spec:
       # renovate: registryUrl=https://charts.truechartsoci.org
       chart: nvidia-device-plugin
-      version: 0.18.0
+      version: 0.18.2
       sourceRef:
         kind: HelmRepository
         name: nvdp
@@ -47,7 +47,7 @@ spec:
         effect: NoSchedule
     image:
       repository: nvcr.io/nvidia/k8s-device-plugin
-      tag: v0.18.1
+      tag: v0.18.2
     runtimeClassName: nvidia
     # Chart uses nodeAffinity by default which matches pci-10de.present label
     # Node has both pci-10de.present and pci-0300_10de.present labels

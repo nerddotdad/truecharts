@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: grav
-      version: 14.14.6
+      version: 14.14.16
       sourceRef:
         kind: HelmRepository
         name: truecharts
