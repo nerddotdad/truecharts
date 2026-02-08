@@ -102,15 +102,12 @@ spec:
                 CF_MODPACK_MANIFEST: /data/manifest.json
                 CF_SLUG: "custom"
                 CF_API_KEY: ${CF_API_KEY}
-                # Exclude client-only mods (CurseForge slugs from modpack; these break dedicated server)
+                # Exclude client-only mods (CurseForge slugs only; no commas in comments)
                 CF_EXCLUDE_MODS: |
-                  # OctoLib (ShatterLib) - references client Screen class
                   octo-lib
-                  # TrashSlot, Inventory Profiles Next, libIPN - inventory UI
                   trashslot
                   inventory-profiles-next
                   libipn
-                  # Xaero's Minimap, Controllable - client-only
                   xaeros-minimap
                   controllable
                 # Re-evaluate exclude list and remove excluded mods (set to "false" after first successful start)
