@@ -101,6 +101,10 @@ spec:
                 CF_MODPACK_MANIFEST: /data/manifest.json
                 CF_SLUG: "custom"
                 CF_API_KEY: ${CF_API_KEY}
+                # Exclude client-side mods that reference client-only code (e.g. Screen) on server
+                CF_EXCLUDE_MODS: |
+                  # ShatterLib - NoClassDefFoundError: net/minecraft/client/gui/screens/Screen
+                  shatterlib
                 # MODRINTH_PLATFORM: PAPER
                 # MODRINTH_PROJECTS: |
                 #   axgraves
