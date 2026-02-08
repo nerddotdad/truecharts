@@ -70,8 +70,6 @@ spec:
                 EULA: "TRUE"
                 GUI: "FALSE"
                 OVERRIDE_SERVER_PROPERTIES: true
-                VERSION: "LATEST"
-                TYPE: "PAPER"
                 DIFFICULTY: "Normal"
                 MAX_PLAYERS: 20
                 MAX_WORLD_SIZE: 10000
@@ -96,14 +94,21 @@ spec:
                 LEVEL: world
                 ONLINE_MODE: true
                 MEMORY: 6144M
-                MODRINTH_PLATFORM: PAPER
-                MODRINTH_PROJECTS: |
-                  axgraves
-                  simple-voice-chat
-                  quicksortx
-                  bluemap
-                  pxplayersleep
-                  bmarker
+                TYPE: "NEOFORGE"
+                VERSION: "21.11.38"
+                NEOFORGE_VERSION: "RELEASE"
+                MODPACK_PLATFORM: AUTO_CURSEFORGE
+                CF_MODPACK_MANIFEST: /data/manifest.json
+                CF_SLUG: "custom"
+                CF_API_KEY: ${CF_API_KEY}
+                # MODRINTH_PLATFORM: PAPER
+                # MODRINTH_PROJECTS: |
+                #   axgraves
+                #   simple-voice-chat
+                #   quicksortx
+                #   bluemap
+                #   pxplayersleep
+                #   bmarker
                 # RCON_PASSWORD: "secretrconpass"
                 # PACKWIZ_URL: ""
                 # CUSTOM_SERVER: ""
