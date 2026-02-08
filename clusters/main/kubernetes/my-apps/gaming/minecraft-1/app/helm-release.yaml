@@ -1,3 +1,4 @@
+# Details on this chart can be found at https://docker-minecraft-server.readthedocs.io/en/latest/
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
