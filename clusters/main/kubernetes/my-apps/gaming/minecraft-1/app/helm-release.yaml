@@ -102,10 +102,17 @@ spec:
                 CF_MODPACK_MANIFEST: /data/manifest.json
                 CF_SLUG: "custom"
                 CF_API_KEY: ${CF_API_KEY}
-                # Exclude client-side mods that reference client-only code (e.g. Screen) on server
+                # Exclude client-only mods (CurseForge slugs from modpack; these break dedicated server)
                 CF_EXCLUDE_MODS: |
-                  # ShatterLib - NoClassDefFoundError: net/minecraft/client/gui/screens/Screen
-                  shatterlib
+                  # OctoLib (ShatterLib) - references client Screen class
+                  octo-lib
+                  # TrashSlot, Inventory Profiles Next, libIPN - inventory UI
+                  trashslot
+                  inventory-profiles-next
+                  libipn
+                  # Xaero's Minimap, Controllable - client-only
+                  xaeros-minimap
+                  controllable
                 # Re-evaluate exclude list and remove excluded mods (set to "false" after first successful start)
                 CF_FORCE_SYNCHRONIZE: "true"
                 # MODRINTH_PLATFORM: PAPER
