@@ -106,7 +106,6 @@ spec:
                 CF_EXCLUDE_MODS: |
                   # ShatterLib - NoClassDefFoundError: net/minecraft/client/gui/screens/Screen
                   shatterlib
-                  octolib
                 # Re-evaluate exclude list and remove excluded mods (set to "false" after first successful start)
                 CF_FORCE_SYNCHRONIZE: "true"
                 # MODRINTH_PLATFORM: PAPER
