@@ -48,6 +48,9 @@ spec:
           # runtimeClassName: "intel-gpu"
           containers:
             main:
+              env:
+                # Keep data on same NFS as config (single NFS); sanity check only looks at /config root
+                JELLYFIN_DATA_DIR: "/config/data"
               resources:
                 limits:
                   gpu.intel.com/i915: 1
