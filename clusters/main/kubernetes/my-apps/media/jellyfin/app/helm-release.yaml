@@ -32,6 +32,19 @@ spec:
     workload:
       main:
         podSpec:
+          # Remove stale .jellyfin-data marker from /config (Jellyfin 10.9+ expects only .jellyfin-config there)
+          initContainers:
+            remove-data-marker:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - "rm -f /config/.jellyfin-data && echo 'Cleaned stale .jellyfin-data marker from /config'"
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
           # runtimeClassName: "intel-gpu"
           containers:
             main:
