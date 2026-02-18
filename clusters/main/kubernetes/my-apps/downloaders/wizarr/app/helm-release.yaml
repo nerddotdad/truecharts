@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: wizarr
-      version: 11.17.15
+      version: 11.17.16
       sourceRef:
         kind: HelmRepository
         name: truecharts
