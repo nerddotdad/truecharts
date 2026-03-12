@@ -31,7 +31,7 @@ spec:
     keepHistory: false
   values:
     image:
-      repository: axeleroy/self-host-planning-poker
+      repository: ghcr.io/nerddotdad/self-host-planning-poker:latest
       pullPolicy: IfNotPresent
       tag: latest
 
