@@ -66,3 +66,5 @@ spec:
             description: kubernetes-dashboard service
             group: dashboards
             icon: ""
+            widget:
+              enabled: false

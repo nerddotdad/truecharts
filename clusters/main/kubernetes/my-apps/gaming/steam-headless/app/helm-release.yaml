@@ -316,3 +316,5 @@ spec:
 
 
             
+            widget:
+              enabled: false

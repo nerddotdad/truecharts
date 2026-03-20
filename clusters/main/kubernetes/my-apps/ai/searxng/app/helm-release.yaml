@@ -57,3 +57,5 @@ spec:
             description: searxng service
             group: ai
             icon: ""
+            widget:
+              enabled: false

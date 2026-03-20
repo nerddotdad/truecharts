@@ -67,3 +67,5 @@ spec:
             group: "{{ .Release.Namespace }}"
             icon: "https://getgrav.org/favicon.ico"
   
+            widget:
+              enabled: false

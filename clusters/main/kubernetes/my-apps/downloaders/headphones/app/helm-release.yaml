@@ -68,6 +68,8 @@ spec:
             description: headphones service
             group: downloaders
             icon: ""
+            widget:
+              enabled: false
           traefik:
               enabled: false
           # homepage:

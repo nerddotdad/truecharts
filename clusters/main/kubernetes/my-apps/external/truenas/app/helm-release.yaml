@@ -58,3 +58,5 @@ spec:
             description: This is a Truenas instance
             group: "{{ .Release.Namespace }}"
             icon: ""
+            widget:
+              enabled: false

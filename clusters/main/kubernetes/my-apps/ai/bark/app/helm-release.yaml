@@ -149,3 +149,5 @@ spec:
             group: ai
             icon: ""
 
+            widget:
+              enabled: false

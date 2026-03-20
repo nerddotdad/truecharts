@@ -118,6 +118,8 @@ spec:
             description: ollama service
             group: ai
             icon: ""
+            widget:
+              enabled: false
       api:
         enabled: true
         ingressClassName: external

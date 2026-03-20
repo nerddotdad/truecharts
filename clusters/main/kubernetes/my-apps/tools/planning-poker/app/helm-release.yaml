@@ -109,3 +109,5 @@ spec:
             description: planning-poker service
             group: tools
             icon: ""
+            widget:
+              enabled: false

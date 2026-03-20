@@ -98,3 +98,5 @@ spec:
             description: owncast service
             group: media
             icon: ""
+            widget:
+              enabled: false

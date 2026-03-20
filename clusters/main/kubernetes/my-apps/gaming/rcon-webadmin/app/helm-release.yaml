@@ -90,6 +90,8 @@ spec:
             description: rcon-webadmin service
             group: gaming
             icon: ""
+            widget:
+              enabled: false
           traefik:
               enabled: false
       main:
