@@ -85,7 +85,8 @@ spec:
 
             providers:
               longhorn:
-                url: https://longhorn.${DOMAIN_0}
+                # Use in-cluster Longhorn frontend service to avoid external DNS resolution issues.
+                url: http://longhorn-frontend.longhorn-system.svc
 
             title: HomeLab Control Center
             description: TrueCharts cluster dashboard
