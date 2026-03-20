@@ -482,6 +482,5 @@ spec:
             description: coqui-tts service
             group: ai
             icon: ""
-
             widget:
               enabled: false

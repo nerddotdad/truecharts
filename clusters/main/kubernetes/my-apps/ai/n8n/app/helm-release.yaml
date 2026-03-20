@@ -96,3 +96,11 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: n8n
+            description: n8n instance
+            group: ai
+            icon: ""
+            widget:
+              enabled: false
