@@ -6,7 +6,7 @@ service:
     ports:
       main:
         protocol: https
-        port: 443
+        port: 81
         # Target port is the port of the "external service"
         # Defaults to "port" if not set
 
