@@ -474,12 +474,12 @@ spec:
           traefik:
             enabled: false
           certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
           homepage:
             enabled: true
             name: coqui-tts
             description: coqui-tts service
             group: ai
             icon: ""
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
 

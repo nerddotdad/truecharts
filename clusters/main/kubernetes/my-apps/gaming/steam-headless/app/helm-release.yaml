@@ -305,14 +305,14 @@ spec:
           traefik:
             enabled: false
           certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
           homepage:
             enabled: true
             name: steam-headless
             description: steam-headless service
             group: gaming
             icon: ""
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
 
 
             

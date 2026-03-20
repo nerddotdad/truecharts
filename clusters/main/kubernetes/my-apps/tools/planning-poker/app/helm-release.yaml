@@ -101,11 +101,11 @@ spec:
           traefik:
             enabled: false
           certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
           homepage:
             enabled: true
             name: planning-poker
             description: planning-poker service
             group: tools
             icon: ""
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"

@@ -58,11 +58,11 @@ spec:
           traefik:
             enabled: false
           certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
           homepage:
             enabled: true
             name: kubernetes-dashboard
             description: kubernetes-dashboard service
             group: dashboards
             icon: ""
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
