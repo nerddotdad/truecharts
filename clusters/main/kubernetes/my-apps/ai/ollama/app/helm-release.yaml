@@ -110,6 +110,12 @@ spec:
           traefik:
             enabled: false
           certManager:
+          homepage:
+            enabled: true
+            name: ollama
+            description: ollama service
+            group: ai
+            icon: ""
             enabled: true
             certificateIssuer: "domain-0-le-prod"
       api:

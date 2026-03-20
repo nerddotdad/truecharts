@@ -82,6 +82,12 @@ spec:
                 pathType: Prefix
         integrations:
           certManager:
+          homepage:
+            enabled: true
+            name: rcon-webadmin
+            description: rcon-webadmin service
+            group: gaming
+            icon: ""
             enabled: true
             certificateIssuer: domain-0-le-prod
           traefik:

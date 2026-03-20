@@ -51,7 +51,26 @@ spec:
         data:
           # https://gethomepage.dev/configs/custom-css-js/
           custom.js: ""
-          custom.css: ""
+          custom.css: |
+            :root {
+              --card-radius: 14px;
+            }
+
+            .service, .bookmark {
+              border-radius: var(--card-radius) !important;
+              border: 1px solid color-mix(in srgb, var(--color-500) 28%, transparent);
+              box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+            }
+
+            .service:hover, .bookmark:hover {
+              transform: translateY(-2px);
+              transition: transform 0.18s ease-in-out;
+            }
+
+            .group-title {
+              letter-spacing: 0.02em;
+              text-transform: uppercase;
+            }
           kubernetes.yaml: |
             ---
             # For configuration options and examples, please see:
@@ -65,15 +84,41 @@ spec:
             # https://gethomepage.dev/configs/
 
             providers:
-              openweathermap: openweathermapapikey
-              weatherapi: weatherapiapikey
               longhorn:
                 url: https://longhorn.${DOMAIN_0}
+
+            title: HomeLab Control Center
+            description: TrueCharts cluster dashboard
+            language: en
+            headerStyle: underlined
+            cardBlur: sm
+            statusStyle: dot
+            color: slate
+            theme: dark
+            hideVersion: true
+            useEqualHeights: true
+            target: _self
+
+            background:
+              image: https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2400&auto=format&fit=crop
+              blur: sm
+              saturate: 115
+              brightness: 40
+              opacity: 35
+
+            quicklaunch:
+              searchDescriptions: true
+              hideInternetSearch: false
+              showSearchSuggestions: true
 
           widgets.yaml: |
             ---
             # For configuration options and examples, please see:
             # https://gethomepage.dev/widgets/
+
+            - greeting:
+                text_size: xl
+                text: "Welcome back"
 
             - resources:
                 cpu: true
@@ -90,68 +135,57 @@ spec:
                   cpu: true
                   memory: true
                   showLabel: true
-                  label: "{{ .Release.Namespace }}"
+                  label: "main-cluster"
                 nodes:
-                  show: false
+                  show: true
                   cpu: true
                   memory: true
                   showLabel: true
 
             - longhorn:
-                expanded: true
+                expanded: false
                 total: true
                 labels: true
                 nodes: true
-                include:
-                  - node1
-                  - node2
 
           services.yaml: |
             ---
             # For configuration options and examples, please see:
             # https://gethomepage.dev/configs/services/
+            # Intentionally minimal. Service cards are sourced from each app's
+            # ingress.main.integrations.homepage configuration.
 
           bookmarks.yaml: |
             ---
             # For configuration options and examples, please see:
             # https://gethomepage.dev/configs/bookmarks/
-
-            - Developer:
-                - Github:
-                    - abbr: GH
+            - Cluster:
+                - Flux:
+                    - abbr: FX
                       href: https://github.com/nerddotdad/truecharts
+                      description: GitOps source of truth
+                - TrueNAS:
+                    - abbr: TN
+                      href: https://truenas.${DOMAIN_0}
+                      description: Storage administration
+                - Kubernetes:
+                    - abbr: K8
+                      href: https://kubedash.${DOMAIN_0}
+                      description: Cluster dashboard
 
-            - Social:
-                - Reddit:
-                    - abbr: RE
-                      href: https://reddit.com/
-
-            - Entertainment:
-                - YouTube:
-                    - abbr: YT
-                      href: https://youtube.com/
-
-            - TrueCharts:
+            - References:
                 - TrueCharts:
-                  - abbr: TC
-                    icon: https://truecharts.org/svg/favicon.svg
-                    href: https://truecharts.org
-                    description: "TrueCharts Website"
-                - Github:
-                  - abbr: GH
-                    icon: https://github.com/fluidicon.png
-                    href: https://github.com/truecharts
-                    description: "TrueCharts GitHub"
-                - Open Collective:
-                  - abbr: TC
-                    icon: https://opencollective.com/favicon.ico
-                    href: https://opencollective.com/truecharts
-                    description: "TrueCharts Open Collective"
-                - Discord:
-                  - abbr: DC
-                    icon: https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://discord.com&size=32
-                    href: https://truecharts.org/s/discord
-                    description: "TrueCharts Discord"
+                    - abbr: TC
+                      href: https://truecharts.org
+                      description: Chart documentation
+                - TrueCharts GitHub:
+                    - abbr: GH
+                      href: https://github.com/truecharts
+                      description: Upstream charts and issues
+                - Talos:
+                    - abbr: TL
+                      href: https://www.talos.dev/
+                      description: Talos Linux docs
                     
     ingress:
       main:
