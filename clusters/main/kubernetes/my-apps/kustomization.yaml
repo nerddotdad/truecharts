@@ -13,3 +13,4 @@ resources:
   - communication
   # - decomissioned
   # - under_construction
+  - external
