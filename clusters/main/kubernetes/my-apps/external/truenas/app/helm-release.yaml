@@ -1,33 +1,60 @@
-service:
-  main:
-    type: ExternalIP
-    externalIP: "192.168.30.50"
-    useSlice: false
-    ports:
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: truenas
+  namespace: external
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: external-service
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    service:
       main:
-        protocol: https
-        port: 81
-        # Target port is the port of the "external service"
-        # Defaults to "port" if not set
-
-  ingress:
-    main:
-      enabled: true
-      ingressClassName: external
-      hosts: 
-        - host: truenas.${DOMAIN_0}
-          paths:
-            - path: /
-              pathType: Prefix
-      integrations:
-        traefik:
-          enabled: false
-        certManager:
-          enabled: true
-          certificateIssuer: "domain-0-le-prod"
-        homepage:
-          enabled: true
-          name: Truenas
-          description: This is a Truenas instance
-          group: "{{ .Release.Namespace }}"
-          icon: ""
+        type: ExternalIP
+        externalIP: "192.168.30.50"
+        useSlice: false
+        ports:
+          main:
+            protocol: https
+            port: 81
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: truenas.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: Truenas
+            description: This is a Truenas instance
+            group: "{{ .Release.Namespace }}"
+            icon: ""
