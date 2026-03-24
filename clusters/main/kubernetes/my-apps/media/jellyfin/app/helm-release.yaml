@@ -52,7 +52,11 @@ spec:
                 # Keep data on same NFS as config (single NFS); sanity check only looks at /config root
                 JELLYFIN_DATA_DIR: "/config/data"
               resources:
+                requests:
+                  cpu: 250m
+                  memory: 2Gi
                 limits:
+                  memory: 6Gi
                   gpu.intel.com/i915: 1
     persistence:
       config:
@@ -63,10 +67,8 @@ spec:
         server: ${NAS_IP}
       transcode:
         enabled: true
-        type: nfs
         mountPath: /transcode
-        path: ${NFS_JELLYFIN_TRANSCODE}
-        server: ${NAS_IP}
+        type: "emptyDir"
       media:
         enabled: true
         type: nfs
