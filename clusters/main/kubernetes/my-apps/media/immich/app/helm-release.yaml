@@ -66,6 +66,11 @@ spec:
         recovery:
           revision: "2"
           credentials: cloudflare_r2
+          # PITR into immich-cnpg-main-r2 (R2) before VectorChord WAL churn (2026-04-11). CNPG selects the
+          # nearest base backup and replays WAL to this time. Remove pitrTarget after a good restore when
+          # switching cnpg.main back to standalone (otherwise a future bootstrap could clamp again).
+          pitrTarget:
+            time: "2026-04-10T23:59:59Z"
     persistence:
       mlcache:
         enabled: true
