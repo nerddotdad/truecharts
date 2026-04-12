@@ -134,10 +134,7 @@ spec:
     ingress:
       main:
         enabled: true
-        # Use internal class: external nginx admission webhook was refusing connections
-        # (Helm failed with validate.nginx.ingress.kubernetes.io -> admission svc :8443).
-        # Switch back to external once nginx-external admission endpoints are healthy.
-        ingressClassName: internal
+        ingressClassName: external
         hosts:
           - host: comfyui.${DOMAIN_0}
             paths:
