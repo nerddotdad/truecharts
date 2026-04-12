@@ -7,5 +7,5 @@ resources:
   - searxng/ks.yaml
   - whisper/ks.yaml
   - coqui-tts/ks.yaml
-  # - comfyui/ks.yaml
+  - comfyui/ks.yaml
   - bark/ks.yaml
