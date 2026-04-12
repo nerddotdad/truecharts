@@ -51,10 +51,12 @@ spec:
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
       main:
-        # Restored DB still uses pgvecto.rs (vectors.*). Default chart image is vectorchord (no $libdir/vectors),
-        # which crashes Immich on pg_indexes for clip_index/face_index. Use vectors image until TrueForge
-        # migration finishes and types are public.vector; then remove this line for default vectorchord.
+        # Restored DB still uses pgvecto.rs (vectors.*). Chart default is vectorchord (no $libdir/vectors).
+        # `type: vectors` should select pgvecto.rs; if the Cluster spec still shows vectorchord, `cluster.imageName`
+        # forces it (TrueCharts common postgresVectors16Image for chart 27.0.13). Remove both overrides after migration.
         type: vectors
+        cluster:
+          imageName: ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.3-v0.2.1@sha256:f1a19d4fc4073b0671a72ad34ef012aa20d21b3ddf5b4b0c9077d54450db679a
         mode: recovery
         backups:
           enabled: true
