@@ -51,6 +51,10 @@ spec:
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
       main:
+        # Restored DB still uses pgvecto.rs (vectors.*). Default chart image is vectorchord (no $libdir/vectors),
+        # which crashes Immich on pg_indexes for clip_index/face_index. Use vectors image until TrueForge
+        # migration finishes and types are public.vector; then remove this line for default vectorchord.
+        type: vectors
         mode: recovery
         backups:
           enabled: true
