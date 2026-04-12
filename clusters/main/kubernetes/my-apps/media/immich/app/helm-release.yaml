@@ -14,7 +14,8 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 10m
+  # CNPG recovery + NFS volume mounts + dependent workloads can exceed 10m on install/upgrade.
+  timeout: 30m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -161,7 +162,9 @@ spec:
             microservices: {}
     workload:
       main:
-        replicas: 0  # Scaled down for VectorChord migration
+        # Must be >=1: microservices and machinelearning initContainers wait on
+        # http://immich:10323/api/server/ping; replicas 0 deadlocks Helm and those pods.
+        replicas: 1
         podSpec:
           # runtimeClassName: "intel-gpu"
           containers:
