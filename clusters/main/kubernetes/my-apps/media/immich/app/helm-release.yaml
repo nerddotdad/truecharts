@@ -169,6 +169,10 @@ spec:
             paths:
               - path: /
                 pathType: Prefix
+          - host: immich-internal.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
         integrations:
           traefik:
             enabled: false
