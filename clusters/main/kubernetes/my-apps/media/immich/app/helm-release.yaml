@@ -43,6 +43,11 @@ spec:
         secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
+      # VectorChord migration (chart 24→25): https://trueforge.org/truetech/truecharts/charts/stable/immich/migrate-to-vectorchord/
+      # If the DB was switched to the VectorChord image before embeddings were cast to pgvector's type, unqualified
+      # "vector(dim)" in Step 3 can resolve to vectors.vector (pgvecto). That image has no $libdir/vectors — the
+      # smart_search/face_search tables become unreadable. Fix: restore CNPG from a backup taken before Step 2,
+      # redo the guide, and use "public.vector(<dim>)" in Step 3 (and "public.vector(512)" for face_search).
     # backup process as follows
     ## incriment backup.revsision and recovery.revision +1
       main:
