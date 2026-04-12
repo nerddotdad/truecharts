@@ -14,8 +14,7 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  # CNPG recovery + NFS + app readiness can exceed 30m on cold install (retries + full WAL replay).
-  timeout: 45m
+  timeout: 30m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -30,7 +29,11 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Prefer control plane for immich (media processing can run on control plane)
+    # Fresh Immich overlay: everything else comes from chart defaults
+    # https://github.com/trueforge-org/truecharts/blob/master/charts/stable/immich/values.yaml
+    #
+    # For a truly empty Postgres: delete CNPG Cluster immich-cnpg-main + its PVCs in the cluster once,
+    # then let Flux reconcile so initdb runs on new volumes. This Git state does NOT recover from R2.
     podOptions:
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
@@ -43,37 +46,19 @@ spec:
         secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
-      # VectorChord migration (chart 24→25): https://trueforge.org/truetech/truecharts/charts/stable/immich/migrate-to-vectorchord/
-      # If the DB was switched to the VectorChord image before embeddings were cast to pgvector's type, unqualified
-      # "vector(dim)" in Step 3 can resolve to vectors.vector (pgvecto). That image has no $libdir/vectors — the
-      # smart_search/face_search tables become unreadable. Fix: restore CNPG from a backup taken before Step 2,
-      # redo the guide, and use "public.vector(<dim>)" in Step 3 (and "public.vector(512)" for face_search).
-    # backup process as follows
-    ## incriment backup.revsision and recovery.revision +1
       main:
-        # Restored DB still uses pgvecto.rs (vectors.*). Chart default is vectorchord (no $libdir/vectors).
-        # `type: vectors` should select pgvecto.rs; if the Cluster spec still shows vectorchord, `cluster.imageName`
-        # forces it (TrueCharts common postgresVectors16Image for chart 27.0.13). Remove both overrides after migration.
-        type: vectors
-        cluster:
-          imageName: ghcr.io/tensorchord/cloudnative-pgvecto.rs:16.3-v0.2.1@sha256:f1a19d4fc4073b0671a72ad34ef012aa20d21b3ddf5b4b0c9077d54450db679a
-        mode: recovery
+        mode: standalone
         backups:
           enabled: true
-          revision: "2"
+          revision: "3"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
-          - name: daily-backup
-            schedule: "0 0 1 * * *"
-            backupOwnerReference: self
-            immediate: true
-            suspend: false
-        recovery:
-          revision: "2"
-          credentials: cloudflare_r2
-          # PITR to 2026-04-10 caused CNPG "no target backup found" (likely WAL gaps vs 7d retention / catalog).
-          # Recover to latest on r2; pgvecto.rs imageName above keeps the DB readable for TrueForge SQL fixes.
+            - name: daily-backup
+              schedule: "0 0 1 * * *"
+              backupOwnerReference: self
+              immediate: true
+              suspend: false
     persistence:
       mlcache:
         enabled: true
@@ -94,9 +79,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/backups/
         path: ${NFS_IMMICH_BACKUPS}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -106,9 +90,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/encoded-video/
         path: ${NFS_IMMICH_ENCODED_VIDEO}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -118,9 +101,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/library/
         path: ${NFS_IMMICH_LIBRARY}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -130,9 +112,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/upload/
         path: ${NFS_IMMICH_UPLOAD}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -142,9 +123,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/thumbs/
         path: ${NFS_IMMICH_THUMBS}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -154,9 +134,8 @@ spec:
         type: nfs
         mountPath: /usr/src/app/upload/profile/
         path: ${NFS_IMMICH_PROFILE}
-        server:  ${NAS_IP}
+        server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
@@ -168,18 +147,14 @@ spec:
         path: ${NFS_IMMICH_EXTERNAL}
         server: ${NAS_IP}
         targetSelector:
-          # Main pod/container is server
           main:
             main: {}
           microservices:
             microservices: {}
     workload:
       main:
-        # Must be >=1: microservices and machinelearning initContainers wait on
-        # http://immich:10323/api/server/ping; replicas 0 deadlocks Helm and those pods.
         replicas: 1
         podSpec:
-          # runtimeClassName: "intel-gpu"
           containers:
             main:
               resources:
@@ -189,7 +164,7 @@ spec:
       main:
         enabled: true
         ingressClassName: external
-        hosts: 
+        hosts:
           - host: immich.${DOMAIN_0}
             paths:
               - path: /
