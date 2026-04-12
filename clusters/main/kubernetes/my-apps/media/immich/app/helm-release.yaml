@@ -14,8 +14,8 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  # CNPG recovery + NFS volume mounts + dependent workloads can exceed 10m on install/upgrade.
-  timeout: 30m
+  # CNPG recovery + NFS + app readiness can exceed 30m on cold install (retries + full WAL replay).
+  timeout: 45m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -72,11 +72,8 @@ spec:
         recovery:
           revision: "2"
           credentials: cloudflare_r2
-          # PITR into immich-cnpg-main-r2 (R2) before VectorChord WAL churn (2026-04-11). CNPG selects the
-          # nearest base backup and replays WAL to this time. Remove pitrTarget after a good restore when
-          # switching cnpg.main back to standalone (otherwise a future bootstrap could clamp again).
-          pitrTarget:
-            time: "2026-04-10T23:59:59Z"
+          # PITR to 2026-04-10 caused CNPG "no target backup found" (likely WAL gaps vs 7d retention / catalog).
+          # Recover to latest on r2; pgvecto.rs imageName above keeps the DB readable for TrueForge SQL fixes.
     persistence:
       mlcache:
         enabled: true
