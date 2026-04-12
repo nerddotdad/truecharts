@@ -103,18 +103,23 @@ spec:
                   failureThreshold: 6
 
     persistence:
+      # Local block storage (Longhorn) avoids NFS latency and file-locking pain for venv/git/uv
+      # during installs and upgrades. Pod is pinned to k8s-worker-1, so RWO is fine.
+      # Resize PVCs if you outgrow them; use VolSync/restic if you need off-cluster backups.
       run:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 50Gi
         mountPath: "/comfy/mnt"
-        path: ${NFS_APP_CONFIGS}/comfyui/run
-        server: ${NAS_IP}
       basedir:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 200Gi
         mountPath: "/basedir"
-        path: ${NFS_APP_CONFIGS}/comfyui/basedir
-        server: ${NAS_IP}
 
     service:
       main:
