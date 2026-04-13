@@ -57,7 +57,7 @@ spec:
                   memory: 2Gi
                 limits:
                   memory: 6Gi
-                  gpu.intel.com/i915: 1
+                  gpu.intel.com/i915: 5
     persistence:
       config:
         enabled: true
