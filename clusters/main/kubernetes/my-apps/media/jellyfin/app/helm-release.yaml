@@ -67,8 +67,10 @@ spec:
         server: ${NAS_IP}
       transcode:
         enabled: true
+        type: nfs
         mountPath: /transcode
-        type: "emptyDir"
+        path: ${NFS_JELLYFIN_TRANSCODE}
+        server: ${NAS_IP}
       media:
         enabled: true
         type: nfs
