@@ -44,10 +44,8 @@ spec:
         runAsGroup: 568
       pod:
         fsGroup: 568
-        # Image installs UPDATE_CRON/BACKUP_CRON via `crontab` as user enshrouded (enshrouded-bootstrap).
-        # Without this, bootstrap logs: /var/spool/cron/: mkstemp: Permission denied — no crontab is installed.
-        supplementalGroups:
-          - 997
+        # Pod supplementalGroups do not survive supervisord's setuid to user enshrouded; initCrontab still
+        # needs membership in the image's `crontab` group (see main container command wrapper below).
 
     podOptions:
       nodeSelector:
@@ -83,6 +81,14 @@ spec:
           containers:
             main:
               enabled: true
+              # Allow user enshrouded to install UPDATE_CRON/BACKUP_CRON (initCrontab runs as that user).
+              # Pod supplementalGroups are dropped when supervisord switches UID; add real group membership.
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  usermod -a -G crontab enshrouded 2>/dev/null || true
+                  exec /usr/local/etc/enshrouded/bootstrap
               # Override securityContext to allow root, preventing chart from setting PUID/PGID
               # Add capabilities needed for supervisor to kill/restart processes during updates
               securityContext:
