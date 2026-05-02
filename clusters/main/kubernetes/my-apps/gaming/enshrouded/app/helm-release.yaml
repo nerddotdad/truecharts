@@ -44,6 +44,10 @@ spec:
         runAsGroup: 568
       pod:
         fsGroup: 568
+        # Image installs UPDATE_CRON/BACKUP_CRON via `crontab` as user enshrouded (enshrouded-bootstrap).
+        # Without this, bootstrap logs: /var/spool/cron/: mkstemp: Permission denied — no crontab is installed.
+        supplementalGroups:
+          - 997
 
     podOptions:
       nodeSelector:
