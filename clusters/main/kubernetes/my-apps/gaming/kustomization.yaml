@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - rcon-webadmin/ks.yaml
-  - steam-headless/ks.yaml
+  # - steam-headless/ks.yaml
   - enshrouded/ks.yaml
   - minecraft-1/ks.yaml
   - hytale/ks.yaml
