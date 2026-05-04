@@ -56,7 +56,7 @@ nodes:
       #   - "@./patches/gpu.yaml"
     - hostname: k8s-worker-1
       ipAddress: ${WORKER1IP_IP}
-      controlPlane: false
+      controlPlane: true
       nameservers:
         - 1.1.1.1
         - 8.8.8.8
@@ -77,6 +77,8 @@ nodes:
           routes:
             - network: 0.0.0.0/0
               gateway: ${GATEWAY}
+          vip:
+            ip: ${VIP}
       nodeLabels:
         node-type: ai-dedicated
         workload: ai-services
@@ -90,6 +92,10 @@ nodes:
               - siderolabs/util-linux-tools
               - siderolabs/iscsi-tools
               # - siderolabs/qemu-guest-agent  # Disabled for physical hardware
+              # Intel iGPU (same stack as k8s-control-1 VM)
+              - siderolabs/i915
+              - siderolabs/intel-ucode
+              - siderolabs/mei
               - siderolabs/amd-ucode
               - siderolabs/nonfree-kmod-nvidia-lts
               - siderolabs/nvidia-container-toolkit-lts
@@ -105,6 +111,9 @@ controlPlane:
      - name: nvme_tcp
      - name: vfio_pci
      - name: uio_pci_generic
+     # Required on bare-metal CP (k8s-worker-1): were previously only on worker role
+     - name: r8169  # Realtek 2.5Gbe
+     - name: uinput  # Sunshine /dev/uinput
     schematic:
         customization:
             extraKernelArgs:
@@ -114,6 +123,7 @@ controlPlane:
                     - siderolabs/util-linux-tools
                     - siderolabs/iscsi-tools
                     - siderolabs/qemu-guest-agent  # Enabled for VM control plane
+                    - siderolabs/uinput  # Match worker role (bare-metal CP)
     machineFiles:
     - content: |
         [plugins."io.containerd.cri.v1.images"] 

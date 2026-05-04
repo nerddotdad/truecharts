@@ -9,3 +9,4 @@ resources:
   - coqui-tts/ks.yaml
   - comfyui/ks.yaml
   - bark/ks.yaml
+  - styletts2/ks.yaml
