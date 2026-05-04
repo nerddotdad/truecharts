@@ -29,5 +29,8 @@ spec:
     - name: node-feature-discovery
       namespace: kube-system
   values:
-    controllerExtraArgs: |
-      - --devices=gpu
+    # Official chart uses manager.devices (Artifact Hub); controllerExtraArgs is not a valid values key for 0.34.x
+    # and can leave the manager misconfigured / crashing on health probes.
+    manager:
+      devices:
+        gpu: true

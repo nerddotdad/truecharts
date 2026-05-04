@@ -80,6 +80,9 @@ spec:
     localRedirectPolicy: true
     operator:
       rollOutPods: true
+      # Operator and agent both default to hostPort 9963 for Prometheus; on a single node that collides and the operator stays Pending.
+      prometheus:
+        enabled: false
       # Tolerate gpu-workloads taint on worker node (Cilium operator may need to run on all nodes)
       # Tolerate node.kubernetes.io/not-ready so operator can run on new nodes
       tolerations:

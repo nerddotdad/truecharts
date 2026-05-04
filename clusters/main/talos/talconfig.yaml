@@ -21,39 +21,39 @@ cniConfig:
 patches:
     - '@./patches/all.yaml'
 nodes:
-    # # We would adivce to always stick to a "k8s-something-1" style naming scheme
-    # - hostname: k8s-control-1
-    #   ipAddress: ${MASTER1IP_IP}
-    #   controlPlane: true
-    #   nameservers:
-    #     - 1.1.1.1
-    #     - 8.8.8.8
-    #   installDiskSelector:
-    #     size: <= 3000GB
-    #   networkInterfaces:
-    #     # suffix is the adapter mac adres.
-    #     - interface: ens3
-    #       addresses:
-    #         - ${MASTER1IP_CIDR}
-    #       routes:
-    #         - network: 0.0.0.0/0
-    #           gateway: ${GATEWAY}
-    #       vip:
-    #         ip: ${VIP}
-    #   schematic:
-    #     customization:
-    #         systemExtensions:
-    #           officialExtensions:
-    #             - siderolabs/util-linux-tools
-    #             - siderolabs/iscsi-tools
-    #             - siderolabs/qemu-guest-agent  # Enabled for VM control plane
-    #             - siderolabs/i915
-    #             - siderolabs/intel-ucode
-    #             - siderolabs/mei
-    #           # - siderolabs/nonfree-kmod-nvidia-lts
-    #           # - siderolabs/nvidia-container-toolkit-lts
-    #   # patches:
-    #   #   - "@./patches/gpu.yaml"
+    # We would adivce to always stick to a "k8s-something-1" style naming scheme
+    - hostname: k8s-control-1
+      ipAddress: ${TEMP_MASTER1IP}
+      controlPlane: true
+      nameservers:
+        - 1.1.1.1
+        - 8.8.8.8
+      installDiskSelector:
+        size: <= 3000GB
+      networkInterfaces:
+        # suffix is the adapter mac adres.
+        - interface: ens3
+          addresses:
+            - ${TEMP_MASTER1IP_CIDR}
+          routes:
+            - network: 0.0.0.0/0
+              gateway: ${GATEWAY}
+          vip:
+            ip: ${VIP}
+      schematic:
+        customization:
+            systemExtensions:
+              officialExtensions:
+                - siderolabs/util-linux-tools
+                - siderolabs/iscsi-tools
+                - siderolabs/qemu-guest-agent  # Enabled for VM control plane
+                - siderolabs/i915
+                - siderolabs/intel-ucode
+                - siderolabs/mei
+              # - siderolabs/nonfree-kmod-nvidia-lts
+              # - siderolabs/nvidia-container-toolkit-lts
+      # patches:
+      #   - "@./patches/gpu.yaml"
     - hostname: k8s-cp-1
       ipAddress: ${MASTER1IP_IP}
       controlPlane: true
@@ -110,7 +110,7 @@ controlPlane:
      - name: nvme_tcp
      - name: vfio_pci
      - name: uio_pci_generic
-     # Required on bare-metal CP (k8s-worker-1): were previously only on worker role
+     # Required on bare-metal CP (k8s-cp-1): were previously only on worker role
      - name: r8169  # Realtek 2.5Gbe
      - name: uinput  # Sunshine /dev/uinputs
     schematic:
