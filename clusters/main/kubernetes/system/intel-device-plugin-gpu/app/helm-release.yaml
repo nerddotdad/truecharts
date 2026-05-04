@@ -29,4 +29,9 @@ spec:
   values:
     name: intel-gpu-plugin
     sharedDevNum: 5
+    # Default selector requires intel.feature.node.kubernetes.io/gpu=true, which only appears when the
+    # bundled NodeFeatureRule matches PCI Intel AND kernel module i915/xe is visible to NFD — often false on Talos
+    # until modules bind; your node already has feature.node.kubernetes.io/pci-0300_8086.present=true from NFD.
+    nodeSelector:
+      feature.node.kubernetes.io/pci-0300_8086.present: "true"
     nodeFeatureRule: true

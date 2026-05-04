@@ -45,6 +45,10 @@ spec:
     cnpg:
       main:
         mode: standalone
+        # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
+        cluster:
+          instances: 1
+          singleNode: true
         backups:
           enabled: true
           revision: "3"
@@ -151,12 +155,8 @@ spec:
     workload:
       main:
         replicas: 1
-        podSpec:
-          containers:
-            main:
-              resources:
-                limits:
-                  gpu.intel.com/i915: 1
+        # Dropped per-container resources override (was gpu.intel.com/i915: 1) — no i915 in node allocatable
+        # until Intel device plugin is healthy; chart defaults apply for main container resources.
     ingress:
       main:
         enabled: true
