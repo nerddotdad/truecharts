@@ -47,16 +47,6 @@ spec:
         # Pod supplementalGroups do not survive supervisord's setuid to user enshrouded; initCrontab still
         # needs membership in the image's `crontab` group (see main container command wrapper below).
 
-    podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
-    #   # Tolerate gpu-workloads taint on worker node if needed
-    #   tolerations:
-    #     - key: gpu-workloads
-    #       operator: Equal
-    #       value: "required"
-    #       effect: NoSchedule
-
     workload:
       main:
         podSpec:

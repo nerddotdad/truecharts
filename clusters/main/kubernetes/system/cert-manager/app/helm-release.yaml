@@ -29,12 +29,3 @@ spec:
     dns01RecursiveNameservers: "1.1.1.1:53,1.0.0.1:53"
     dns01RecursiveNameserversOnly: false
     enableCertificateOwnerRef: true
-    # Prefer control plane for cert-manager components
-    nodeSelector:
-      node-role.kubernetes.io/control-plane: ""
-    webhook:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
-    cainjector:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""

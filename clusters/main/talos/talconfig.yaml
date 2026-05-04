@@ -55,7 +55,7 @@ nodes:
     #   # patches:
     #   #   - "@./patches/gpu.yaml"
     - hostname: k8s-cp-1
-      ipAddress: ${WORKER1IP_IP}
+      ipAddress: ${MASTER1IP_IP}
       controlPlane: true
       nameservers:
         - 1.1.1.1
@@ -73,7 +73,7 @@ nodes:
         # Common names: enp4s0, enp5s0, enp6s0, etc.
         - interface: enp1s0
           addresses:
-            - ${WORKER1IP_CIDR}
+            - ${MASTER1IP_CIDR}
           routes:
             - network: 0.0.0.0/0
               gateway: ${GATEWAY}
@@ -99,7 +99,7 @@ nodes:
         - "@./patches/ai.yaml"
         - "@./patches/uinput.yaml"
 controlPlane:
-    ipAddress: ${WORKER1IP_IP}
+    ipAddress: ${MASTER1IP_IP}
     controlPlane: true
     nameservers:
       - 1.1.1.1
@@ -112,7 +112,7 @@ controlPlane:
      - name: uio_pci_generic
      # Required on bare-metal CP (k8s-worker-1): were previously only on worker role
      - name: r8169  # Realtek 2.5Gbe
-     - name: uinput  # Sunshine /dev/uinput
+     - name: uinput  # Sunshine /dev/uinputs
     schematic:
         customization:
             extraKernelArgs:

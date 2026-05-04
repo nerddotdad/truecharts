@@ -29,19 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Prefers AI workloads on dedicated worker node
-    podOptions:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-type
-                    operator: In
-                    values:
-                      - ai-dedicated
-
     deployment:
       N8N_HOST: "n8n.hoth.systems"
     endpoints: {

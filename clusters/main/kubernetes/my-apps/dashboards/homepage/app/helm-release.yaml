@@ -30,11 +30,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    # Prefer control plane for homepage dashboard
-    podOptions:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
-
     # When true, the chart mounts settings/widgets/etc. read-only under /app/config and
     # Homepage fails with EROFS when it copies skeleton files (see TrueCharts homepage defaults).
     forceConfigFromValues: false

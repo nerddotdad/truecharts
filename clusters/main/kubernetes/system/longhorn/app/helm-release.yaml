@@ -38,14 +38,7 @@ spec:
       defaultClass: true
       # Replica count for default storage class
       defaultClassReplicaCount: "1"
-    # Restrict Longhorn components to control plane nodes only
-    # Note: Worker node can still use Longhorn volumes, but Longhorn system components run on control plane
-    nodeSelector:
-      node-role.kubernetes.io/control-plane: ""
-    # Ensure Longhorn system components only run on control plane
-    systemManagedComponentsNodeSelector:
-      node-role.kubernetes.io/control-plane: ""
-    # Longhorn CSI plugin must run on all nodes (including worker) for volume mounting
+    # Longhorn CSI plugin must run on all nodes for volume mounting
     # Add toleration so it can run on worker node despite taint
     csi:
       attacher:

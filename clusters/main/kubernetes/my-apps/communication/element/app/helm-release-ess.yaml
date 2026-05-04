@@ -18,12 +18,7 @@ spec:
   values:
     # Server name (base domain)
     serverName: ${DOMAIN_0}
-    
-    # Prefer control plane for element-server-suite components
-    global:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
-    
+
     # Certificate Manager configuration (Let's Encrypt)
     certManager:
       clusterIssuer: domain-0-le-prod

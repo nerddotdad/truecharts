@@ -34,9 +34,6 @@ spec:
     #
     # For a truly empty Postgres: delete CNPG Cluster immich-cnpg-main + its PVCs in the cluster once,
     # then let Flux reconcile so initdb runs on new volumes. This Git state does NOT recover from R2.
-    podOptions:
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: ""
     credentials:
       cloudflare_r2:
         type: s3

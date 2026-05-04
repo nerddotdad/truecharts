@@ -45,10 +45,6 @@ spec:
       pod:
         fsGroup: 568
 
-    podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
-
     workload:
       main:
         podSpec:

@@ -44,8 +44,6 @@ spec:
         runAsGroup: 0
 
     podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
       runtimeClassName: "nvidia"
       tolerations:
         - key: node.cilium.io/agent-not-ready
@@ -104,7 +102,7 @@ spec:
 
     persistence:
       # Local block storage (Longhorn) avoids NFS latency and file-locking pain for venv/git/uv
-      # during installs and upgrades. Pod is pinned to k8s-worker-1, so RWO is fine.
+      # during installs and upgrades. Single-node cluster; RWO is fine.
       # Resize PVCs if you outgrow them; use VolSync/restic if you need off-cluster backups.
       run:
         enabled: true

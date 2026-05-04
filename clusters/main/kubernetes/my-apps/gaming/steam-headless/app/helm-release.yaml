@@ -36,8 +36,6 @@ spec:
         fsGroup: 568
 
     podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
       runtimeClassName: "nvidia"
       # Tolerate gpu-workloads taint on worker node
       # Also tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)

@@ -35,8 +35,6 @@ spec:
         # This ensures the pod can read/write/execute files on the NFS mount
         fsGroup: 568
     podOptions:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-worker-1
       runtimeClassName: "nvidia"
       # Tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)
       tolerations:
