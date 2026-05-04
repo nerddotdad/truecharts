@@ -44,7 +44,7 @@ spec:
         encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
     cnpg:
       main:
-        mode: standalone
+        mode: recovery
         # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
         cluster:
           instances: 1
