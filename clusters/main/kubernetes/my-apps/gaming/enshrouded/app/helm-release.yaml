@@ -62,34 +62,14 @@ spec:
                   # Create required runtime directory
                   mkdir -p /var/run/enshrouded
                   chown -R 568:568 /var/run/enshrouded || true
-                  # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
-                  chown -R 568:568 /opt/enshrouded || true
-                  chmod -R 755 /opt/enshrouded || true
+                  # Avoid recursive chown/chmod on NFS mounts; this can fail with root_squash.
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
           containers:
             main:
               enabled: true
-              # Allow user enshrouded to install UPDATE_CRON/BACKUP_CRON (initCrontab runs as that user).
-              # Pod supplementalGroups are dropped when supervisord switches UID; add real group membership.
-              command:
-                - /bin/bash
-                - -c
-                - |
-                  usermod -a -G crontab enshrouded 2>/dev/null || true
-                  exec /usr/local/etc/enshrouded/bootstrap
-              # Override securityContext to allow root, preventing chart from setting PUID/PGID
-              # Add capabilities needed for supervisor to kill/restart processes during updates
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
-                runAsNonRoot: false
-                capabilities:
-                  add:
-                    - SYS_PTRACE  # Required for supervisor to trace and kill processes
-                    - SYS_ADMIN   # Required for process management and namespace operations
-                    # Note: CHOWN, SETUID, SETGID, FOWNER, DAC_OVERRIDE are already added by the chart
+              # Keep default image bootstrap behavior and run as configured non-root user/group.
               # Enshrouded server doesn't typically need health probes
               # but we can add them if the image supports it
               probes:
