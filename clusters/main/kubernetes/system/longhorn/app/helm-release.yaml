@@ -25,70 +25,24 @@ spec:
       retries: 3
   values:
     defaultSettings:
-      # Replica count for data redundancy (1 = no redundancy, faster but less safe)
+      # Increase to 3 for a multi-node cluster
       defaultReplicaCount: "1"
-      # Reduce overprovisioning from 200% to 150% to prevent overallocation
-      storageOverProvisioningPercentage: "150"
-      # Use strict-local data locality to ensure volumes are on same node as pod for better performance
-      # This ensures Steam downloads use local storage on worker node
-      defaultDataLocality: "strict-local"
+      # Overprovisioning might be needed when using volsync
+      storageOverProvisioningPercentage: "200"
+      storageReservedPercentageForDefaultDisk: "10"
       # v2DataEngine: true
+    csi:
+      attacherReplicaCount: 1
+      provisionerReplicaCount: 1
+      resizerReplicaCount: 1
+      snapshotterReplicaCount: 1
     persistence:
       # Set to false to pick another CSI as default
       defaultClass: true
-      # Replica count for default storage class
-      defaultClassReplicaCount: "1"
-    # Longhorn CSI plugin must run on all nodes for volume mounting
-    # Add toleration so it can run on worker node despite taint
-    csi:
-      attacher:
-        tolerations:
-          - key: gpu-workloads
-            operator: Equal
-            value: "required"
-            effect: NoSchedule
-      provisioner:
-        tolerations:
-          - key: gpu-workloads
-            operator: Equal
-            value: "required"
-            effect: NoSchedule
-      resizer:
-        tolerations:
-          - key: gpu-workloads
-            operator: Equal
-            value: "required"
-            effect: NoSchedule
-      snapshotter:
-        tolerations:
-          - key: gpu-workloads
-            operator: Equal
-            value: "required"
-            effect: NoSchedule
-      plugin:
-        tolerations:
-          - key: gpu-workloads
-            operator: Equal
-            value: "required"
-            effect: NoSchedule
-          # Tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)
-          - key: node.cilium.io/agent-not-ready
-            operator: Exists
-            effect: NoSchedule
-          - key: node.kubernetes.io/not-ready
-            operator: Exists
-            effect: NoSchedule
-    # Longhorn CSI plugin DaemonSet must run on all nodes (including worker) for volume mounting
-    # Add tolerations so it can run on worker node despite taints
-    csiPlugin:
-      tolerations:
-        - key: gpu-workloads
-          operator: Equal
-          value: "required"
-          effect: NoSchedule
-        - key: node.cilium.io/agent-not-ready
-          operator: Exists
-          effect: NoSchedule
-        - key: node.kubernetes.io/not-ready
-          operator: Exists
-          effect: NoSchedule
+      # Increase to 3 for a multi-node cluster
+      defaultClassReplicaCount: 1
+    longhornUI:
+      replicas: 1
+    metrics:
+      serviceMonitor:
+        enabled: true

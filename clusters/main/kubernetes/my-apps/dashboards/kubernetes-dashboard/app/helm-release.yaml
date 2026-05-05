@@ -44,7 +44,7 @@ spec:
     ingress:
       main:
         enabled: true
-        ingressClassName: external
+        ingressClassName: externals
         hosts: 
           - host: kubedash.${DOMAIN_0}
             paths:
