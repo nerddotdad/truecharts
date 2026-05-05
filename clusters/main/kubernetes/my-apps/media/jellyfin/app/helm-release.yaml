@@ -61,6 +61,8 @@ spec:
                   memory: 6Gi
                   gpu.intel.com/i915: 1
     persistence:
+      data:
+        enabled: false
       config:
         enabled: true
         type: nfs
