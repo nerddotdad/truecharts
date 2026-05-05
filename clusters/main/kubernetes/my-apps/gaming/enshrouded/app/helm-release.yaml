@@ -50,24 +50,24 @@ spec:
     workload:
       main:
         podSpec:
-          # initContainers:
-          #   fix-permissions:
-          #     enabled: true
-          #     type: init
-          #     image: docker.io/library/alpine:3.23
-          #     command:
-          #       - /bin/sh
-          #       - -c
-          #       - |
-          #         # Create required runtime directory
-          #         mkdir -p /var/run/enshrouded
-          #         chown -R 568:568 /var/run/enshrouded || true
-          #         # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
-          #         chown -R 568:568 /opt/enshrouded || true
-          #         chmod -R 755 /opt/enshrouded || true
-          #     securityContext:
-          #       runAsUser: 0
-          #       runAsGroup: 0
+          initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Create required runtime directory
+                  mkdir -p /var/run/enshrouded
+                  chown -R 568:568 /var/run/enshrouded || true
+                  # Fix ownership of all game files to match NFS share owner (apps user, UID 568)
+                  chown -R 568:568 /opt/enshrouded || true
+                  chmod -R 755 /opt/enshrouded || true
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
           containers:
             main:
               enabled: true
