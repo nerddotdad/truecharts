@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - immich/ks.yaml
+  - immich-restore-test/ks.yaml
   - jellyfin/ks.yaml
   - owncast/ks.yaml

@@ -1,0 +1,12 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: immich-restore-test
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: clusters/main/kubernetes/my-apps/media/immich-restore-test/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: cluster
