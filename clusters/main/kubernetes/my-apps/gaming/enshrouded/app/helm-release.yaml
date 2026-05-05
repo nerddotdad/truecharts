@@ -39,11 +39,11 @@ spec:
         readOnlyRootFilesystem: false
         # Set to 568 so chart sets PUID/PGID to 568 in fixedEnv
         # Container-level override will still allow root execution
-        runAsNonRoot: true
-        runAsUser: 568
-        runAsGroup: 568
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
       pod:
-        fsGroup: 568
+        fsGroup: 0
         # Pod supplementalGroups do not survive supervisord's setuid to user enshrouded; initCrontab still
         # needs membership in the image's `crontab` group (see main container command wrapper below).
 
