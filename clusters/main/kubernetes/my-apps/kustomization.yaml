@@ -8,7 +8,7 @@ resources:
   - gaming
   - websites
   - tools
-  - ai
+  # - ai
   - infrastructure
   - communication
   # - decomissioned
