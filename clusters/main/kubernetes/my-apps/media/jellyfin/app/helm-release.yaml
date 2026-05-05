@@ -57,6 +57,7 @@ spec:
                   memory: 2Gi
                 limits:
                   memory: 6Gi
+                  gpu.intel.com/i915: 1
                   # Intel QSV: re-add gpu.intel.com/i915 when intel-device-plugin exposes it on the node
                   # (operator healthy); requesting i915 blocked scheduling — allocatable had no i915, only nvidia.com/gpu
     persistence:
