@@ -62,8 +62,10 @@ spec:
               mountPath: /microcache
       backups:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/backups/
+        path: ${NFS_IMMICH}/restore-test/backups
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -71,8 +73,10 @@ spec:
             microservices: {}
       video:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/encoded-video/
+        path: ${NFS_IMMICH}/restore-test/encoded-video
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -80,8 +84,10 @@ spec:
             microservices: {}
       library:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/library/
+        path: ${NFS_IMMICH}/restore-test/library
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -89,8 +95,10 @@ spec:
             microservices: {}
       uploads:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/upload/
+        path: ${NFS_IMMICH}/restore-test/upload
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -98,8 +106,10 @@ spec:
             microservices: {}
       thumbs:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/thumbs/
+        path: ${NFS_IMMICH}/restore-test/thumbs
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -107,8 +117,10 @@ spec:
             microservices: {}
       profile:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/upload/profile/
+        path: ${NFS_IMMICH}/restore-test/profile
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
@@ -116,8 +128,10 @@ spec:
             microservices: {}
       external:
         enabled: true
-        type: emptyDir
+        type: nfs
         mountPath: /usr/src/app/external
+        path: ${NFS_IMMICH}/restore-test/external
+        server: ${NAS_IP}
         targetSelector:
           main:
             main: {}
