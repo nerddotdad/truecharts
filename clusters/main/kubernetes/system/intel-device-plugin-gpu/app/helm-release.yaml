@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: intel-device-plugins-gpu
-      version: 0.34.1
+      version: 0.32.0
       sourceRef:
         kind: HelmRepository
         name: home-ops-mirror
@@ -29,12 +29,4 @@ spec:
   values:
     name: intel-gpu-plugin
     sharedDevNum: 5
-    # Helm merges chart defaults with values — nodeSelector: {} does NOT clear the chart default
-    # (GpuDevicePlugin keeps intel.feature.node.kubernetes.io/gpu). Set that key to null to drop it,
-    # and match nodes where NFD sees Intel VGA (0300/8086). Same idea as TrueCharts + Talos without
-    # needing the NodeFeatureRule i915/xe module labels.
-    nodeSelector:
-      feature.node.kubernetes.io/pci-0300_8086.present: "true"
-      intel.feature.node.kubernetes.io/gpu: null
-    # When true, chart layers extra NodeFeatureRule / selectors (often breaks on Talos).
-    nodeFeatureRule: false
+    nodeFeatureRule: true

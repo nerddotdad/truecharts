@@ -55,11 +55,13 @@ spec:
                 requests:
                   cpu: 250m
                   memory: 2Gi
+                  # Extended resources must be in requests for scheduling. Discrete Arc / Xe KMD uses
+                  # gpu.intel.com/xe (see Intel GPU plugin README). If kubectl shows only gpu.intel.com/i915
+                  # on the node, switch both request/limit keys to i915.
+                  gpu.intel.com/xe: 1
                 limits:
                   memory: 6Gi
-                  gpu.intel.com/i915: 1
-                  # Intel QSV: re-add gpu.intel.com/i915 when intel-device-plugin exposes it on the node
-                  # (operator healthy); requesting i915 blocked scheduling — allocatable had no i915, only nvidia.com/gpu
+                  gpu.intel.com/xe: 1
     persistence:
       config:
         enabled: true

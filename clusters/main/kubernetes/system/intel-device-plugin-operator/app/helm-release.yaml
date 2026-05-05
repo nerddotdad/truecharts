@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: intel-device-plugins-operator
-      version: 0.34.1
+      version: 0.32.0
       sourceRef:
         kind: HelmRepository
         name: home-ops-mirror
@@ -29,8 +29,5 @@ spec:
     - name: node-feature-discovery
       namespace: kube-system
   values:
-    # Official chart uses manager.devices (Artifact Hub); controllerExtraArgs is not a valid values key for 0.34.x
-    # and can leave the manager misconfigured / crashing on health probes.
-    manager:
-      devices:
-        gpu: true
+    controllerExtraArgs: |
+      - --devices=gpu
