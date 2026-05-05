@@ -32,8 +32,6 @@ spec:
     # Fresh Immich overlay: everything else comes from chart defaults
     # https://github.com/trueforge-org/truecharts/blob/master/charts/stable/immich/values.yaml
     #
-    # For a truly empty Postgres: delete CNPG Cluster immich-cnpg-main + its PVCs in the cluster once,
-    # then let Flux reconcile so initdb runs on new volumes. This Git state does NOT recover from R2.
     credentials:
       cloudflare_r2:
         type: s3
@@ -45,6 +43,9 @@ spec:
     cnpg:
       main:
         mode: recovery
+        # Required by chart when mode is recovery (same named credential bundle as backups).
+        recovery:
+          credentials: cloudflare_r2
         # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
         cluster:
           instances: 1
