@@ -1,0 +1,38 @@
+# Temporary smoke test: schedules a pod that requests an Intel extended resource and runs clinfo.
+# - If the Job stays Pending → kubelet still does not advertise gpu.intel.com/* (device plugin / DRM).
+# - If it runs → check logs for GPU sections.
+#
+# Edit resources below if your node exposes gpu.intel.com/i915 instead of xe (see:
+#   kubectl get node k8s-cp-1 -o json | jq '.status.allocatable | with_entries(select(.key|startswith("gpu.intel")))'
+# Remove this file and the `debug` entry from clusters/main/kubernetes/kustomization.yaml when done.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: intel-gpu-smoke-test
+  namespace: media
+spec:
+  ttlSecondsAfterFinished: 900
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: opencl-info
+          image: docker.io/intel/intel-opencl-icd:devel
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "=== /dev/dri ==="
+              ls -la /dev/dri 2>&1 || true
+              echo "=== clinfo ==="
+              clinfo -l 2>&1 || true
+              echo "=== done ==="
+          resources:
+            requests:
+              gpu.intel.com/xe: "1"
+            limits:
+              gpu.intel.com/xe: "1"

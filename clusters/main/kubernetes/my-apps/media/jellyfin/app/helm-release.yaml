@@ -14,7 +14,8 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 5m
+  # 5m caused repeated upgrade timeouts while the pod was Pending → rollback stuck on old i915 defaults.
+  timeout: 20m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -55,14 +56,15 @@ spec:
                 requests:
                   cpu: 250m
                   memory: 2Gi
-                  # Must match what kubelet advertises: Xe KMD → gpu.intel.com/xe, i915 KMD → i915
-                  # (Intel GPU plugin resource table: intel.github.io/.../cmd/gpu_plugin/README.html)
-                  # If still Pending, run: kubectl get node <n> -o json | jq '.status.allocatable|with_entries(select(.key|test("intel")))'
-                  # To run without HW while debugging, remove the two gpu.intel.com lines from requests+limits.
-                  gpu.intel.com/xe: 1
+                  # Strip chart defaults (often gpu.intel.com/i915: 2) until kubelet advertises Intel GPU.
+                  # When allocatable shows gpu.intel.com/xe or .../i915, replace nulls with : 1 on both req+lim.
+                  gpu.intel.com/i915: null
+                  gpu.intel.com/xe: null
                 limits:
+                  cpu: 1500m
                   memory: 6Gi
-                  gpu.intel.com/xe: 1
+                  gpu.intel.com/i915: null
+                  gpu.intel.com/xe: null
     persistence:
       config:
         enabled: true
