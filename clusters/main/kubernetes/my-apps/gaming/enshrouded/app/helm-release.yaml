@@ -32,7 +32,7 @@ spec:
     image:
       repository: mornedhels/enshrouded-server
       pullPolicy: IfNotPresent
-      tag: latest
+      tag: stable-wine
     
     securityContext:
       container:
