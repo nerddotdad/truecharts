@@ -43,16 +43,18 @@ spec:
     cnpg:
       main:
         mode: recovery
-        # Required by chart when mode is recovery (same named credential bundle as backups).
+        # https://truecharts.org/guides/backup--restore/cnpg-backup-restore/
+        # recovery.revision must match the backups.revision that produced the backups in R2; backups.revision is then +1 for new backups after restore.
         recovery:
           credentials: cloudflare_r2
+          revision: "3"
         # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
         cluster:
           instances: 1
           singleNode: true
         backups:
           enabled: true
-          revision: "3"
+          revision: "4"
           credentials: cloudflare_r2
           retentionPolicy: "7d"
           scheduledBackups:
