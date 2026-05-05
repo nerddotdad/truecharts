@@ -56,15 +56,10 @@ spec:
                 requests:
                   cpu: 250m
                   memory: 2Gi
-                  # Strip chart defaults (often gpu.intel.com/i915: 2) until kubelet advertises Intel GPU.
-                  # When allocatable shows gpu.intel.com/xe or .../i915, replace nulls with : 1 on both req+lim.
-                  gpu.intel.com/i915: null
-                  gpu.intel.com/xe: null
                 limits:
                   cpu: 1500m
                   memory: 6Gi
-                  gpu.intel.com/i915: null
-                  gpu.intel.com/xe: null
+                  gpu.intel.com/i915: 1
     persistence:
       config:
         enabled: true
