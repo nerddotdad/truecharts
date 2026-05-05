@@ -29,7 +29,9 @@ spec:
   values:
     name: intel-gpu-plugin
     sharedDevNum: 5
-    # Single-node cluster: no nodeSelector — plugin runs on the sole node. If you add nodes later,
-    # consider pinning (e.g. PCI Intel VGA label) so the plugin does not schedule on GPU-less machines.
-    # When true, chart adds intel.feature.node.kubernetes.io/gpu + NodeFeatureRule (often breaks on Talos).
+    # Chart default is nodeSelector: { intel.feature.node.kubernetes.io/gpu: "true" } (Talos often
+    # never gets that label). Empty map = no selector, fine for a single-node cluster; add labels
+    # here again if you expand to multiple nodes and need to pin Intel GPU nodes only.
+    nodeSelector: {}
+    # When true, chart layers extra NodeFeatureRule / selectors (often breaks on Talos).
     nodeFeatureRule: false
