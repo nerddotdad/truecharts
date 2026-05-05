@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: intel-device-plugins-operator
-      version: 0.32.0
+      version: 0.34.1
       sourceRef:
         kind: HelmRepository
         name: home-ops-mirror
@@ -29,5 +29,7 @@ spec:
     - name: node-feature-discovery
       namespace: kube-system
   values:
-    controllerExtraArgs: |
-      - --devices=gpu
+    # 0.34.x expects manager.devices (Artifact Hub). Older controllerExtraArgs can misconfigure the manager.
+    manager:
+      devices:
+        gpu: true

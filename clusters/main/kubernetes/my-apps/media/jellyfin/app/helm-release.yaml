@@ -55,9 +55,10 @@ spec:
                 requests:
                   cpu: 250m
                   memory: 2Gi
-                  # Extended resources must be in requests for scheduling. Discrete Arc / Xe KMD uses
-                  # gpu.intel.com/xe (see Intel GPU plugin README). If kubectl shows only gpu.intel.com/i915
-                  # on the node, switch both request/limit keys to i915.
+                  # Must match what kubelet advertises: Xe KMD → gpu.intel.com/xe, i915 KMD → i915
+                  # (Intel GPU plugin resource table: intel.github.io/.../cmd/gpu_plugin/README.html)
+                  # If still Pending, run: kubectl get node <n> -o json | jq '.status.allocatable|with_entries(select(.key|test("intel")))'
+                  # To run without HW while debugging, remove the two gpu.intel.com lines from requests+limits.
                   gpu.intel.com/xe: 1
                 limits:
                   memory: 6Gi

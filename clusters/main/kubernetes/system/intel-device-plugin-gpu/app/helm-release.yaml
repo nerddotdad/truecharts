@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: intel-device-plugins-gpu
-      version: 0.32.0
+      version: 0.34.1
       sourceRef:
         kind: HelmRepository
         name: home-ops-mirror
@@ -29,4 +29,15 @@ spec:
   values:
     name: intel-gpu-plugin
     sharedDevNum: 5
-    nodeFeatureRule: true
+    # TrueCharts defaults use nodeFeatureRule: true + chart nodeSelector → requires
+    # intel.feature.node.kubernetes.io/gpu from NFD. On Talos, i915 is often built-in so NFD never
+    # sets that label (see github.com/intel/intel-device-plugins-for-kubernetes/issues/1688) and
+    # NO GpuDevicePlugin/DaemonSet pods run — nothing advertises gpu.intel.com/* on the node.
+    # Override: match PCI Intel VGA via NFD + drop chart default intel.feature selector (null clears merged default).
+    nodeSelector:
+      feature.node.kubernetes.io/pci-0300_8086.present: "true"
+      intel.feature.node.kubernetes.io/gpu: null
+    nodeFeatureRule: false
+    # Intel + NVIDIA on one node: "single" by-path mode can fail to register Intel DRM devices.
+    # Ref: intel.github.io/intel-device-plugins-for-kubernetes/cmd/gpu_plugin/README.html (by-path mounting)
+    bypathMode: all
