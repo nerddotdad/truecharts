@@ -64,6 +64,11 @@ spec:
             main:
               enabled: true
               # Keep a minimal app-template override footprint while debugging startup.
+              securityContext:
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
               probes:
                 startup:
                   enabled: false
