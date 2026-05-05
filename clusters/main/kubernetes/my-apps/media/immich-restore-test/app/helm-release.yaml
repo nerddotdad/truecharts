@@ -128,4 +128,22 @@ spec:
         replicas: 1
     ingress:
       main:
-        enabled: false
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: immich-test.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+          - host: immich-test-internal.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: false
