@@ -79,6 +79,7 @@ spec:
     kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
     localRedirectPolicy: true
     operator:
+      replicas: 1
       rollOutPods: true
       # Operator and agent both default to hostPort 9963 for Prometheus; on a single node that collides and the operator stays Pending.
       prometheus:
