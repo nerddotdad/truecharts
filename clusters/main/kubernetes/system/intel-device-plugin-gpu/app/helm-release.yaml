@@ -29,9 +29,12 @@ spec:
   values:
     name: intel-gpu-plugin
     sharedDevNum: 5
-    # Chart default is nodeSelector: { intel.feature.node.kubernetes.io/gpu: "true" } (Talos often
-    # never gets that label). Empty map = no selector, fine for a single-node cluster; add labels
-    # here again if you expand to multiple nodes and need to pin Intel GPU nodes only.
-    nodeSelector: {}
+    # Helm merges chart defaults with values — nodeSelector: {} does NOT clear the chart default
+    # (GpuDevicePlugin keeps intel.feature.node.kubernetes.io/gpu). Set that key to null to drop it,
+    # and match nodes where NFD sees Intel VGA (0300/8086). Same idea as TrueCharts + Talos without
+    # needing the NodeFeatureRule i915/xe module labels.
+    nodeSelector:
+      feature.node.kubernetes.io/pci-0300_8086.present: "true"
+      intel.feature.node.kubernetes.io/gpu: null
     # When true, chart layers extra NodeFeatureRule / selectors (often breaks on Talos).
     nodeFeatureRule: false
