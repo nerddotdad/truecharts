@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: immich-restore-test
-  namespace: media-restore
+  namespace: media
 spec:
   interval: 15m
   chart:
