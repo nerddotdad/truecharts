@@ -85,13 +85,6 @@ spec:
                 SERVER_ENABLE_VOICE_CHAT: "true"
                 SERVER_VOICE_CHAT_MODE: "Proximity"
                 SERVER_ENABLE_TEXT_CHAT: "true"
-                # Keep app data ownership mapped to NAS apps:apps (568:568).
-                PUID: "568"
-                PGID: "568"
-                UID: "568"
-                GID: "568"
-                USER_ID: "568"
-                GROUP_ID: "568"
                 # Preset must be set to "Custom" for gameSettings to be applied
                 PRESET: "Custom"
                 # Server Role 0 (Admins role with password)
