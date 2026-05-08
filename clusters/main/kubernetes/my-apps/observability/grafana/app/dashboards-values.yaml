@@ -21,7 +21,7 @@ dashboards:
                 - name: datasource
                   value: Prometheus
             marketplace:
-                id: ENC[AES256_GCM,data:DT6nH+A=,iv:eTwYnWqIY467bh41GNJC+LCDBbWUfGAIkvT38m/qnME=,tag:6QykjLLTkJG2N54jfNq01w==,type:int]
+                id: ENC[AES256_GCM,data:YE57AjM=,iv:oCAz7MxxCAiUfrsLGBhOghsMZzhMZUt7GT925y3LrSM=,tag:9duOlNLaFdDXOsvrZH1Jzg==,type:int]
                 revision: 2
 sops:
     shamir_threshold: 3
@@ -29,13 +29,13 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3MWJqd2swWG5yU1p5dHJH
-            SDFpTEF3ZysydTROdm1aVFNVTm84OEl6WVRVCjJqdkg2dXFBOTJWTmRZVFdvcWVU
-            Y1ZndG9hKzcxOTg4KzVSdGNoZlIzWTAKLS0tIE5QSW9BcU8yejJRSVNoWWNhQ1ov
-            WXorTm1NL3lJMTErTG5jTnF6Zk1uNzgKpoRvs4OaZ4RXQLqO8SWmM/8AwIcLkkzb
-            zJ5H1gPzeuw7Is5ldYtE3Lsgad9ixXU1o6ArGsKZ+IR6d34sPcGr+w==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBnQW9qTmdGQ0h2SnE5bGhj
+            UTBia1ZwOWdEc0d2cnNzVUpLc2k0MkNDT0RVCjlXVklFWWxWRERQQkZ2VUVFd2RV
+            QUVMVnNMV2VTRDlGRjNaZEs0QkgzbU0KLS0tIDAxWTFSNjdmRzhxNFZuUVB0SlhL
+            aVlxbmNMbHJOeFJ5R25seEpOZXhWZ0UKVCtSLaYb3T6dyRIAqpzeAaWT29Lo7RKs
+            BLLX85n21/kGBNVRIeBLkeOMQFsBgY1G7a2wSgZoSfU9MOmgTMUeuQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-05-08T22:54:59Z"
-    mac: ENC[AES256_GCM,data:OvtmE9+OkCcnZbZOVKV3Vc/I5kHSet9lNyN7+IHNfoEHW30dqMnQzMyf1QEFKihZAh1HpLHTeYlmFklKycCsElS2OpYrNxKeINa8KlGM6BbFj9B0bUyyYoPgi+Dlrisnjvgqob/pqvH5WQJulsfrZjASRFQ3OWSQ0xy0PdgXyNw=,iv:SnZhzwzk1cnHWz5NmzDFFRs69jWFl7Ja4RP2Lprx/JY=,tag:t1MYSuqM9+iDGfvIpOCQFw==,type:str]
+    lastmodified: "2026-05-08T22:59:05Z"
+    mac: ENC[AES256_GCM,data:68+9DpzaZ9UQDYJXDEEdp5dGagY+afJYSe+bbUYfAztaLB8WsCppO8MkrlTU9u44H6dfBWx1b3o27rHiWI2dzYZbZc+YyhAl/a/KsHXnDzxlF84tv/7m2e5lVcNXRQ5eY/RY9yWD+cxnyDxqLqYp0hUgbvCtcRZfOum3NsCp0s8=,iv:Yt9IsCOqvHCouq4zaIsfMw+WlvYhvkXLIWEd+JDzE5k=,tag:yiqfT8MksbuvIQEYASOo2A==,type:str]
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.11.0

@@ -63,6 +63,21 @@ spec:
             datasources:
               enabled: false
 
+    dashboards:
+      grafana:
+        nginx-14900:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+              value: Prometheus
+            - name: $$datasource
+              value: Prometheus
+          marketplace:
+            id: 14900
+            revision: 2
+
     configmap:
       prometheus-kube-datasource:
         enabled: true
