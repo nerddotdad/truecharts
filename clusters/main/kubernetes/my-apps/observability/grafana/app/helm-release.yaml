@@ -70,7 +70,7 @@ spec:
           failOnError: false
           b64content: false
           datasource:
-            - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+            - name: Testing Dashboard
               value: Prometheus
             - name: $$datasource
               value: Prometheus
