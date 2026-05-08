@@ -30,6 +30,10 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: grafana-dashboards-values
+      valuesKey: values.yaml
   values:
     # TrueCharts ships optional dashboards (cert-manager, etc.) that substitute ${DS_PROMETHEUS} → "Prometheus".
     # The chart does not create that datasource for you; wire Prometheus from kube-prometheus-stack explicitly.

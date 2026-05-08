@@ -1,0 +1,37 @@
+# Merged into HelmRelease via spec.valuesFrom → ConfigMap `grafana-dashboards-values`.
+# Add more dashboards under `dashboards.grafana.<name>` per:
+# https://truecharts.org/charts/stable/grafana/dashboards/
+#
+# Marketplace IDs/revisions: https://grafana.com/grafana/dashboards/<id>
+dashboards:
+    grafana:
+        nginx-14900:
+            enabled: true
+            failOnError: false
+            b64content: false
+            datasource:
+                # Dashboard 14900 templates use this __inputs name (not DS_PROMETHEUS).
+                - name: ${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+                  value: Prometheus
+                # Several panels reference this literal string.
+                - name: $datasource
+                  value: Prometheus
+            marketplace:
+                id: ENC[AES256_GCM,data:hn7gJ5A=,iv:19IeZWVcM5Y/PUVWyJzu2/a2qI3HAPz1Y1d8AYBYl10=,tag:Z/yA6tMe+HGUseEt9Q2f6A==,type:int]
+                revision: 2
+sops:
+    shamir_threshold: 3
+    age:
+        - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBNa2F5S0szVWIvOEl6akkx
+            aXdOd2NCTEM1TlNBUzNyRkVkQzJzSkNpSjBvCm9nOGpaMHNiRlBZQkxuTFBoSi8y
+            M3k4Vy80WmFkbWZoYkVvQ2VxSmQwTk0KLS0tIHhLRHlsbTlMeFFCNFVoQ0F6WEtI
+            Ly96VnZGaXJQV2RVVDJRV0pUd1dMcDAK0uFhbGiFwTdbQKIn3d/uQI23uzvvI+qE
+            mJlcOt2qlO4tVkJDQAsUXw2q5IbR+ti6h6DZ8e7k7b/RJw64A0BVlA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-08T22:49:16Z"
+    mac: ENC[AES256_GCM,data:04aILTujoTrd81nfGGpXEXWhT/v30GcaQkdA57vYnqL3e50oMtx6WMu/GAugiC6EdVBHzni9JRscb5G7z9671k0iPtQe1WBQm00e5l8faaAn1yu85V5DMpDszMpk+XI81dl/fDmIk5oGHI1eDTIqhKJtOtU9uLUh0PpQRU3Lys4=,iv:xTniCD1vrovqz5pMziGNvigEHSynCrFBTEfPF+v8yAQ=,tag:mzdwtnY2nMVqHJc/w03zbg==,type:str]
+    encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
+    version: 3.11.0
