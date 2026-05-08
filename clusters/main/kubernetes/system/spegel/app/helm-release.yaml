@@ -1,5 +1,8 @@
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# Staff-style clusters use chart defaults only (see alfi0812/talos spegel HelmRelease). If Spegel stays
+# 0/1 with "routing table is empty after bootstrapping" on Talos+Cilium, add values — e.g.
+# podOptions.hostNetwork: true — see https://github.com/spegel-org/spegel/issues/1256
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
