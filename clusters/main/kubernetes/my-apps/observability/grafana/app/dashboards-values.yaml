@@ -3,6 +3,10 @@
 # https://truecharts.org/charts/stable/grafana/dashboards/
 #
 # Marketplace IDs/revisions: https://grafana.com/grafana/dashboards/<id>
+#
+# Post-build envsubst: use $$ where Grafana/Helm need a literal $. Input $$ → output $
+# (e.g. $${DS_...} → ${DS_...}). Do not SOPS-encrypt this file with a regex that matches `id:`
+# or marketplace.id becomes ciphertext and Helm breaks.
 dashboards:
     grafana:
         nginx-14900:
@@ -10,14 +14,14 @@ dashboards:
             failOnError: false
             b64content: false
             datasource:
-                # Dashboard 14900 templates use this __inputs name (not DS_PROMETHEUS).
-                - name: ${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+                # Dashboard 14900 __inputs name; must match JSON after envsubst.
+                - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
                   value: Prometheus
-                # Several panels reference this literal string.
-                - name: $datasource
+                # Panels use this literal; $$ → $ after envsubst.
+                - name: $$datasource
                   value: Prometheus
             marketplace:
-                id: ENC[AES256_GCM,data:hn7gJ5A=,iv:19IeZWVcM5Y/PUVWyJzu2/a2qI3HAPz1Y1d8AYBYl10=,tag:Z/yA6tMe+HGUseEt9Q2f6A==,type:int]
+                id: ENC[AES256_GCM,data:v4ad+yk=,iv:OxDSw3ornE6RqV7bPUahMwr8j5Svb6wnOgv+qeQY9qg=,tag:9ECOjXkE38ArEe1kHoQ2OA==,type:int]
                 revision: 2
 sops:
     shamir_threshold: 3
@@ -25,13 +29,13 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBNa2F5S0szVWIvOEl6akkx
-            aXdOd2NCTEM1TlNBUzNyRkVkQzJzSkNpSjBvCm9nOGpaMHNiRlBZQkxuTFBoSi8y
-            M3k4Vy80WmFkbWZoYkVvQ2VxSmQwTk0KLS0tIHhLRHlsbTlMeFFCNFVoQ0F6WEtI
-            Ly96VnZGaXJQV2RVVDJRV0pUd1dMcDAK0uFhbGiFwTdbQKIn3d/uQI23uzvvI+qE
-            mJlcOt2qlO4tVkJDQAsUXw2q5IbR+ti6h6DZ8e7k7b/RJw64A0BVlA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBTcFpPY0dFN2tOZDFHQUVx
+            R3hTemg4aytVVUFMdktCaXlSTC9iSVVraUZJCmkybldoc2RVOGhSKy9HZ2Uvd3I1
+            dW4vbHptMnVKNHZ0Uk1Jakc5dVlFUDgKLS0tIENQeXJCQkNxRS9YRFc3YktNQXFx
+            dWxGS0FGT053eGp1N2dFWmlLejM5SUEK9MvYDzUWQ9kKYZdSm93IBnBBdBIiXAV4
+            v4xyxAgQeJ4/qHLFo8UhABZm/u31SFtQa7HEVpQGA0ZpGo7GVDl7pQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-05-08T22:49:16Z"
-    mac: ENC[AES256_GCM,data:04aILTujoTrd81nfGGpXEXWhT/v30GcaQkdA57vYnqL3e50oMtx6WMu/GAugiC6EdVBHzni9JRscb5G7z9671k0iPtQe1WBQm00e5l8faaAn1yu85V5DMpDszMpk+XI81dl/fDmIk5oGHI1eDTIqhKJtOtU9uLUh0PpQRU3Lys4=,iv:xTniCD1vrovqz5pMziGNvigEHSynCrFBTEfPF+v8yAQ=,tag:mzdwtnY2nMVqHJc/w03zbg==,type:str]
+    lastmodified: "2026-05-08T22:51:18Z"
+    mac: ENC[AES256_GCM,data:HbgJYNNxxc7sj7AbxS9jmo2eX+6pwUm5Ym3puV2ELKqC0E+8zf2sn4PyNro32My87ioO45kOecKwodYNAazAx0uN42+OfbopZ+i8xOWLkS0vJPUzSNK9oEuJ9JvZGHYExMnHZlsF7CCKNRgN/MoVe+pc0G/PjXtomyJKHMIdakg=,iv:DvMUSOu4nQXh740q97fcbPm96OtkArfc2dvxlNE1Qug=,tag:bmUT+9GoG8maqZXG4KYfUA==,type:str]
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.11.0
