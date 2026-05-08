@@ -4,7 +4,6 @@ resources:
   - dashboards
   - downloaders
   - media
-  - monitoring
   - gaming
   - websites
   - tools
@@ -14,3 +13,4 @@ resources:
   # - decomissioned
   # - under_construction
   - external
+  - observability
