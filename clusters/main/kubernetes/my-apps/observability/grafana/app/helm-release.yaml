@@ -31,6 +31,8 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # TrueCharts ships optional dashboards (cert-manager, etc.) that substitute ${DS_PROMETHEUS} → "Prometheus".
+    # The chart does not create that datasource for you; wire Prometheus from kube-prometheus-stack explicitly.
     cnpg:
       main:
         enabled: false
@@ -52,6 +54,40 @@ spec:
                 GF_DATABASE_PASSWORD: ""
                 GF_DATABASE_NAME: ""
                 GF_DATABASE_USER: ""
+            # Static Prometheus datasource is mounted below; disable the k8s-sidecar that watches
+            # labeled ConfigMaps so we do not rely on an emptyDir + separate Flux-managed CM.
+            datasources:
+              enabled: false
+
+    configmap:
+      prometheus-kube-datasource:
+        enabled: true
+        data:
+          prometheus.yaml: |-
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                uid: prometheus
+                url: http://kube-prometheus-stack-prometheus.kube-prometheus-stack.svc.cluster.local:9090
+                access: proxy
+                isDefault: true
+                jsonData:
+                  httpMethod: POST
+                  timeInterval: 30s
+
+    persistence:
+      sc-datasource-volume:
+        enabled: false
+      prometheus-kube-datasource:
+        enabled: true
+        type: configmap
+        objectName: prometheus-kube-datasource
+        mountPath: /etc/grafana/provisioning/datasources
+        targetSelector:
+          main:
+            main:
+              readOnly: true
 
     ingress:
       main:
