@@ -1,3 +1,5 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -40,7 +42,16 @@ spec:
             main:
               env:
                 GF_DATABASE_TYPE: sqlite3
+                GF_DATABASE_SSL_MODE: disable
+                GF_SECURITY_ADMIN_USER: admin
                 GF_SECURITY_ADMIN_PASSWORD: "${ADMIN_PASS}"
+                # Chart defaults use secretKeyRef → cnpg-main-*; Helm merges maps by key, so you must
+                # override these or install fails with "Expected … Secret [cnpg-main-urls] to be defined".
+                # Empty values drop postgres usage when using SQLite (Grafana ignores these for sqlite3).
+                GF_DATABASE_HOST: ""
+                GF_DATABASE_PASSWORD: ""
+                GF_DATABASE_NAME: ""
+                GF_DATABASE_USER: ""
 
     ingress:
       main:
@@ -59,7 +70,7 @@ spec:
             enabled: true
             name: Grafana
             description: Grafana service
-            group: "{{ .Release.Namespace }}"
+            group: observability
             icon: ""
             widget:
               enabled: false
