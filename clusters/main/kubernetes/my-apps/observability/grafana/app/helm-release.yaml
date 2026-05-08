@@ -44,7 +44,8 @@ spec:
 
     ingress:
       main:
-        enabled: false
+        enabled: true
+        ingressClassName: external
         hosts:
           - host: grafana.${DOMAIN_0}
             paths:
@@ -54,3 +55,11 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Grafana
+            description: Grafana service
+            group: "{{ .Release.Namespace }}"
+            icon: ""
+            widget:
+              enabled: false
