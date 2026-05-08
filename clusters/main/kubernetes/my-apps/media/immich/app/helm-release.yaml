@@ -32,37 +32,37 @@ spec:
     # Fresh Immich overlay: everything else comes from chart defaults
     # https://github.com/trueforge-org/truecharts/blob/master/charts/stable/immich/values.yaml
     #
-    credentials:
-      cloudflare_r2:
-        type: s3
-        url: "${CLOUDFLARE_R2_URL}"
-        bucket: "${CLOUDFLARE_R2_BUCKET_PREFIX}-immich"
-        accessKey: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
-        secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
-        encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
-    cnpg:
-      main:
-        mode: recovery
-        # https://truecharts.org/guides/backup--restore/cnpg-backup-restore/
-        # recovery.revision must match the backups.revision that produced the backups in R2; backups.revision is then +1 for new backups after restore.
-        recovery:
-          credentials: cloudflare_r2
-          revision: "3"
-        # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
-        cluster:
-          instances: 1
-          singleNode: true
-        backups:
-          enabled: true
-          revision: "4"
-          credentials: cloudflare_r2
-          retentionPolicy: "7d"
-          scheduledBackups:
-            - name: daily-backup
-              schedule: "0 0 1 * * *"
-              backupOwnerReference: self
-              immediate: true
-              suspend: false
+    # credentials:
+    #   cloudflare_r2:
+    #     type: s3
+    #     url: "${CLOUDFLARE_R2_URL}"
+    #     bucket: "${CLOUDFLARE_R2_BUCKET_PREFIX}-immich"
+    #     accessKey: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
+    #     secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
+    #     encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
+    # cnpg:
+    #   main:
+    #     mode: recovery
+    #     # https://truecharts.org/guides/backup--restore/cnpg-backup-restore/
+    #     # recovery.revision must match the backups.revision that produced the backups in R2; backups.revision is then +1 for new backups after restore.
+    #     recovery:
+    #       credentials: cloudflare_r2
+    #       revision: "3"
+    #     # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
+    #     cluster:
+    #       instances: 1
+    #       singleNode: true
+    #     backups:
+    #       enabled: true
+    #       revision: "4"
+    #       credentials: cloudflare_r2
+    #       retentionPolicy: "7d"
+    #       scheduledBackups:
+    #         - name: daily-backup
+    #           schedule: "0 0 1 * * *"
+    #           backupOwnerReference: self
+    #           immediate: true
+    #           suspend: false
     persistence:
       mlcache:
         enabled: true
