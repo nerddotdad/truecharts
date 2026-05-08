@@ -15,13 +15,13 @@ dashboards:
             b64content: false
             datasource:
                 # Dashboard 14900 __inputs name; must match JSON after envsubst.
-                - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+                - name: test_dashboard
                   value: Prometheus
                 # Panels use this literal; $$ → $ after envsubst.
-                - name: $$datasource
+                - name: datasource
                   value: Prometheus
             marketplace:
-                id: ENC[AES256_GCM,data:v4ad+yk=,iv:OxDSw3ornE6RqV7bPUahMwr8j5Svb6wnOgv+qeQY9qg=,tag:9ECOjXkE38ArEe1kHoQ2OA==,type:int]
+                id: ENC[AES256_GCM,data:DT6nH+A=,iv:eTwYnWqIY467bh41GNJC+LCDBbWUfGAIkvT38m/qnME=,tag:6QykjLLTkJG2N54jfNq01w==,type:int]
                 revision: 2
 sops:
     shamir_threshold: 3
@@ -29,13 +29,13 @@ sops:
         - recipient: age1k26ujnyjzw0y2sd72lyayn694luyr9agswjuklrtn8j3a5vseuaqsvruad
           enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBTcFpPY0dFN2tOZDFHQUVx
-            R3hTemg4aytVVUFMdktCaXlSTC9iSVVraUZJCmkybldoc2RVOGhSKy9HZ2Uvd3I1
-            dW4vbHptMnVKNHZ0Uk1Jakc5dVlFUDgKLS0tIENQeXJCQkNxRS9YRFc3YktNQXFx
-            dWxGS0FGT053eGp1N2dFWmlLejM5SUEK9MvYDzUWQ9kKYZdSm93IBnBBdBIiXAV4
-            v4xyxAgQeJ4/qHLFo8UhABZm/u31SFtQa7HEVpQGA0ZpGo7GVDl7pQ==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3MWJqd2swWG5yU1p5dHJH
+            SDFpTEF3ZysydTROdm1aVFNVTm84OEl6WVRVCjJqdkg2dXFBOTJWTmRZVFdvcWVU
+            Y1ZndG9hKzcxOTg4KzVSdGNoZlIzWTAKLS0tIE5QSW9BcU8yejJRSVNoWWNhQ1ov
+            WXorTm1NL3lJMTErTG5jTnF6Zk1uNzgKpoRvs4OaZ4RXQLqO8SWmM/8AwIcLkkzb
+            zJ5H1gPzeuw7Is5ldYtE3Lsgad9ixXU1o6ArGsKZ+IR6d34sPcGr+w==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-05-08T22:51:18Z"
-    mac: ENC[AES256_GCM,data:HbgJYNNxxc7sj7AbxS9jmo2eX+6pwUm5Ym3puV2ELKqC0E+8zf2sn4PyNro32My87ioO45kOecKwodYNAazAx0uN42+OfbopZ+i8xOWLkS0vJPUzSNK9oEuJ9JvZGHYExMnHZlsF7CCKNRgN/MoVe+pc0G/PjXtomyJKHMIdakg=,iv:DvMUSOu4nQXh740q97fcbPm96OtkArfc2dvxlNE1Qug=,tag:bmUT+9GoG8maqZXG4KYfUA==,type:str]
+    lastmodified: "2026-05-08T22:54:59Z"
+    mac: ENC[AES256_GCM,data:OvtmE9+OkCcnZbZOVKV3Vc/I5kHSet9lNyN7+IHNfoEHW30dqMnQzMyf1QEFKihZAh1HpLHTeYlmFklKycCsElS2OpYrNxKeINa8KlGM6BbFj9B0bUyyYoPgi+Dlrisnjvgqob/pqvH5WQJulsfrZjASRFQ3OWSQ0xy0PdgXyNw=,iv:SnZhzwzk1cnHWz5NmzDFFRs69jWFl7Ja4RP2Lprx/JY=,tag:t1MYSuqM9+iDGfvIpOCQFw==,type:str]
     encrypted_regex: ((?i)(displayname|email|pass|ca|id|bootstraptoken|secretboxencryptionsecret|secrets|secrets|password|cert|secret($|[^N])|key|token|^data$|^stringData))
     version: 3.11.0

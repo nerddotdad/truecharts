@@ -1,0 +1,20 @@
+# Merged into HelmRelease via spec.valuesFrom → ConfigMap `grafana-dashboards-values`.
+# Filename must NOT end with `values.yaml`: /.sops.yaml matches ^clusters.*kubernetes.*values.ya?ml$
+# and encrypts keys like `id` (breaks marketplace.id) on commit.
+#
+# Post-build envsubst: $$ → literal $ (e.g. $${DS_…} and $$datasource).
+# https://truecharts.org/charts/stable/grafana/dashboards/
+dashboards:
+  grafana:
+    nginx-14900:
+      enabled: true
+      failOnError: false
+      b64content: false
+      datasource:
+        - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
+          value: Prometheus
+        - name: $$datasource
+          value: Prometheus
+      marketplace:
+        id: 14900
+        revision: 2

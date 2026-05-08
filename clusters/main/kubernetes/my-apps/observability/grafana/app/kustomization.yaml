@@ -6,6 +6,6 @@ resources:
 configMapGenerator:
   - name: grafana-dashboards-values
     files:
-      - values.yaml=dashboards-values.yaml
+      - values.yaml=dashboards.fragment.yaml
     options:
       disableNameSuffixHash: true
