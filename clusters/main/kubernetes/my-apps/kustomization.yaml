@@ -9,7 +9,6 @@ resources:
   - tools
   # - ai
   - infrastructure
-  - communication
   # - decomissioned
   # - under_construction
   - external
