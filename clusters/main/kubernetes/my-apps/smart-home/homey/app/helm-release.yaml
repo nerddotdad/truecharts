@@ -1,0 +1,161 @@
+# Homey Self-Hosted Server — mirrors Athom Docker compose (host network + privileged).
+# https://support.homey.app/hc/en-us/articles/24010537261980-How-to-install-Homey-Self-Hosted-Server-with-Docker-on-Linux
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: homey
+  namespace: smart-home
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 10m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: ghcr.io/athombv/homey-shs
+      pullPolicy: Always
+      tag: latest
+
+    securityContext:
+      container:
+        privileged: true
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: true
+        seccompProfile:
+          type: Unconfined
+        capabilities:
+          add:
+            - NET_BIND_SERVICE
+            - NET_ADMIN
+            - NET_RAW
+            - SYS_ADMIN
+          drop: []
+      pod:
+        fsGroup: 0
+
+    podOptions:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+
+    workload:
+      main:
+        replicas: 1
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              securityContext:
+                privileged: true
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
+                allowPrivilegeEscalation: true
+                seccompProfile:
+                  type: Unconfined
+                capabilities:
+                  add:
+                    - NET_BIND_SERVICE
+                    - NET_ADMIN
+                    - NET_RAW
+                    - SYS_ADMIN
+                  drop: []
+              probes:
+                startup:
+                  enabled: true
+                  type: tcp
+                  port: 4859
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 30
+                liveness:
+                  enabled: true
+                  type: tcp
+                  port: 4859
+                  periodSeconds: 30
+                  failureThreshold: 3
+                readiness:
+                  enabled: true
+                  type: tcp
+                  port: 4859
+                  periodSeconds: 10
+                  failureThreshold: 3
+              env:
+                PORT_SERVER_HTTP: "4859"
+                PORT_SERVER_HTTPS: "4860"
+                PORT_SERVER_BRIDGE_V1: "4861"
+                PORT_SERVER_BRIDGE_V2: "4862"
+              resources:
+                requests:
+                  memory: 1Gi
+                  cpu: 250m
+                limits:
+                  memory: 4Gi
+                  cpu: "2"
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 4859
+            targetPort: 4859
+            protocol: tcp
+          https:
+            enabled: true
+            port: 4860
+            targetPort: 4860
+            protocol: tcp
+          bridge-v1:
+            enabled: true
+            port: 4861
+            targetPort: 4861
+            protocol: tcp
+          bridge-v2:
+            enabled: true
+            port: 4862
+            targetPort: 4862
+            protocol: tcp
+
+    persistence:
+      user:
+        enabled: true
+        type: pvc
+        size: 10Gi
+        storageClass: longhorn
+        mountPath: /homey/user
+
+    ingress:
+      main:
+        enabled: false
