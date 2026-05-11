@@ -166,4 +166,30 @@ spec:
 
     ingress:
       main:
-        enabled: false
+        enabled: true
+        ingressClassName: external
+        targetSelector:
+          main: main
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+        hosts:
+          - host: homey.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: homey
+            description: Homey Self-Hosted Server
+            group: smart-home
+            icon: ""
+            widget:
+              enabled: false
