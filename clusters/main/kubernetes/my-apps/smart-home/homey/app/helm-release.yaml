@@ -111,6 +111,8 @@ spec:
                   periodSeconds: 10
                   failureThreshold: 3
               env:
+                # Advertise the MetalLB VIP to clients (see Athom env table).
+                HOMEY_LOCAL_ADDRESS: ${HOMEY_IP}
                 PORT_SERVER_HTTP: "4859"
                 PORT_SERVER_HTTPS: "4860"
                 PORT_SERVER_BRIDGE_V1: "4861"
@@ -126,6 +128,12 @@ spec:
     service:
       main:
         enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${HOMEY_IP}
+        externalTrafficPolicy: Local
+        integrations:
+          metallb:
+            enabled: true
         ports:
           main:
             enabled: true
