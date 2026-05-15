@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 data:
   # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
-  TALOS_VERSION: v1.13.0
+  TALOS_VERSION: v1.13.2
   # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
   # Must match the cluster kubelet minor series; Talos allows only stepped upgrades (e.g. 1.32→1.33→1.34), never skip minors.
   KUBERNETES_VERSION: v1.33.0
