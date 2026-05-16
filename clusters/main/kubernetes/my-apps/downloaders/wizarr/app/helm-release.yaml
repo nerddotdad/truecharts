@@ -35,12 +35,13 @@ spec:
       pullPolicy: IfNotPresent
       tag: latest@sha256:19da537e01b5470cb34b083b5ac64cb534dd27084d9d66bc634e96c1f3976884
     persistence:
-      database: # this is the target location for nzbget
+      database:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 2Gi
         mountPath: /data/database
-        path: ${NFS_WIZARR_DATABASE}
-        server: ${NAS_IP}
     ingress:
       main:
         enabled: true
