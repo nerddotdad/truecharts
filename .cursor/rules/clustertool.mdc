@@ -1,0 +1,38 @@
+---
+description: Use clustertool (ForgeTool) for secrets, Talos, and cluster ops—not raw sops
+alwaysApply: true
+---
+
+# Clustertool (ForgeTool)
+
+`clustertool` is installed and wraps Talos, Kubernetes, Flux, and SOPS workflows for this TrueCharts GitOps repo. It runs **ForgeTool** (`forgetool`). Discover commands anytime:
+
+```bash
+clustertool --help
+clustertool <command> --help
+```
+
+Use `--cluster <name>` when not using the default cluster (`main`).
+
+## Secrets and cluster variables
+
+- **Do not** call `sops` directly to encrypt or decrypt repo secrets. Use clustertool instead.
+- **`clusters/main/clusterenv.yaml`** — edit plaintext cluster/chart variables here (IPs, domains, NFS paths, tokens, etc.).
+- **`clusters/main/kubernetes/flux-system/flux/clustersettings.secret.yaml`** — encrypted `cluster-config` ConfigMap consumed by Flux `postBuild.substituteFrom`. Do not hand-edit with plaintext values.
+- **`age.agekey`** — SOPS age key (must exist locally; never commit). Rules in **`.sops.yaml`**.
+
+| Task | Command |
+|------|---------|
+| Decrypt for editing | `clustertool decrypt` |
+| Encrypt before commit | `clustertool encrypt` |
+| Verify encryption | `clustertool checkcrypt` |
+
+**Workflow:** add or change values in `clusterenv.yaml` → `clustertool encrypt` → commit encrypted files (including `clustersettings.secret.yaml`). Never commit plaintext secrets or unencrypted `ENC[...]` fields mixed with raw strings in SOPS-managed files—Flux will fail with *"does not match sops' data format"*.
+
+## Other useful commands
+
+- **`clustertool talos`** — `apply`, `bootstrap`, `health`, `kubeconfig`, `upgrade`, `reset` (`clustertool talos --help`)
+- **`clustertool flux`** — advanced Flux helpers (`clustertool flux --help`)
+- **`clustertool cluster`** — `init`, `genconfig` for Talos layout (`clustertool cluster --help`)
+
+For GitOps app changes, still edit manifests under `clusters/` and use `kubectl`/`flux` only to **observe** reconciliation—never `kubectl apply` or patch live resources.
