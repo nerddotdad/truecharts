@@ -4,21 +4,21 @@
     'config:recommended',
     'github>truecharts/public//.github/renovate/main.json5',
   ],
-  minor: {
-    packageRules: [
-      {
-        matchPackageNames: [
-          'ghcr.io/siderolabs/kubelet',
-          'ghcr.io/siderolabs/installer',
-        ],
-        dependencyDashboardApproval: true,
-      },
-    ],
-  },
   automerge: true,
   automergeType: 'pr',
   ignoreTests: true,
   packageRules: [
+    {
+      description:
+        'Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan',
+      matchPackageNames: [
+        'ghcr.io/siderolabs/kubelet',
+        'ghcr.io/siderolabs/installer',
+      ],
+      matchUpdateTypes: ['major', 'minor', 'patch'],
+      dependencyDashboardApproval: true,
+      automerge: false,
+    },
     {
       matchCategories: ['docker'],
       pinDigests: true,
