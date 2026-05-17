@@ -1,7 +1,7 @@
 clusterName: ${CLUSTERNAME}
 # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
 # Forgetool 3.0.3 validates talosVersion up to v1.12.x. Live OS version is set in upgrade-settings (TALOS_VERSION).
-talosVersion: v1.13.0
+talosVersion: v1.12.2
 # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
 kubernetesVersion: v1.33.0
 endpoint: https://${VIP}:6443
