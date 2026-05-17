@@ -35,30 +35,14 @@ spec:
         podSpec:
           # Remove stale .jellyfin-data marker from /config (Jellyfin 10.9+ expects only .jellyfin-config there)
           initContainers:
-            migrate-db-to-pvc:
+            remove-data-marker:
               enabled: true
               type: init
               image: docker.io/library/alpine:3.23
               command:
                 - /bin/sh
                 - -c
-                - |
-                  set -e
-                  rm -f /config/.jellyfin-data /config/data/.jellyfin-data
-                  if [ -f /data/data/jellyfin.db ]; then
-                    echo "Jellyfin DB already on PVC"
-                    exit 0
-                  fi
-                  if [ ! -f /config/data/data/jellyfin.db ]; then
-                    echo "No NFS database to migrate"
-                    exit 0
-                  fi
-                  echo "Migrating Jellyfin DB from NFS to Longhorn PVC..."
-                  mkdir -p /data/data
-                  rm -f /config/data/data/jellyfin.db-wal /config/data/data/jellyfin.db-shm
-                  cp -a /config/data/data/. /data/data/
-                  chown -R 568:568 /data/data
-                  echo "Migration complete"
+                - "rm -f /config/.jellyfin-data && echo 'Cleaned stale .jellyfin-data marker from /config'"
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
@@ -66,8 +50,8 @@ spec:
           containers:
             main:
               env:
-                # Library metadata DB on Longhorn; SQLite on NFS hangs after unclean shutdown.
-                JELLYFIN_DATA_DIR: "/data"
+                # Keep data on same NFS as config (single NFS); sanity check only looks at /config root
+                JELLYFIN_DATA_DIR: "/config/data"
               resources:
                 requests:
                   cpu: 250m
