@@ -1,0 +1,35 @@
+# One-time model pull for GitOps bootstrap. If this Job already completed, delete it
+# before changing the model name or re-running: kubectl delete job -n ai ollama-pull-qwen25-coder-32b
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-pull-qwen25-coder-32b
+  namespace: ai
+spec:
+  ttlSecondsAfterFinished: 604800
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pull
+          image: curlimages/curl:8.12.1
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              OLLAMA="http://ollama.ai.svc.cluster.local:11434"
+              until curl -sf "${OLLAMA}/api/tags" >/dev/null; do
+                echo "waiting for ollama API..."
+                sleep 10
+              done
+              echo "pulling qwen2.5-coder:32b (this may take a while)..."
+              curl -sf "${OLLAMA}/api/pull" -d '{"name":"qwen2.5-coder:32b"}'
+              echo "pull complete"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
