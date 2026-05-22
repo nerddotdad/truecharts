@@ -50,10 +50,10 @@ spec:
     resources:
         requests:
           nvidia.com/gpu: 1
-          memory: 4Gi
+          memory: 6Gi
         limits:
           nvidia.com/gpu: 1
-          memory: 20Gi
+          memory: 24Gi
 
     workload:
       main:
@@ -65,17 +65,24 @@ spec:
               env:
                 OLLAMA_HOST: "0.0.0.0:11434"
                 OLLAMA_ORIGINS: "*"
-                OLLAMA_CONTEXT_LENGTH: "16000"
+                OLLAMA_FLASH_ATTENTION: "1"
+                OLLAMA_KEEP_ALIVE: "24h"
+                OLLAMA_MAX_LOADED_MODELS: "1"
+                OLLAMA_NUM_PARALLEL: "1"
+                OLLAMA_KV_CACHE_TYPE: "q8_0"
+                OLLAMA_GPU_OVERHEAD: "536870912"
+                OLLAMA_CONTEXT_LENGTH: "8192"
       ui:
         type: Deployment
 
     persistence:
       config:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 120Gi
         mountPath: "/root/.ollama"
-        path: ${NFS_APPS}/ollama/config
-        server: ${NAS_IP}
         targetSelector:
           main:
             main:
