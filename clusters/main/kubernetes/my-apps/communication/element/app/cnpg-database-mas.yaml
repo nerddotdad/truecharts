@@ -1,0 +1,11 @@
+# MAS database for Matrix Authentication Service (CNPG Database CRD)
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: element-postgresql-mas
+  namespace: communication
+spec:
+  name: mas
+  owner: synapse
+  cluster:
+    name: element-postgresql

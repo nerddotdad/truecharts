@@ -42,7 +42,3 @@ spec:
       owner: synapse
       secret:
         name: element-postgresql-credentials
-      postInitSQL:
-        - |
-          CREATE DATABASE mas OWNER synapse;
-          GRANT ALL PRIVILEGES ON DATABASE mas TO synapse;
