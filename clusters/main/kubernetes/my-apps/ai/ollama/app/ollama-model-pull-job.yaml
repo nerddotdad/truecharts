@@ -1,5 +1,7 @@
-# One-time model pull for GitOps bootstrap. If this Job already completed, delete it
-# before changing the model name or re-running: kubectl delete job -n ai ollama-pull-qwen25-coder-32b
+# One-time model pull for GitOps bootstrap.
+# - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
+# - Job spec.template is immutable: delete before changing the script or model:
+#   kubectl delete job -n ai ollama-pull-qwen25-coder-32b
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -19,13 +21,13 @@ spec:
             - -c
             - |
               set -e
-              OLLAMA="http://ollama-api.ai.svc.cluster.local:11434"
-              until curl -sf "${OLLAMA}/api/tags" >/dev/null; do
+              OLLAMA_API=http://ollama-api.ai.svc.cluster.local:11434
+              until curl -sf "$OLLAMA_API/api/tags" >/dev/null; do
                 echo "waiting for ollama API..."
                 sleep 10
               done
               echo "pulling qwen2.5-coder:32b (this may take a while)..."
-              curl -sf "${OLLAMA}/api/pull" -d '{"name":"qwen2.5-coder:32b"}'
+              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"qwen2.5-coder:32b"}'
               echo "pull complete"
           resources:
             requests:
