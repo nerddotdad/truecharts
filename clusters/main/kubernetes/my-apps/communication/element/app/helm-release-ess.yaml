@@ -23,17 +23,15 @@ spec:
     certManager:
       clusterIssuer: domain-0-le-prod
     
-    # External PostgreSQL configuration (CNPG)
+    # Disable bundled Postgres (CNPG deployed separately)
     postgres:
       enabled: false
-      host: element-postgresql-rw.communication.svc.cluster.local
-      port: 5432
-      user: synapse
-      password:
-        value: ${ELEMENT_DB_PASSWORD}
-      database: synapse
-      sslMode: prefer
-    
+
+    # Defaults for chart-constructed PVCs (Synapse media, etc.)
+    storage:
+      storageClassName: longhorn
+      resourcePolicy: keep
+
     # Element Web Configuration
     elementWeb:
       ingress:
@@ -65,14 +63,21 @@ spec:
     
     # Synapse Configuration
     synapse:
+      # External PostgreSQL (CNPG)
+      postgres:
+        host: element-postgresql-rw.communication.svc.cluster.local
+        port: 5432
+        user: synapse
+        password:
+          value: ${ELEMENT_DB_PASSWORD}
+        database: synapse
+        sslMode: prefer
       ingress:
         host: matrix.${DOMAIN_0}
         className: external
-      # Use internal storage (backed up via NAS backup strategy)
-      storage:
-        size: 50Gi
-        storageClassName: longhorn
-        resourcePolicy: keep
+      media:
+        storage:
+          size: 50Gi
       # Disable federation to make server private
       additional:
         user-config.yaml:
@@ -105,6 +110,14 @@ spec:
         className: external
     
     matrixAuthenticationService:
+      postgres:
+        host: element-postgresql-rw.communication.svc.cluster.local
+        port: 5432
+        user: synapse
+        password:
+          value: ${ELEMENT_DB_PASSWORD}
+        database: mas
+        sslMode: prefer
       ingress:
         host: mas.${DOMAIN_0}
         className: external
