@@ -78,8 +78,6 @@ spec:
       media:
         storage:
           size: 50Gi
-      registrationSharedSecret:
-        value: ${ELEMENT_REGISTRATION_SECRET}
       # Disable federation to make server private
       additional:
         user-config.yaml:
@@ -100,9 +98,8 @@ spec:
               room_name: "Server Notices"
             # Custom server name for privacy indication
             server_name: "Hoth Private Matrix Server"
-            # Registration secret is set via synapse.registrationSharedSecret (chart-managed)
-            enable_registration: true
-            registration_requires_token: true
+            # Registration is handled by Matrix Authentication Service (OAuth delegation)
+            suppress_key_server_warning: true
     
     # Hostnames configuration
     elementAdmin:
