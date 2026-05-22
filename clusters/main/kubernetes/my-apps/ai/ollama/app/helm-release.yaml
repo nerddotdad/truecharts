@@ -71,8 +71,8 @@ spec:
                 OLLAMA_NUM_PARALLEL: "1"
                 OLLAMA_KV_CACHE_TYPE: "q8_0"
                 OLLAMA_GPU_OVERHEAD: "536870912"
-                # qwen2.5-coder:14b supports 128K native; 64K fits RTX 3090 with flash attention + q8 KV
-                OLLAMA_CONTEXT_LENGTH: "65536"
+                # qwen3.5:9b — 256K native; tested ~17GB VRAM at 262144 on RTX 3090 (100% GPU)
+                OLLAMA_CONTEXT_LENGTH: "262144"
       ui:
         type: Deployment
 
@@ -118,7 +118,7 @@ spec:
           homepage:
             enabled: true
             name: ollama
-            description: Ollama LLM (qwen2.5-coder:14b, 64K ctx, GPU)
+            description: Ollama LLM (qwen3.5:9b, 256K ctx, GPU)
             group: ai
             icon: ""
             widget:

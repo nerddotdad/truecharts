@@ -1,11 +1,12 @@
 # One-time model pull for GitOps bootstrap.
+# Default model: qwen3.5:9b (Hermes Guide pick; 256K native, 64K+ with OLLAMA_CONTEXT_LENGTH on RTX 3090).
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model:
-#   kubectl delete job -n ai ollama-pull-qwen25-coder-14b
+#   kubectl delete job -n ai ollama-pull-qwen35-9b
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ollama-pull-qwen25-coder-14b
+  name: ollama-pull-qwen35-9b
   namespace: ai
 spec:
   ttlSecondsAfterFinished: 604800
@@ -26,8 +27,8 @@ spec:
                 echo "waiting for ollama API..."
                 sleep 10
               done
-              echo "pulling qwen2.5-coder:14b (this may take a while)..."
-              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"qwen2.5-coder:14b"}'
+              echo "pulling qwen3.5:9b (this may take a while)..."
+              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"qwen3.5:9b"}'
               echo "pull complete"
           resources:
             requests:
