@@ -19,7 +19,7 @@ spec:
             - -c
             - |
               set -e
-              OLLAMA="http://ollama.ai.svc.cluster.local:11434"
+              OLLAMA="http://ollama-api.ai.svc.cluster.local:11434"
               until curl -sf "${OLLAMA}/api/tags" >/dev/null; do
                 echo "waiting for ollama API..."
                 sleep 10
