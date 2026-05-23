@@ -1,27 +1,28 @@
 {
-  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: [
-    'config:recommended',
-    'github>truecharts/public//.github/renovate/main.json5',
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "github>trueforge-org/truecharts//.github/renovate/main.json5"
   ],
-  automerge: true,
-  automergeType: 'pr',
-  ignoreTests: true,
-  packageRules: [
+  "automerge": true,
+  "automergeType": "pr",
+  "ignoreTests": true,
+  "ignorePaths": [
+    "**/*.sops.*",
+    "**/.archive/**",
+    "**/archive/**",
+    "**/resources/**"
+  ],
+  "packageRules": [
     {
-      description:
-        'Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan',
-      matchPackageNames: [
-        'ghcr.io/siderolabs/kubelet',
-        'ghcr.io/siderolabs/installer',
+      "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",
+      "matchPackageNames": [
+        "ghcr.io/siderolabs/kubelet",
+        "ghcr.io/siderolabs/installer"
       ],
-      matchUpdateTypes: ['major', 'minor', 'patch'],
-      dependencyDashboardApproval: true,
-      automerge: false,
-    },
-    {
-      matchCategories: ['docker'],
-      pinDigests: true,
-    },
-  ],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
 }
