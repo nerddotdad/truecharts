@@ -81,6 +81,7 @@ spec:
         server: ${NAS_IP}
       cache:
         enabled: true
+        size: 20Gi
         mountPath: "/cache"
         type: "emptyDir"
     ingress:
