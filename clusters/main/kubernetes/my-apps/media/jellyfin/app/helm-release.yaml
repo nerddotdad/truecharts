@@ -67,23 +67,12 @@ spec:
         mountPath: /config
         path: ${NFS_JELLYFIN_CONFIG}
         server: ${NAS_IP}
-      transcode:
-        enabled: true
-        type: nfs
-        mountPath: /transcode
-        path: ${NFS_JELLYFIN_TRANSCODE}
-        server: ${NAS_IP}
       media:
         enabled: true
         type: nfs
         mountPath: /media
         path: ${NFS_MEDIA}
         server: ${NAS_IP}
-      cache:
-        enabled: true
-        size: 20Gi
-        mountPath: "/cache"
-        type: "emptyDir"
     ingress:
       main:
         enabled: true
