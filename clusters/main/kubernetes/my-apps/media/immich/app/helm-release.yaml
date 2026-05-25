@@ -31,7 +31,15 @@ spec:
   values:
     # Fresh Immich overlay: everything else comes from chart defaults
     # https://github.com/trueforge-org/truecharts/blob/master/charts/stable/immich/values.yaml
-    #
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
     # credentials:
     #   cloudflare_r2:
     #     type: s3
@@ -124,10 +132,20 @@ spec:
             microservices: {}
       thumbs:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        # main + microservices both mount thumbs; RWO would block the second pod.
+        accessMode: ReadWriteMany
+        size: 100Gi
         mountPath: /usr/src/app/upload/thumbs/
-        path: ${NFS_IMMICH_THUMBS}
-        server: ${NAS_IP}
+        volsync:
+          - name: thumbs
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: true
+            src:
+              enabled: true
         targetSelector:
           main:
             main: {}
