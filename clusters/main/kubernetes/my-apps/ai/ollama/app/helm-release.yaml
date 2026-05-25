@@ -57,6 +57,11 @@ spec:
     service:
       main:
         enabled: false
+      api:
+        primary: true
+        ports:
+          api:
+            primary: true
 
     workload:
       main:
@@ -98,6 +103,7 @@ spec:
       main:
         enabled: false
       api:
+        primary: true
         enabled: true
         ingressClassName: external
         hosts:
