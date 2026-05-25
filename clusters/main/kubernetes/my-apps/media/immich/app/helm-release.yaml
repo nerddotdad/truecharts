@@ -175,7 +175,7 @@ spec:
             microservices: {}
     workload:
       main:
-        replicas: 1
+        replicas: 0
         podSpec:
           containers:
             main:
@@ -187,6 +187,7 @@ spec:
                   cpu: "4"
                   memory: 8Gi
       microservices:
+        replicas: 0
         podSpec:
           containers:
             microservices:
@@ -198,6 +199,7 @@ spec:
                   cpu: "4"
                   memory: 6Gi
       machinelearning:
+        replicas: 0
         podSpec:
           containers:
             machinelearning:
