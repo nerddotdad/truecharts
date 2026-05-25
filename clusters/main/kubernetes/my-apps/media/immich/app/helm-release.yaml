@@ -143,7 +143,7 @@ spec:
             type: restic
             credentials: truenas_garage
             dest:
-              enabled: true
+              enabled: false
             src:
               enabled: true
         targetSelector:
