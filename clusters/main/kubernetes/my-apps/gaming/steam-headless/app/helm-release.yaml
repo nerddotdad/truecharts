@@ -14,7 +14,7 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 10m
+  timeout: 20m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -29,6 +29,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
     securityContext:
       pod:
         # Set fsGroup to 568 to match NFS share ownership (default user)
@@ -209,27 +218,19 @@ spec:
               readOnly: false
       games:
         enabled: true
-        type: nfs
+        type: pvc
+        size: 500Gi
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
         mountPath: /mnt/games
-        path: ${NFS_STEAM_GAMES}
-        server: ${NAS_IP}
-        # Use NFS from NAS for games directory - fast, remote storage that survives node loss
-        # NFS provides good performance while ensuring data persistence
-        # 
-        # ALTERNATIVE: If network bandwidth is a concern, use PVC with Longhorn instead:
-        #   type: pvc
-        #   size: 500Gi  # Adjust size as needed
-        #   storageClass: longhorn
-        #   accessMode: ReadWriteOnce
-        #   volsync:
-        #     - name: games
-        #       type: restic
-        #       credentials: cloudflare_r2  # Or your S3 credentials
-        #       dest:
-        #         enabled: true
-        #       src:
-        #         enabled: true
-        #         schedule: "0 0 2 * * *"  # Daily at 2 AM
+        volsync:
+          - name: games
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: false
+            src:
+              enabled: true
       flatpak:
         enabled: true
         type: pvc
