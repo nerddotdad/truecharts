@@ -4,7 +4,7 @@ resources:
   - namespace.yaml
   - jellyseerr/ks.yaml
   - nzbget/ks.yaml
-  # - prowlarr/ks.yaml
+  - prowlarr/ks.yaml
   - radarr/ks.yaml
   - sonarr/ks.yaml
   - lidarr/ks.yaml
