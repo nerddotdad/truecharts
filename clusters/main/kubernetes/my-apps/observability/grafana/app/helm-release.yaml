@@ -96,6 +96,9 @@ spec:
                   timeInterval: 30s
 
     persistence:
+      data:
+        enabled: true
+        size: 10Gi
       sc-datasource-volume:
         enabled: false
       prometheus-kube-datasource:

@@ -29,6 +29,10 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    persistence:
+      config:
+        enabled: true
+        size: 2Gi
     cloudflareddns:
       user: ${DOMAIN_0_EMAIL}
       api_token: ${DOMAIN_0_CLOUDFLARE_TOKEN}

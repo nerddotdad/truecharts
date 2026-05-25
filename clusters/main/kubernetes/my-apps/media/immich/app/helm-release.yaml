@@ -48,6 +48,12 @@ spec:
     #     accessKey: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
     #     secretKey: "${CLOUDFLARE_R2_SECRET_ACESS_KEY}"
     #     encrKey: "${CLOUDFLARE_R2_ENCRKEY}"
+    cnpg:
+      main:
+        # Single-node cluster: drop replica-2 PVCs (~200Gi Longhorn reservation on a 1-node cluster).
+        cluster:
+          instances: 1
+          singleNode: true
     # cnpg:
     #   main:
     #     mode: recovery
@@ -56,10 +62,6 @@ spec:
     #     recovery:
     #       credentials: cloudflare_r2
     #       revision: "3"
-    #     # Single-node cluster: avoid a second Postgres replica (was failing with Longhorn I/O on replica PVC).
-    #     cluster:
-    #       instances: 1
-    #       singleNode: true
     #     backups:
     #       enabled: true
     #       revision: "4"
