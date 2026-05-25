@@ -83,7 +83,7 @@ spec:
                 # qwen3.5:9b — 256K native; tested ~17GB VRAM at 262144 on RTX 3090 (100% GPU)
                 OLLAMA_CONTEXT_LENGTH: "262144"
       ui:
-        type: Deployment
+        enabled: false
 
     persistence:
       config:
@@ -106,49 +106,11 @@ spec:
             main:
               mountPath: "/root/.ollama"
       data:
-        enabled: true
-        type: pvc
-        storageClass: longhorn
-        accessMode: ReadWriteOnce
-        size: 4Gi
-        mountPath: "/app/backend/data"
-        volsync:
-          - name: data
-            type: restic
-            credentials: truenas_garage_ai
-            dest:
-              enabled: false
-            src:
-              enabled: true
-        targetSelector:
-          ui:
-            ui:
-              mountPath: "/app/backend/data"
+        enabled: false
 
     ingress:
       main:
-        primary: true
-        enabled: true
-        ingressClassName: external
-        hosts:
-          - host: ollama.${DOMAIN_0}
-            paths:
-              - path: /
-                pathType: Prefix
-        integrations:
-          traefik:
-            enabled: false
-          certManager:
-            enabled: true
-            certificateIssuer: "domain-0-le-prod"
-          homepage:
-            enabled: true
-            name: ollama
-            description: Ollama LLM (qwen3.5:9b, 256K ctx, GPU)
-            group: ai
-            icon: ""
-            widget:
-              enabled: false
+        enabled: false
       api:
         enabled: true
         ingressClassName: external
@@ -163,3 +125,11 @@ spec:
           certManager:
             enabled: true
             certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: ollama
+            description: Ollama LLM API (qwen3.5:9b, 256K ctx, GPU)
+            group: ai
+            icon: ""
+            widget:
+              enabled: false
