@@ -296,7 +296,7 @@ spec:
             dest:
               enabled: false
             src:
-              enabled: true
+              enabled: false
         targetSelector:
           main:
             main:
@@ -318,7 +318,7 @@ spec:
             dest:
               enabled: false
             src:
-              enabled: true
+              enabled: false
         targetSelector:
           main:
             main:
@@ -340,7 +340,7 @@ spec:
             dest:
               enabled: false
             src:
-              enabled: true
+              enabled: false
         targetSelector:
           main:
             mcbackup:
