@@ -14,7 +14,7 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 20m
+  timeout: 10m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -29,15 +29,6 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    credentials:
-      truenas_garage_ai:
-        type: s3
-        url: "${GARAGE_URL}"
-        region: garage
-        bucket: ai-agents
-        accessKey: "${GARAGE_ACCESS_KEY_ID}"
-        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
-        encrKey: "${ADMIN_PASS}"
     securityContext:
       container:
         runAsNonRoot: false
@@ -47,7 +38,6 @@ spec:
 
     podOptions:
       runtimeClassName: "nvidia"
-      # Tolerate system taints for node initialization (Cilium agent-not-ready and node not-ready)
       tolerations:
         - key: node.cilium.io/agent-not-ready
           operator: Exists
@@ -57,12 +47,12 @@ spec:
           effect: NoSchedule
 
     resources:
-        requests:
-          nvidia.com/gpu: 1
-          memory: 6Gi
-        limits:
-          nvidia.com/gpu: 1
-          memory: 24Gi
+      requests:
+        nvidia.com/gpu: 1
+        memory: 6Gi
+      limits:
+        nvidia.com/gpu: 1
+        memory: 24Gi
 
     service:
       main:
@@ -97,14 +87,6 @@ spec:
         accessMode: ReadWriteOnce
         size: 120Gi
         mountPath: "/root/.ollama"
-        volsync:
-          - name: config
-            type: restic
-            credentials: truenas_garage_ai
-            dest:
-              enabled: false
-            src:
-              enabled: true
         targetSelector:
           main:
             main:
