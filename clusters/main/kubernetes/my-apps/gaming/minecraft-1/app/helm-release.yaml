@@ -39,6 +39,19 @@ spec:
         accessKey: "${GARAGE_ACCESS_KEY_ID}"
         secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
         encrKey: "${ADMIN_PASS}"
+    mcBackupImage:
+      repository: docker.io/itzg/mc-backup
+      pullPolicy: Always
+      tag: latest
+    mcbackup:
+      zstd_params:
+        - --long=25
+        - --single-thread
+      excludes:
+        - "*.jar"
+        - cache
+        - logs
+        - "*.tmp"
     securityContext:
       container:
         runAsNonRoot: true
