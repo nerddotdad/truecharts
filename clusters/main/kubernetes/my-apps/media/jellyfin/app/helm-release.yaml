@@ -77,14 +77,9 @@ spec:
         accessMode: ReadWriteOnce
         size: 20Gi
         mountPath: /config
-        volsync:
-          - name: config
-            type: restic
-            credentials: truenas_garage
-            dest:
-              enabled: true
-            src:
-              enabled: true
+        # VolSync disabled until NFS migration completes (dest populator + src mover
+        # race jellyfin for the RWO config volume on single-node Longhorn).
+        # Re-enable src-only after migration (see wizarr pattern).
       media:
         enabled: true
         type: nfs
