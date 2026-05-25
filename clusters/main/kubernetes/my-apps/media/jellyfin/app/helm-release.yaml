@@ -30,6 +30,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
     workload:
       main:
         podSpec:
@@ -50,7 +59,7 @@ spec:
           containers:
             main:
               env:
-                # Keep data on same NFS as config (single NFS); sanity check only looks at /config root
+                # Data lives under /config on the local PVC
                 JELLYFIN_DATA_DIR: "/config/data"
               resources:
                 requests:
@@ -63,10 +72,19 @@ spec:
     persistence:
       config:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 20Gi
         mountPath: /config
-        path: ${NFS_JELLYFIN_CONFIG}
-        server: ${NAS_IP}
+        volsync:
+          - name: config
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: true
+            src:
+              enabled: true
       media:
         enabled: true
         type: nfs
