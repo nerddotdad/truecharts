@@ -14,7 +14,7 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 5m
+  timeout: 20m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -29,13 +29,31 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
     persistence:
       config:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 2Gi
         mountPath: /config
-        path: ${NFS_PROWLARR_CONFIG}
-        server:  ${NAS_IP}
+        volsync:
+          - name: config
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: true
+            src:
+              enabled: true
     ingress:
       main:
         enabled: true
