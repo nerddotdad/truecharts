@@ -138,7 +138,7 @@ spec:
         storageClass: longhorn
         # main + microservices both mount thumbs; RWO would block the second pod.
         accessMode: ReadWriteMany
-        size: 100Gi
+        size: 30Gi
         mountPath: /usr/src/app/upload/thumbs/
         volsync:
           - name: thumbs
@@ -201,7 +201,7 @@ spec:
                   cpu: "4"
                   memory: 6Gi
       machinelearning:
-        replicas: 0
+        replicas: 1
         podSpec:
           containers:
             machinelearning:
