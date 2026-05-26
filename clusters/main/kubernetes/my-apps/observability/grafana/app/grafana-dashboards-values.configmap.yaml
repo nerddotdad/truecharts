@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-values
+  namespace: observability
+data:
+  values.yaml: |
+    dashboards:
+      grafana: {}
