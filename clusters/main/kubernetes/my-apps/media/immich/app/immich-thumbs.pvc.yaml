@@ -1,0 +1,14 @@
+# Chart ignores accessMode ReadWriteMany and always creates RWO; both main and
+# microservices mount thumbs, so we pre-provision RWX on Longhorn.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-thumbs
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 30Gi

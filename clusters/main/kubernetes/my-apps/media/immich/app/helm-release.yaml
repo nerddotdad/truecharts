@@ -135,10 +135,7 @@ spec:
       thumbs:
         enabled: true
         type: pvc
-        storageClass: longhorn
-        # main + microservices both mount thumbs; RWO would block the second pod.
-        accessMode: ReadWriteMany
-        size: 30Gi
+        existingClaim: immich-thumbs
         mountPath: /usr/src/app/upload/thumbs/
         volsync:
           - name: thumbs
