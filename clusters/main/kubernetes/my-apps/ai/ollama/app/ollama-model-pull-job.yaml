@@ -6,7 +6,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ollama-pull-qwen35-9b
+  name: ollama-model-pull-job
   namespace: ai
 spec:
   ttlSecondsAfterFinished: 604800
@@ -29,6 +29,9 @@ spec:
               done
               echo "pulling qwen3.5:9b (this may take a while)..."
               curl -sf "$OLLAMA_API/api/pull" -d '{"name":"qwen3.5:9b"}'
+              echo "pull complete"
+              echo "pulling windffooxxyang1130764/mesugaki-R18G:latest..."
+              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"windffooxxyang1130764/mesugaki-R18G:latest"}'
               echo "pull complete"
           resources:
             requests:
