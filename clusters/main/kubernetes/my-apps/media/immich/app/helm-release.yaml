@@ -134,10 +134,20 @@ spec:
             microservices: {}
       thumbs:
         enabled: true
-        type: nfs
+        type: pvc
+        storageClass: longhorn
+        # main + microservices both mount thumbs; RWO would block the second pod.
+        accessMode: ReadWriteMany
+        size: 30Gi
         mountPath: /usr/src/app/upload/thumbs/
-        path: ${NFS_IMMICH_THUMBS}
-        server: ${NAS_IP}
+        volsync:
+          - name: thumbs
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: false
+            src:
+              enabled: false
         targetSelector:
           main:
             main: {}
@@ -167,7 +177,7 @@ spec:
             microservices: {}
     workload:
       main:
-        replicas: 1
+        replicas: 0
         podSpec:
           containers:
             main:
@@ -179,7 +189,7 @@ spec:
                   cpu: "4"
                   memory: 8Gi
       microservices:
-        replicas: 1
+        replicas: 0
         podSpec:
           containers:
             microservices:
