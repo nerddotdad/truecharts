@@ -79,6 +79,7 @@ spec:
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 HERMES_OPTIONAL_SKILLS_DIR: /opt/homelab-skills
                 HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
+                HERMES_WEBUI_EXTENSION_SCRIPT_URLS: /extensions/alert-handoff.js
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT: python3 /opt/homelab-scripts/alert_prefill.py
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT_TIMEOUT: "5"
                 INCIDENT_API_BASE: http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents

@@ -11,7 +11,7 @@ AI-assisted alert triage using **[Hermes Agent](https://github.com/NousResearch/
 | Service | URL |
 |---------|-----|
 | **Hermes WebUI** | `https://hermes.${DOMAIN_0}` |
-| **Ask AI** (from ntfy) | `https://hermes.${DOMAIN_0}/?incident=<fingerprint>` |
+| **Ask AI** (from ntfy) | `https://hermes.${DOMAIN_0}/?incident=<fingerprint>&autostart=1` |
 | **Incident API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
 
 Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** (same as Grafana).
@@ -21,7 +21,7 @@ Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** 
 ```text
 Prometheus / Grafana → homelab-alert-bridge (stores incident JSON)
                     → alertmanager-ntfy → ntfy (Runbook | Alert | Ask AI)
-Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
+Phone → Ask AI → Hermes WebUI (extension loads incident + auto-starts agent)
       → You chat with Hermes (read-only kubectl / flux)
       → Agent proposes resolution; you execute via GitOps
       → Hermes can save a skill for next time
@@ -77,7 +77,7 @@ Default model **`qwen3.5:9b`** at `http://ollama.ai.svc.cluster.local:11434/v1` 
 | **404 nginx** on `https://hermes.<domain>/` | Hermes HelmRelease not deployed — check `kubectl get helmrelease -n ai hermes-oncall` and `my-apps/ai/kustomization.yaml` includes `hermes-oncall/ks.yaml`. Only `/homelab/api` ingress alone returns 404 on `/`. |
 | WebUI ImagePullBackOff | Build/push `hermes-homelab` image on `main` |
 | Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
-| Ask AI opens empty composer | Browser extension blocked? Check `/homelab/api/incidents/<id>` in browser |
+| Ask AI opens empty composer | Log in first (sessionStorage resumes after auth). Check `/homelab/api/incidents/<id>` in browser. Ensure `HERMES_WEBUI_EXTENSION_SCRIPT_URLS` includes `/extensions/alert-handoff.js`. |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
 | **Connection error** in chat | Hermes logs show `ollama-api.ai.svc.cluster.local`? Use **`ollama.ai.svc.cluster.local:11434/v1`** (Service `ollama`) or apply `ollama-api` cluster DNS alias. `ollama-api.${DOMAIN_0}` is ingress-only. |
