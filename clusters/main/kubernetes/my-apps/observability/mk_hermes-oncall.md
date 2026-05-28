@@ -38,9 +38,18 @@ Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
 | `custom_images/homelab-alert-bridge/` | Incident bridge image |
 | `alertmanager-ntfy/app/configmap.yaml` | **Ask AI** `X-Actions` button |
 
+## Image versions (Renovate)
+
+CI publishes semver tags from `custom_images/*/VERSION`. Manifests pin that tag with a `# renovate:` comment; **Renovate** opens PRs when GHCR has a newer version (often auto-merged).
+
+| Image | Pin location |
+|-------|----------------|
+| `hermes-homelab` | `hermes-oncall/app/helm-release.yaml` → `values.image.tag` |
+| `homelab-alert-bridge` | `homelab-alert-bridge/app/deployment.yaml` → `image:` |
+
 ## First deploy
 
-1. **Push to `main`** so GitHub Actions builds `ghcr.io/nerddotdad/hermes-homelab` and `homelab-alert-bridge` (paths under `custom_images/`).
+1. **Push to `main`** so GitHub Actions builds `ghcr.io/nerddotdad/hermes-homelab` and `homelab-alert-bridge` (paths under `custom_images/`). First build tags **`1.0.0`** from each `VERSION` file.
 2. Flux reconciles `homelab-alert-bridge` **before** Alertmanager traffic switches (Kustomization `dependsOn: alertmanager-ntfy` only — bridge should be up when AM config changes).
 3. Open `https://hermes.${DOMAIN_0}`, complete WebUI onboarding if prompted, confirm model **qwen3.5:9b** via Ollama.
 4. Fire a test alert (see `alert-test/`) and tap **Ask AI** on ntfy.

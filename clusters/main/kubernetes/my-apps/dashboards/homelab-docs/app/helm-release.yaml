@@ -34,8 +34,8 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/homelab-docs
       pullPolicy: IfNotPresent
-      # Pin after CI push, or use :latest (ImagePolicy optional). See custom_images/homelab-docs/VERSION
-      tag: latest
+      # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-docs
+      tag: "1.0.7"
 
     workload:
       main:

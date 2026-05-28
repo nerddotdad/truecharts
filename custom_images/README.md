@@ -94,10 +94,18 @@ image:
 ### Updating Image Versions
 
 1. Make your changes to the Dockerfile or source files
-2. Update the `VERSION` file in the image directory (e.g., `1.0.0` → `1.0.1`)
-3. Update the `tag` in your HelmRelease to match the new version
-4. Commit and push - the new image will be built with the new version tag
-5. Flux will detect the HelmRelease change and pull the new image
+2. Commit and push to `main` — the build workflow auto-bumps `VERSION` (patch) unless you edited `VERSION` in the same commit
+3. **Renovate** opens a PR to update pinned `tag:` / `image:` lines in `helm-release.yaml` and `deployment.yaml` (see `# renovate:` comments)
+4. After merge, Flux reconciles and pulls the new semver tag
+
+Helm/deploy manifests use semver pins plus Renovate annotations, for example:
+
+```yaml
+# renovate: datasource=docker depName=ghcr.io/nerddotdad/my-image
+tag: "1.0.0"
+```
+
+You do not need `pullPolicy: Always` when using pinned semver tags.
 
 ### For Private Images
 

@@ -13,7 +13,35 @@
     "**/archive/**",
     "**/resources/**"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Homelab custom GHCR images — HelmRelease values.image.tag",
+      "managerFilePatterns": ["clusters/**/helm-release.yaml"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s#]+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Homelab custom GHCR images — Deployment container image",
+      "managerFilePatterns": ["clusters/**/deployment.yaml"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image:\\s+[^:]+:(?<currentValue>\\S+)"
+      ]
+    }
+  ],
   "packageRules": [
+    {
+      "description": "Homelab custom GHCR image bumps (CI publishes semver from custom_images/*/VERSION)",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/nerddotdad/hermes-homelab",
+        "ghcr.io/nerddotdad/homelab-alert-bridge",
+        "ghcr.io/nerddotdad/homelab-docs"
+      ],
+      "automerge": true
+    },
     {
       "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",
       "matchPackageNames": [
