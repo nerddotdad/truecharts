@@ -42,9 +42,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: automation/custom-image-tags
           delete-branch: true
-          commit-message: |
-            chore: sync custom image tags after CI build
-          title: chore: sync custom image tags after CI build
+          commit-message: "chore: sync custom image tags after CI build"
+          title: "chore: sync custom image tags after CI build"
           body: |
             Updates `custom_images/*/VERSION` and cluster manifest image pins after GHCR publish.
 
