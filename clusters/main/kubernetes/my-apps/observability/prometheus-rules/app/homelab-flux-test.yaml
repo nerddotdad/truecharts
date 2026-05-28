@@ -1,0 +1,34 @@
+---
+# Fast-path alert for alert-test-fail only (2m). Remove with alert-test/ after validation.
+# Production Flux Helm alerts use 10m in homelab-flux.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-flux-test
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.flux.test
+      interval: 30s
+      rules:
+        - alert: HomelabFluxHelmReleaseTestFail
+          expr: |
+            gotk_resource_info{
+              customresource_kind="HelmRelease",
+              name="alert-test-fail",
+              exported_namespace="observability",
+              ready="False",
+              suspended!="true"
+            } == 1
+          for: 2m
+          labels:
+            severity: critical
+            homelab_team: platform
+            alert_test: "true"
+          annotations:
+            summary: "[TEST] HelmRelease alert-test-fail not ready"
+            description: >-
+              Deliberate test workload failed (nonexistent chart). If you see this on ntfy, the
+              Flux → Prometheus → Alertmanager → ntfy pipeline works. Remove observability/alert-test/.

@@ -1,0 +1,30 @@
+---
+# INTENTIONALLY BROKEN — for alert pipeline testing only.
+# References a chart that does not exist on the truecharts HelmRepository.
+# Delete alert-test/ and homelab-flux-test.yaml when finished testing.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alert-test-fail
+  namespace: observability
+  labels:
+    homelab.dev/alert-test: "true"
+spec:
+  interval: 5m
+  timeout: 5m
+  maxHistory: 1
+  install:
+    remediation:
+      retries: 0
+  upgrade:
+    remediation:
+      retries: 0
+  chart:
+    spec:
+      chart: alert-test-nonexistent-chart
+      version: 99.99.99
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 5m

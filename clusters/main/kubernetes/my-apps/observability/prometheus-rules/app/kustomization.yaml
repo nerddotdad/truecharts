@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - homelab-downloaders.yaml
   - homelab-flux.yaml
+  - homelab-flux-test.yaml
   - homelab-gitops.yaml

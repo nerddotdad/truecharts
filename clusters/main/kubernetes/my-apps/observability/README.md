@@ -157,6 +157,10 @@ kubectl get podmonitor -n flux-system
 
 Tune `for:` durations in `homelab-flux.yaml` if Flux reconciliation legitimately runs longer than the alert window.
 
+### Practical alert test (broken HelmRelease)
+
+See **`alert-test/README.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
+
 ## Silence noise
 
 - **Watchdog** / **InfoInhibitor**: routed to `null` receiver (pipeline health only).
