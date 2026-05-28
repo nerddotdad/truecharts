@@ -3,8 +3,14 @@ FROM ghcr.io/nesquena/hermes-webui:latest@sha256:0e793c6358dd4e5292ff62f5540ec67
 
 USER root
 
+# Hermes Agent source — docker_init.bash installs from /opt/hermes or ~/.hermes/hermes-agent.
+ARG HERMES_AGENT_REF=main
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && apt-get install -y --no-install-recommends curl ca-certificates git \
+    && git clone --depth 1 --branch "${HERMES_AGENT_REF}" \
+      https://github.com/NousResearch/hermes-agent.git /opt/hermes \
+    && test -f /opt/hermes/run_agent.py \
+    && test -f /opt/hermes/pyproject.toml \
     && KVER="$(curl -fsSL https://dl.k8s.io/release/stable.txt)" \
     && curl -fsSL "https://dl.k8s.io/release/${KVER}/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl \
@@ -27,6 +33,9 @@ RUN printf '%s\n' \
   'if [ -f /opt/hermes-seed/config.yaml ] && [ ! -f /home/hermeswebui/.hermes/config.yaml ]; then' \
   '  mkdir -p /home/hermeswebui/.hermes' \
   '  cp /opt/hermes-seed/config.yaml /home/hermeswebui/.hermes/config.yaml' \
+  'fi' \
+  'if [ ! -e /home/hermeswebui/.hermes/hermes-agent ] && [ -f /opt/hermes/run_agent.py ]; then' \
+  '  ln -sfn /opt/hermes /home/hermeswebui/.hermes/hermes-agent' \
   'fi' \
   'exec /hermeswebui_init.bash "$@"' \
   > /hermes-homelab-entry.sh \

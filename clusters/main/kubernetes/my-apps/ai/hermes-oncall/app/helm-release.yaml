@@ -74,6 +74,9 @@ spec:
                 HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
                 HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
                 HERMES_HOME: /home/hermeswebui/.hermes
+                # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
+                HERMES_WEBUI_AGENT_DIR: /opt/hermes
+                HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 HERMES_OPTIONAL_SKILLS_DIR: /opt/homelab-skills
                 HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT: python3 /opt/homelab-scripts/alert_prefill.py
@@ -88,8 +91,10 @@ spec:
                   type: http
                   port: 8787
                   path: /health
-                  initialDelaySeconds: 30
-                  periodSeconds: 10
+                  # First boot runs uv pip install for hermes-agent (can take several minutes).
+                  initialDelaySeconds: 90
+                  periodSeconds: 15
+                  failureThreshold: 24
                 liveness:
                   enabled: true
                   type: http
@@ -130,6 +135,11 @@ spec:
         size: 20Gi
         mountPath: /home/hermeswebui/.hermes
         readOnly: false
+        targetSelectAll: true
+      workspace:
+        enabled: true
+        type: emptyDir
+        mountPath: /workspace
         targetSelectAll: true
 
     ingress:

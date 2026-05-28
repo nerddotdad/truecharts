@@ -2,6 +2,7 @@
 
 Extends [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui) for homelab on-call:
 
+- **[Hermes Agent](https://github.com/NousResearch/hermes-agent)** cloned to `/opt/hermes` at image build (`run_agent` import)
 - `kubectl` + `flux` CLI (read-only triage via in-cluster ServiceAccount)
 - Skill `homelab-k8s-flux-triage`
 - Alert deep-link extension + prefill script

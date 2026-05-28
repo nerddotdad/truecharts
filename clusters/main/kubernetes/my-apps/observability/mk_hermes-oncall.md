@@ -80,5 +80,7 @@ Default model **`qwen3.5:9b`** at `http://ollama-api.ai.svc.cluster.local:11434/
 | Ask AI opens empty composer | Browser extension blocked? Check `/homelab/api/incidents/<id>` in browser |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
+| **Missing imports: run_agent** | Use **`hermes-homelab`** image (includes agent at `/opt/hermes`), not upstream WebUI alone. After upgrade, **delete the pod** so first-boot `uv pip install` runs again (not only restart). First start can take **~5–10 min**. |
+| Provider incomplete | Wait for startup; check logs for `Adding hermes-agent's pyproject.toml` |
 
 See also [Observability](mk_observability.md) and [Alert runbooks](runbooks/mk_runbook_index.md).
