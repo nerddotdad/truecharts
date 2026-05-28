@@ -116,6 +116,9 @@ jobs:
   sync-manifests:
     needs: build
     if: needs.build.result == 'success'
+    permissions:
+      contents: write
+      pull-requests: write
     uses: ./.github/workflows/sync-custom-image-tags.yml
     with:
       bumps-json: ${{ needs.build.outputs.bumps-json }}

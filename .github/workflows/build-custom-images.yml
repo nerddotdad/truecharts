@@ -289,6 +289,9 @@ jobs:
   sync-manifests:
     needs: collect-bumps
     if: needs.collect-bumps.outputs.bumps-json != '' && needs.collect-bumps.outputs.bumps-json != '[]'
+    permissions:
+      contents: write
+      pull-requests: write
     uses: ./.github/workflows/sync-custom-image-tags.yml
     with:
       bumps-json: ${{ needs.collect-bumps.outputs.bumps-json }}
