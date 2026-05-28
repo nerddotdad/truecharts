@@ -40,7 +40,7 @@ Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
 
 ## Image versions (CI PR)
 
-CI publishes semver tags from `custom_images/*/VERSION`, then opens a PR updating cluster pins (`scripts/bump_custom_image_manifest.py`). Merge the PR so Flux deploys the new tag.
+CI publishes semver tags to GHCR from `custom_images/*/VERSION`, then **Renovate** opens PRs updating cluster image pins (`semver@sha256:…`) and `VERSION` files. Merged PRs let Flux deploy the new tag.
 
 | Image | Pin location |
 |-------|----------------|

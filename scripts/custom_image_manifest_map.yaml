@@ -1,5 +1,5 @@
-# Maps custom_images/<name> to cluster manifests updated after CI build.
-# Used by scripts/bump_custom_image_manifest.py and GitHub Actions.
+# Maps custom_images/<name> to cluster manifests with pinned image tags.
+# Used by scripts/bump_custom_image_manifest.py for manual bumps; Renovate updates manifests in PRs.
 images:
   hermes-homelab:
     registry: ghcr.io/nerddotdad/hermes-homelab

@@ -88,26 +88,27 @@ Update your HelmRelease to use the GHCR image with the semantic version tag:
 image:
   repository: ghcr.io/nerddotdad/styletts2
   pullPolicy: IfNotPresent
-  tag: "1.0.0"  # Use semantic version from VERSION file
+  # renovate: datasource=docker depName=ghcr.io/nerddotdad/styletts2
+  tag: 1.0.0@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
-**Important:** Always use the semantic version tag (not `latest`) to ensure Kubernetes pulls new images when you update the version. The `latest` tag doesn't change, so Kubernetes won't detect updates with `IfNotPresent` pull policy.
+Use the TrueCharts-style `semver@sha256:…` pin (not bare semver or `latest`). Renovate updates both the semver and digest when CI publishes a new GHCR tag.
 
 ### Updating Image Versions
 
 1. Make your changes to the Dockerfile or source files
-2. Commit and push to `main` — the build workflow auto-bumps `VERSION` (patch) unless you edited `VERSION` in the same commit
-3. **GitHub Actions** opens a PR (`automation/custom-image-tags`) updating `VERSION` and pinned `tag:` / `image:` in cluster manifests (see `scripts/custom_image_manifest_map.yaml`)
-4. After you merge that PR, Flux reconciles and pulls the new semver tag
+2. Commit and push to `main` — the build workflow auto-bumps the semver tag pushed to GHCR (patch) unless you edited `VERSION` in the same commit
+3. **Renovate** opens PRs updating pinned `tag:` / `image:` in cluster manifests and `custom_images/*/VERSION` (see `.github/renovate.json5`)
+4. After Renovate PRs merge (automerge is enabled), Flux reconciles and pulls the new semver tag
 
-Helm/deploy manifests use semver pins plus Renovate annotations, for example:
+Helm/deploy manifests use semver@sha256 pins plus Renovate annotations, for example:
 
 ```yaml
 # renovate: datasource=docker depName=ghcr.io/nerddotdad/my-image
-tag: "1.0.0"
+tag: 1.0.0@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
-You do not need `pullPolicy: Always` when using pinned semver tags.
+You do not need `pullPolicy: Always` when using pinned semver@sha256 tags.
 
 ### For Private Images
 
