@@ -35,9 +35,10 @@ spec:
       securityContext:
         fsGroup: 1000
 
+    # Pre-created SA + ClusterRole in rbac.yaml — do not let the chart create one.
     serviceAccount:
-      create: false
-      name: hermes-oncall
+      main:
+        enabled: false
 
     image:
       repository: ghcr.io/nerddotdad/hermes-homelab
@@ -47,7 +48,8 @@ spec:
     workload:
       main:
         podSpec:
-          serviceAccountName: hermes-oncall
+          # GitOps ServiceAccount (see rbac.yaml), not chart-generated.
+          overrideServiceAccountName: hermes-oncall
           initContainers:
             seed-hermes-config:
               enabled: true
