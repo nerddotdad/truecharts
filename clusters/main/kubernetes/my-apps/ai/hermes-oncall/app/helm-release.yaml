@@ -33,7 +33,8 @@ spec:
   values:
     podOptions:
       securityContext:
-        fsGroup: 1000
+        # Hermes WebUI image uses UID/GID 1024 (see upstream Dockerfile).
+        fsGroup: 1024
 
     # Pre-created SA + ClusterRole in rbac.yaml — do not let the chart create one.
     serviceAccount:
@@ -50,24 +51,6 @@ spec:
         podSpec:
           # GitOps ServiceAccount (see rbac.yaml), not chart-generated.
           overrideServiceAccountName: hermes-oncall
-          initContainers:
-            seed-hermes-config:
-              enabled: true
-              type: init
-              image: ghcr.io/nerddotdad/hermes-homelab:latest
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  set -e
-                  mkdir -p /home/hermeswebui/.hermes
-                  if [ ! -f /home/hermeswebui/.hermes/config.yaml ]; then
-                    cp /opt/hermes-seed/config.yaml /home/hermeswebui/.hermes/config.yaml
-                    echo "Seeded Hermes config.yaml"
-                  fi
-              securityContext:
-                runAsUser: 1000
-                runAsGroup: 1000
           containers:
             main:
               enabled: true
@@ -82,8 +65,8 @@ spec:
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT: python3 /opt/homelab-scripts/alert_prefill.py
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT_TIMEOUT: "5"
                 INCIDENT_API_BASE: http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents
-                WANTED_UID: "1000"
-                WANTED_GID: "1000"
+                WANTED_UID: "1024"
+                WANTED_GID: "1024"
               probes:
                 startup:
                   enabled: true
@@ -131,8 +114,8 @@ spec:
         accessMode: ReadWriteOnce
         size: 20Gi
         mountPath: /home/hermeswebui/.hermes
-        globalMounts:
-          - readOnly: false
+        readOnly: false
+        targetSelectAll: true
 
     ingress:
       main:

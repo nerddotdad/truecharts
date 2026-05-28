@@ -20,4 +20,17 @@ COPY extensions /opt/hermes-extensions/
 # Seed Ollama provider when config.yaml does not exist yet (PVC first boot).
 COPY config.yaml /opt/hermes-seed/config.yaml
 
-USER hermeswebui
+# Upstream CMD is /hermeswebui_init.bash — must run as root (UID setup + volume prep).
+RUN printf '%s\n' \
+  '#!/bin/sh' \
+  'set -e' \
+  'if [ -f /opt/hermes-seed/config.yaml ] && [ ! -f /home/hermeswebui/.hermes/config.yaml ]; then' \
+  '  mkdir -p /home/hermeswebui/.hermes' \
+  '  cp /opt/hermes-seed/config.yaml /home/hermeswebui/.hermes/config.yaml' \
+  'fi' \
+  'exec /hermeswebui_init.bash "$@"' \
+  > /hermes-homelab-entry.sh \
+  && chmod 755 /hermes-homelab-entry.sh
+
+USER root
+CMD ["/hermes-homelab-entry.sh"]
