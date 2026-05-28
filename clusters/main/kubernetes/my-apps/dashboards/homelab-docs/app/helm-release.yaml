@@ -1,4 +1,6 @@
 ---
+# Static MkDocs site (nginx). Image is built in CI from clusters/**/mk_*.md — not served from GitHub Actions.
+# Runtime: app-template Deployment + Service + Ingress at https://docs.${DOMAIN_0}
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -32,6 +34,7 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/homelab-docs
       pullPolicy: IfNotPresent
+      # Pin after CI push, or use :latest (ImagePolicy optional). See custom_images/homelab-docs/VERSION
       tag: latest
 
     workload:

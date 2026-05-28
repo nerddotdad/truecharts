@@ -8,13 +8,17 @@ This site is generated from **`mk_*.md`** files co-located in this GitOps reposi
 
 ## MkDocs site (`homelab-docs`)
 
+**Already deployed in the cluster** via `app-template` + Ingress at **`https://docs.${DOMAIN_0}`**. GitHub Actions only builds the container image; the runner does not host the site.
+
 | Item | Location |
 |------|----------|
 | Collector script | `scripts/collect_mkdocs.py` |
 | MkDocs config | `mkdocs/mkdocs.base.yml` |
 | Docker image | `custom_images/homelab-docs/` → `ghcr.io/nerddotdad/homelab-docs` |
-| CI workflow | `.github/workflows/build-homelab-docs.yml` |
-| HelmRelease | `my-apps/dashboards/homelab-docs/` |
+| CI workflow | `.github/workflows/build-homelab-docs.yml` (build image) |
+| HelmRelease (app-template + ingress) | `my-apps/dashboards/homelab-docs/app/helm-release.yaml` |
+
+Set GitHub repo variable **`DOCS_SITE_URL`** to `https://docs.<your-domain>` before the first docs image build. See `custom_images/homelab-docs/README.md`.
 
 Top navigation uses **tabs** (visible on wide screens, ≥1220px): this page is **Home**. All cluster services live under the **Kubernetes** tab. Add more top-level tabs by placing `mk_*.md` files in `clusters/main/kubernetes/` (same folder as this file).
 
