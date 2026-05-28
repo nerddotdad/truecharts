@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-ntfy-config
+  namespace: observability
+data:
+  config.yml: |
+    http:
+      addr: :8000
+    ntfy:
+      baseurl: http://ntfy.observability.svc.cluster.local:10222
+      notification:
+        topic: homelab-alerts
+        priority: |
+          status == "firing" && Labels.severity == "critical" ? "urgent" : (status == "firing" ? "high" : "default")
+        tags:
+          - tag: rotating_light
+            condition: status == "firing"
+          - tag: white_check_mark
+            condition: status == "resolved"
+          - tag: warning
+            condition: Labels.severity == "warning"
+          - tag: skull
+            condition: Labels.severity == "critical"
+        templates:
+          title: |
+            {{- if eq .Status "resolved" -}}
+            ✅ Resolved: {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
+            {{- else -}}
+            🔥 {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
+            {{- end -}}
+          description: |
+            {{- if index .Annotations "description" -}}
+            {{ index .Annotations "description" }}
+            {{- else if index .Annotations "message" -}}
+            {{ index .Annotations "message" }}
+            {{- else if index .Annotations "summary" -}}
+            {{ index .Annotations "summary" }}
+            {{- else -}}
+            Alert {{ .Labels.alertname }} is {{ .Status }}.
+            {{- end }}
+            {{- with .Labels.namespace }}
+
+            Namespace: {{ . }}{{ end }}{{- with .Labels.pod }}
+            Pod: {{ . }}{{ end }}{{- with .Labels.severity }}
+            Severity: {{ . }}{{ end }}{{- with .Labels.job }}
+            Job: {{ . }}{{ end }}
+          headers:
+            X-Click: |
+              {{ .GeneratorURL }}
+        async: false

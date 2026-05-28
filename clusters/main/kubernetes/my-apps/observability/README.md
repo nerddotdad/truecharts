@@ -25,7 +25,9 @@ flowchart LR
   KSM --> P
   PR --> P
   P -->|firing alerts| AM
-  AM -->|POST homelab-alerts| NT
+  BR[alertmanager-ntfy]
+  AM --> BR
+  BR -->|title + message| NT
   GF -->|query| P
   GF -.->|contact point| AM
 ```
@@ -34,7 +36,7 @@ flowchart LR
 |-------|----------|---------|
 | Default K8s alerts | `kube-prometheus-stack` Helm chart | Node, pod, PVC, API, etc. |
 | Homelab alerts | `prometheus-rules/app/*.yaml` | Custom PromQL you own |
-| Notifications | `ntfy/app/helm-release.yaml` + `alertmanagerconfig.yaml` | Alertmanager → ntfy topic `homelab-alerts` |
+| Notifications | `alertmanager-ntfy/` + `alertmanagerconfig.yaml` | Formats alerts → ntfy topic `homelab-alerts` |
 | Dashboards | `grafana/app/grafana-dashboards-values.configmap.yaml` | TrueCharts marketplace IDs |
 | Grafana ↔ AM | `grafana/app/helm-release.yaml` (`configmap.grafana-alerting-provisioning`) | Unified alerting contact point |
 
@@ -59,7 +61,9 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
    curl -d "Homelab ntfy test" https://ntfy.<your-domain>/homelab-alerts
    ```
 
-Alertmanager posts Prometheus alert JSON to that topic (messages look raw until you add transforms later). No `clusterenv` secret is required for the default unauthenticated setup.
+**alertmanager-ntfy** sits between Alertmanager and ntfy: it turns webhook JSON into a readable **title**, **message**, priority, and tags. Grafana’s “Alertmanager (homelab)” contact point uses the same path, so test alerts from Grafana are formatted too.
+
+Edit templates in `alertmanager-ntfy/app/configmap.yaml` (`templates.title` / `templates.description`). No `clusterenv` secret is required for the default unauthenticated setup.
 
 **Enable auth later:** set `ENABLE_AUTH_FILE: true` in the ntfy Helm values, create users with `ntfy user add`, then add bearer token auth to `alertmanagerconfig.yaml`.
 
@@ -130,3 +134,4 @@ Prefer **PrometheusRule** for infrastructure alerts so firing state is consisten
 | `grafana/app/grafana-dashboards-values.configmap.yaml` | New dashboards |
 | `grafana/app/helm-release.yaml` (alerting `configmap` block) | Grafana contact points / policies |
 | `ntfy/app/helm-release.yaml` | ntfy server, ingress, persistence |
+| `alertmanager-ntfy/app/configmap.yaml` | Alert title/message templates, priority, tags |

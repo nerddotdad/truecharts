@@ -4,4 +4,5 @@ resources:
   - namespace.yaml
   - grafana/ks.yaml
   - ntfy/ks.yaml
+  - alertmanager-ntfy/ks.yaml
   - prometheus-rules/ks.yaml
