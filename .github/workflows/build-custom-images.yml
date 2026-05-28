@@ -242,7 +242,7 @@ jobs:
             '{image: $image, version: $version}' > "bump-manifests/${{ matrix.image }}.json"
 
       - name: Upload version manifest
-        uses: actions/upload-artifact@65a9edc5881c5f5e526fb0d65b8e60ba6b0d0b0 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bump-${{ matrix.image }}
           path: bump-manifests/${{ matrix.image }}.json
@@ -266,7 +266,7 @@ jobs:
       bumps-json: ${{ steps.bumps.outputs.json }}
     steps:
       - name: Download built version manifests
-        uses: actions/download-artifact@65a9edc5881c5f5e526fb0d65b8e60ba6b0d0b0 # v4
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
         with:
           pattern: bump-*
           merge-multiple: true
