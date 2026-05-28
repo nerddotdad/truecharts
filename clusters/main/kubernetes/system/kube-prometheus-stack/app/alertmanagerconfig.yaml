@@ -9,7 +9,7 @@ spec:
   route:
     groupBy: ["alertname", "namespace", "severity"]
     groupInterval: 10m
-    groupWait: 2m
+    groupWait: 30s
     receiver: homelab-webhook
     repeatInterval: 12h
     routes:

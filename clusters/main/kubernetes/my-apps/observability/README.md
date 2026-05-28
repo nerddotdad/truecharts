@@ -61,7 +61,14 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
    curl -d "Homelab ntfy test" https://ntfy.<your-domain>/homelab-alerts
    ```
 
-**alertmanager-ntfy** sits between Alertmanager and ntfy: it turns webhook JSON into a readable **title**, **message**, priority, and tags. Grafana’s “Alertmanager (homelab)” contact point uses the same path, so test alerts from Grafana are formatted too.
+**alertmanager-ntfy** formats webhook payloads into readable ntfy **title**, **message**, priority, and tags.
+
+| Source | Path |
+|--------|------|
+| Grafana alerts & **Test** button | Contact point **ntfy (homelab)** → webhook → alertmanager-ntfy → ntfy |
+| Prometheus / cluster alerts | Alertmanager → webhook → alertmanager-ntfy → ntfy |
+
+Use contact point **ntfy (homelab)** in Grafana rules and when clicking **Test** on a contact point. Do not use the old “Alertmanager (homelab)” / external-Alertmanager contact point for ntfy—that path does not deliver Grafana test notifications reliably.
 
 Edit templates in `alertmanager-ntfy/app/configmap.yaml` (`templates.title` / `templates.description`). No `clusterenv` secret is required for the default unauthenticated setup.
 

@@ -84,31 +84,28 @@ spec:
         data:
           contact-points.yaml: |-
             apiVersion: 1
+            deleteContactPoints:
+              - orgId: 1
+                uid: homelab-alertmanager
             contactPoints:
               - orgId: 1
-                name: Alertmanager (homelab)
+                name: ntfy (homelab)
                 receivers:
-                  - uid: homelab-alertmanager
-                    type: prometheus-alertmanager
+                  - uid: homelab-ntfy-webhook
+                    type: webhook
                     settings:
-                      url: http://kube-prometheus-stack-alertmanager.kube-prometheus-stack.svc.cluster.local:9093
+                      url: http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook
                     disableResolveMessage: false
+          # Grafana webhook uses Prometheus webhook JSON — same format alertmanager-ntfy expects.
           policies.yaml: |-
             apiVersion: 1
             policies:
               - orgId: 1
-                receiver: Alertmanager (homelab)
+                receiver: ntfy (homelab)
                 group_by: ["grafana_folder", "alertname"]
-                group_wait: 30s
+                group_wait: 10s
                 group_interval: 5m
                 repeat_interval: 4h
-                routes:
-                  - receiver: Alertmanager (homelab)
-                    object_matchers:
-                      - ["severity", "=", "critical"]
-                  - receiver: Alertmanager (homelab)
-                    object_matchers:
-                      - ["severity", "=", "warning"]
 
     persistence:
       data:
