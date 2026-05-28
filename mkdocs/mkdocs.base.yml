@@ -4,8 +4,16 @@ site_name: Homelab Cluster Docs
 site_description: GitOps cluster documentation (co-located mk_*.md sources)
 copyright: Copyright &copy; Homelab
 
+# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/
+repo_url: https://github.com/nerddotdad/truecharts
+repo_name: nerddotdad/truecharts
+# Staged paths are main/kubernetes/...; sources live under clusters/main/kubernetes/...
+edit_uri: edit/main/clusters/
+
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   palette:
     - scheme: slate
       primary: deep purple
@@ -29,10 +37,17 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.action.edit
+    - content.action.view
     - toc.follow
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      enable_git_follow: false
+      type: date
+      fallback_to_build_date: true
 
 markdown_extensions:
   - admonition

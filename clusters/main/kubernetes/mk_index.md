@@ -1,5 +1,6 @@
 ---
 title: Home
+edit_url: https://github.com/nerddotdad/truecharts/edit/main/clusters/main/kubernetes/mk_index.md
 ---
 
 # Homelab cluster documentation
@@ -52,7 +53,11 @@ Optional: `my-apps/<area>/mk_index.md` replaces the auto-generated area overview
 
 ## Document freshness
 
-Every page shows a **Last updated (Git)** banner (last commit touching that source file). Under **Home → Site build info** you see when the **published nginx image** was built (CI time + git SHA + image tag). If a runbook link from ntfy returns 404, the Git file may exist but the cluster image is still old — rebuild and roll `homelab-docs`.
+- **Page footer** (Material + `git-revision-date-localized`): last updated and created dates from Git for each `mk_*.md` source.
+- **Banner** on each page: last commit for that file plus link to **Site build info** (published image date).
+- **Edit / View** (top of page): open the doc on GitHub (`repo_url` + `edit_uri` → `clusters/...`).
+
+If a runbook link from ntfy returns 404, the Git file may exist but the cluster image is still old — rebuild and roll `homelab-docs`.
 
 ## Workflow
 
