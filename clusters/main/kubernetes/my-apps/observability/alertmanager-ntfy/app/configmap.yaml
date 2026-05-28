@@ -47,6 +47,11 @@ data:
             Severity: {{ . }}{{ end }}{{- with .Labels.job }}
             Job: {{ . }}{{ end }}
           headers:
+            # GeneratorURL points at in-cluster Prometheus (not reachable from phone). Prefer runbook.
             X-Click: |
-              {{ .GeneratorURL }}
+              {{- if index .Annotations "runbook_url" -}}
+              {{ index .Annotations "runbook_url" }}
+              {{- else -}}
+              https://grafana.${DOMAIN_0}/
+              {{- end -}}
         async: false

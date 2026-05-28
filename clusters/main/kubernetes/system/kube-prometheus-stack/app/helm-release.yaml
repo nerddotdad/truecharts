@@ -124,6 +124,8 @@ spec:
       prometheus:
         monitor:
           enabled: true
+          # Avoid ingesting duplicate exporter timestamps from gotk_resource_info (Info metrics).
+          honorTimestamps: false
           relabelings:
             - action: replace
               regex: (.*)

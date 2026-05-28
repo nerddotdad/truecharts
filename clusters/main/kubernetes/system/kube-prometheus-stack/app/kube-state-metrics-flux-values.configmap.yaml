@@ -40,11 +40,11 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
-                          source_name: [spec, sourceRef, name]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
+                      source_name: [spec, sourceRef, name]
               - groupVersionKind:
                   group: helm.toolkit.fluxcd.io
                   version: v2
@@ -58,12 +58,10 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
-                          chart_name: [status, history, "0", chartName]
-                          chart_ref_name: [spec, chartRef, name]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1
@@ -77,10 +75,10 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1
@@ -94,10 +92,10 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1
@@ -111,10 +109,10 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1
@@ -128,7 +126,7 @@ data:
                       info:
                         labelsFromPath:
                           name: [metadata, name]
-                        labelsFromPath:
-                          exported_namespace: [metadata, namespace]
-                          ready: [status, conditions, "[type=Ready]", status]
-                          suspended: [spec, suspend]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]

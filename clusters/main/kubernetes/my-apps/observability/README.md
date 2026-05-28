@@ -63,6 +63,8 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
 
 **alertmanager-ntfy** formats webhook payloads into readable ntfy **title**, **message**, priority, and tags.
 
+**Notification tap links:** `X-Click` uses each alert’s `runbook_url` when present (works on your phone). Otherwise it opens `https://grafana.${DOMAIN_0}/`. Built-in Prometheus `GeneratorURL` links use the in-cluster Service DNS (`kube-prometheus-stack-prometheus...`) and are intentionally not used.
+
 | Source | Path |
 |--------|------|
 | Grafana alerts & **Test** button | Contact point **ntfy (homelab)** → webhook → alertmanager-ntfy → ntfy |
@@ -156,6 +158,15 @@ kubectl get podmonitor -n flux-system
 ```
 
 Tune `for:` durations in `homelab-flux.yaml` if Flux reconciliation legitimately runs longer than the alert window.
+
+### `PrometheusDuplicateTimestamps` (kube-state-metrics)
+
+If you see **“Prometheus is dropping samples with duplicate timestamps”**, check Prometheus logs — drops often come from **`serviceMonitor/.../kube-state-metrics`**, not from Prometheus self-metrics. Common causes after enabling Flux `gotk_resource_info`:
+
+- Mis-indented `labelsFromPath` in `kube-state-metrics-flux-values.configmap.yaml` (must match [Flux custom metrics](https://fluxcd.io/flux/monitoring/custom-metrics/) — metric-level `labelsFromPath`, not duplicated under `info`)
+- Volatile Info labels on HelmRelease (`chart_name`, etc.) that change every reconcile
+
+Homelab config keeps stable labels only (`ready`, `suspended`, `name`, `exported_namespace`) and sets `honorTimestamps: false` on the kube-state-metrics ServiceMonitor. After deploy, the alert should clear within ~15m. Runbook: [PrometheusDuplicateTimestamps](https://runbooks.prometheus-operator.dev/runbooks/prometheus/prometheusduplicatetimestamps).
 
 ### Practical alert test (broken HelmRelease)
 
