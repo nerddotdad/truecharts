@@ -31,9 +31,16 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    podOptions:
-      securityContext:
-        # Hermes WebUI image uses UID/GID 1024 (see upstream Dockerfile).
+    # Hermes entrypoint must start as root (hermeswebuitoo) to usermod → UID 1024 on the PVC.
+    # TrueCharts defaults (runAsUser 568 + RO rootfs) block hermeswebui_init.bash.
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: true
+      pod:
         fsGroup: 1024
 
     # Pre-created SA + ClusterRole in rbac.yaml — do not let the chart create one.
@@ -55,6 +62,12 @@ spec:
           containers:
             main:
               enabled: true
+              securityContext:
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
+                allowPrivilegeEscalation: true
               env:
                 HERMES_WEBUI_HOST: "0.0.0.0"
                 HERMES_WEBUI_PORT: "8787"
@@ -67,6 +80,7 @@ spec:
                 HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT_TIMEOUT: "5"
                 INCIDENT_API_BASE: http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents
                 WANTED_UID: "1024"
+                # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
               probes:
                 startup:
