@@ -32,3 +32,5 @@
 #           annotations:
 #             summary: "Container {{ $labels.namespace }}/{{ $labels.pod }} memory > 90% of limit"
 #             description: "Investigate memory pressure before OOMKill."
+#             # Tap link in ntfy (copy URL: python scripts/runbook_url.py HomelabExampleHighMemory)
+#             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-example-high-memory/

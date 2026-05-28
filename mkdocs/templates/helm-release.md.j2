@@ -1,0 +1,98 @@
+---
+title: {{ title }}
+helmrelease_doc: generated
+source: {{ git_path }}
+---
+
+# {{ name }} (`{{ namespace }}`)
+
+Chart **section index** (from `helm-release.md.j2`). Auto-generated from [`{{ helm_filename }}`]({{ git_path }}). Service-specific alert runbooks and other `mk_*.md` notes appear as **sub-pages** under this chart in the sidebar.
+
+## Summary
+
+| Field | Value |
+|-------|-------|
+| **HelmRelease** | `{{ namespace }}/{{ name }}` |
+| **Chart** | `{{ chart_display }}` |
+| **Chart version** | `{{ chart_version or "—" }}` |
+| **Source** | {{ chart_source_display }} |
+| **Reconcile interval** | {{ interval or "—" }} |
+| **Timeout** | {{ timeout or "—" }} |
+| **Max history** | {{ max_history or "—" }} |
+| **Drift detection** | {{ drift_mode or "—" }} |
+{% if suspend is not none %}
+| **Suspended** | {{ suspend }} |
+{% endif %}
+{% if image_repository %}
+| **Image** | `{{ image_repository }}:{{ image_tag or "latest" }}` |
+{% endif %}
+
+## GitOps path
+
+```
+{{ git_path }}
+```
+
+{% if values_from %}
+## ValuesFrom
+
+{% for ref in values_from %}
+- `{{ ref.kind }}/{{ ref.name }}` (key: `{{ ref.key }}`)
+{% endfor %}
+{% endif %}
+
+## Reconciliation
+
+```bash
+flux get helmrelease {{ name }} -n {{ namespace }}
+kubectl describe helmrelease {{ name }} -n {{ namespace }}
+kubectl get helmrelease {{ name }} -n {{ namespace }} -o yaml
+```
+
+## Chart source
+
+```bash
+{% if chart_source_kind == "HelmRepository" -%}
+flux get helmrepository {{ chart_source_name }} -n {{ chart_source_namespace }}
+{%- elif chart_source_kind == "OCIRepository" -%}
+flux get ocirepository {{ chart_source_name }} -n {{ chart_source_namespace }}
+{%- else -%}
+# sourceRef: {{ chart_source_kind }} {{ chart_source_name }}/{{ chart_source_namespace }}
+{%- endif %}
+```
+
+{% if supplemental_docs %}
+## Service documentation
+
+Co-located notes for this workload (also listed as sub-pages in the sidebar).
+
+{% for doc in supplemental_docs %}
+- [{{ doc.title }}]({{ doc.href }})
+{% endfor %}
+{% endif %}
+
+{% if service_runbooks %}
+## Alert runbooks (this service)
+
+On-call steps for alerts tied to this HelmRelease (sub-pages in the sidebar).
+
+{% for doc in service_runbooks %}
+- [{{ doc.title }}]({{ doc.href }})
+{% endfor %}
+{% endif %}
+
+{% if platform_runbooks %}
+## Platform alert runbooks
+
+These alerts can fire for many HelmReleases; steps use this release’s name/namespace from the table above.
+
+{% for doc in platform_runbooks %}
+- [{{ doc.title }}]({{ doc.href }})
+{% endfor %}
+{% endif %}
+
+{% if notes_block %}
+## Notes
+
+{{ notes_block }}
+{% endif %}

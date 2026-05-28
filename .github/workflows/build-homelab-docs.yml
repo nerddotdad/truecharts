@@ -1,0 +1,107 @@
+name: Build Homelab Docs
+
+on:
+  push:
+    paths:
+      - 'clusters/**/mk_*.md'
+      - 'clusters/**/helm-release*.yaml'
+      - 'clusters/main/kubernetes/mk_index.md'
+      - 'clusters/main/mk_index.md'
+      - 'mkdocs/**'
+      - 'scripts/collect_mkdocs.py'
+      - 'scripts/helmrelease_docs.py'
+      - 'custom_images/homelab-docs/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: homelab-docs
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get and bump image version
+        id: version
+        run: |
+          VERSION_FILE="custom_images/${{ env.IMAGE_NAME }}/VERSION"
+          if [ -f "$VERSION_FILE" ]; then
+            CURRENT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
+            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+              VERSION_CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -q "^${VERSION_FILE}$" && echo yes || echo no)
+            else
+              VERSION_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^${VERSION_FILE}$" && echo yes || echo no)
+            fi
+            if [ "$VERSION_CHANGED" = "yes" ]; then
+              VERSION="$CURRENT_VERSION"
+            elif [[ $CURRENT_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+              echo "$VERSION" > "$VERSION_FILE"
+            else
+              VERSION="$CURRENT_VERSION"
+            fi
+          else
+            VERSION=$(date +"%Y.%m.%d-%H%M")
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Image version: $VERSION"
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push docs image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: custom_images/homelab-docs/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            MKDOCS_SITE_URL=${{ vars.DOCS_SITE_URL || 'https://docs.example.com' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Commit auto-bumped VERSION
+        run: |
+          VERSION_FILE="custom_images/${{ env.IMAGE_NAME }}/VERSION"
+          if ! git diff --quiet "$VERSION_FILE" 2>/dev/null; then
+            git config user.email "action@github.com"
+            git config user.name "GitHub Action"
+            git add "$VERSION_FILE"
+            git commit -m "chore: auto-bump homelab-docs version to ${{ steps.version.outputs.version }} [skip ci]" || true
+            git push origin "HEAD:${{ github.ref_name }}" || true
+          fi
+
+      - name: Summary
+        run: |
+          echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
+          echo "Update HelmRelease tag after first build if not using :latest"

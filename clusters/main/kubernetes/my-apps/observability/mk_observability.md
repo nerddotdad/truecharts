@@ -1,3 +1,7 @@
+---
+title: Observability stack
+---
+
 # Homelab observability (GitOps)
 
 This stack wires **Prometheus** (metrics + alert rules), **Alertmanager** (notifications), and **Grafana** (dashboards + optional UI alerting) entirely from Git.
@@ -102,6 +106,25 @@ Prometheus rules are the primary alert source for this cluster. Grafana displays
 
 **Test in Prometheus UI** (port-forward or in-cluster): Status → Rules, Alerts.
 
+## Alert runbooks
+
+Runbooks are MkDocs pages under `observability/runbooks/`. A tap on an ntfy notification opens `runbook_url` when the PrometheusRule includes it.
+
+1. Copy `runbooks/mk_runbook_template.md` → `runbooks/mk_runbook_<alert-kebab>.md`
+2. Fill in the page (reuse snippets from `mkdocs/snippets/runbook/`)
+3. Get the URL: `python scripts/runbook_url.py YourAlertName`
+4. Add `runbook_url: https://docs.${DOMAIN_0}/...` to the alert annotations (Flux substitutes `${DOMAIN_0}`)
+5. Add a row to `runbooks/mk_runbook_index.md`
+
+**Service ties**
+
+| Mechanism | Use |
+|-----------|-----|
+| `releases: [namespace/name]` in runbook front matter | Alert runbook linked on that service’s HelmRelease doc page |
+| `areas: [downloaders]` | Runbook linked for every app under that `my-apps` folder |
+| `scope: all-helmreleases` | Platform runbook linked on all HelmRelease pages |
+| `app/mk_runbook.md` | On-call steps for one chart only (not alert-specific) |
+
 ## Add a Grafana marketplace dashboard
 
 Edit `grafana/app/grafana-dashboards-values.configmap.yaml` under `dashboards.grafana`:
@@ -170,7 +193,7 @@ Homelab config keeps stable labels only (`ready`, `suspended`, `name`, `exported
 
 ### Practical alert test (broken HelmRelease)
 
-See **`alert-test/README.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
+See **`alert-test/mk_alert-test.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
 
 ## Silence noise
 

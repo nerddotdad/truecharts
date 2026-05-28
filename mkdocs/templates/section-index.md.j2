@@ -1,0 +1,19 @@
+---
+title: {{ title }}
+---
+
+# {{ title }}
+
+{% if description %}
+{{ description }}
+{% endif %}
+
+## In this section
+
+| Service / page | Description |
+|----------------|-------------|
+{% for page in pages %}
+| [{{ page.title }}]({{ page.href }}) | {{ page.kind }} |
+{% endfor %}
+
+Add an overview for this area with `mk_index.md` next to the app folders (e.g. `my-apps/downloaders/mk_index.md`).

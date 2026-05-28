@@ -25,6 +25,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} — chart {{ $labels.chart }}{{ $labels.chart_ref }} not ready"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-flux-helmrelease-not-ready/
             description: |-
               Release: {{ $labels.exported_namespace }}/{{ $labels.name }}
               Chart: {{ $labels.chart }}{{ $labels.chart_ref }} (version {{ $labels.chart_version }}, repo {{ $labels.chart_source }})

@@ -1,3 +1,7 @@
+---
+title: Alert pipeline test
+---
+
 # Alert pipeline test harness
 
 Intentionally broken `HelmRelease` to validate Flux and notification alerts without waiting for a real outage.
