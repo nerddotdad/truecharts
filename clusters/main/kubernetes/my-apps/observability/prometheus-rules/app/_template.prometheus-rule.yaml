@@ -1,0 +1,34 @@
+---
+# TEMPLATE — copy to a new file (e.g. homelab-gaming.yaml), edit, add to kustomization.yaml, commit.
+# Prometheus picks up PrometheusRule objects cluster-wide (ruleSelectorNilUsesHelmValues: false).
+#
+# Common label conventions:
+#   severity: warning | critical
+#   homelab_team: <your team label for routing (optional)>
+#
+# apiVersion: monitoring.coreos.com/v1
+# kind: PrometheusRule
+# metadata:
+#   name: homelab-example
+#   namespace: observability
+#   labels:
+#     app.kubernetes.io/part-of: homelab-observability
+# spec:
+#   groups:
+#     - name: homelab.example
+#       interval: 30s
+#       rules:
+#         - alert: HomelabExampleHighMemory
+#           expr: |
+#             (
+#               container_memory_working_set_bytes{namespace="gaming", container!=""}
+#               / on (namespace, pod, container) group_left()
+#               kube_pod_container_resource_limits{resource="memory", namespace="gaming"}
+#             ) > 0.9
+#           for: 15m
+#           labels:
+#             severity: warning
+#             homelab_team: gaming
+#           annotations:
+#             summary: "Container {{ $labels.namespace }}/{{ $labels.pod }} memory > 90% of limit"
+#             description: "Investigate memory pressure before OOMKill."

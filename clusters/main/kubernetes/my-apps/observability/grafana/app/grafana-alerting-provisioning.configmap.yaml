@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting-provisioning
+  namespace: observability
+data:
+  contact-points.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: Alertmanager (homelab)
+        receivers:
+          - uid: homelab-alertmanager
+            type: prometheus-alertmanager
+            settings:
+              url: http://kube-prometheus-stack-alertmanager.kube-prometheus-stack.svc.cluster.local:9093
+            disableResolveMessage: false
+  policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: Alertmanager (homelab)
+        group_by: ["grafana_folder", "alertname"]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        routes:
+          - receiver: Alertmanager (homelab)
+            object_matchers:
+              - ["severity", "=", "critical"]
+          - receiver: Alertmanager (homelab)
+            object_matchers:
+              - ["severity", "=", "warning"]

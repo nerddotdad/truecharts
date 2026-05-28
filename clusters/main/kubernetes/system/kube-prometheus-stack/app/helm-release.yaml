@@ -36,7 +36,21 @@ spec:
         forceConflicts: true
     cleanPrometheusOperatorObjectNames: true
     alertmanager:
-      enabled: false
+      enabled: true
+      alertmanagerSpec:
+        # Pick up AlertmanagerConfig CRs in this namespace (see alertmanagerconfig.yaml).
+        alertmanagerConfigSelector: {}
+        alertmanagerConfigNamespaceSelector: {}
+        alertmanagerConfigMatcherStrategy:
+          type: None
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+      ingress:
+        enabled: false
     kubeEtcd:
       service:
         selector:

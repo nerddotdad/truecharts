@@ -5,5 +5,36 @@ metadata:
   namespace: observability
 data:
   values.yaml: |
+    # Add dashboards under dashboards.grafana.<id> — see README in observability/.
     dashboards:
-      grafana: {}
+      grafana:
+        node-exporter-1860:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS}
+              value: Prometheus
+          marketplace:
+            id: 1860
+            revision: 37
+        k8s-views-global-15760:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS}
+              value: Prometheus
+          marketplace:
+            id: 15760
+            revision: 28
+        cert-manager-13407:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS}
+              value: Prometheus
+          marketplace:
+            id: 13407
+            revision: 2

@@ -1,0 +1,27 @@
+---
+# Homelab-specific rules. kube-prometheus-stack already ships broad Kubernetes alerts.
+# Copy _template.prometheus-rule.yaml to add more rule files, then list them in kustomization.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-downloaders
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.downloaders
+      interval: 30s
+      rules:
+        - alert: HomelabDownloaderMetricsDown
+          expr: |
+            up{namespace="downloaders", job=~".*-metrics"} == 0
+          for: 30m
+          labels:
+            severity: warning
+            homelab_team: downloaders
+          annotations:
+            summary: "Downloader metrics scrape down ({{ $labels.job }})"
+            description: >-
+              Prometheus cannot scrape {{ $labels.job }} in namespace downloaders for 30+ minutes.
+              The app may still run; metrics ServiceMonitor or the pod may be misconfigured.

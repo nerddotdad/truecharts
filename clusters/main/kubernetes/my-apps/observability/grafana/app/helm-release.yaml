@@ -63,21 +63,6 @@ spec:
             datasources:
               enabled: false
 
-    dashboards:
-      grafana:
-        nginx-14900:
-          enabled: true
-          failOnError: false
-          b64content: false
-          datasource:
-            - name: $${DS_PROMETHEUS.INTERNAL-ODMONT.COM}
-              value: Prometheus
-            - name: $$datasource
-              value: Prometheus
-          marketplace:
-            id: 14900
-            revision: 2
-
     configmap:
       prometheus-kube-datasource:
         enabled: true
@@ -106,6 +91,15 @@ spec:
         type: configmap
         objectName: prometheus-kube-datasource
         mountPath: /etc/grafana/provisioning/datasources
+        targetSelector:
+          main:
+            main:
+              readOnly: true
+      grafana-alerting-provisioning:
+        enabled: true
+        type: configmap
+        objectName: grafana-alerting-provisioning
+        mountPath: /etc/grafana/provisioning/alerting
         targetSelector:
           main:
             main:

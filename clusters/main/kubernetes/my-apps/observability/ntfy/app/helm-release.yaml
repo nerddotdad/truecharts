@@ -1,0 +1,81 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ntfy
+  namespace: observability
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: ntfy
+      version: 13.7.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 5m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                NTFY_BASE_URL: "https://ntfy.${DOMAIN_0}"
+                NTFY_BEHIND_PROXY: true
+                ENABLE_CACHE_FILE: true
+
+    persistence:
+      config:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 1Gi
+      cache:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 2Gi
+
+    metrics:
+      main:
+        enabled: true
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: ntfy.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: ntfy
+            description: Push notifications for homelab alerts
+            group: observability
+            icon: ""
+            widget:
+              enabled: false

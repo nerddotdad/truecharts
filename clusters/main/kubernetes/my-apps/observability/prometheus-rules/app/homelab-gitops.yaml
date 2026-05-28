@@ -1,0 +1,28 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-gitops
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.certificates
+      interval: 1h
+      rules:
+        - alert: HomelabCertificateExpiringSoon
+          expr: |
+            (
+              certmanager_certificate_expiration_timestamp_seconds{namespace!=""}
+              - time()
+            ) < (14 * 24 * 3600)
+          for: 1h
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "TLS certificate expiring within 14 days ({{ $labels.name }})"
+            description: >-
+              Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in less than 14 days.
+              Check cert-manager Certificate or ClusterIssuer status.
