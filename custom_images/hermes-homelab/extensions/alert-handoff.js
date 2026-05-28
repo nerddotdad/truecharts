@@ -1,10 +1,7 @@
 /**
  * Homelab alert deep-link: ?incident=<id>&autostart=1
- * Fetches incident JSON from /homelab/api/incidents/<id>, then either:
- * - autostart: new session + send() so Hermes begins triage immediately
- * - review: prefill composer only
- *
- * Persists pending incident in sessionStorage so login redirects can resume.
+ * Waits for Hermes WebUI boot to finish, then loads incident context and optionally
+ * starts triage via newSession() + send().
  */
 (function () {
   "use strict";
@@ -22,6 +19,9 @@
     autostart = sessionStorage.getItem("homelab_pending_autostart") === "1";
   }
   if (!incidentId) return;
+
+  const handoffKey = "homelab_handoff_done_" + incidentId;
+  if (sessionStorage.getItem(handoffKey) === "1") return;
 
   sessionStorage.setItem("homelab_pending_incident_id", incidentId);
   sessionStorage.setItem("homelab_pending_autostart", autostart ? "1" : "0");
@@ -67,6 +67,7 @@
   function clearPending() {
     sessionStorage.removeItem("homelab_pending_incident_id");
     sessionStorage.removeItem("homelab_pending_autostart");
+    sessionStorage.setItem(handoffKey, "1");
     try {
       const clean = new URL(window.location.href);
       clean.searchParams.delete("incident");
@@ -77,24 +78,31 @@
     }
   }
 
-  function waitForWebUI(timeoutMs) {
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /** Wait until Hermes boot IIFE finished (avoids loadSession wiping the composer). */
+  function waitForBoot(timeoutMs) {
     return new Promise(function (resolve, reject) {
       const deadline = Date.now() + timeoutMs;
       (function poll() {
+        const bootReady = window.S && window.S._bootReady === true;
         const msg = document.getElementById("msg");
-        const ready =
-          msg &&
+        const apisReady =
           typeof window.send === "function" &&
           typeof window.newSession === "function";
-        if (ready) {
+        if (bootReady && msg && apisReady) {
           resolve();
           return;
         }
         if (Date.now() >= deadline) {
-          reject(new Error("Hermes WebUI did not become ready"));
+          reject(new Error("Hermes WebUI boot did not complete in time"));
           return;
         }
-        setTimeout(poll, 200);
+        setTimeout(poll, 150);
       })();
     });
   }
@@ -113,15 +121,17 @@
     if (typeof window.renderSessionList === "function") {
       await window.renderSessionList();
     }
+    await sleep(150);
     if (!setComposerText(text)) {
       throw new Error("composer input not found");
     }
+    await sleep(50);
     await window.send();
   }
 
   showBanner(
     autostart
-      ? "Loading alert and starting Hermes triage…"
+      ? "Loading alert — waiting for Hermes to finish starting…"
       : "Loading alert context…"
   );
 
@@ -134,34 +144,35 @@
       const text = formatAlert(data);
       sessionStorage.setItem("homelab_incident_" + incidentId, text);
 
-      if (autostart) {
-        return waitForWebUI(120000)
-          .then(function () {
-            showBanner("Starting on-call triage…");
-            return startTriage(text);
-          })
-          .then(function () {
+      return waitForBoot(120000).then(async function () {
+        if (autostart) {
+          showBanner("Starting on-call triage…");
+          try {
+            await startTriage(text);
             clearPending();
             showBanner(
               "On-call triage started — Hermes is investigating. Use Stop to cancel."
             );
-          });
-      }
-
-      return waitForWebUI(120000)
-        .then(function () {
-          if (setComposerText(text)) {
-            clearPending();
-            showBanner("Alert context loaded — review and send.");
-            return;
+          } catch (err) {
+            setComposerText(text);
+            showBanner(
+              "Autostart failed: " +
+                (err && err.message ? err.message : String(err)) +
+                " — message restored in composer; tap Send to retry."
+            );
           }
-          throw new Error("composer input not found");
-        })
-        .catch(function () {
-          showBanner(
-            "Alert loaded — log in if needed, open a new chat, and send when ready."
-          );
-        });
+          return;
+        }
+
+        if (setComposerText(text)) {
+          clearPending();
+          showBanner("Alert context loaded — review and send.");
+          return;
+        }
+        showBanner(
+          "Alert loaded — open a new chat and paste if the composer is not visible."
+        );
+      });
     })
     .catch(function (err) {
       showBanner("Could not load incident " + incidentId + ": " + err.message);
