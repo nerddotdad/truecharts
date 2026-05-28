@@ -31,6 +31,7 @@ Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
 
 | Path | Role |
 |------|------|
+| `my-apps/ai/kustomization.yaml` | Must list `hermes-oncall/ks.yaml` (Flux will not deploy Hermes otherwise) |
 | `my-apps/ai/hermes-oncall/` | WebUI HelmRelease, RBAC, PVC |
 | `my-apps/observability/homelab-alert-bridge/` | Webhook store + proxy + `/homelab/api` ingress |
 | `custom_images/hermes-homelab/` | WebUI image + kubectl/flux + homelab skills |
@@ -64,6 +65,7 @@ Default model **`qwen3.5:9b`** at `http://ollama-api.ai.svc.cluster.local:11434/
 
 | Issue | Check |
 |-------|--------|
+| **404 nginx** on `https://hermes.<domain>/` | Hermes HelmRelease not deployed — check `kubectl get helmrelease -n ai hermes-oncall` and `my-apps/ai/kustomization.yaml` includes `hermes-oncall/ks.yaml`. Only `/homelab/api` ingress alone returns 404 on `/`. |
 | WebUI ImagePullBackOff | Build/push `hermes-homelab` image on `main` |
 | Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
 | Ask AI opens empty composer | Browser extension blocked? Check `/homelab/api/incidents/<id>` in browser |

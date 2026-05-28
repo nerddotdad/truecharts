@@ -52,9 +52,7 @@ spec:
             seed-hermes-config:
               enabled: true
               type: init
-              image:
-                repository: ghcr.io/nerddotdad/hermes-homelab
-                tag: latest
+              image: ghcr.io/nerddotdad/hermes-homelab:latest
               command:
                 - /bin/sh
                 - -c
