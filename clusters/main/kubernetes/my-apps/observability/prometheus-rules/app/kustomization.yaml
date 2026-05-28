@@ -6,3 +6,4 @@ resources:
   - homelab-flux.yaml
   - homelab-flux-test.yaml
   - homelab-gitops.yaml
+  - _template.prometheus-rule.yaml
