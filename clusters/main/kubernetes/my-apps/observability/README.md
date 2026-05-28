@@ -36,7 +36,7 @@ flowchart LR
 | Homelab alerts | `prometheus-rules/app/*.yaml` | Custom PromQL you own |
 | Notifications | `ntfy/app/helm-release.yaml` + `alertmanagerconfig.yaml` | Alertmanager → ntfy topic `homelab-alerts` |
 | Dashboards | `grafana/app/grafana-dashboards-values.configmap.yaml` | TrueCharts marketplace IDs |
-| Grafana ↔ AM | `grafana/app/grafana-alerting-provisioning.configmap.yaml` | Unified alerting contact point |
+| Grafana ↔ AM | `grafana/app/helm-release.yaml` (`configmap.grafana-alerting-provisioning`) | Unified alerting contact point |
 
 ## ntfy (push notifications)
 
@@ -110,7 +110,7 @@ Find IDs at [grafana.com/grafana/dashboards](https://grafana.com/grafana/dashboa
 
 ## Add a Grafana-managed alert (optional)
 
-File provisioning lives in `grafana-alerting-provisioning.configmap.yaml`. Export rules from Grafana UI (Alerting → Export) or follow [Grafana file provisioning](https://grafana.com/docs/grafana/latest/alerting/set-up/provision-alerting-resources/file-provisioning/).
+Grafana alerting file provisioning lives in `helm-release.yaml` under `configmap.grafana-alerting-provisioning.data` (same pattern as the Prometheus datasource). Export rules from Grafana UI (Alerting → Export) or follow [Grafana file provisioning](https://grafana.com/docs/grafana/latest/alerting/set-up/provision-alerting-resources/file-provisioning/).
 
 Prefer **PrometheusRule** for infrastructure alerts so firing state is consistent in Prometheus, Alertmanager, and Grafana.
 
@@ -128,5 +128,5 @@ Prefer **PrometheusRule** for infrastructure alerts so firing state is consisten
 | `system/kube-prometheus-stack/app/alertmanagerconfig.yaml` | Routing, receivers, inhibit rules |
 | `prometheus-rules/app/*.yaml` | New homelab PromQL alerts |
 | `grafana/app/grafana-dashboards-values.configmap.yaml` | New dashboards |
-| `grafana/app/grafana-alerting-provisioning.configmap.yaml` | Grafana contact points / policies |
+| `grafana/app/helm-release.yaml` (alerting `configmap` block) | Grafana contact points / policies |
 | `ntfy/app/helm-release.yaml` | ntfy server, ingress, persistence |
