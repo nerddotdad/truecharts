@@ -3,6 +3,11 @@ FROM python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fa
 
 WORKDIR /src
 
+# mkdocs-git-revision-date-localized + collect_mkdocs freshness need the git CLI (not just .git/).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY mkdocs/requirements.txt mkdocs/requirements.txt
 RUN pip install --no-cache-dir -r mkdocs/requirements.txt
 
@@ -24,6 +29,8 @@ ENV MKDOCS_SITE_URL=${MKDOCS_SITE_URL}
 ENV DOCS_BUILD_SHA=${DOCS_BUILD_SHA}
 ENV DOCS_BUILD_TIME=${DOCS_BUILD_TIME}
 ENV DOCS_IMAGE_VERSION=${DOCS_IMAGE_VERSION}
+# Avoid GitPython stderr noise when the plugin probes git during mkdocs build.
+ENV GIT_PYTHON_REFRESH=quiet
 
 COPY .git .git
 
