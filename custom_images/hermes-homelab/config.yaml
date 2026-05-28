@@ -2,7 +2,7 @@
 model:
   default: qwen3.5:9b
   provider: custom
-  base_url: http://ollama-api.ai.svc.cluster.local:11434/v1
+  base_url: http://ollama.ai.svc.cluster.local:11434/v1
   context_length: 64000
 
 webui_prefill_messages_script:

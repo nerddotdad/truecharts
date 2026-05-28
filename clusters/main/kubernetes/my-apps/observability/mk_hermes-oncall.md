@@ -68,7 +68,7 @@ Skill **`homelab-k8s-flux-triage`** (in the image) instructs the agent to stay r
 
 ## Ollama
 
-Default model **`qwen3.5:9b`** at `http://ollama-api.ai.svc.cluster.local:11434/v1` (seeded in `custom_images/hermes-homelab/config.yaml`). Change in WebUI **Control Center** or edit `config.yaml` on the PVC.
+Default model **`qwen3.5:9b`** at `http://ollama.ai.svc.cluster.local:11434/v1` (seeded in `custom_images/hermes-homelab/config.yaml`). In-cluster clients use Service **`ollama`** (or alias **`ollama-api`**) — not the ingress hostname alone. Change model/URL in WebUI **Control Center** or edit `config.yaml` on the PVC.
 
 ## Troubleshooting
 
@@ -80,6 +80,7 @@ Default model **`qwen3.5:9b`** at `http://ollama-api.ai.svc.cluster.local:11434/
 | Ask AI opens empty composer | Browser extension blocked? Check `/homelab/api/incidents/<id>` in browser |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
+| **Connection error** in chat | Hermes logs show `ollama-api.ai.svc.cluster.local`? Use **`ollama.ai.svc.cluster.local:11434/v1`** (Service `ollama`) or apply `ollama-api` cluster DNS alias. `ollama-api.${DOMAIN_0}` is ingress-only. |
 | **Missing imports: run_agent** | Use **`hermes-homelab`** image (includes agent at `/opt/hermes`), not upstream WebUI alone. After upgrade, **delete the pod** so first-boot `uv pip install` runs again (not only restart). First start can take **~5–10 min**. |
 | Provider incomplete | Wait for startup; check logs for `Adding hermes-agent's pyproject.toml` |
 
