@@ -33,7 +33,7 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/self-host-planning-poker
       pullPolicy: IfNotPresent
-      tag: latest
+      tag: latest@sha256:9963ccedb0775417179dee3b32b6c47f4cf306bb0d9f50f9af55fef39a5356ef
 
     workload:
       main:
