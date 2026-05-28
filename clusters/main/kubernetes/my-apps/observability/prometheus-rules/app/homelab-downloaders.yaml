@@ -1,6 +1,5 @@
 ---
-# Homelab-specific rules. kube-prometheus-stack already ships broad Kubernetes alerts.
-# Copy _template.prometheus-rule.yaml to add more rule files, then list them in kustomization.yaml.
+# Downloader *arr metrics: homelab alert replaces noisy kube-prometheus-stack TargetDown in namespace downloaders.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -15,13 +14,17 @@ spec:
       rules:
         - alert: HomelabDownloaderMetricsDown
           expr: |
-            up{namespace="downloaders", job=~".*-metrics"} == 0
-          for: 30m
+            up{namespace="downloaders", service=~".+-metrics"} == 0
+            or
+            up{namespace="downloaders", job=~".+-metrics"} == 0
+          for: 20m
           labels:
             severity: warning
             homelab_team: downloaders
           annotations:
-            summary: "Downloader metrics scrape down ({{ $labels.job }})"
-            description: >-
-              Prometheus cannot scrape {{ $labels.job }} in namespace downloaders for 30+ minutes.
-              The app may still run; metrics ServiceMonitor or the pod may be misconfigured.
+            summary: "Downloader metrics down: {{ $labels.service }}{{ $labels.job }} (downloaders)"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-downloader-metrics-down/
+            description: |-
+              Prometheus cannot scrape metrics for {{ $labels.service }}{{ $labels.job }} (job={{ $labels.job }}, service={{ $labels.service }}) in downloaders for 20+ minutes.
+              The app UI may still work; the metrics endpoint or ServiceMonitor is unreachable.
+              Generic TargetDown in downloaders is suppressed; this alert is the one that notifies ntfy.

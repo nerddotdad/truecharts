@@ -198,7 +198,9 @@ See **`alert-test/mk_alert-test.md`**. A deliberate `alert-test-fail` HelmReleas
 ## Silence noise
 
 - **Watchdog** / **InfoInhibitor**: routed to `null` receiver (pipeline health only).
-- **TargetDown** on apps without metrics: fix ServiceMonitor or increase `for` in a homelab rule (see `homelab-downloaders.yaml`).
+- **TargetDown** in `downloaders`: suppressed in Alertmanager; use **`HomelabDownloaderMetricsDown`** (`homelab-downloaders.yaml`, 20m on `service=*-metrics`) for ntfy instead.
+- **TargetDown** elsewhere: fix ServiceMonitor or disable via kube-prometheus-stack `defaultRules.disabled.TargetDown`.
+- **KubeJobNotCompleted** for `ollama-model-pull-job`: suppressed; use **`HomelabOllamaModelPullStuck`** (36h, `homelab-ai.yaml`) or delete the Job after a successful pull.
 - Temporary: Alertmanager UI (port-forward svc) or Grafana silences.
 
 ## Key files

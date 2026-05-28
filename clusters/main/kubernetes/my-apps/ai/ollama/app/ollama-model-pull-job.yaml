@@ -2,13 +2,19 @@
 # Default model: qwen3.5:9b (Hermes Guide pick; 256K native, 64K+ with OLLAMA_CONTEXT_LENGTH on RTX 3090).
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model:
-#   kubectl delete job -n ai ollama-pull-qwen35-9b
+#   kubectl delete job -n ai ollama-model-pull-job
+# - Large pulls may run >12h; KubeJobNotCompleted is suppressed for this job_name (see homelab-ai PrometheusRule).
+#   Delete the Job after success so metrics/alerts clear: kubectl delete job ollama-model-pull-job -n ai
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: ollama-model-pull-job
   namespace: ai
+  labels:
+    homelab.dev/bootstrap-job: "true"
 spec:
+  # Stop runaway pulls; adjust if you add much larger models.
+  activeDeadlineSeconds: 172800
   ttlSecondsAfterFinished: 604800
   backoffLimit: 5
   template:

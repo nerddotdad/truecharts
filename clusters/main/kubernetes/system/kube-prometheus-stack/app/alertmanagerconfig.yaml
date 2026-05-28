@@ -23,6 +23,24 @@ spec:
           - name: alertname
             value: Watchdog
             matchType: =
+      # HomelabDownloaderMetricsDown (20m) replaces generic TargetDown for *arr metrics.
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: TargetDown
+            matchType: =
+          - name: namespace
+            value: downloaders
+            matchType: =
+      # ollama-model-pull-job can run many hours; HomelabOllamaModelPullStuck (36h) replaces 12h KubeJobNotCompleted.
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: KubeJobNotCompleted
+            matchType: =
+          - name: job_name
+            value: ollama-model-pull-job
+            matchType: =
   inhibitRules:
     - equal: ["alertname", "namespace"]
       sourceMatch:

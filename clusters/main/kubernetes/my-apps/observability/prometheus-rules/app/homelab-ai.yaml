@@ -1,0 +1,31 @@
+---
+# AI namespace batch jobs: replace kube-prometheus-stack KubeJobNotCompleted for known long pulls.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-ai
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.ai.batch
+      interval: 1m
+      rules:
+        - alert: HomelabOllamaModelPullStuck
+          expr: |
+            time() - max by (namespace, job_name) (
+              kube_job_status_start_time{namespace="ai", job_name="ollama-model-pull-job"}
+              and
+              kube_job_status_active{namespace="ai", job_name="ollama-model-pull-job"} > 0
+            ) > 129600
+          for: 30m
+          labels:
+            severity: warning
+            homelab_team: ai
+          annotations:
+            summary: "Ollama model pull job still running after 36h ({{ $labels.job_name }})"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
+            description: |-
+              Job ai/ollama-model-pull-job has been active for 36+ hours. Large model pulls can take hours; beyond 36h the pull may be stuck (network, disk, or Ollama API).
+              Generic KubeJobNotCompleted (12h) for this job is suppressed; this alert notifies ntfy.
