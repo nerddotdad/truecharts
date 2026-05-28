@@ -48,14 +48,30 @@ jobs:
           echo "Before SHA: ${{ github.event.before }}"
           echo "Current SHA: ${{ github.sha }}"
           
+          # homelab-docs Dockerfile needs repo-root context (clusters/, mkdocs/, scripts/).
+          # It is built only by .github/workflows/build-homelab-docs.yml — never here.
+          skip_homelab_docs() {
+            if [ "$1" = "homelab-docs" ]; then
+              echo "Skipping homelab-docs (built by Build Homelab Docs workflow)"
+              return 0
+            fi
+            return 1
+          }
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.image }}" ]; then
-              # Single image specified
-              IMAGES="[\"${{ github.event.inputs.image }}\"]"
+              if skip_homelab_docs "${{ github.event.inputs.image }}"; then
+                IMAGES="[]"
+              else
+                IMAGES="[\"${{ github.event.inputs.image }}\"]"
+              fi
               echo "images=$IMAGES" >> $GITHUB_OUTPUT
             else
-              # Find all directories with Dockerfile
-              IMAGES=$(find custom_images -name Dockerfile -type f | sed 's|custom_images/||' | sed 's|/Dockerfile||' | jq -R . | jq -s -c .)
+              # Find all directories with Dockerfile (except homelab-docs)
+              IMAGES=$(find custom_images -name Dockerfile -type f \
+                | sed 's|custom_images/||' | sed 's|/Dockerfile||' \
+                | grep -vx 'homelab-docs' \
+                | jq -R . | jq -s -c .)
               echo "images=$IMAGES" >> $GITHUB_OUTPUT
             fi
           else
@@ -85,6 +101,9 @@ jobs:
               # Filter to only directories that have a Dockerfile
               VALID_IMAGES=""
               for img in $CHANGED; do
+                if skip_homelab_docs "$img"; then
+                  continue
+                fi
                 if [ -f "custom_images/$img/Dockerfile" ]; then
                   if [ -z "$VALID_IMAGES" ]; then
                     VALID_IMAGES="$img"

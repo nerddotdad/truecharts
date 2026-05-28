@@ -9,7 +9,9 @@ on:
       - 'clusters/main/mk_index.md'
       - 'mkdocs/**'
       - 'scripts/collect_mkdocs.py'
+      - 'scripts/doc_metadata.py'
       - 'scripts/helmrelease_docs.py'
+      - 'scripts/runbook_index.py'
       - 'custom_images/homelab-docs/**'
     branches:
       - main

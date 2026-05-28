@@ -49,5 +49,6 @@ MKDOCS_SITE_URL=http://127.0.0.1:8000 .venv-mkdocs/bin/mkdocs serve -f mkdocs/mk
 |------|------|
 | `Dockerfile` | `collect_mkdocs` + `mkdocs build` → nginx (no `.git` in CI context; uses `DOCS_BUILD_*` args) |
 | `VERSION` | Image tag bumped by CI |
-| `.github/workflows/build-homelab-docs.yml` | Build and push to GHCR |
+| `.github/workflows/build-homelab-docs.yml` | Build and push to GHCR (**repo root** Docker context) |
+| `.github/workflows/build-custom-images.yml` | Does **not** build this image (wrong context) |
 | `clusters/.../homelab-docs/app/helm-release.yaml` | app-template + ingress |
