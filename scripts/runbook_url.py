@@ -6,12 +6,19 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from runbook_index import discover_alert_runbooks  # noqa: E402
 
 
 # PascalCase alerts need explicit slugs (HelmRelease → helmrelease, not helm-release).
 SLUG_OVERRIDES: dict[str, str] = {
     "HomelabFluxHelmReleaseNotReady": "homelab-flux-helmrelease-not-ready",
     "HomelabFluxHelmReleaseTestFail": "homelab-flux-helmrelease-test-fail",
+    "HomelabKubeJobFailedOllamaModelPull": "homelab-ollama-model-pull-stuck",
 }
 
 
@@ -22,7 +29,21 @@ def alert_to_slug(alertname: str) -> str:
     return s.replace("_", "-").lower()
 
 
+def runbook_path_from_index(alertname: str) -> str | None:
+    """Resolve path from runbook front matter (alertname / alertnames)."""
+    for book in discover_alert_runbooks():
+        names = book.get("alertnames") or []
+        if book.get("alertname"):
+            names = [str(book["alertname"]), *[str(n) for n in names]]
+        if alertname in names:
+            return book["href"]
+    return None
+
+
 def runbook_path(alertname: str) -> str:
+    indexed = runbook_path_from_index(alertname)
+    if indexed:
+        return indexed
     return (
         "main/kubernetes/my-apps/observability/runbooks/"
         f"mk_runbook_{alert_to_slug(alertname)}.md"

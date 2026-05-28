@@ -86,6 +86,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             MKDOCS_SITE_URL=${{ vars.DOCS_SITE_URL || 'https://docs.example.com' }}
+            DOCS_BUILD_SHA=${{ github.sha }}
+            DOCS_BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
+            DOCS_IMAGE_VERSION=${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64

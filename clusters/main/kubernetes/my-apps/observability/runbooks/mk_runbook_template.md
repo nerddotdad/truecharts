@@ -1,6 +1,9 @@
 ---
 title: "Runbook: ALERT_NAME_HERE"
 alertname: ALERT_NAME_HERE
+# Optional: more Prometheus alert names that share this page
+# alertnames:
+#   - OtherAlertForSameRunbook
 severity: warning
 homelab_team: platform
 # Link to services (pick one or more):
@@ -78,6 +81,8 @@ Homelab ntfy notifications expose three **view** actions when configured: **Runb
 | **Filename** | `mk_runbook_<slug>.md` — run the helper first; use the path it prints |
 | **URL helper** | `python scripts/runbook_url.py HomelabFluxHelmReleaseNotReady` then `python scripts/runbook_url.py --path-only ...` |
 | **Annotation** | `runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_.../` |
+| **URL helper** | Resolves `alertname` / `alertnames` from front matter — not only kebab-guessing |
+| **Published** | **Last updated (Git)** on the page; **Site build info** for the nginx image date |
 
 ```yaml
 annotations:

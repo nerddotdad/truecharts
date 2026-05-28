@@ -60,12 +60,19 @@ def discover_alert_runbooks() -> list[dict[str, Any]]:
         if path.name in SKIP_RUNBOOK_NAMES:
             continue
         meta = parse_front_matter(path)
+        alertnames = _as_list(meta.get("alertnames"))
+        primary = meta.get("alertname")
+        if primary:
+            names = [str(primary)] + [str(a) for a in alertnames if str(a) != str(primary)]
+        else:
+            names = [str(a) for a in alertnames]
         books.append(
             {
                 "path": path,
                 "href": path.relative_to(CLUSTERS_ROOT).as_posix(),
                 "title": str(meta.get("title") or path.stem.replace("mk_runbook_", "").replace("-", " ").title()),
-                "alertname": meta.get("alertname"),
+                "alertname": primary,
+                "alertnames": names,
                 "scope": meta.get("scope"),
                 "releases": [_normalize_release_ref(r) for r in _as_list(meta.get("releases"))],
                 "areas": [a.strip().lower() for a in _as_list(meta.get("areas"))],

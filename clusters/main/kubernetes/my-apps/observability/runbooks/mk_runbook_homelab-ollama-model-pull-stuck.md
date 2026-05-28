@@ -1,6 +1,8 @@
 ---
-title: "Runbook: HomelabOllamaModelPullStuck"
+title: "Runbook: Ollama model pull (Job)"
 alertname: HomelabOllamaModelPullStuck
+alertnames:
+  - HomelabKubeJobFailedOllamaModelPull
 severity: warning
 homelab_team: ai
 releases:

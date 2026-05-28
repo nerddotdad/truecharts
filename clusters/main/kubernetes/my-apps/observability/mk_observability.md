@@ -72,6 +72,7 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
 | Action | Header | Opens |
 |--------|--------|--------|
 | Tap notification | `X-Click` | `https://ntfy.<domain>/homelab-alerts` (topic in the ntfy app) |
+| **Ask AI** button | `X-Actions` | [Hermes WebUI](mk_hermes-oncall.md) `https://hermes.<domain>/?incident=<fingerprint>` |
 | **Runbook** button | `X-Actions` | `runbook_url` annotation, else [prometheus-operator runbooks](https://runbooks.prometheus-operator.dev/) |
 | **Alert** button | `X-Actions` | Grafana Alerting list filtered by `alertname` |
 | **Dashboard** button | `X-Actions` | Only when the rule sets `dashboard_url` (homelab rules) |
@@ -88,8 +89,9 @@ annotations:
 
 | Source | Path |
 |--------|------|
-| Grafana alerts & **Test** button | Contact point **ntfy (homelab)** → webhook → alertmanager-ntfy → ntfy |
-| Prometheus / cluster alerts | Alertmanager → webhook → alertmanager-ntfy → ntfy |
+| Grafana alerts & **Test** button | Contact point **ntfy (homelab)** → **homelab-alert-bridge** → alertmanager-ntfy → ntfy |
+| Prometheus / cluster alerts | Alertmanager → **homelab-alert-bridge** → alertmanager-ntfy → ntfy |
+| **Ask AI** / incident JSON | [Hermes on-call](mk_hermes-oncall.md) + `homelab-alert-bridge` |
 
 Use contact point **ntfy (homelab)** in Grafana rules and when clicking **Test** on a contact point. Do not use the old “Alertmanager (homelab)” / external-Alertmanager contact point for ntfy—that path does not deliver Grafana test notifications reliably.
 
@@ -125,13 +127,15 @@ Prometheus rules are the primary alert source for this cluster. Grafana displays
 
 ## Alert runbooks
 
-Runbooks are MkDocs pages under `observability/runbooks/`. A tap on an ntfy notification opens `runbook_url` when the PrometheusRule includes it.
+Runbooks are MkDocs pages under `observability/runbooks/`. ntfy **Runbook** buttons use `runbook_url` on the PrometheusRule.
+
+**Freshness:** each page shows **Last updated (Git)**. **Home → Site build info** shows when the cluster image was built. If ntfy opens a 404, the runbook may exist in Git but `homelab-docs` has not been rebuilt or pulled yet.
 
 1. Copy `runbooks/mk_runbook_template.md` → `runbooks/mk_runbook_<alert-kebab>.md`
-2. Fill in the page (reuse snippets from `mkdocs/snippets/runbook/`)
-3. Get the URL: `python scripts/runbook_url.py YourAlertName`
+2. Set `alertname` and optional `alertnames` (multiple alerts, one runbook file)
+3. Get the URL: `python scripts/runbook_url.py YourAlertName` (must match an existing file)
 4. Add `runbook_url: https://docs.${DOMAIN_0}/...` to the alert annotations (Flux substitutes `${DOMAIN_0}`)
-5. Add a row to `runbooks/mk_runbook_index.md`
+5. Commit — the runbook index table is regenerated at build time
 
 **Service ties**
 
@@ -221,7 +225,7 @@ The chart ships dozens of **PrometheusRule** groups (node, kubelet, workloads, s
 **Yes, for almost all of them**, when Alertmanager marks them **Active**:
 
 ```text
-Prometheus (default rules) → Alertmanager → homelab-webhook → alertmanager-ntfy → homelab-alerts
+Prometheus (default rules) → Alertmanager → homelab-alert-bridge → alertmanager-ntfy → homelab-alerts
 ```
 
 Your `alertmanagerconfig.yaml` default receiver is **`homelab-webhook`**. Only a few names are routed to **`null`** on purpose (see [Silence noise](#silence-noise) below). Everything else—including `KubePodCrashLooping`, `KubePersistentVolumeFillingUp`, `NodeFilesystemAlmostOutOfSpace`, etc.—uses the same ntfy path as homelab rules.

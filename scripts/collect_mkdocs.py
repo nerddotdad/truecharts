@@ -27,7 +27,11 @@ from helmrelease_docs import (
     output_doc_name,
     relative_doc_href,
 )
-from runbook_index import get_alert_runbooks, parse_front_matter, runbook_targets_workload
+from doc_metadata import git_last_modified, inject_freshness_banner, site_build_info
+from runbook_index import discover_alert_runbooks, get_alert_runbooks, parse_front_matter, runbook_targets_workload
+
+RUNBOOK_INDEX_BEGIN = "<!-- runbook-index-begin -->"
+RUNBOOK_INDEX_END = "<!-- runbook-index-end -->"
 
 HOME_SOURCE_NAME = "mk_index.md"
 
@@ -405,7 +409,14 @@ def build_top_level_nav(
     """
     Material navigation.tabs: Home, optional mk_*.md siblings in kubernetes/, then Kubernetes tab.
     """
-    nav: list = [{"Home": "index.md"}]
+    nav: list = [
+        {
+            "Home": [
+                "index.md",
+                {"Site build info": "meta/site-build.md"},
+            ]
+        }
+    ]
     for page in sorted(kubernetes_tab_pages, key=lambda p: p["title"].lower()):
         nav.append({page["title"]: page["href"]})
     cluster_nav: list = []
@@ -417,12 +428,118 @@ def build_top_level_nav(
     return nav
 
 
-def write_site_home(staged_index: Path) -> None:
+def apply_freshness_to_file(
+    staged_path: Path,
+    git_source: Path,
+    *,
+    site_build: dict[str, str],
+) -> None:
+    rel = git_source.relative_to(REPO_ROOT)
+    updated = git_last_modified(REPO_ROOT, rel)
+    text = staged_path.read_text(encoding="utf-8")
+    staged_path.write_text(
+        inject_freshness_banner(
+            text,
+            last_updated=updated,
+            source_rel=rel.as_posix(),
+            site_built_at=site_build.get("built_at"),
+            site_sha=site_build.get("sha"),
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_site_build_page(staging_root: Path, site_build: dict[str, str]) -> str:
+    """Published-site metadata (image build time, not per-page Git dates)."""
+    rel = Path("meta/site-build.md")
+    dest = staging_root / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(
+        f"""---
+title: Site build info
+---
+
+# Site build info
+
+Use this page to confirm the **homelab-docs** Deployment is serving a recent image.
+
+| Field | Value |
+|-------|-------|
+| **Image built at** | {site_build["built_at"]} |
+| **Git commit (build)** | `{site_build["sha"]}` |
+| **Image version tag** | `{site_build["image_version"]}` |
+
+## Why a runbook link shows 404
+
+1. The runbook `mk_*.md` must exist under `clusters/` and be included by `collect_mkdocs.py`.
+2. Push to **`main`** so the **Build Homelab Docs** workflow rebuilds `ghcr.io/nerddotdad/homelab-docs`.
+3. Cluster pulls the new tag (`homelab-docs` HelmRelease). With `tag: latest`, restart the pod if the registry tag moved but Kubernetes did not pull again.
+4. Confirm `runbook_url` matches the file: `python scripts/runbook_url.py YourAlertName`
+
+Per-page **Last updated (Git)** on each doc reflects the last commit that touched that source file, not necessarily the published image date above.
+""",
+        encoding="utf-8",
+    )
+    return rel.as_posix()
+
+
+def render_runbook_index_table(site_build: dict[str, str]) -> str:
+    rows: list[tuple[str, str, str, str]] = []
+    for book in discover_alert_runbooks():
+        href = book["href"]
+        slug = Path(href).stem
+        link = f"[{book['title']}]({slug}/)"
+        updated = git_last_modified(REPO_ROOT, Path(href)) or "—"
+        names = list(book.get("alertnames") or [])
+        if not names and book.get("alertname"):
+            names = [str(book["alertname"])]
+        for name in names:
+            rows.append((f"`{name}`", link, updated, href))
+    rows.sort(key=lambda r: r[0].lower())
+    lines = [
+        RUNBOOK_INDEX_BEGIN,
+        "",
+        "| Alert | Runbook | Last updated (Git) | Source |",
+        "|-------|---------|-------------------|--------|",
+    ]
+    for alert, link, updated, src in rows:
+        lines.append(f"| {alert} | {link} | {updated} | `{src}` |")
+    lines.extend(
+        [
+            "",
+            f"_Table generated at site build ({site_build['built_at']}). "
+            "Add rows manually in git only if you disable auto-generation markers._",
+            "",
+            RUNBOOK_INDEX_END,
+        ]
+    )
+    return "\n".join(lines)
+
+
+def update_runbook_index_staged(staging_root: Path, site_build: dict[str, str]) -> None:
+    index_rel = Path("main/kubernetes/my-apps/observability/runbooks/mk_runbook_index.md")
+    staged = staging_root / index_rel
+    if not staged.is_file():
+        return
+    text = staged.read_text(encoding="utf-8")
+    table = render_runbook_index_table(site_build)
+    if RUNBOOK_INDEX_BEGIN in text and RUNBOOK_INDEX_END in text:
+        before, rest = text.split(RUNBOOK_INDEX_BEGIN, 1)
+        _, after = rest.split(RUNBOOK_INDEX_END, 1)
+        text = before + table + after
+    else:
+        text = text.rstrip() + "\n\n## Runbook index\n\n" + table + "\n"
+    staged.write_text(text, encoding="utf-8")
+
+
+def write_site_home(staged_index: Path, *, site_build: dict[str, str]) -> None:
     if SITE_HOME_SOURCE.is_file():
         shutil.copy2(SITE_HOME_SOURCE, staged_index)
+        apply_freshness_to_file(staged_index, SITE_HOME_SOURCE, site_build=site_build)
         return
     if SITE_HOME_FALLBACK.is_file():
         shutil.copy2(SITE_HOME_FALLBACK, staged_index)
+        apply_freshness_to_file(staged_index, SITE_HOME_FALLBACK, site_build=site_build)
         return
     staged_index.write_text(
         """---
@@ -437,7 +554,7 @@ HelmRelease pages are generated from `helm-release.yaml`. Alert runbooks nest un
     )
 
 
-def stage_kubernetes_tab_pages() -> list[dict[str, str]]:
+def stage_kubernetes_tab_pages(site_build: dict[str, str]) -> list[dict[str, str]]:
     """Stage mk_*.md in kubernetes/ (except mk_index.md) as extra top-level tabs."""
     tabs: list[dict[str, str]] = []
     for src, rel in discover_kubernetes_root_mk():
@@ -446,6 +563,7 @@ def stage_kubernetes_tab_pages() -> list[dict[str, str]]:
         dest = STAGING_DIR / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
+        apply_freshness_to_file(dest, src, site_build=site_build)
         tabs.append({"title": title_from_file(src), "href": rel.as_posix()})
     return tabs
 
@@ -457,13 +575,16 @@ def stage_doc(
     src: Path | None,
     *,
     release_to_workload: dict[str, str],
+    site_build: dict[str, str],
     is_helm: bool = False,
     runbook_meta: dict[str, Any] | None = None,
+    git_source: Path | None = None,
 ) -> None:
     dest = STAGING_DIR / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copy2(src, dest)
+        apply_freshness_to_file(dest, git_source or src, site_build=site_build)
     insert_nav_page(
         nav_tree,
         rel,
@@ -483,8 +604,10 @@ def main() -> int:
     if STAGING_DIR.exists():
         shutil.rmtree(STAGING_DIR)
     STAGING_DIR.mkdir(parents=True)
-    write_site_home(STAGING_DIR / "index.md")
-    kubernetes_tab_pages = stage_kubernetes_tab_pages()
+    site_build = site_build_info(REPO_ROOT)
+    write_site_build_page(STAGING_DIR, site_build)
+    write_site_home(STAGING_DIR / "index.md", site_build=site_build)
+    kubernetes_tab_pages = stage_kubernetes_tab_pages(site_build)
 
     nav_tree: dict = {}
     release_to_workload = build_release_to_workload_map()
@@ -492,11 +615,21 @@ def main() -> int:
     manual_count = 0
     mk_count = 0
 
+    helm_git_sources: dict[Path, Path] = {}
     for rel, title in generate_helm_release_docs(STAGING_DIR):
-        stage_doc(nav_tree, rel, title, None, release_to_workload=release_to_workload, is_helm=True)
+        stage_doc(
+            nav_tree,
+            rel,
+            title,
+            None,
+            release_to_workload=release_to_workload,
+            site_build=site_build,
+            is_helm=True,
+        )
         helm_count += 1
 
     for helm_path in discover_helm_release_paths():
+        helm_git_sources[helm_doc_staging_rel(helm_path)] = helm_path
         app_dir = helm_path.parent
         meta = yaml.safe_load(helm_path.read_text(encoding="utf-8")) or {}
         name = str((meta.get("metadata") or {}).get("name") or app_dir.parent.name)
@@ -511,9 +644,15 @@ def main() -> int:
             title_from_file(src),
             src,
             release_to_workload=release_to_workload,
+            site_build=site_build,
             is_helm=True,
         )
         manual_count += 1
+
+    for rel in list(helm_git_sources):
+        staged = STAGING_DIR / rel
+        if staged.is_file():
+            apply_freshness_to_file(staged, helm_git_sources[rel], site_build=site_build)
 
     for src, rel in discover_mk_files():
         runbook_meta = None
@@ -525,9 +664,12 @@ def main() -> int:
             title_from_file(src),
             src,
             release_to_workload=release_to_workload,
+            site_build=site_build,
             runbook_meta=runbook_meta,
         )
         mk_count += 1
+
+    update_runbook_index_staged(STAGING_DIR, site_build)
 
     write_workload_indexes(nav_tree, STAGING_DIR)
     write_section_indexes(nav_tree, STAGING_DIR)
@@ -537,6 +679,10 @@ def main() -> int:
     base["docs_dir"] = "staging"
     base["site_dir"] = "site"
     base["site_url"] = os.environ.get("MKDOCS_SITE_URL", DEFAULT_SITE_URL).rstrip("/")
+    base["copyright"] = (
+        f"Site image built {site_build['built_at']} · "
+        f"tag {site_build['image_version']} · git {site_build['sha'][:12]}"
+    )
     base["nav"] = build_top_level_nav(
         nav_tree,
         kubernetes_tab_pages,

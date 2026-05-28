@@ -46,12 +46,9 @@ Reusable blocks in `mkdocs/snippets/runbook/` — include in any runbook with:
 
 ## Runbook index
 
-| Alert | Runbook |
-|-------|---------|
-| `HomelabFluxHelmReleaseNotReady` | [HelmRelease not ready](mk_runbook_homelab-flux-helmrelease-not-ready.md) |
-| `HomelabFluxHelmReleaseTestFail` | [Test harness](mk_runbook_homelab-flux-helmrelease-test-fail.md) |
-| `HomelabDownloaderMetricsDown` | [Downloader metrics down](mk_runbook_homelab-downloader-metrics-down.md) |
-| `HomelabOllamaModelPullStuck` | [Ollama model pull stuck](mk_runbook_homelab-ollama-model-pull-stuck.md) |
-| `HomelabKubeJobFailedOllamaModelPull` | [Ollama model pull job failed](mk_runbook_homelab-ollama-model-pull-stuck.md) |
+The table below is **regenerated at each docs build** from runbook front matter (`alertname`, `alertnames`) and Git last-commit dates.
 
-Add a row here whenever you add a runbook file.
+<!-- runbook-index-begin -->
+<!-- runbook-index-end -->
+
+Add a new runbook file under this folder; set `alertname` / `alertnames` in front matter — no need to edit the table by hand.

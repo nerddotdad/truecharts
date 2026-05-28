@@ -21,6 +21,14 @@ GitHub Actions only **builds** the image. **Serving** is your cluster: `app-temp
 3. Ensure Flux reconciles `homelab-docs` Kustomization (`clusters/main/kubernetes/my-apps/dashboards/homelab-docs/`).
 4. Open **`https://docs.${DOMAIN_0}`** (same host as in the HelmRelease ingress).
 
+## Document freshness
+
+- Each page: **Last updated (Git)** (last commit for that `mk_*.md` or `helm-release.yaml`).
+- **Home → Site build info**: CI image build time, git SHA, and `VERSION` tag.
+- Footer: same build metadata on every page.
+
+If ntfy **Runbook** links 404, confirm **Site build info** is newer than your runbook commit and roll `homelab-docs` if needed (`tag: latest` may require a pod restart to re-pull).
+
 ## Verify in cluster
 
 ```bash

@@ -1,0 +1,160 @@
+---
+# Hermes Agent + WebUI — on-call triage at https://hermes.${DOMAIN_0}
+# Image: custom_images/hermes-homelab (ghcr.io/nerddotdad/hermes-homelab) — build via Build Custom Docker Images workflow.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: hermes-oncall
+  namespace: ai
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.6.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 15m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    podOptions:
+      securityContext:
+        fsGroup: 1000
+
+    serviceAccount:
+      create: false
+      name: hermes-oncall
+
+    image:
+      repository: ghcr.io/nerddotdad/hermes-homelab
+      pullPolicy: IfNotPresent
+      tag: latest
+
+    workload:
+      main:
+        podSpec:
+          serviceAccountName: hermes-oncall
+          initContainers:
+            seed-hermes-config:
+              enabled: true
+              type: init
+              image:
+                repository: ghcr.io/nerddotdad/hermes-homelab
+                tag: latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  mkdir -p /home/hermeswebui/.hermes
+                  if [ ! -f /home/hermeswebui/.hermes/config.yaml ]; then
+                    cp /opt/hermes-seed/config.yaml /home/hermeswebui/.hermes/config.yaml
+                    echo "Seeded Hermes config.yaml"
+                  fi
+              securityContext:
+                runAsUser: 1000
+                runAsGroup: 1000
+          containers:
+            main:
+              enabled: true
+              env:
+                HERMES_WEBUI_HOST: "0.0.0.0"
+                HERMES_WEBUI_PORT: "8787"
+                HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
+                HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
+                HERMES_HOME: /home/hermeswebui/.hermes
+                HERMES_OPTIONAL_SKILLS_DIR: /opt/homelab-skills
+                HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
+                HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT: python3 /opt/homelab-scripts/alert_prefill.py
+                HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT_TIMEOUT: "5"
+                INCIDENT_API_BASE: http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents
+                WANTED_UID: "1000"
+                WANTED_GID: "1000"
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /health
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /health
+                  initialDelaySeconds: 60
+                  periodSeconds: 30
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /health
+                  initialDelaySeconds: 15
+                  periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 1Gi
+                limits:
+                  memory: 4Gi
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 8787
+            protocol: tcp
+            targetPort: 8787
+
+    persistence:
+      hermes-data:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 20Gi
+        mountPath: /home/hermeswebui/.hermes
+        globalMounts:
+          - readOnly: false
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: hermes.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Hermes on-call
+            description: Hermes Agent WebUI — alert triage with persistent memory
+            group: ai
+            icon: mdi-robot-happy-outline
+            href: https://hermes.${DOMAIN_0}
+            widget:
+              enabled: false

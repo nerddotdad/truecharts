@@ -7,6 +7,7 @@ COPY mkdocs/requirements.txt mkdocs/requirements.txt
 RUN pip install --no-cache-dir -r mkdocs/requirements.txt
 
 COPY scripts/collect_mkdocs.py scripts/collect_mkdocs.py
+COPY scripts/doc_metadata.py scripts/doc_metadata.py
 COPY scripts/helmrelease_docs.py scripts/helmrelease_docs.py
 COPY scripts/runbook_index.py scripts/runbook_index.py
 COPY mkdocs/mkdocs.base.yml mkdocs/mkdocs.base.yml
@@ -16,7 +17,15 @@ COPY clusters clusters
 
 # Required for navigation.instant (non-empty sitemap). Override at build time to match ingress host.
 ARG MKDOCS_SITE_URL=https://docs.example.com
+ARG DOCS_BUILD_SHA=unknown
+ARG DOCS_BUILD_TIME=unknown
+ARG DOCS_IMAGE_VERSION=unknown
 ENV MKDOCS_SITE_URL=${MKDOCS_SITE_URL}
+ENV DOCS_BUILD_SHA=${DOCS_BUILD_SHA}
+ENV DOCS_BUILD_TIME=${DOCS_BUILD_TIME}
+ENV DOCS_IMAGE_VERSION=${DOCS_IMAGE_VERSION}
+
+COPY .git .git
 
 RUN python scripts/collect_mkdocs.py \
     && mkdocs build -f mkdocs/mkdocs.generated.yml

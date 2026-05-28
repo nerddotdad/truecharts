@@ -50,11 +50,16 @@ Override with a hand-written `mk_helmrelease.md` next to the manifest (`helmrele
 
 Optional: `my-apps/<area>/mk_index.md` replaces the auto-generated area overview.
 
+## Document freshness
+
+Every page shows a **Last updated (Git)** banner (last commit touching that source file). Under **Home → Site build info** you see when the **published nginx image** was built (CI time + git SHA + image tag). If a runbook link from ntfy returns 404, the Git file may exist but the cluster image is still old — rebuild and roll `homelab-docs`.
+
 ## Workflow
 
 1. Add or edit `mk_*.md` next to your manifests under `clusters/`.
 2. Push to `main` — GitHub Actions rebuilds the docs image.
 3. Flux deploys to `https://docs.${DOMAIN_0}`.
+4. Open **Site build info** and confirm the build date matches your push.
 
 ```yaml
 ---

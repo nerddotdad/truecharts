@@ -1,0 +1,29 @@
+---
+# Incident API on the same host as Hermes WebUI (path /homelab/api → this Service).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hermes-incident-api
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/part-of: homelab-observability
+  annotations:
+    cert-manager.io/cluster-issuer: domain-0-le-prod
+spec:
+  ingressClassName: external
+  tls:
+    - hosts:
+        - hermes.${DOMAIN_0}
+      secretName: hermes-incident-api-tls
+  rules:
+    - host: hermes.${DOMAIN_0}
+      http:
+        paths:
+          - path: /homelab/api
+            pathType: Prefix
+            backend:
+              service:
+                name: homelab-alert-bridge
+                port:
+                  number: 8000

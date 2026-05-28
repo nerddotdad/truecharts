@@ -1,0 +1,73 @@
+---
+title: Hermes on-call (WebUI + Agent)
+---
+
+# Hermes on-call
+
+AI-assisted alert triage using **[Hermes Agent](https://github.com/NousResearch/hermes-agent)** and **[Hermes WebUI](https://github.com/nesquena/hermes-webui)** — full CLI parity in the browser, with **persistent memory** (skills, sessions, `MEMORY.md`) so repeat incidents get faster over time.
+
+## URLs
+
+| Service | URL |
+|---------|-----|
+| **Hermes WebUI** | `https://hermes.${DOMAIN_0}` |
+| **Ask AI** (from ntfy) | `https://hermes.${DOMAIN_0}/?incident=<fingerprint>` |
+| **Incident API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
+
+Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** (same as Grafana).
+
+## Alert flow
+
+```text
+Prometheus / Grafana → homelab-alert-bridge (stores incident JSON)
+                    → alertmanager-ntfy → ntfy (Runbook | Alert | Ask AI)
+Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
+      → You chat with Hermes (read-only kubectl / flux)
+      → Agent proposes resolution; you execute via GitOps
+      → Hermes can save a skill for next time
+```
+
+## GitOps layout
+
+| Path | Role |
+|------|------|
+| `my-apps/ai/hermes-oncall/` | WebUI HelmRelease, RBAC, PVC |
+| `my-apps/observability/homelab-alert-bridge/` | Webhook store + proxy + `/homelab/api` ingress |
+| `custom_images/hermes-homelab/` | WebUI image + kubectl/flux + homelab skills |
+| `custom_images/homelab-alert-bridge/` | Incident bridge image |
+| `alertmanager-ntfy/app/configmap.yaml` | **Ask AI** `X-Actions` button |
+
+## First deploy
+
+1. **Push to `main`** so GitHub Actions builds `ghcr.io/nerddotdad/hermes-homelab` and `homelab-alert-bridge` (paths under `custom_images/`).
+2. Flux reconciles `homelab-alert-bridge` **before** Alertmanager traffic switches (Kustomization `dependsOn: alertmanager-ntfy` only — bridge should be up when AM config changes).
+3. Open `https://hermes.${DOMAIN_0}`, complete WebUI onboarding if prompted, confirm model **qwen3.5:9b** via Ollama.
+4. Fire a test alert (see `alert-test/`) and tap **Ask AI** on ntfy.
+
+## Read-only cluster access
+
+ServiceAccount **`hermes-oncall`** in namespace `ai` has **get/list/watch** on pods, events, jobs, HelmReleases, Kustomizations, etc. — no patch/delete.
+
+Skill **`homelab-k8s-flux-triage`** (in the image) instructs the agent to stay read-only and prefer GitOps changes.
+
+## Memory and skills
+
+- State lives on PVC **`hermes-data`** mounted at `/home/hermeswebui/.hermes`.
+- Back up this PVC (Longhorn snapshot or Velero) — losing it loses learned skills/sessions.
+- After resolving an incident, tell Hermes what worked; it can offer to save a **skill** for future alerts.
+
+## Ollama
+
+Default model **`qwen3.5:9b`** at `http://ollama-api.ai.svc.cluster.local:11434/v1` (seeded in `custom_images/hermes-homelab/config.yaml`). Change in WebUI **Control Center** or edit `config.yaml` on the PVC.
+
+## Troubleshooting
+
+| Issue | Check |
+|-------|--------|
+| WebUI ImagePullBackOff | Build/push `hermes-homelab` image on `main` |
+| Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
+| Ask AI opens empty composer | Browser extension blocked? Check `/homelab/api/incidents/<id>` in browser |
+| No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
+| Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
+
+See also [Observability](mk_observability.md) and [Alert runbooks](runbooks/mk_runbook_index.md).

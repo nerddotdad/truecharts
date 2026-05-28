@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homelab-alert-bridge-incidents
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
