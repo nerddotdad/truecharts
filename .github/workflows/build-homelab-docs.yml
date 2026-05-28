@@ -3,13 +3,12 @@ name: Build Homelab Docs
 on:
   push:
     paths:
-      - 'clusters/**/mk_*.md'
+      - 'documentation/**'
       - 'clusters/**/helm-release*.yaml'
-      - 'clusters/main/kubernetes/mk_index.md'
-      - 'clusters/main/mk_index.md'
       - 'mkdocs/**'
       - 'scripts/collect_mkdocs.py'
       - 'scripts/doc_metadata.py'
+      - 'scripts/doc_paths.py'
       - 'scripts/helmrelease_docs.py'
       - 'scripts/runbook_index.py'
       - 'custom_images/homelab-docs/**'

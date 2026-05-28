@@ -1,4 +1,4 @@
-# Build static docs from co-located clusters/**/mk_*.md (repo root context).
+# Build static docs from documentation/ + clusters/ helm manifests (repo root context).
 FROM python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97 AS builder
 
 WORKDIR /src
@@ -8,11 +8,13 @@ RUN pip install --no-cache-dir -r mkdocs/requirements.txt
 
 COPY scripts/collect_mkdocs.py scripts/collect_mkdocs.py
 COPY scripts/doc_metadata.py scripts/doc_metadata.py
+COPY scripts/doc_paths.py scripts/doc_paths.py
 COPY scripts/helmrelease_docs.py scripts/helmrelease_docs.py
 COPY scripts/runbook_index.py scripts/runbook_index.py
 COPY mkdocs/mkdocs.base.yml mkdocs/mkdocs.base.yml
 COPY mkdocs/templates mkdocs/templates
 COPY mkdocs/snippets mkdocs/snippets
+COPY documentation documentation
 COPY clusters clusters
 
 # Required for navigation.instant (non-empty sitemap). Override at build time to match ingress host.

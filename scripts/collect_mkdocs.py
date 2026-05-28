@@ -3,7 +3,7 @@
 Stage MkDocs content from the GitOps tree:
 
 1. Auto-generate chart index pages from helm-release.yaml (helm-release.md.j2 → <workload>/index.md).
-2. Copy hand-written mk_*.md (override generated chart page when helmrelease_doc: manual).
+2. Copy hand-written mk_*.md from documentation/ (override generated chart page when helmrelease_doc: manual).
 3. Emit mkdocs.generated.yml navigation (section indexes + chart/workload groups).
 """
 
@@ -28,12 +28,13 @@ from helmrelease_docs import (
     relative_doc_href,
 )
 from doc_metadata import git_last_modified, inject_freshness_banner, site_build_info
+from doc_paths import DOCS_ROOT, app_dir_to_doc_dir, clusters_rel_to_doc_dir, doc_staging_rel
 from runbook_index import discover_alert_runbooks, get_alert_runbooks, parse_front_matter, runbook_targets_workload
 
 RUNBOOK_INDEX_BEGIN = "<!-- runbook-index-begin -->"
 RUNBOOK_INDEX_END = "<!-- runbook-index-end -->"
 
-HOME_SOURCE_NAME = "mk_index.md"
+HOME_SOURCE_NAME = "index.md"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLUSTERS_ROOT = REPO_ROOT / "clusters"
@@ -53,13 +54,12 @@ EXCLUDE_DIR_NAMES = {
 MK_FILE = re.compile(r"^mk_.*\.md$", re.IGNORECASE)
 RUNBOOK_FILE = re.compile(r"^mk_runbook_.*\.md$", re.IGNORECASE)
 SKIP_MK_FILES = {
-    HOME_SOURCE_NAME,
     "mk_runbook_template.md",
 }
 FRONT_MATTER_TITLE = re.compile(r"^title:\s*['\"]?(.*?)['\"]?\s*$", re.MULTILINE)
 AREA_INDEX_NAME = "mk_index.md"
-SITE_HOME_SOURCE = CLUSTERS_ROOT / "main" / "kubernetes" / AREA_INDEX_NAME
-SITE_HOME_FALLBACK = CLUSTERS_ROOT / "main" / AREA_INDEX_NAME
+SITE_HOME_SOURCE = DOCS_ROOT / HOME_SOURCE_NAME
+KUBERNETES_DOCS_ROOT = DOCS_ROOT / "kubernetes"
 KUBERNETES_ROOT = CLUSTERS_ROOT / "main" / "kubernetes"
 CLUSTER_TAB_TITLE = "Kubernetes"
 KUBERNETES_CLUSTER_INDEX = Path("main/kubernetes/index.md")
@@ -124,19 +124,20 @@ def workload_key_from_rel(rel: Path) -> str | None:
     return None
 
 
-def is_kubernetes_root_doc(rel: Path) -> bool:
-    """mk_*.md directly under clusters/main/kubernetes/ (tab roots, not workload docs)."""
-    return rel.parent.as_posix() == KUBERNETES_ROOT.relative_to(CLUSTERS_ROOT).as_posix()
+def is_kubernetes_root_doc(doc_rel: Path) -> bool:
+    """mk_*.md directly under documentation/kubernetes/ (tab roots, not workload docs)."""
+    return doc_rel.parent.as_posix() == "kubernetes"
 
 
 def discover_kubernetes_root_mk() -> list[tuple[Path, Path]]:
-    if not KUBERNETES_ROOT.is_dir():
+    if not KUBERNETES_DOCS_ROOT.is_dir():
         return []
     found: list[tuple[Path, Path]] = []
-    for path in sorted(KUBERNETES_ROOT.glob("mk_*.md")):
+    for path in sorted(KUBERNETES_DOCS_ROOT.glob("mk_*.md")):
         if path.name in SKIP_MK_FILES:
             continue
-        found.append((path, path.relative_to(CLUSTERS_ROOT)))
+        doc_rel = path.relative_to(DOCS_ROOT)
+        found.append((path, doc_staging_rel(doc_rel)))
     return found
 
 
@@ -151,18 +152,23 @@ def discover_mk_files() -> list[tuple[Path, Path]]:
             auto_generated_paths.add(helm_doc_staging_rel(hr))
 
     found: list[tuple[Path, Path]] = []
-    for root, dirnames, filenames in CLUSTERS_ROOT.walk():
+    if not DOCS_ROOT.is_dir():
+        return found
+    for root, dirnames, filenames in DOCS_ROOT.walk():
         dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIR_NAMES]
         for name in filenames:
             if not MK_FILE.match(name) or name in SKIP_MK_FILES:
                 continue
+            if name == HOME_SOURCE_NAME and Path(root) == DOCS_ROOT:
+                continue
             src = root / name
-            rel = src.relative_to(CLUSTERS_ROOT)
-            if is_kubernetes_root_doc(rel) or rel.as_posix() == "main/mk_index.md":
+            doc_rel = src.relative_to(DOCS_ROOT)
+            if is_kubernetes_root_doc(doc_rel):
                 continue
-            if rel in auto_generated_paths and name.lower() == AUTO_DOC_FILE.lower():
+            staging_rel = doc_staging_rel(doc_rel)
+            if staging_rel in auto_generated_paths and name.lower() == AUTO_DOC_FILE.lower():
                 continue
-            found.append((src, rel))
+            found.append((src, staging_rel))
     return sorted(found, key=lambda item: str(item[1]).lower())
 
 
@@ -307,11 +313,11 @@ def write_section_indexes(nav_tree: dict, staging_root: Path) -> None:
         index_staged.parent.mkdir(parents=True, exist_ok=True)
 
         if "my-apps" in prefix.parts:
-            custom = CLUSTERS_ROOT / "main" / "kubernetes" / "my-apps" / prefix.parts[-1] / AREA_INDEX_NAME
+            custom = DOCS_ROOT / "kubernetes" / "my-apps" / prefix.parts[-1] / AREA_INDEX_NAME
         elif "_sections" in prefix.parts:
-            custom = CLUSTERS_ROOT / "main" / "kubernetes" / "_sections" / prefix.parts[-1] / AREA_INDEX_NAME
+            custom = DOCS_ROOT / "kubernetes" / "_sections" / prefix.parts[-1] / AREA_INDEX_NAME
         else:
-            custom = CLUSTERS_ROOT / prefix / AREA_INDEX_NAME
+            custom = clusters_rel_to_doc_dir(prefix)
         if custom.is_file():
             shutil.copy2(custom, index_staged)
             data["__index__"] = index_rel.as_posix()
@@ -377,7 +383,7 @@ def write_workload_indexes(nav_tree: dict, staging_root: Path) -> None:
     """Optional chart mk_index.md replaces auto-generated workload/index.md."""
     for data in nav_tree.values():
         for workload_key, w in data.get("__workloads__", {}).items():
-            custom = CLUSTERS_ROOT / workload_key / AREA_INDEX_NAME
+            custom = clusters_rel_to_doc_dir(Path(workload_key)) / AREA_INDEX_NAME
             if not custom.is_file():
                 continue
             index_rel = Path(workload_key) / "index.md"
@@ -497,7 +503,7 @@ Use this page to confirm the **homelab-docs** Deployment is serving a recent ima
 
 ## Why a runbook link shows 404
 
-1. The runbook `mk_*.md` must exist under `clusters/` and be included by `collect_mkdocs.py`.
+1. The runbook `mk_*.md` must exist under `documentation/` and be included by `collect_mkdocs.py`.
 2. Push to **`main`** so the **Build Homelab Docs** workflow rebuilds `ghcr.io/nerddotdad/homelab-docs`.
 3. Cluster pulls the new tag (`homelab-docs` HelmRelease). With `tag: latest`, restart the pod if the registry tag moved but Kubernetes did not pull again.
 4. Confirm `runbook_url` matches the file: `python scripts/runbook_url.py YourAlertName`
@@ -563,10 +569,6 @@ def write_site_home(staged_index: Path, *, site_build: dict[str, str]) -> None:
         shutil.copy2(SITE_HOME_SOURCE, staged_index)
         apply_freshness_to_file(staged_index, SITE_HOME_SOURCE, site_build=site_build)
         return
-    if SITE_HOME_FALLBACK.is_file():
-        shutil.copy2(SITE_HOME_FALLBACK, staged_index)
-        apply_freshness_to_file(staged_index, SITE_HOME_FALLBACK, site_build=site_build)
-        return
     staged_index.write_text(
         """---
 title: Home
@@ -581,16 +583,14 @@ HelmRelease pages are generated from `helm-release.yaml`. Alert runbooks nest un
 
 
 def stage_kubernetes_tab_pages(site_build: dict[str, str]) -> list[dict[str, str]]:
-    """Stage mk_*.md in kubernetes/ (except mk_index.md) as extra top-level tabs."""
+    """Stage mk_*.md in documentation/kubernetes/ as extra top-level tabs."""
     tabs: list[dict[str, str]] = []
-    for src, rel in discover_kubernetes_root_mk():
-        if src.name == AREA_INDEX_NAME:
-            continue
-        dest = STAGING_DIR / rel
+    for src, staging_rel in discover_kubernetes_root_mk():
+        dest = STAGING_DIR / staging_rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
         apply_freshness_to_file(dest, src, site_build=site_build)
-        tabs.append({"title": title_from_file(src), "href": rel.as_posix()})
+        tabs.append({"title": title_from_file(src), "href": staging_rel.as_posix()})
     return tabs
 
 
@@ -626,6 +626,9 @@ def main() -> int:
     if not CLUSTERS_ROOT.is_dir():
         print(f"clusters root not found: {CLUSTERS_ROOT}", file=sys.stderr)
         return 1
+    if not DOCS_ROOT.is_dir():
+        print(f"documentation root not found: {DOCS_ROOT}", file=sys.stderr)
+        return 1
 
     if STAGING_DIR.exists():
         shutil.rmtree(STAGING_DIR)
@@ -656,24 +659,6 @@ def main() -> int:
 
     for helm_path in discover_helm_release_paths():
         helm_git_sources[helm_doc_staging_rel(helm_path)] = helm_path
-        app_dir = helm_path.parent
-        meta = yaml.safe_load(helm_path.read_text(encoding="utf-8")) or {}
-        name = str((meta.get("metadata") or {}).get("name") or app_dir.parent.name)
-        doc_name = output_doc_name(helm_path, name)
-        if not is_manual_helm_doc(app_dir, doc_name):
-            continue
-        src = app_dir / doc_name
-        rel = src.relative_to(CLUSTERS_ROOT)
-        stage_doc(
-            nav_tree,
-            rel,
-            title_from_file(src),
-            src,
-            release_to_workload=release_to_workload,
-            site_build=site_build,
-            is_helm=True,
-        )
-        manual_count += 1
 
     for rel in list(helm_git_sources):
         staged = STAGING_DIR / rel
@@ -682,7 +667,7 @@ def main() -> int:
 
     for src, rel in discover_mk_files():
         runbook_meta = None
-        if RUNBOOK_FILE.match(rel.name):
+        if RUNBOOK_FILE.match(src.name):
             runbook_meta = parse_front_matter(src)
         stage_doc(
             nav_tree,
@@ -694,6 +679,26 @@ def main() -> int:
             runbook_meta=runbook_meta,
         )
         mk_count += 1
+
+    for helm_path in discover_helm_release_paths():
+        app_dir = helm_path.parent
+        meta = yaml.safe_load(helm_path.read_text(encoding="utf-8")) or {}
+        name = str((meta.get("metadata") or {}).get("name") or app_dir.parent.name)
+        doc_name = output_doc_name(helm_path, name)
+        if not is_manual_helm_doc(app_dir, doc_name):
+            continue
+        src = app_dir_to_doc_dir(app_dir) / doc_name
+        rel = doc_staging_rel(src.relative_to(DOCS_ROOT))
+        stage_doc(
+            nav_tree,
+            rel,
+            title_from_file(src),
+            src,
+            release_to_workload=release_to_workload,
+            site_build=site_build,
+            is_helm=True,
+        )
+        manual_count += 1
 
     update_runbook_index_staged(STAGING_DIR, site_build)
 

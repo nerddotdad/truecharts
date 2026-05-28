@@ -103,7 +103,7 @@ def freshness_banner(
             "[Site build details](/meta/site-build/)"
         )
     lines.append(
-        "- **When runbooks 404:** push `mk_*.md` to `main`, wait for "
+        "- **When runbooks 404:** push docs under `documentation/` to `main`, wait for "
         "[homelab-docs CI](https://github.com/nerddotdad/truecharts/actions), then confirm "
         "the cluster `homelab-docs` image tag matches the new build."
     )

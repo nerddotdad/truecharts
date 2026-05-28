@@ -68,7 +68,7 @@ Document which services this runbook is for (must match front matter above). Wit
 | `charts` | `nzbget` → any release installing chart `nzbget` |
 | `scope: all-helmreleases` | Listed under “Platform alert runbooks” on every chart page |
 
-**Per-service on-call steps:** add `app/mk_runbook.md` next to the manifest (shows under “Service documentation” on that chart’s page).
+**Per-service on-call steps:** add `documentation/kubernetes/my-apps/<workload>/app/mk_runbook.md` (shows under “Service documentation” on that chart’s page).
 
 ## ntfy buttons (alertmanager-ntfy)
 

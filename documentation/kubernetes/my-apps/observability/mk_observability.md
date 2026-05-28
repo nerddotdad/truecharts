@@ -127,11 +127,11 @@ Prometheus rules are the primary alert source for this cluster. Grafana displays
 
 ## Alert runbooks
 
-Runbooks are MkDocs pages under `observability/runbooks/`. ntfy **Runbook** buttons use `runbook_url` on the PrometheusRule.
+Runbooks are MkDocs pages under `documentation/kubernetes/my-apps/observability/runbooks/`. ntfy **Runbook** buttons use `runbook_url` on the PrometheusRule.
 
 **Freshness:** each page shows **Last updated (Git)**. **Home → Site build info** shows when the cluster image was built. If ntfy opens a 404, the runbook may exist in Git but `homelab-docs` has not been rebuilt or pulled yet.
 
-1. Copy `runbooks/mk_runbook_template.md` → `runbooks/mk_runbook_<alert-kebab>.md`
+1. Copy `documentation/kubernetes/my-apps/observability/runbooks/mk_runbook_template.md` → `mk_runbook_<alert-kebab>.md` in the same folder
 2. Set `alertname` and optional `alertnames` (multiple alerts, one runbook file)
 3. Get the URL: `python scripts/runbook_url.py YourAlertName` (must match an existing file)
 4. Add `runbook_url: https://docs.${DOMAIN_0}/...` to the alert annotations (Flux substitutes `${DOMAIN_0}`)
@@ -144,7 +144,7 @@ Runbooks are MkDocs pages under `observability/runbooks/`. ntfy **Runbook** butt
 | `releases: [namespace/name]` in runbook front matter | Alert runbook linked on that service’s HelmRelease doc page |
 | `areas: [downloaders]` | Runbook linked for every app under that `my-apps` folder |
 | `scope: all-helmreleases` | Platform runbook linked on all HelmRelease pages |
-| `app/mk_runbook.md` | On-call steps for one chart only (not alert-specific) |
+| `documentation/kubernetes/my-apps/<workload>/app/mk_runbook.md` | On-call steps for one chart only (not alert-specific) |
 
 ## Add a Grafana marketplace dashboard
 
@@ -214,7 +214,7 @@ Homelab config keeps stable labels only (`ready`, `suspended`, `name`, `exported
 
 ### Practical alert test (broken HelmRelease)
 
-See **`alert-test/mk_alert-test.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
+See **`documentation/kubernetes/my-apps/observability/alert-test/mk_alert-test.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
 
 ## Using kube-prometheus-stack default alerts (with ntfy)
 
@@ -285,7 +285,7 @@ Today **warning** and **critical** both go to ntfy (critical inhibits warning fo
 | Flux / GitOps | Already: `homelab-flux.yaml` |
 | App-specific scrape down | Pattern: `homelab-downloaders.yaml` + suppress `TargetDown` in that namespace |
 | Long bootstrap Jobs | Pattern: `homelab-ai.yaml` + suppress `KubeJobNotCompleted` for that `job_name` |
-| Your own SLOs | New `prometheus-rules/app/homelab-<team>.yaml` + runbook under `runbooks/` |
+| Your own SLOs | New `prometheus-rules/app/homelab-<team>.yaml` + runbook under `documentation/kubernetes/my-apps/observability/runbooks/` |
 
 Prioritize **runbooks** only for alerts you actually respond to; defaults already link to [prometheus-operator runbooks](https://runbooks.prometheus-operator.dev/) when the chart sets `runbook_url`.
 

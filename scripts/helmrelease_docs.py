@@ -10,6 +10,7 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from doc_paths import DOCS_ROOT, app_dir_to_doc_dir, doc_staging_rel
 from runbook_index import get_alert_runbooks, match_runbooks_for_release, workload_area
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +36,7 @@ def _safe_get(obj: Any, *keys: str, default: Any = None) -> Any:
 
 
 def is_manual_helm_doc(app_dir: Path, doc_name: str = AUTO_DOC_FILE) -> bool:
-    manual = app_dir / doc_name
+    manual = app_dir_to_doc_dir(app_dir) / doc_name
     if not manual.is_file():
         return False
     head = manual.read_text(encoding="utf-8", errors="replace")[:800]
@@ -76,23 +77,22 @@ def relative_doc_href(page_rel: Path, target_rel: Path) -> str:
 
 
 def list_supplemental_mk(app_dir: Path) -> list[dict[str, str]]:
-    """mk_*.md in app/ and, when present, the parent workload directory (e.g. alert-test/)."""
-    search_dirs = [app_dir]
-    if app_dir.name == "app":
-        search_dirs.append(app_dir.parent)
+    """mk_*.md under documentation/ mirroring app/ and workload directories."""
+    from doc_paths import supplemental_mk_dirs
 
     docs: list[dict[str, str]] = []
     seen: set[str] = set()
-    for directory in search_dirs:
+    for directory in supplemental_mk_dirs(app_dir):
         for path in sorted(directory.glob("mk_*.md")):
             if path.name.lower() == AUTO_DOC_FILE.lower():
                 continue
-            rel = path.relative_to(CLUSTERS_ROOT).as_posix()
-            if rel in seen:
+            doc_rel = path.relative_to(DOCS_ROOT)
+            href = doc_staging_rel(doc_rel).as_posix()
+            if href in seen:
                 continue
-            seen.add(rel)
+            seen.add(href)
             title = path.stem[3:].replace("_", " ").replace("-", " ").title()
-            docs.append({"title": title, "href": rel})
+            docs.append({"title": title, "href": href})
     return docs
 
 

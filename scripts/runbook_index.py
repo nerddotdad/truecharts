@@ -7,8 +7,7 @@ from typing import Any
 
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-CLUSTERS_ROOT = REPO_ROOT / "clusters"
+from doc_paths import DOCS_ROOT, doc_staging_rel
 
 SKIP_RUNBOOK_NAMES = {
     "mk_runbook_template.md",
@@ -43,6 +42,8 @@ def _as_list(value: Any) -> list[str]:
 
 
 def workload_area(helm_path: Path) -> str:
+    from doc_paths import CLUSTERS_ROOT
+
     rel = helm_path.relative_to(CLUSTERS_ROOT)
     parts = rel.parts
     if "my-apps" in parts:
@@ -56,7 +57,9 @@ def workload_area(helm_path: Path) -> str:
 
 def discover_alert_runbooks() -> list[dict[str, Any]]:
     books: list[dict[str, Any]] = []
-    for path in sorted(CLUSTERS_ROOT.rglob("mk_runbook_*.md")):
+    if not DOCS_ROOT.is_dir():
+        return books
+    for path in sorted(DOCS_ROOT.rglob("mk_runbook_*.md")):
         if path.name in SKIP_RUNBOOK_NAMES:
             continue
         meta = parse_front_matter(path)
@@ -66,10 +69,11 @@ def discover_alert_runbooks() -> list[dict[str, Any]]:
             names = [str(primary)] + [str(a) for a in alertnames if str(a) != str(primary)]
         else:
             names = [str(a) for a in alertnames]
+        doc_rel = path.relative_to(DOCS_ROOT)
         books.append(
             {
                 "path": path,
-                "href": path.relative_to(CLUSTERS_ROOT).as_posix(),
+                "href": doc_staging_rel(doc_rel).as_posix(),
                 "title": str(meta.get("title") or path.stem.replace("mk_runbook_", "").replace("-", " ").title()),
                 "alertname": primary,
                 "alertnames": names,

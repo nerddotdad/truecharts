@@ -5,7 +5,7 @@ Static MkDocs Material site served in the cluster (not on GitHub Actions).
 ## How it works
 
 ```text
-Git push (mk_*.md, helm-release.yaml, mkdocs/*)
+Git push (documentation/, helm-release.yaml, mkdocs/*)
     → GitHub Actions builds Docker image (collect_mkdocs + mkdocs build + nginx)
     → ghcr.io/nerddotdad/homelab-docs
     → Flux HelmRelease (app-template) in namespace dashboards

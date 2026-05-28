@@ -1,5 +1,5 @@
 ---
-# Static MkDocs site (nginx). Image is built in CI from clusters/**/mk_*.md — not served from GitHub Actions.
+# Static MkDocs site (nginx). Image is built in CI from documentation/ + helm-release.yaml — not served from GitHub Actions.
 # Runtime: app-template Deployment + Service + Ingress at https://docs.${DOMAIN_0}
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
