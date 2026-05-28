@@ -31,6 +31,10 @@ curl -s http://ollama-api.ai.svc.cluster.local:11434/api/tags | head
 
 Check whether the Job pod is still running, whether Ollama API responds, and whether pulls appear in logs (`pulling qwen3.5:9b`, etc.).
 
+## KubeJobFailed
+
+If you received **KubeJobFailed** for this Job, the pull container exited with failure (not just “still running”). Use the steps below, then delete the Job so the alert clears.
+
 ## Resolve
 
 1. **If the pull finished** but the Job object is old: delete the Job (spec is immutable; recreate from Git if needed):

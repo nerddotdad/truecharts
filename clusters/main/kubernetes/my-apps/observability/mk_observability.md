@@ -67,7 +67,24 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
 
 **alertmanager-ntfy** formats webhook payloads into readable ntfy **title**, **message**, priority, and tags.
 
-**Notification tap links:** `X-Click` uses each alert’s `runbook_url` when present (works on your phone). Otherwise it opens `https://grafana.${DOMAIN_0}/`. Built-in Prometheus `GeneratorURL` links use the in-cluster Service DNS (`kube-prometheus-stack-prometheus...`) and are intentionally not used.
+**ntfy notification actions** (configured in `alertmanager-ntfy/app/configmap.yaml`):
+
+| Action | Header | Opens |
+|--------|--------|--------|
+| Tap notification | `X-Click` | `https://ntfy.<domain>/homelab-alerts` (topic in the ntfy app) |
+| **Runbook** button | `X-Actions` | `runbook_url` annotation, else [prometheus-operator runbooks](https://runbooks.prometheus-operator.dev/) |
+| **Alert** button | `X-Actions` | Grafana Alerting list filtered by `alertname` |
+| **Dashboard** button | `X-Actions` | Only when the rule sets `dashboard_url` (homelab rules) |
+
+Do **not** use Prometheus `GeneratorURL` in ntfy headers — it points at in-cluster DNS (`kube-prometheus-stack-prometheus...`) and is unreachable from your phone.
+
+Optional annotations on PrometheusRule alerts:
+
+```yaml
+annotations:
+  runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/.../mk_runbook_.../
+  dashboard_url: https://grafana.${DOMAIN_0}/d/<uid-or-slug>
+```
 
 | Source | Path |
 |--------|------|
@@ -287,6 +304,7 @@ For each row: **fix**, **disable** (`defaultRules.disabled`), **suppress** (`nul
 - **TargetDown** in `downloaders`: suppressed in Alertmanager; use **`HomelabDownloaderMetricsDown`** (`homelab-downloaders.yaml`, 20m on `service=*-metrics`) for ntfy instead.
 - **TargetDown** elsewhere: fix ServiceMonitor or disable via kube-prometheus-stack `defaultRules.disabled.TargetDown`.
 - **KubeJobNotCompleted** for `ollama-model-pull-job`: suppressed; use **`HomelabOllamaModelPullStuck`** (36h, `homelab-ai.yaml`) or delete the Job after a successful pull.
+- **KubeJobFailed** for `ollama-model-pull-job`: suppressed; use **`HomelabKubeJobFailedOllamaModelPull`** (`homelab-ai.yaml`) with homelab runbook link on ntfy.
 - Temporary: Alertmanager UI (port-forward svc) or Grafana silences.
 
 ## Key files

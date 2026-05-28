@@ -67,6 +67,10 @@ Document which services this runbook is for (must match front matter above). Wit
 
 **Per-service on-call steps:** add `app/mk_runbook.md` next to the manifest (shows under “Service documentation” on that chart’s page).
 
+## ntfy buttons (alertmanager-ntfy)
+
+Homelab ntfy notifications expose three **view** actions when configured: **Runbook**, **Alert** (Grafana), **Dashboard** (only if `dashboard_url` is set on the alert). Tapping the notification opens the `homelab-alerts` topic in the ntfy app.
+
 ## Naming and ntfy link
 
 | Item | Convention |

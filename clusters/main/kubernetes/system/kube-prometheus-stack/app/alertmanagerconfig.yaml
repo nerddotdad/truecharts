@@ -41,6 +41,15 @@ spec:
           - name: job_name
             value: ollama-model-pull-job
             matchType: =
+      # HomelabKubeJobFailedOllamaModelPull carries homelab runbook_url for ntfy buttons.
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: KubeJobFailed
+            matchType: =
+          - name: job_name
+            value: ollama-model-pull-job
+            matchType: =
   inhibitRules:
     - equal: ["alertname", "namespace"]
       sourceMatch:

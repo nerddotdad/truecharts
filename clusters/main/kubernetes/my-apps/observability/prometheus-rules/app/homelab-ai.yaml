@@ -29,3 +29,16 @@ spec:
             description: |-
               Job ai/ollama-model-pull-job has been active for 36+ hours. Large model pulls can take hours; beyond 36h the pull may be stuck (network, disk, or Ollama API).
               Generic KubeJobNotCompleted (12h) for this job is suppressed; this alert notifies ntfy.
+        - alert: HomelabKubeJobFailedOllamaModelPull
+          expr: kube_job_failed{namespace="ai", job_name="ollama-model-pull-job"} > 0
+          for: 5m
+          labels:
+            severity: warning
+            homelab_team: ai
+          annotations:
+            summary: "Ollama model pull job failed (ai/ollama-model-pull-job)"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
+            description: |-
+              The bootstrap Job that pulls Ollama models failed. Check Job logs and Ollama API health.
+              Delete the Job after fixing: kubectl delete job ollama-model-pull-job -n ai
+              Optional: add dashboard_url on this alert for a third ntfy button (Grafana dashboard UID).

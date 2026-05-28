@@ -52,5 +52,6 @@ Reusable blocks in `mkdocs/snippets/runbook/` — include in any runbook with:
 | `HomelabFluxHelmReleaseTestFail` | [Test harness](mk_runbook_homelab-flux-helmrelease-test-fail.md) |
 | `HomelabDownloaderMetricsDown` | [Downloader metrics down](mk_runbook_homelab-downloader-metrics-down.md) |
 | `HomelabOllamaModelPullStuck` | [Ollama model pull stuck](mk_runbook_homelab-ollama-model-pull-stuck.md) |
+| `HomelabKubeJobFailedOllamaModelPull` | [Ollama model pull job failed](mk_runbook_homelab-ollama-model-pull-stuck.md) |
 
 Add a row here whenever you add a runbook file.
