@@ -125,6 +125,38 @@ Grafana alerting file provisioning lives in `helm-release.yaml` under `configmap
 
 Prefer **PrometheusRule** for infrastructure alerts so firing state is consistent in Prometheus, Alertmanager, and Grafana.
 
+## Flux / GitOps alerts
+
+Flux was not exporting metrics until wired up in two places:
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| PodMonitor | `flux-system/monitoring/podmonitor.yaml` | Scrapes helm/kustomize/source-controller metrics |
+| kube-state-metrics | `system/kube-prometheus-stack/app/kube-state-metrics-flux-values.configmap.yaml` | `gotk_resource_info` for HelmRelease, Kustomization, sources |
+
+Prometheus rules: `prometheus-rules/app/homelab-flux.yaml`
+
+| Alert | Meaning |
+|-------|---------|
+| `HomelabFluxHelmReleaseNotReady` | Helm install/upgrade or chart problem (10m) |
+| `HomelabFluxKustomizationNotReady` | Kustomize apply failing (15m) |
+| `HomelabFluxSourceNotReady` | Git/OCI/Helm repo or chart not ready |
+| `HomelabFluxControllerReconcileErrors` | Controller error rate in `flux-system` |
+| `HomelabFluxHelmReconcileSlow` | helm-controller p99 reconcile > 5m |
+
+After deploy, verify metrics exist:
+
+```bash
+# Resource state (from kube-state-metrics)
+kubectl exec -n kube-prometheus-stack prometheus-kube-prometheus-stack-0 -c prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/query?query=gotk_resource_info' | head -c 500
+
+# Controller metrics (from PodMonitor)
+kubectl get podmonitor -n flux-system
+```
+
+Tune `for:` durations in `homelab-flux.yaml` if Flux reconciliation legitimately runs longer than the alert window.
+
 ## Silence noise
 
 - **Watchdog** / **InfoInhibitor**: routed to `null` receiver (pipeline health only).
@@ -137,7 +169,9 @@ Prefer **PrometheusRule** for infrastructure alerts so firing state is consisten
 |------|-------------|
 | `system/kube-prometheus-stack/app/helm-release.yaml` | Enable/tune Prometheus/Alertmanager |
 | `system/kube-prometheus-stack/app/alertmanagerconfig.yaml` | Routing, receivers, inhibit rules |
-| `prometheus-rules/app/*.yaml` | New homelab PromQL alerts |
+| `prometheus-rules/app/*.yaml` | New homelab PromQL alerts (incl. `homelab-flux.yaml`) |
+| `flux-system/monitoring/podmonitor.yaml` | Flux controller scrape config |
+| `system/kube-prometheus-stack/app/kube-state-metrics-flux-values.configmap.yaml` | Flux CR metrics for alerting |
 | `grafana/app/grafana-dashboards-values.configmap.yaml` | New dashboards |
 | `grafana/app/helm-release.yaml` (alerting `configmap` block) | Grafana contact points / policies |
 | `ntfy/app/helm-release.yaml` | ntfy server, ingress, persistence |

@@ -1,0 +1,21 @@
+---
+# Scrapes Flux controller metrics (gotk_reconcile_*, controller_runtime_*).
+# Ref: https://fluxcd.io/flux/monitoring/metrics/
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flux-controllers
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - flux-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: flux
+  podMetricsEndpoints:
+    - port: http-prom
+      path: /metrics
+      interval: 30s

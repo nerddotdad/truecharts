@@ -1,0 +1,112 @@
+---
+# Requires gotk_resource_info (kube-state-metrics Flux CR config) and Flux PodMonitor.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-flux
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.flux.resources
+      interval: 1m
+      rules:
+        - alert: HomelabFluxHelmReleaseNotReady
+          expr: |
+            gotk_resource_info{
+              customresource_kind="HelmRelease",
+              ready="False",
+              suspended!="true"
+            } == 1
+          for: 10m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
+            description: >-
+              Flux HelmRelease has been Not Ready for 10+ minutes (failed install/upgrade, chart fetch, or dependency).
+              Check: kubectl describe helmrelease {{ $labels.name }} -n {{ $labels.exported_namespace }}
+
+        - alert: HomelabFluxKustomizationNotReady
+          expr: |
+            gotk_resource_info{
+              customresource_kind="Kustomization",
+              ready="False",
+              suspended!="true"
+            } == 1
+          for: 15m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "Kustomization {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
+            description: >-
+              Flux Kustomization reconciliation is failing. Check: kubectl describe kustomization {{ $labels.name }} -n {{ $labels.exported_namespace }}
+
+        - alert: HomelabFluxSourceNotReady
+          expr: |
+            gotk_resource_info{
+              customresource_kind=~"GitRepository|HelmRepository|OCIRepository|HelmChart",
+              ready="False",
+              suspended!="true"
+            } == 1
+          for: 15m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Flux source {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
+            description: >-
+              A Flux source (Git/OCI/Helm repo or chart) is not ready; downstream HelmReleases/Kustomizations may fail.
+
+        - alert: HomelabFluxResourceUnknown
+          expr: |
+            gotk_resource_info{
+              customresource_kind=~"HelmRelease|Kustomization|GitRepository|HelmRepository|OCIRepository|HelmChart",
+              ready="Unknown",
+              suspended!="true"
+            } == 1
+          for: 30m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Flux {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} status unknown"
+            description: >-
+              Resource has been in Unknown readiness for 30+ minutes.
+
+    - name: homelab.flux.controllers
+      interval: 1m
+      rules:
+        - alert: HomelabFluxControllerReconcileErrors
+          expr: |
+            sum by (controller) (
+              rate(controller_runtime_reconcile_total{namespace="flux-system", result="error"}[5m])
+            ) > 0
+          for: 10m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Flux controller {{ $labels.controller }} reporting reconcile errors"
+            description: >-
+              Sustained reconciliation errors from {{ $labels.controller }}. Check logs in flux-system.
+
+        - alert: HomelabFluxHelmReconcileSlow
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum by (le, controller) (
+                rate(controller_runtime_reconcile_time_seconds_bucket{namespace="flux-system", controller="helmrelease"}[5m])
+              )
+            ) > 300
+          for: 15m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "HelmRelease reconciles are very slow (p99 > 5m)"
+            description: >-
+              helm-controller p99 reconcile time exceeds 5 minutes; installs/upgrades may be stuck or overloaded.

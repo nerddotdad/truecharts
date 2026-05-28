@@ -28,6 +28,10 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: kube-state-metrics-flux-values
+      valuesKey: values.yaml
   values:
     crds:
       enabled: true
