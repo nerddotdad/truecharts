@@ -1,0 +1,18 @@
+# Maps custom_images/<name> to cluster manifests updated after CI build.
+# Used by scripts/bump_custom_image_manifest.py and GitHub Actions.
+images:
+  hermes-homelab:
+    registry: ghcr.io/nerddotdad/hermes-homelab
+    manifests:
+      - kind: helm-tag
+        path: clusters/main/kubernetes/my-apps/ai/hermes-oncall/app/helm-release.yaml
+  homelab-alert-bridge:
+    registry: ghcr.io/nerddotdad/homelab-alert-bridge
+    manifests:
+      - kind: deployment-image
+        path: clusters/main/kubernetes/my-apps/observability/homelab-alert-bridge/app/deployment.yaml
+  homelab-docs:
+    registry: ghcr.io/nerddotdad/homelab-docs
+    manifests:
+      - kind: helm-tag
+        path: clusters/main/kubernetes/my-apps/dashboards/homelab-docs/app/helm-release.yaml

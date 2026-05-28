@@ -24,6 +24,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      bumps-json: ${{ steps.bumps-json.outputs.json }}
     permissions:
       contents: write
       packages: write
@@ -95,18 +97,26 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Commit auto-bumped VERSION
+      - name: Prepare bumps JSON for manifest sync
+        id: bumps-json
         run: |
-          VERSION_FILE="custom_images/${{ env.IMAGE_NAME }}/VERSION"
-          if ! git diff --quiet "$VERSION_FILE" 2>/dev/null; then
-            git config user.email "action@github.com"
-            git config user.name "GitHub Action"
-            git add "$VERSION_FILE"
-            git commit -m "chore: auto-bump homelab-docs version to ${{ steps.version.outputs.version }} [skip ci]" || true
-            git push origin "HEAD:${{ github.ref_name }}" || true
-          fi
+          jq -n \
+            --arg image "${{ env.IMAGE_NAME }}" \
+            --arg version "${{ steps.version.outputs.version }}" \
+            '[{image: $image, version: $version}]' > bumps.json
+          echo "json<<EOF" >> "$GITHUB_OUTPUT"
+          cat bumps.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Summary
         run: |
           echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
-          echo "Update HelmRelease tag after first build if not using :latest"
+          echo "Helm tag bump PR follows via sync-custom-image-tags workflow."
+
+  sync-manifests:
+    needs: build
+    if: needs.build.result == 'success'
+    uses: ./.github/workflows/sync-custom-image-tags.yml
+    with:
+      bumps-json: ${{ needs.build.outputs.bumps-json }}
+    secrets: inherit

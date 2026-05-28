@@ -1,0 +1,63 @@
+# Called after custom image builds to open one PR with VERSION + Helm/Deployment tag bumps.
+name: Sync custom image tags
+
+on:
+  workflow_call:
+    inputs:
+      bumps-json:
+        description: 'JSON array [{"image":"hermes-homelab","version":"1.0.2"}, ...]'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Apply VERSION files and manifest tags
+        run: |
+          set -euo pipefail
+          BUMPS='${{ inputs.bumps-json }}'
+          echo "$BUMPS" | jq -e 'type == "array" and length > 0' >/dev/null
+          mkdir -p /tmp/image-bumps
+          echo "$BUMPS" | jq -c '.[]' | while read -r row; do
+            image=$(echo "$row" | jq -r '.image')
+            version=$(echo "$row" | jq -r '.version')
+            echo "$version" > "custom_images/${image}/VERSION"
+            echo "{\"image\":\"${image}\",\"version\":\"${version}\"}" > "/tmp/image-bumps/${image}.json"
+          done
+          python3 scripts/bump_custom_image_manifest.py --from-dir /tmp/image-bumps
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@c5a7806c49a8ed9a8e41f0e6ae46f8ee64a04ac # v7.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/custom-image-tags
+          delete-branch: true
+          commit-message: |
+            chore: sync custom image tags after CI build
+          title: chore: sync custom image tags after CI build
+          body: |
+            Updates `custom_images/*/VERSION` and cluster manifest image pins after GHCR publish.
+
+            ```json
+            ${{ inputs.bumps-json }}
+            ```
+
+            Merging this PR lets Flux deploy the new image tags.
+
+            <!-- [skip ci] for path filters that would re-trigger doc-only builds -->
+          labels: |
+            dependencies
+          add-paths: |
+            custom_images/**/VERSION
+            clusters/**/helm-release.yaml
+            clusters/**/deployment.yaml

@@ -33,14 +33,14 @@
   ],
   "packageRules": [
     {
-      "description": "Homelab custom GHCR image bumps (CI publishes semver from custom_images/*/VERSION)",
+      "description": "Homelab custom GHCR tags — bumped by CI (build-custom-images / build-homelab-docs PRs)",
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/nerddotdad/hermes-homelab",
         "ghcr.io/nerddotdad/homelab-alert-bridge",
         "ghcr.io/nerddotdad/homelab-docs"
       ],
-      "automerge": true
+      "enabled": false
     },
     {
       "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",

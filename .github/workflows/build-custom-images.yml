@@ -233,35 +233,20 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Commit updated VERSION file (if auto-bumped)
-        if: steps.version.outputs.version != ''
+      - name: Record built version for manifest sync
         run: |
-          VERSION_FILE="custom_images/${{ matrix.image }}/VERSION"
-          if [ -f "$VERSION_FILE" ]; then
-            # Check if VERSION file has uncommitted changes
-            if ! git diff --quiet "$VERSION_FILE" 2>/dev/null; then
-              echo "VERSION file was auto-bumped, committing changes..."
-              git config --local user.email "action@github.com"
-              git config --local user.name "GitHub Action"
-              git add "$VERSION_FILE"
-              
-              # Commit the change
-              if git commit -m "chore: auto-bump ${{ matrix.image }} version to ${{ steps.version.outputs.version }} [skip ci]"; then
-                echo "Committed VERSION file update"
-                # Try to push (may fail if branch is protected or has conflicts)
-                if git push origin HEAD:${{ github.ref_name }}; then
-                  echo "Pushed VERSION file update to repository"
-                else
-                  echo "Warning: Failed to push VERSION file update. You may need to commit manually."
-                  echo "New version is: ${{ steps.version.outputs.version }}"
-                fi
-              else
-                echo "No changes to commit (may have been committed already)"
-              fi
-            else
-              echo "VERSION file unchanged, no commit needed"
-            fi
-          fi
+          mkdir -p bump-manifests
+          jq -n \
+            --arg image "${{ matrix.image }}" \
+            --arg version "${{ steps.version.outputs.version }}" \
+            '{image: $image, version: $version}' > "bump-manifests/${{ matrix.image }}.json"
+
+      - name: Upload version manifest
+        uses: actions/upload-artifact@65a9edc5881c5f5e526fb0d65b8e60ba6b0d0b0 # v4
+        with:
+          name: bump-${{ matrix.image }}
+          path: bump-manifests/${{ matrix.image }}.json
+          retention-days: 1
 
       - name: Image digest and tags
         run: |
@@ -271,6 +256,41 @@ jobs:
           echo ""
           echo "Image version: ${{ steps.version.outputs.version }}"
           echo ""
-          echo "To use this image, update your Helm chart with:"
-          echo "  tag: \"${{ steps.version.outputs.version }}\""
+          echo "Manifest tags are updated via the sync-custom-image-tags PR job."
+
+  collect-bumps:
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      bumps-json: ${{ steps.bumps.outputs.json }}
+    steps:
+      - name: Download built version manifests
+        uses: actions/download-artifact@65a9edc5881c5f5e526fb0d65b8e60ba6b0d0b0 # v4
+        with:
+          pattern: bump-*
+          merge-multiple: true
+          path: bump-manifests
+
+      - name: Collect bumps JSON
+        id: bumps
+        run: |
+          if [ ! -d bump-manifests ] || [ -z "$(find bump-manifests -name '*.json' -print -quit 2>/dev/null)" ]; then
+            echo "No bump artifacts found"
+            echo 'json=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          json=$(jq -s '.' bump-manifests/*.json)
+          echo "Collected bumps: $json"
+          echo "json<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$json" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+  sync-manifests:
+    needs: collect-bumps
+    if: needs.collect-bumps.outputs.bumps-json != '' && needs.collect-bumps.outputs.bumps-json != '[]'
+    uses: ./.github/workflows/sync-custom-image-tags.yml
+    with:
+      bumps-json: ${{ needs.collect-bumps.outputs.bumps-json }}
+    secrets: inherit
 

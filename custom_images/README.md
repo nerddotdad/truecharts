@@ -97,8 +97,8 @@ image:
 
 1. Make your changes to the Dockerfile or source files
 2. Commit and push to `main` — the build workflow auto-bumps `VERSION` (patch) unless you edited `VERSION` in the same commit
-3. **Renovate** opens a PR to update pinned `tag:` / `image:` lines in `helm-release.yaml` and `deployment.yaml` (see `# renovate:` comments)
-4. After merge, Flux reconciles and pulls the new semver tag
+3. **GitHub Actions** opens a PR (`automation/custom-image-tags`) updating `VERSION` and pinned `tag:` / `image:` in cluster manifests (see `scripts/custom_image_manifest_map.yaml`)
+4. After you merge that PR, Flux reconciles and pulls the new semver tag
 
 Helm/deploy manifests use semver pins plus Renovate annotations, for example:
 

@@ -38,9 +38,9 @@ Phone → Ask AI → Hermes WebUI (extension + prefill loads alert context)
 | `custom_images/homelab-alert-bridge/` | Incident bridge image |
 | `alertmanager-ntfy/app/configmap.yaml` | **Ask AI** `X-Actions` button |
 
-## Image versions (Renovate)
+## Image versions (CI PR)
 
-CI publishes semver tags from `custom_images/*/VERSION`. Manifests pin that tag with a `# renovate:` comment; **Renovate** opens PRs when GHCR has a newer version (often auto-merged).
+CI publishes semver tags from `custom_images/*/VERSION`, then opens a PR updating cluster pins (`scripts/bump_custom_image_manifest.py`). Merge the PR so Flux deploys the new tag.
 
 | Image | Pin location |
 |-------|----------------|
