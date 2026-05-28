@@ -195,6 +195,92 @@ Homelab config keeps stable labels only (`ready`, `suspended`, `name`, `exported
 
 See **`alert-test/mk_alert-test.md`**. A deliberate `alert-test-fail` HelmRelease (nonexistent chart) plus `HomelabFluxHelmReleaseTestFail` (2m `for`) lets you verify ntfy without waiting 10 minutes. Remove `alert-test/` and `homelab-flux-test.yaml` when done.
 
+## Using kube-prometheus-stack default alerts (with ntfy)
+
+The chart ships dozens of **PrometheusRule** groups (node, kubelet, workloads, storage, API, etc.). You do **not** need a separate Grafana contact point for them.
+
+### Do default alerts reach ntfy?
+
+**Yes, for almost all of them**, when Alertmanager marks them **Active**:
+
+```text
+Prometheus (default rules) → Alertmanager → homelab-webhook → alertmanager-ntfy → homelab-alerts
+```
+
+Your `alertmanagerconfig.yaml` default receiver is **`homelab-webhook`**. Only a few names are routed to **`null`** on purpose (see [Silence noise](#silence-noise) below). Everything else—including `KubePodCrashLooping`, `KubePersistentVolumeFillingUp`, `NodeFilesystemAlmostOutOfSpace`, etc.—uses the same ntfy path as homelab rules.
+
+Grafana **Alerting** can *display* firing Prometheus rules without you getting a push. If ntfy is quiet, check **Alertmanager**, not only Grafana:
+
+```bash
+kubectl port-forward -n kube-prometheus-stack svc/kube-prometheus-stack-alertmanager 9093:9093
+# http://127.0.0.1:9093 — Active vs Suppressed vs Unprocessed
+```
+
+Confirm the pipeline after changes:
+
+```bash
+curl -d "ntfy pipeline test" https://ntfy.<your-domain>/homelab-alerts
+flux get helmrelease homelab-flux-test-fail -n observability   # or alert-test harness
+```
+
+Built-in rules often include **`runbook_url`** (prometheus-operator runbooks). **alertmanager-ntfy** uses that annotation for the ntfy tap link when present.
+
+### Recommended approach (homelab)
+
+Work in three layers—do not try to “enable” defaults globally; they are already on.
+
+| Layer | What to do |
+|-------|------------|
+| **1. Keep** | High-signal defaults: pod crash loop, PVC almost full, node disk/memory pressure, API errors, `KubeJobFailed`, cert issues (plus your **`homelab-*`** rules for Flux, certs, etc.). |
+| **2. Tune or silence** | Noisy defaults: **`TargetDown`** (scrape blips), **`KubeJobNotCompleted`** (long Jobs), CPUThrottling on batch work, alerts for components you do not run. Use chart `defaultRules.disabled` / `customRules` in `system/kube-prometheus-stack/app/helm-release.yaml`, or **`null` routes** in `alertmanagerconfig.yaml` (same pattern as Watchdog / downloaders / ollama). |
+| **3. Homelab replacements** | Where a default rule is too blunt, add a **narrower** `homelab-*.yaml` rule and **suppress** the default for that case (see `homelab-downloaders.yaml`, `homelab-ai.yaml`). |
+
+### Tune defaults in GitOps (examples)
+
+In `kube-prometheus-stack` Helm `values` (not committed yet unless you add):
+
+```yaml
+defaultRules:
+  # disabled:
+  #   TargetDown: true
+  #   KubeCPUOvercommit: true
+  customRules:
+    TargetDown:
+      for: 30m
+    KubeJobNotCompleted:
+      for: 24h
+```
+
+`disabled` turns a rule off cluster-wide. `customRules` only changes `for` / `severity` on that alert name.
+
+### Optional: route by severity in Alertmanager
+
+Today **warning** and **critical** both go to ntfy (critical inhibits warning for the *same* `alertname` + `namespace`). To page harder on critical only, add child routes in `alertmanagerconfig.yaml`, e.g. warnings with longer `repeatInterval` or a separate topic—only after you audit what fires.
+
+### Add homelab value on top
+
+| Need | Action |
+|------|--------|
+| Flux / GitOps | Already: `homelab-flux.yaml` |
+| App-specific scrape down | Pattern: `homelab-downloaders.yaml` + suppress `TargetDown` in that namespace |
+| Long bootstrap Jobs | Pattern: `homelab-ai.yaml` + suppress `KubeJobNotCompleted` for that `job_name` |
+| Your own SLOs | New `prometheus-rules/app/homelab-<team>.yaml` + runbook under `runbooks/` |
+
+Prioritize **runbooks** only for alerts you actually respond to; defaults already link to [prometheus-operator runbooks](https://runbooks.prometheus-operator.dev/) when the chart sets `runbook_url`.
+
+### Audit what is firing (one-time)
+
+```bash
+kubectl exec -n kube-prometheus-stack deploy/kube-prometheus-stack-prometheus -c prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/alerts' | jq -r '
+    .data.alerts[]
+    | select(.state=="firing")
+    | [.labels.alertname, .labels.severity, .labels.namespace]
+    | @tsv' | sort -u
+```
+
+For each row: **fix**, **disable** (`defaultRules.disabled`), **suppress** (`null` route), or **replace** (homelab rule)—then commit.
+
 ## Silence noise
 
 - **Watchdog** / **InfoInhibitor**: routed to `null` receiver (pipeline health only).
