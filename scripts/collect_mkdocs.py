@@ -64,6 +64,32 @@ KUBERNETES_ROOT = CLUSTERS_ROOT / "main" / "kubernetes"
 CLUSTER_TAB_TITLE = "Kubernetes"
 KUBERNETES_CLUSTER_INDEX = Path("main/kubernetes/index.md")
 DEFAULT_SITE_URL = "http://127.0.0.1:8000"
+GIT_REVISION_PLUGIN = "git-revision-date-localized"
+
+
+def has_git_history(repo_root: Path) -> bool:
+    return (repo_root / ".git").is_dir()
+
+
+def mkdocs_plugins_for_build(base: dict[str, Any], repo_root: Path) -> list[Any]:
+    """Drop git-revision-date plugin when .git is absent (Docker / CI build context)."""
+    plugins: list[Any] = list(base.get("plugins") or [])
+    if has_git_history(repo_root):
+        return plugins
+    filtered: list[Any] = []
+    for entry in plugins:
+        if entry == GIT_REVISION_PLUGIN:
+            continue
+        if isinstance(entry, dict) and GIT_REVISION_PLUGIN in entry:
+            continue
+        filtered.append(entry)
+    if len(filtered) != len(plugins):
+        print(
+            "No .git in build context; omitting git-revision-date-localized "
+            "(per-page Git dates need local build; CI uses DOCS_BUILD_* + freshness banners)",
+            file=sys.stderr,
+        )
+    return filtered
 
 
 def title_from_path(rel: Path) -> str:
@@ -676,6 +702,7 @@ def main() -> int:
     cluster_index_href = write_kubernetes_cluster_index(nav_tree, STAGING_DIR)
 
     base = yaml.safe_load(BASE_CONFIG.read_text(encoding="utf-8"))
+    base["plugins"] = mkdocs_plugins_for_build(base, REPO_ROOT)
     base["docs_dir"] = "staging"
     base["site_dir"] = "site"
     base["site_url"] = os.environ.get("MKDOCS_SITE_URL", DEFAULT_SITE_URL).rstrip("/")
