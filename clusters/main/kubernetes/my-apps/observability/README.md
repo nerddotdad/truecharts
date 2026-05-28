@@ -140,7 +140,7 @@ Prometheus rules: `prometheus-rules/app/homelab-flux.yaml`
 
 | Alert | Meaning |
 |-------|---------|
-| `HomelabFluxHelmReleaseNotReady` | Helm install/upgrade or chart problem (10m) |
+| `HomelabFluxHelmReleaseNotReady` | Helm install/upgrade or chart problem (10m); summary includes `namespace/release` and **chart** from GitOps spec |
 | `HomelabFluxKustomizationNotReady` | Kustomize apply failing (15m) |
 | `HomelabFluxSourceNotReady` | Git/OCI/Helm repo or chart not ready |
 | `HomelabFluxControllerReconcileErrors` | Controller error rate in `flux-system` |

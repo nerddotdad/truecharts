@@ -24,10 +24,13 @@ spec:
             severity: critical
             homelab_team: platform
           annotations:
-            summary: "HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
-            description: >-
-              Flux HelmRelease has been Not Ready for 10+ minutes (failed install/upgrade, chart fetch, or dependency).
+            summary: "HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} — chart {{ $labels.chart }}{{ $labels.chart_ref }} not ready"
+            description: |-
+              Release: {{ $labels.exported_namespace }}/{{ $labels.name }}
+              Chart: {{ $labels.chart }}{{ $labels.chart_ref }} (version {{ $labels.chart_version }}, repo {{ $labels.chart_source }})
+              Flux HelmRelease Not Ready for 10+ minutes (install/upgrade, chart fetch, or dependency).
               Check: kubectl describe helmrelease {{ $labels.name }} -n {{ $labels.exported_namespace }}
+              GitOps path: clusters/main/kubernetes/**/{{ $labels.exported_namespace }}/**/{{ $labels.name }}/
 
         - alert: HomelabFluxKustomizationNotReady
           expr: |
@@ -57,9 +60,12 @@ spec:
             severity: warning
             homelab_team: platform
           annotations:
-            summary: "Flux source {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
-            description: >-
-              A Flux source (Git/OCI/Helm repo or chart) is not ready; downstream HelmReleases/Kustomizations may fail.
+            summary: "Flux {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }}{{ if $labels.chart }} — chart {{ $labels.chart }}{{ end }} not ready"
+            description: |-
+              Resource: {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }}
+              {{ if $labels.chart }}Chart: {{ $labels.chart }} (version {{ $labels.chart_version }}, source {{ $labels.chart_source }})
+              {{ end }}Not ready; downstream HelmReleases/Kustomizations may fail.
+              Check: kubectl describe {{ $labels.customresource_kind }}/{{ $labels.name }} -n {{ $labels.exported_namespace }}
 
         - alert: HomelabFluxResourceUnknown
           expr: |
@@ -91,8 +97,11 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Flux controller {{ $labels.controller }} reporting reconcile errors"
-            description: >-
-              Sustained reconciliation errors from {{ $labels.controller }}. Check logs in flux-system.
+            description: |-
+              Controller {{ $labels.controller }} has sustained reconcile errors in flux-system.
+              Find failing workloads: kubectl get helmrelease,helmchart,kustomization -A
+              Logs: kubectl logs -n flux-system deploy/helm-controller -c manager --tail=50
+              (Also check HomelabFluxHelmReleaseNotReady / HomelabFluxSourceNotReady for chart and release names.)
 
         - alert: HomelabFluxHelmReconcileSlow
           expr: |

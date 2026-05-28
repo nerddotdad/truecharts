@@ -40,7 +40,14 @@ data:
             {{- else -}}
             Alert {{ .Labels.alertname }} is {{ .Status }}.
             {{- end }}
-            {{- with .Labels.namespace }}
+            {{- with .Labels.exported_namespace }}
+
+            Flux namespace: {{ . }}{{ end }}{{- with .Labels.name }}
+            Release: {{ . }}{{ end }}{{- if or .Labels.chart .Labels.chart_ref }}
+
+            Chart: {{ .Labels.chart }}{{ .Labels.chart_ref }}{{ end }}{{- with .Labels.chart_version }}
+
+            Chart version: {{ . }}{{ end }}{{- with .Labels.namespace }}
 
             Namespace: {{ . }}{{ end }}{{- with .Labels.pod }}
             Pod: {{ . }}{{ end }}{{- with .Labels.severity }}

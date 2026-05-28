@@ -62,6 +62,11 @@ data:
                       exported_namespace: [metadata, namespace]
                       ready: [status, conditions, "[type=Ready]", status]
                       suspended: [spec, suspend]
+                      # Inline chart (spec.chart) or chartRef — use {{ $labels.chart }}{{ $labels.chart_ref }} in alerts.
+                      chart: [spec, chart, spec, chart]
+                      chart_version: [spec, chart, spec, version]
+                      chart_ref: [spec, chartRef, name]
+                      chart_source: [spec, chart, spec, sourceRef, name]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1
@@ -79,6 +84,9 @@ data:
                       exported_namespace: [metadata, namespace]
                       ready: [status, conditions, "[type=Ready]", status]
                       suspended: [spec, suspend]
+                      chart: [spec, chart]
+                      chart_version: [spec, version]
+                      chart_source: [spec, sourceRef, name]
               - groupVersionKind:
                   group: source.toolkit.fluxcd.io
                   version: v1

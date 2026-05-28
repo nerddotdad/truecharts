@@ -28,7 +28,9 @@ spec:
             homelab_team: platform
             alert_test: "true"
           annotations:
-            summary: "[TEST] HelmRelease alert-test-fail not ready"
-            description: >-
-              Deliberate test workload failed (nonexistent chart). If you see this on ntfy, the
-              Flux → Prometheus → Alertmanager → ntfy pipeline works. Remove observability/alert-test/.
+            summary: "[TEST] observability/alert-test-fail — chart {{ $labels.chart }}{{ $labels.chart_ref }} not ready"
+            description: |-
+              Release: observability/alert-test-fail
+              Chart: {{ $labels.chart }}{{ $labels.chart_ref }} (version {{ $labels.chart_version }})
+              Deliberate test (nonexistent chart). Pipeline OK if you see this on ntfy.
+              Remove observability/alert-test/ and homelab-flux-test.yaml when done.
