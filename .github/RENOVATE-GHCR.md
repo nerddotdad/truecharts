@@ -57,3 +57,28 @@ Do **not** delete old GHCR image tags — Renovate picks the newest semver above
 3. Re-run Renovate.
 
 One-time manual bump in Git is OK if you are blocked (e.g. bridge `1.0.0` → `1.1.1`); Renovate should maintain pins after the template fix.
+
+## Dashboard shows branch names you never see on GitHub
+
+That is normal for **`update failure`**: Renovate **plans** a branch name (e.g. `renovate/ghcr.io-nerddotdad-homelab-alert-bridge-1.0.0`), then fails while applying file edits (bad `autoReplaceStringTemplate`, digest mismatch, etc.) **before** it successfully pushes the branch. Logs often show `branchExists=false` → `Branch needs creating` → `update failure` — the branch was never on GitHub, so there is nothing to delete.
+
+Each run retries the **same planned branch name** and records **Repository problems** until one run succeeds or the update is no longer needed.
+
+## Dashboard still shows “Repository problems”
+
+Renovate also keeps **repository / branch cache** (especially on Mend-hosted). The warning can linger after a failed run even when `git branch -r | grep renovate/ghcr.io-nerddotdad` prints nothing.
+
+Check Git is clean:
+
+```bash
+git fetch origin
+git branch -r | grep 'renovate/ghcr.io-nerddotdad'
+```
+
+If that prints nothing, then:
+
+1. Confirm `.github/renovate.json5` on `main` has the fixed `autoReplaceStringTemplate` (with `tag: ` / `image:` prefixes).
+2. Open the **Dependency Dashboard** issue and comment: `renovate:retry` (or use Mend → run Renovate manually).
+3. After the next green run, **Repository problems** should disappear. Failed entries may show once more, then drop when Renovate opens fresh PRs or finds nothing to update.
+
+You do **not** need to recreate deleted branches. Renovate will create new ones only when a new update is available (e.g. the next CI image build).

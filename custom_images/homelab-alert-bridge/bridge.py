@@ -86,13 +86,19 @@ def _sign_webhook(body: bytes, secret: str) -> str:
     return hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 
-def _check_triage_auth(headers) -> bool:
+def _check_triage_auth(headers, query: str = "") -> bool:
     if not TRIAGE_AUTH_TOKEN:
         return False
     auth = headers.get("Authorization", "")
     if auth.startswith("Bearer ") and auth[7:].strip() == TRIAGE_AUTH_TOKEN:
         return True
-    return headers.get("X-Homelab-Triage-Token") == TRIAGE_AUTH_TOKEN
+    if headers.get("X-Homelab-Triage-Token") == TRIAGE_AUTH_TOKEN:
+        return True
+    # ntfy iOS often omits custom headers on http actions; allow token in query (ingress logs).
+    for part in query.split("&"):
+        if part.startswith("token=") and part[6:] == TRIAGE_AUTH_TOKEN:
+            return True
+    return False
 
 
 def _load_incident(incident_id: str) -> dict | None:
@@ -172,6 +178,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ("/health", "/healthz"):
             self._json(200, {"ok": True})
             return
+        if self.path.split("?", 1)[0] == "/homelab/triage":
+            self._handle_triage()
+            return
         prefix = "/homelab/api/incidents/"
         if self.path.startswith(prefix):
             iid = _safe_id(self.path[len(prefix) :].split("?", 1)[0].strip("/"))
@@ -184,7 +193,8 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "not found"})
 
     def _handle_triage(self) -> None:
-        if not _check_triage_auth(self.headers):
+        path, _, query = self.path.partition("?")
+        if not _check_triage_auth(self.headers, query):
             self._json(401, {"error": "unauthorized"})
             return
         payload, err = self._read_json_body()
