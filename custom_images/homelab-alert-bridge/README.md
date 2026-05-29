@@ -2,7 +2,7 @@
 
 - `POST /hook` — stores each alert as JSON, forwards to alertmanager-ntfy
 - `GET /homelab/api/incidents/<id>` — incident JSON for debugging
-- `POST /homelab/triage` — auth token + `incident_id` → Hermes webhook (ntfy Ask AI)
+- `POST /homelab/triage` — auth token + `incident_id` → Hermes webhook on `hermes-oncall-app-template.ai.svc:8644` (ntfy Ask AI)
 - `GET /health`
 
 PVC: `/data/incidents` (14-day retention policy can be added later).

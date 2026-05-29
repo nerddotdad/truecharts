@@ -31,7 +31,7 @@ spec:
             - name: NTFY_BRIDGE_URL
               value: http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook
             - name: HERMES_WEBHOOK_URL
-              value: http://hermes-oncall.ai.svc.cluster.local:8644/webhooks/homelab-alerts
+              value: http://hermes-oncall-app-template.ai.svc.cluster.local:8644/webhooks/homelab-alerts
             - name: HERMES_WEBHOOK_SECRET
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
             - name: TRIAGE_AUTH_TOKEN

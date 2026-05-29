@@ -21,7 +21,7 @@ NTFY_BRIDGE_URL = os.environ.get(
 )
 HERMES_WEBHOOK_URL = os.environ.get(
     "HERMES_WEBHOOK_URL",
-    "http://hermes-oncall.ai.svc.cluster.local:8644/webhooks/homelab-alerts",
+    "http://hermes-oncall-app-template.ai.svc.cluster.local:8644/webhooks/homelab-alerts",
 )
 HERMES_WEBHOOK_SECRET = os.environ.get("HERMES_WEBHOOK_SECRET", "")
 TRIAGE_AUTH_TOKEN = os.environ.get("TRIAGE_AUTH_TOKEN", "")
