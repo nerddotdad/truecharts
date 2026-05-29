@@ -81,6 +81,7 @@ Default model **`qwen3.5:9b`** at `http://ollama.ai.svc.cluster.local:11434/v1` 
 | Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
 | Ask AI / triage 502 Hermes | Gateway not listening on :8644. WebUI **System Settings** may show “Gateway not configured”. Rebuild `hermes-homelab` ≥ 1.1.2; check `kubectl logs deploy/hermes-oncall-app-template -n ai \| grep start-gateway`. Verify: `kubectl run -n ai curl-test --rm -it --image=curlimages/curl -- curl -sS -o /dev/null -w '%{http_code}' http://hermes-oncall-app-template.ai.svc:8644/webhooks/homelab-alerts` (expect non-000). |
 | Gateway never starts | `start-gateway` waits for `/app/venv/bin/hermes` (WebUI first boot ~5–10 min). Existing PVCs missing `platforms.webhook` in `config.yaml` are patched at gateway start. |
+| **Gateway not configured** (orange pill) but `hermes gateway status` OK | Usually **root-owned** `gateway_state.json` from an older image while WebUI runs as `hermeswebui`. Fix: `hermes-homelab` ≥ 1.1.3 runs the gateway as `hermeswebui`, or `chown hermeswebui:hermeswebui ~/.hermes/gateway*` and restart the pod. |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
 | **Connection error** in chat | Hermes logs show `ollama-api.ai.svc.cluster.local`? Use **`ollama.ai.svc.cluster.local:11434/v1`** (Service `ollama`) or apply `ollama-api` cluster DNS alias. `ollama-api.${DOMAIN_0}` is ingress-only. |
