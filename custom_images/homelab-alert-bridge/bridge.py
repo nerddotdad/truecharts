@@ -116,13 +116,25 @@ def _prometheus_query(expr: str) -> list[dict]:
     return payload.get("data", {}).get("result") or []
 
 
+def _latin1_http_headers(headers: dict[str, str]) -> dict[str, str]:
+    """urllib/http.client requires ISO-8859-1 header values; strip non-ASCII (e.g. emoji titles)."""
+    safe: dict[str, str] = {}
+    for key, value in headers.items():
+        try:
+            value.encode("latin-1")
+            safe[key] = value
+        except UnicodeEncodeError:
+            safe[key] = value.encode("ascii", errors="ignore").strip() or key
+    return safe
+
+
 def _ntfy_publish(body: str, headers: dict[str, str]) -> tuple[int, str | None, str]:
     url = f"{NTFY_BASE_URL}/{NTFY_TOPIC}"
     req = urllib.request.Request(
         url,
         data=body.encode("utf-8"),
         method="POST",
-        headers=headers,
+        headers=_latin1_http_headers(headers),
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -146,7 +158,7 @@ def _ntfy_update(message_id: str, body: str, headers: dict[str, str]) -> tuple[i
         url,
         data=body.encode("utf-8"),
         method="POST",
-        headers=headers,
+        headers=_latin1_http_headers(headers),
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -304,12 +316,12 @@ def _sync_jellyfin_user_locked_group(namespace: str, payload: dict) -> tuple[str
         elif state.get("last_users") == users:
             return "unchanged", None
         else:
-            body = f"{state['body']}\n\n— Update —\n{user_line}"
+            body = f"{state['body']}\n\n-- Update --\n{user_line}"
             phase = "updated"
         title = f"Jellyfin: {len(users)} user(s) locked in {namespace}"
         body_with_links = f"{body}\n\n---\n\n**Links:** {_jellyfin_markdown_links(namespace)}"
         headers = _jellyfin_ntfy_headers(
-            title=f"🔥 {title}",
+            title=title,
             group_incident_id=group_incident_id,
             resolved=False,
         )
@@ -350,10 +362,10 @@ def _sync_jellyfin_user_locked_group(namespace: str, payload: dict) -> tuple[str
     if state.get("phase") != "active" or not state.get("ntfy_message_id"):
         return "unchanged", None
 
-    body = f"{state.get('body', '')}\n\n— Resolved —\nAll Jellyfin user lockouts cleared."
+    body = f"{state.get('body', '')}\n\n-- Resolved --\nAll Jellyfin user lockouts cleared."
     body_with_links = f"{body}\n\n---\n\n**Links:** {_jellyfin_markdown_links(namespace)}"
     headers = _jellyfin_ntfy_headers(
-        title=f"✅ Resolved: Jellyfin user lockouts ({namespace})",
+        title=f"Resolved: Jellyfin user lockouts ({namespace})",
         group_incident_id=group_incident_id,
         resolved=True,
     )
@@ -658,7 +670,12 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(payload, dict):
             self._json(400, {"error": "invalid payload"})
             return
-        status, resp_body = _handle_alertmanager_hook(payload)
+        try:
+            status, resp_body = _handle_alertmanager_hook(payload)
+        except Exception as exc:
+            sys.stderr.write(f"hook handler error: {exc}\n")
+            self._json(500, {"error": "hook handler failed", "detail": str(exc)})
+            return
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(resp_body)))
