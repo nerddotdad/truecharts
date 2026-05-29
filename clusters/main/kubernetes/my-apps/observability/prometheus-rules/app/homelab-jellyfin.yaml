@@ -85,7 +85,7 @@ spec:
 
         - alert: jellyfin_user_locked
           expr: jellyfin_user_account{namespace="media", admin="0"} == 0
-          for: 0
+          # No `for:` — lockout is binary/persistent; fire on first eval after scrape (CRD requires duration strings, not YAML integer 0).
           labels:
             severity: warning
             homelab_team: media
