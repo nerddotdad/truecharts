@@ -3,3 +3,15 @@ kind: Kustomization
 resources:
   - rbac.yaml
   - helm-release.yaml
+
+configMapGenerator:
+  - name: hermes-oncall-agent
+    files:
+      - SOUL.md=agent-config/SOUL.md
+      - USER.md=agent-config/USER.md
+  - name: hermes-oncall-skills
+    files:
+      - SKILL.md=agent-config/skills/homelab-k8s-flux-triage/SKILL.md
+
+generatorOptions:
+  disableNameSuffixHash: true

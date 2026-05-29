@@ -60,6 +60,9 @@ spec:
           # GitOps SA + token mount (see rbac.yaml). TrueCharts defaults automount to false.
           serviceAccountName: hermes-oncall
           automountServiceAccountToken: true
+          # Bump when editing agent-config/ (SOUL, USER, skills) to roll the pod.
+          annotations:
+            homelab.agent-config/version: "1"
           containers:
             main:
               enabled: true
@@ -84,6 +87,9 @@ spec:
                 WEBHOOK_PORT: "8644"
                 WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
                 HERMES_WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
+                # Homelab docs + dashboards (for agent citations; Flux substitutes DOMAIN_0).
+                HOMELAB_DOCS_BASE_URL: "https://docs.${DOMAIN_0}/main/kubernetes"
+                HOMELAB_GRAFANA_URL: "https://grafana.${DOMAIN_0}"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
@@ -147,6 +153,31 @@ spec:
         enabled: true
         type: emptyDir
         mountPath: /workspace
+        targetSelectAll: true
+      # GitOps agent identity + skills (see agent-config/). No image rebuild for SOUL/SKILL edits.
+      homelab-agent:
+        enabled: true
+        type: configmap
+        objectName: hermes-oncall-agent
+        expandObjectName: false
+        readOnly: true
+        mountPath: /home/hermeswebui/.hermes
+        items:
+          - key: SOUL.md
+            path: SOUL.md
+          - key: USER.md
+            path: USER.md
+        targetSelectAll: true
+      homelab-skills:
+        enabled: true
+        type: configmap
+        objectName: hermes-oncall-skills
+        expandObjectName: false
+        readOnly: true
+        mountPath: /opt/homelab-skills/homelab-k8s-flux-triage
+        items:
+          - key: SKILL.md
+            path: SKILL.md
         targetSelectAll: true
 
     ingress:

@@ -19,7 +19,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY skills /opt/homelab-skills/
+# Skills/SOUL/USER: GitOps ConfigMaps in hermes-oncall/app/agent-config/ (not baked in image).
 COPY scripts /opt/homelab-scripts/
 COPY extensions /opt/hermes-extensions/
 
