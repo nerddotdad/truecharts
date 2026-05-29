@@ -12,8 +12,6 @@ on:
       - 'scripts/helmrelease_docs.py'
       - 'scripts/runbook_index.py'
       - 'custom_images/homelab-docs/**'
-    paths-ignore:
-      - 'custom_images/homelab-docs/VERSION'
     branches:
       - main
   workflow_dispatch:
@@ -23,7 +21,43 @@ env:
   IMAGE_NAME: homelab-docs
 
 jobs:
+  should-build:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 2
+
+      - name: Skip VERSION-only commits
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$before" "${{ github.sha }}" || true)
+          if [ -z "$changed" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          other=$(echo "$changed" | grep -vE '^custom_images/homelab-docs/VERSION$' || true)
+          if [ -z "$other" ]; then
+            echo "VERSION-only commit; skipping rebuild" >> "$GITHUB_STEP_SUMMARY"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: should-build
+    if: needs.should-build.outputs.run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

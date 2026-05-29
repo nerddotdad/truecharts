@@ -4,8 +4,6 @@ on:
   push:
     paths:
       - 'custom_images/**'
-    paths-ignore:
-      - 'custom_images/**/VERSION'
     branches:
       - main
   workflow_dispatch:
@@ -66,6 +64,11 @@ jobs:
             VALID_IMAGES=""
             for img in $(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u); do
               if skip_homelab_docs "$img"; then
+                continue
+              fi
+              # Skip [skip ci] VERSION-only commits (no rebuild loop)
+              real_changes=$(echo "$CHANGED_FILES" | grep -E "^custom_images/${img}/" | grep -vE '/VERSION$' || true)
+              if [ -z "$real_changes" ]; then
                 continue
               fi
               if [ -f "custom_images/$img/Dockerfile" ]; then
