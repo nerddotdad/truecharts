@@ -82,20 +82,19 @@ jobs:
             # Try to get the previous commit for comparison
             if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
               echo "Comparing ${{ github.event.before }}..${{ github.sha }}"
-              # Get all changed files in custom_images
-              CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^custom_images/' || true)
+              # Only paths under custom_images/<image>/ (ignore custom_images/README.md etc.)
+              CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+                | grep -E '^custom_images/[^/]+/' || true)
             else
               echo "No before SHA, comparing HEAD~1..HEAD"
-              # Fallback to HEAD~1 if before is not available
-              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep '^custom_images/' || true)
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+                | grep -E '^custom_images/[^/]+/' || true)
             fi
             
-            echo "Changed files in custom_images:"
+            echo "Changed files under custom_images/<image>/:"
             echo "$CHANGED_FILES"
             
             if [ -n "$CHANGED_FILES" ]; then
-              # Extract unique image directories from changed files
-              # This handles changes to Dockerfile, VERSION, or any files in the image directory
               CHANGED=$(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u)
               
               # Filter to only directories that have a Dockerfile
@@ -125,7 +124,8 @@ jobs:
               echo "$CHANGED"
               IMAGES=$(echo "$CHANGED" | jq -R . | jq -s -c .)
             else
-              echo "No valid images found to build"
+              echo "No image directories changed (root-only edits like custom_images/README.md do not trigger builds)."
+              echo "To rebuild one image manually: Actions → Build Custom Docker Images → Run workflow → image name."
               IMAGES="[]"
             fi
             echo "images=$IMAGES" >> $GITHUB_OUTPUT
