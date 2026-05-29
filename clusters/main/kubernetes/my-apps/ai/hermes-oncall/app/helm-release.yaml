@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.8@sha256:e3a07a6dfc5d9ddcd5c9225706417394dd0da6bd203fbf6e5d57fb945879021c
+      tag: 1.1.9
 
     workload:
       main:
@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "9"
+            homelab.agent-config/version: "10"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -81,10 +81,13 @@ spec:
                 - |
                   # Literal paths only — Flux postBuild strips ${VAR} not in clusterenv (would break cp).
                   mkdir -p /home/hermeswebui/.hermes/memories \
-                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage
+                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage \
+                    /home/hermeswebui/.hermes/skills/jellyfin-api
                   cp -f /opt/hermes-gitops/SOUL.md /home/hermeswebui/.hermes/SOUL.md
                   cp -f /opt/homelab-skills/homelab-k8s-flux-triage/SKILL.md \
                     /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage/SKILL.md
+                  cp -f /opt/homelab-skills/jellyfin-api/SKILL.md \
+                    /home/hermeswebui/.hermes/skills/jellyfin-api/SKILL.md
                   if [ ! -s /home/hermeswebui/.hermes/memories/USER.md ]; then
                     cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/memories/USER.md
                   fi
@@ -123,6 +126,10 @@ spec:
                 # Homelab docs + dashboards (for agent citations; Flux substitutes DOMAIN_0).
                 HOMELAB_DOCS_BASE_URL: "https://docs.${DOMAIN_0}/main/kubernetes"
                 HOMELAB_GRAFANA_URL: "https://grafana.${DOMAIN_0}"
+                # Jellyfin API (same key as Homepage widget HP_JELLYFIN in clusterenv.yaml).
+                JELLYFIN_API_TOKEN: "${HP_JELLYFIN}"
+                JELLYFIN_API_URL: "http://jellyfin.media.svc.cluster.local:8096"
+                JELLYFIN_PUBLIC_URL: "https://jellyfin.${DOMAIN_0}"
                 # Hermes web_search → cluster SearXNG (JSON API verified on :8080).
                 SEARXNG_URL: "http://searxng.ai.svc.cluster.local:8080"
                 WANTED_UID: "1024"
@@ -209,10 +216,12 @@ spec:
         objectName: hermes-oncall-skills
         expandObjectName: false
         readOnly: true
-        mountPath: *gitops_skill
+        mountPath: *skills_root
         items:
-          - key: SKILL.md
-            path: SKILL.md
+          - key: homelab-k8s-flux-triage/SKILL.md
+            path: homelab-k8s-flux-triage/SKILL.md
+          - key: jellyfin-api/SKILL.md
+            path: jellyfin-api/SKILL.md
         targetSelector:
           main:
             main: {}

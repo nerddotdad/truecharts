@@ -86,12 +86,13 @@ ensure_webhook_subscription() {
 
 1. If the payload includes alert.annotations.runbook_url, treat that as the primary runbook.
 2. Otherwise map alert.labels.alertname to homelab runbooks under HOMELAB_DOCS_BASE_URL (see skill homelab-k8s-flux-triage).
-3. Cite doc links in your reply; do not guess URLs.
+3. For jellyfin_* alerts or media playback issues, use skill jellyfin-api (JELLYFIN_API_URL + JELLYFIN_API_TOKEN) alongside homelab-k8s-flux-triage.
+4. Cite doc links in your reply; do not guess URLs.
 
 Incident JSON:
 
 {__raw__}' \
-      --skills homelab-k8s-flux-triage \
+      --skills homelab-k8s-flux-triage,jellyfin-api \
       --secret \"\$WEBHOOK_SECRET\"
   "
 }
