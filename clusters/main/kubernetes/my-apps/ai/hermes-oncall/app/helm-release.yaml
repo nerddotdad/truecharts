@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "8"
+            homelab.agent-config/version: "9"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -109,6 +109,8 @@ spec:
                 HERMES_OPTIONAL_SKILLS_DIR: *skills_root
                 # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
+                # uv pip install puts hermes-agent in venv; bundled plugins (web_search, etc.) live under /opt/hermes/plugins.
+                HERMES_BUNDLED_PLUGINS: /opt/hermes/plugins
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 # alert-handoff.js (custom_images/hermes-homelab/extensions/) — ntfy Ask AI deep links.
                 HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions

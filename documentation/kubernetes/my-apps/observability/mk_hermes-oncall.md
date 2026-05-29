@@ -92,6 +92,34 @@ Verify from the cluster: `curl -sS "http://searxng.ai.svc.cluster.local:8080/sea
 
 See [Hermes web search docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-search).
 
+## Tools not working in WebUI
+
+Hermes installs **hermes-agent** into `/app/venv` on first boot. Plugin-backed tools (`web_search`, `web_extract`, many integrations) load from **`/opt/hermes/plugins`**, not from the venv copy. Without **`HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins`**, `web_search` returns *"No web search provider configured"* even when `SEARXNG_URL` is set.
+
+| Symptom | Likely cause | Fix |
+|---------|----------------|-----|
+| `web_search` never runs / provider error | Missing `HERMES_BUNDLED_PLUGINS` | Set env on HelmRelease (see `hermes-oncall/app/helm-release.yaml`), restart pod |
+| Model replies with JSON/tool XML as text | Ollama + `qwen3.5:9b` tool format | Keep `model.provider: custom`; try `qwen3-coder:latest`; upgrade Ollama |
+| `kubectl` / cluster tools fail | Agent not using in-cluster SA | Use `terminal` tool (works with SA token); ignore missing `~/.kube/config` |
+| No tools at all in UI | Session toolset override | Session settings → toolsets → leave blank (global) or include `web`, `terminal` |
+| Tools work in CLI but not WebUI | Same plugin path issue | Restart WebUI pod after env fix |
+
+Verify inside the pod (as `hermeswebui`):
+
+```bash
+export HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins HERMES_HOME=/home/hermeswebui/.hermes
+cd /app && /app/venv/bin/python -c "
+from hermes_cli.plugins import discover_plugins
+discover_plugins()
+from agent.web_search_registry import list_providers
+print([p.name for p in list_providers()])
+from tools.web_tools import web_search_tool
+print(web_search_tool(query='test', limit=1)[:120])
+"
+```
+
+Expect provider names including `searxng` and `"success": true`.
+
 ## Troubleshooting
 
 | Issue | Check |

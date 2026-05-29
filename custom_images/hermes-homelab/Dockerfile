@@ -46,5 +46,7 @@ RUN chmod 755 /opt/homelab-scripts/start-gateway.sh \
   > /hermes-homelab-entry.sh \
   && chmod 755 /hermes-homelab-entry.sh
 
+ENV HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins
+
 USER root
 CMD ["/hermes-homelab-entry.sh"]
