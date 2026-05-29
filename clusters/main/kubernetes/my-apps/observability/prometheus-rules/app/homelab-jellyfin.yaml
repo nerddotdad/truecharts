@@ -85,7 +85,7 @@ spec:
 
         - alert: jellyfin_user_locked
           expr: jellyfin_user_account{namespace="media", admin="0"} == 0
-          for: 5m
+          for: 2m
           labels:
             severity: warning
             homelab_team: media
