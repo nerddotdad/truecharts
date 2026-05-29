@@ -1,7 +1,8 @@
 # homelab-alert-bridge
 
 - `POST /hook` — stores each alert as JSON, forwards to alertmanager-ntfy
-- `GET /homelab/api/incidents/<id>` — used by Hermes WebUI (Ask AI)
+- `GET /homelab/api/incidents/<id>` — incident JSON for debugging
+- `POST /homelab/triage` — auth token + `incident_id` → Hermes webhook (ntfy Ask AI)
 - `GET /health`
 
 PVC: `/data/incidents` (14-day retention policy can be added later).

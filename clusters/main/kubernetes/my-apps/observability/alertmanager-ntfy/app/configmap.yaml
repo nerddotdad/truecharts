@@ -61,6 +61,6 @@ data:
               {{- $runbook := or (index .Annotations "runbook_url") (index .Annotations "runbook") "https://runbooks.prometheus-operator.dev/" -}}
               {{- $grafanaAlert := printf "https://grafana.${DOMAIN_0}/alerting/list?search=%s" .Labels.alertname -}}
               {{- $incident := or .Fingerprint (printf "%s-%s" .Labels.alertname .Labels.namespace) -}}
-              {{- $askAi := printf "https://hermes.${DOMAIN_0}/?incident=%s&autostart=1" $incident -}}
-              view, Ask AI, {{ $askAi }}; view, Runbook, {{ $runbook }}; view, Alert, {{ $grafanaAlert }}{{- with index .Annotations "dashboard_url" }}; view, Dashboard, {{ . }}{{- end }}
+              {{- $triageBody := printf "{\"incident_id\":\"%s\"}" $incident -}}
+              http, Ask AI, https://hermes.${DOMAIN_0}/homelab/triage, method=POST, headers.Authorization=Bearer ${HERMES_ALERT_TRIAGE_SECRET}, body={{ $triageBody }}; view, Runbook, {{ $runbook }}; view, Alert, {{ $grafanaAlert }}{{- with index .Annotations "dashboard_url" }}; view, Dashboard, {{ . }}{{- end }}
         async: false

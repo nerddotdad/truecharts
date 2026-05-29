@@ -5,7 +5,9 @@ model:
   base_url: http://ollama.ai.svc.cluster.local:11434/v1
   context_length: 64000
 
-webui_prefill_messages_script:
-  - python3
-  - /opt/homelab-scripts/alert_prefill.py
-webui_prefill_messages_script_timeout: 5
+platforms:
+  webhook:
+    enabled: true
+    extra:
+      host: "0.0.0.0"
+      port: 8644

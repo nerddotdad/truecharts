@@ -78,11 +78,11 @@ spec:
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 HERMES_OPTIONAL_SKILLS_DIR: /opt/homelab-skills
-                HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
-                HERMES_WEBUI_EXTENSION_SCRIPT_URLS: /extensions/alert-handoff.js
-                HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT: python3 /opt/homelab-scripts/alert_prefill.py
-                HERMES_WEBUI_PREFILL_MESSAGES_SCRIPT_TIMEOUT: "5"
-                INCIDENT_API_BASE: http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents
+                # ntfy Ask AI → homelab-alert-bridge → Hermes webhook (see start-gateway.sh).
+                WEBHOOK_ENABLED: "true"
+                WEBHOOK_PORT: "8644"
+                WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
+                HERMES_WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
@@ -126,6 +126,11 @@ spec:
             port: 8787
             protocol: tcp
             targetPort: 8787
+          webhook:
+            enabled: true
+            port: 8644
+            protocol: tcp
+            targetPort: 8644
 
     persistence:
       hermes-data:

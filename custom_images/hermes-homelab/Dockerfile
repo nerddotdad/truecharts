@@ -27,7 +27,8 @@ COPY extensions /opt/hermes-extensions/
 COPY config.yaml /opt/hermes-seed/config.yaml
 
 # Upstream CMD is /hermeswebui_init.bash — must run as root (UID setup + volume prep).
-RUN printf '%s\n' \
+RUN chmod 755 /opt/homelab-scripts/start-gateway.sh \
+  && printf '%s\n' \
   '#!/bin/sh' \
   'set -e' \
   'if [ -f /opt/hermes-seed/config.yaml ] && [ ! -f /home/hermeswebui/.hermes/config.yaml ]; then' \
@@ -36,6 +37,9 @@ RUN printf '%s\n' \
   'fi' \
   'if [ ! -e /home/hermeswebui/.hermes/hermes-agent ] && [ -f /opt/hermes/run_agent.py ]; then' \
   '  ln -sfn /opt/hermes /home/hermeswebui/.hermes/hermes-agent' \
+  'fi' \
+  'if [ "${WEBHOOK_ENABLED:-false}" = "true" ]; then' \
+  '  /opt/homelab-scripts/start-gateway.sh &' \
   'fi' \
   'exec /hermeswebui_init.bash "$@"' \
   > /hermes-homelab-entry.sh \

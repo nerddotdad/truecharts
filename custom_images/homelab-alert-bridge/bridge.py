@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Store Alertmanager payloads and proxy to alertmanager-ntfy."""
+"""Store Alertmanager payloads, proxy to alertmanager-ntfy, forward triage to Hermes."""
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import re
 import sys
-import threading
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -18,9 +19,14 @@ NTFY_BRIDGE_URL = os.environ.get(
     "NTFY_BRIDGE_URL",
     "http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook",
 )
+HERMES_WEBHOOK_URL = os.environ.get(
+    "HERMES_WEBHOOK_URL",
+    "http://hermes-oncall.ai.svc.cluster.local:8644/webhooks/homelab-alerts",
+)
+HERMES_WEBHOOK_SECRET = os.environ.get("HERMES_WEBHOOK_SECRET", "")
+TRIAGE_AUTH_TOKEN = os.environ.get("TRIAGE_AUTH_TOKEN", "")
 HTTP_PORT = int(os.environ.get("HTTP_PORT", "8000"))
 MAX_BODY = int(os.environ.get("MAX_BODY_BYTES", str(2 * 1024 * 1024)))
-INCIDENT_TTL_DAYS = int(os.environ.get("INCIDENT_TTL_DAYS", "14"))
 
 
 def _safe_id(value: str) -> str:
@@ -76,8 +82,52 @@ def _proxy_to_ntfy(body: bytes, content_type: str) -> tuple[int, bytes]:
         return exc.code, exc.read()
 
 
+def _sign_webhook(body: bytes, secret: str) -> str:
+    return hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+
+
+def _check_triage_auth(headers) -> bool:
+    if not TRIAGE_AUTH_TOKEN:
+        return False
+    auth = headers.get("Authorization", "")
+    if auth.startswith("Bearer ") and auth[7:].strip() == TRIAGE_AUTH_TOKEN:
+        return True
+    return headers.get("X-Homelab-Triage-Token") == TRIAGE_AUTH_TOKEN
+
+
+def _load_incident(incident_id: str) -> dict | None:
+    path = INCIDENT_DIR / f"{incident_id}.json"
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _forward_to_hermes(incident: dict) -> tuple[int, bytes]:
+    if not HERMES_WEBHOOK_SECRET:
+        return 503, b'{"error":"webhook secret not configured"}'
+    body = json.dumps(incident).encode("utf-8")
+    req = urllib.request.Request(
+        HERMES_WEBHOOK_URL,
+        data=body,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "X-Webhook-Signature": _sign_webhook(body, HERMES_WEBHOOK_SECRET),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+    except urllib.error.URLError as exc:
+        return 502, json.dumps({"error": "hermes webhook unreachable", "detail": str(exc.reason)}).encode(
+            "utf-8"
+        )
+
+
 class Handler(BaseHTTPRequestHandler):
-    server_version = "homelab-alert-bridge/1.0"
+    server_version = "homelab-alert-bridge/1.1"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -90,23 +140,82 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _read_json_body(self) -> tuple[dict | None, int | None]:
+        length = int(self.headers.get("Content-Length", "0"))
+        if length > MAX_BODY:
+            return None, 413
+        if length == 0:
+            return {}, None
+        raw = self.rfile.read(length)
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except json.JSONDecodeError:
+            return None, 400
+        if not isinstance(payload, dict):
+            return None, 400
+        return payload, None
+
+    def _incident_id_from_request(self, payload: dict | None) -> str:
+        if payload:
+            for key in ("incident_id", "id", "fingerprint"):
+                value = payload.get(key)
+                if value:
+                    return _safe_id(str(value))
+        query = self.path.split("?", 1)
+        if len(query) == 2:
+            for part in query[1].split("&"):
+                if part.startswith("incident_id="):
+                    return _safe_id(part.split("=", 1)[1])
+        return ""
+
     def do_GET(self) -> None:
         if self.path in ("/health", "/healthz"):
             self._json(200, {"ok": True})
             return
         prefix = "/homelab/api/incidents/"
         if self.path.startswith(prefix):
-            iid = _safe_id(self.path[len(prefix) :].strip("/"))
-            path = INCIDENT_DIR / f"{iid}.json"
-            if not path.is_file():
+            iid = _safe_id(self.path[len(prefix) :].split("?", 1)[0].strip("/"))
+            incident = _load_incident(iid)
+            if incident is None:
                 self._json(404, {"error": "incident not found", "id": iid})
                 return
-            data = json.loads(path.read_text(encoding="utf-8"))
-            self._json(200, data)
+            self._json(200, incident)
             return
         self._json(404, {"error": "not found"})
 
+    def _handle_triage(self) -> None:
+        if not _check_triage_auth(self.headers):
+            self._json(401, {"error": "unauthorized"})
+            return
+        payload, err = self._read_json_body()
+        if err == 413:
+            self._json(413, {"error": "payload too large"})
+            return
+        if err == 400:
+            self._json(400, {"error": "invalid json"})
+            return
+        incident_id = self._incident_id_from_request(payload)
+        if not incident_id:
+            self._json(400, {"error": "incident_id required"})
+            return
+        incident = _load_incident(incident_id)
+        if incident is None:
+            self._json(404, {"error": "incident not found", "id": incident_id})
+            return
+        status, resp_body = _forward_to_hermes(incident)
+        try:
+            detail = json.loads(resp_body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            detail = {"raw": resp_body.decode("utf-8", errors="replace")[:500]}
+        if status >= 400:
+            self._json(status if status != 502 else 502, {"error": "hermes webhook failed", "detail": detail})
+            return
+        self._json(200, {"ok": True, "incident_id": incident_id, "hermes": detail})
+
     def do_POST(self) -> None:
+        if self.path.split("?", 1)[0] == "/homelab/triage":
+            self._handle_triage()
+            return
         if self.path not in ("/hook", "/"):
             self._json(404, {"error": "not found"})
             return
