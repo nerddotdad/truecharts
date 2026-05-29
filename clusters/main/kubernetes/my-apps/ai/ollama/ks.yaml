@@ -7,6 +7,8 @@ spec:
   interval: 10m
   path: clusters/main/kubernetes/my-apps/ai/ollama/app
   prune: true
+  # Replace immutable bootstrap Job when pull script or models change (see ollama-model-pull-job.yaml).
+  force: true
   sourceRef:
     kind: GitRepository
     name: cluster

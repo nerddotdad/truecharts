@@ -42,7 +42,7 @@ spec:
               model_present() {
                 model="$1"
                 tags=$(curl -sf "$OLLAMA_API/api/tags") || return 1
-                echo "$tags" | grep -F "\"name\":\"${model}\"" >/dev/null
+                echo "$tags" | grep -F '"name":"'"$model"'"' >/dev/null
               }
 
               ensure_model() {
@@ -51,9 +51,9 @@ spec:
                   echo "$model already present, skipping pull"
                   return 0
                 fi
-                echo "pulling ${model} (this may take a while)..."
-                curl -sf "$OLLAMA_API/api/pull" -d "{\"name\":\"${model}\"}"
-                echo "pull complete: ${model}"
+                echo "pulling $model (this may take a while)..."
+                curl -sf "$OLLAMA_API/api/pull" -d '{"name":"'"$model"'"}'
+                echo "pull complete: $model"
               }
 
               ensure_model "qwen3.5:9b"

@@ -39,6 +39,10 @@ If you received **HomelabKubeJobFailedOllamaModelPull**, the pull container exit
 
 **Common false positive:** the Job was recreated (Flux sync, manual delete, etc.) while models were **already on the Ollama volume**. An older script always called `/api/pull` and could fail even though `/api/tags` listed the models. Since pull-script **v2-idempotent**, the Job exits successfully when models are present.
 
+**Flux dry-run `spec.template: field is immutable`:** the ollama Kustomization uses `force: true` so Flux replaces the Job when the pull script changes. If you still see this error, delete the Job once: `kubectl delete job ollama-model-pull-job -n ai`.
+
+**Never use `${name}` in the pull script** — Flux `postBuild` substitutes `${VAR}` from clusterenv and strips shell variables (grep/pull JSON ends up empty).
+
 1. Confirm models exist:
 
    ```bash
