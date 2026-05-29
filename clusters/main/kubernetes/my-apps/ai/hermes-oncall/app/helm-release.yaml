@@ -62,7 +62,19 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ (SOUL, USER, skills) to roll the pod.
           annotations:
-            homelab.agent-config/version: "1"
+            homelab.agent-config/version: "2"
+          initContainers:
+            sync-agent-gitops:
+              enabled: true
+              type: init
+              imageSelector: ubuntuImage
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  mkdir -p /home/hermeswebui/.hermes
+                  cp -f /opt/hermes-gitops/SOUL.md /home/hermeswebui/.hermes/SOUL.md
+                  cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/USER.md
           containers:
             main:
               enabled: true
@@ -148,26 +160,26 @@ spec:
         size: 20Gi
         mountPath: /home/hermeswebui/.hermes
         readOnly: false
-        targetSelectAll: true
+        targetSelector:
+          main:
+            main: {}
+            sync-agent-gitops: {}
       workspace:
         enabled: true
         type: emptyDir
         mountPath: /workspace
         targetSelectAll: true
-      # GitOps agent identity + skills (see agent-config/). No image rebuild for SOUL/SKILL edits.
+      # GitOps SOUL/USER: init copies from /opt/hermes-gitops → PVC (avoids duplicate .hermes mount).
       homelab-agent:
         enabled: true
         type: configmap
         objectName: hermes-oncall-agent
         expandObjectName: false
         readOnly: true
-        mountPath: /home/hermeswebui/.hermes
-        items:
-          - key: SOUL.md
-            path: SOUL.md
-          - key: USER.md
-            path: USER.md
-        targetSelectAll: true
+        mountPath: /opt/hermes-gitops
+        targetSelector:
+          main:
+            sync-agent-gitops: {}
       homelab-skills:
         enabled: true
         type: configmap

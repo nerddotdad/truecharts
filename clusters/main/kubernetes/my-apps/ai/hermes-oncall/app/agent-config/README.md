@@ -10,4 +10,4 @@ Edit files here and commit — **no `hermes-homelab` image rebuild** required.
 
 Kustomize builds ConfigMaps `hermes-oncall-agent` and `hermes-oncall-skills`; the HelmRelease mounts them.
 
-After changing these files, bump `homelab.agent-config/version` in `helm-release.yaml` so Flux rolls the pod and picks up new content.
+After changing these files, bump `homelab.agent-config/version` in `helm-release.yaml` so Flux rolls the pod. The init container `sync-agent-gitops` copies SOUL/USER from the ConfigMap into the PVC on each start.
