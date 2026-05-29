@@ -36,6 +36,8 @@ spec:
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
             - name: TRIAGE_AUTH_TOKEN
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
+            - name: HERMES_PUBLIC_BASE_URL
+              value: "https://hermes.${DOMAIN_0}"
           volumeMounts:
             - name: incidents
               mountPath: /data/incidents

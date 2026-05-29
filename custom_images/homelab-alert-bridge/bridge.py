@@ -25,6 +25,7 @@ HERMES_WEBHOOK_URL = os.environ.get(
 )
 HERMES_WEBHOOK_SECRET = os.environ.get("HERMES_WEBHOOK_SECRET", "")
 TRIAGE_AUTH_TOKEN = os.environ.get("TRIAGE_AUTH_TOKEN", "")
+HERMES_PUBLIC_BASE_URL = os.environ.get("HERMES_PUBLIC_BASE_URL", "").rstrip("/")
 HTTP_PORT = int(os.environ.get("HTTP_PORT", "8000"))
 MAX_BODY = int(os.environ.get("MAX_BODY_BYTES", str(2 * 1024 * 1024)))
 
@@ -220,18 +221,20 @@ class Handler(BaseHTTPRequestHandler):
         if status >= 400:
             self._json(status if status != 502 else 502, {"error": "hermes webhook failed", "detail": detail})
             return
-        if self.command == "GET" and "text/html" in (self.headers.get("Accept") or ""):
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            page = (
-                f"<!DOCTYPE html><html><body>"
-                f"<p>Triage started for incident <code>{incident_id}</code>. "
-                f"You can close this tab and check Hermes.</p></body></html>"
-            ).encode("utf-8")
-            self.send_header("Content-Length", str(len(page)))
-            self.end_headers()
-            self.wfile.write(page)
-            return
+        if self.command == "GET":
+            base = HERMES_PUBLIC_BASE_URL
+            if not base:
+                host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host", "")
+                if host:
+                    proto = self.headers.get("X-Forwarded-Proto", "https")
+                    base = f"{proto}://{host.split(',')[0].strip()}"
+            if base:
+                location = f"{base}/?incident={incident_id}&autostart=1"
+                self.send_response(302)
+                self.send_header("Location", location)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
         self._json(200, {"ok": True, "incident_id": incident_id, "hermes": detail})
 
     def do_POST(self) -> None:

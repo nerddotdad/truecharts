@@ -16,7 +16,7 @@ spec:
     metadata:
       annotations:
         # Roll pod when config changes (alertmanager-ntfy reads config only at startup).
-        checksum/config: 3-ask-ai-view-action
+        checksum/config: 4-ask-ai-hermes-autostart
       labels:
         app.kubernetes.io/name: alertmanager-ntfy
     spec:

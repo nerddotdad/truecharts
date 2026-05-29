@@ -74,8 +74,12 @@ ensure_webhook_platform() {
 ensure_webhook_subscription() {
   run_as_hermes_user "
     export HERMES_HOME='$HERMES_HOME' WEBHOOK_SECRET='$WEBHOOK_SECRET' WEBHOOK_PORT='$WEBHOOK_PORT' HERMES_BIN='$HERMES_BIN'
+    SUB_FILE=\"\$HERMES_HOME/webhook_subscriptions.json\"
     if \"\$HERMES_BIN\" webhook list 2>/dev/null | grep -q 'homelab-alerts'; then
-      exit 0
+      if [ -f \"\$SUB_FILE\" ] && grep -q 'Homelab alert triage from ntfy' \"\$SUB_FILE\" 2>/dev/null; then
+        exit 0
+      fi
+      \"\$HERMES_BIN\" webhook unsubscribe homelab-alerts 2>/dev/null || true
     fi
     \"\$HERMES_BIN\" webhook subscribe homelab-alerts \
       --prompt 'Homelab alert triage from ntfy Ask AI. Use read-only kubectl and flux.

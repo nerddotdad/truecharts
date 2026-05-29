@@ -11,7 +11,7 @@ AI-assisted alert triage using **[Hermes Agent](https://github.com/NousResearch/
 | Service | URL |
 |---------|-----|
 | **Hermes WebUI** | `https://hermes.${DOMAIN_0}` |
-| **Ask AI** (from ntfy) | `POST https://hermes.${DOMAIN_0}/homelab/triage` (Bearer `HERMES_ALERT_TRIAGE_SECRET`) |
+| **Ask AI** (from ntfy) | Opens `https://hermes.${DOMAIN_0}/?incident=<id>&autostart=1` (WebUI chat). API: `GET/POST /homelab/triage` (token) → gateway webhook |
 | **Incident API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
 
 Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** (same as Grafana).
@@ -21,10 +21,8 @@ Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** 
 ```text
 Prometheus / Grafana → homelab-alert-bridge (stores incident JSON)
                     → alertmanager-ntfy → ntfy (Runbook | Alert | Ask AI)
-Phone → Ask AI (POST) → https://hermes.<domain>/homelab/triage (bridge)
-      → Hermes gateway webhook :8644 (/webhooks/homelab-alerts)
-      → Agent triage (read-only kubectl / flux; skill homelab-k8s-flux-triage)
-      → Follow up in Hermes WebUI if needed
+Phone → Ask AI → https://hermes.<domain>/?incident=<id>&autostart=1 (WebUI new chat + triage message)
+      (Optional API path: /homelab/triage → gateway webhook — sessions appear under Gateway, not main chat list)
 ```
 
 The **Hermes gateway daemon** must run alongside WebUI in Docker. Upstream documents this for cron and messaging; homelab uses the same process for **webhooks** ([gateway daemon](https://github.com/nesquena/hermes-webui/blob/master/docs/docker.md#scheduled-jobs-and-the-gateway-daemon)). The `hermes-homelab` image starts `start-gateway.sh` in the background after WebUI installs `hermes-agent` into `/app/venv`.
