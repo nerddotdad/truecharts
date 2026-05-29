@@ -20,7 +20,7 @@ spec:
       containers:
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:1.1.1@sha256:84f13d560e016b15dce9f145eb5c34790b11e85b32224fb19a335c26fc9f8b48
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:1.1.1@sha256:62630b54c0af3e60c538a69d023edf2d2d7a7aae69c09d7a87ae77f6e1279468
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
