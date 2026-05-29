@@ -29,6 +29,15 @@ GitHub Actions only **builds** the image. **Serving** is your cluster: `app-temp
 
 If ntfy **Runbook** links 404, confirm **Site build info** is newer than your runbook commit and roll `homelab-docs` if needed (`tag: latest` may require a pod restart to re-pull).
 
+## CI loop breaker (Renovate)
+
+**Build Homelab Docs** watches `clusters/**/helm-release.yaml`. Renovate PRs that **only** bump custom image `tag:` / digest lines would otherwise:
+
+1. Merge pin PR → docs workflow runs → bump `homelab-docs` VERSION → new GHCR tag  
+2. Renovate opens another `homelab-docs` pin PR → merge → repeat
+
+The workflow **skips** rebuilds when the push contains only HelmRelease **image pin** diffs (same idea as `[skip ci]` on VERSION-only commits). Real doc or HelmRelease **values** changes still rebuild. After a pin-only merge, run **Build Homelab Docs** manually if you need the published site HTML to show the new image tag in generated chart pages.
+
 ## Verify in cluster
 
 ```bash

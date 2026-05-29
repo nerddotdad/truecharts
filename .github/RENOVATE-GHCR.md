@@ -52,6 +52,12 @@ curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/nerddotdad/${img}/
 
 Do **not** delete old GHCR image tags — Renovate picks the newest semver above your cluster pin; extra tags are fine.
 
+### Docs image (`homelab-docs`) loop
+
+**Build Homelab Docs** (`.github/workflows/build-homelab-docs.yml`) also watches `clusters/**/helm-release.yaml`. Without a guard, each merged Renovate pin PR would rebuild the docs image, bump `custom_images/homelab-docs/VERSION`, publish a new tag, and trigger another Renovate PR forever.
+
+The workflow skips rebuilds when the commit **only** changes HelmRelease **image pin** lines (`tag:`, `# renovate`, digest). Merging `homelab-docs` (or other GHCR) pin PRs updates Flux pins without forcing another docs build. Run **Build Homelab Docs** manually when you want generated chart pages on the site to reflect new tags.
+
 1. Delete **stale Git branches** (not registry tags), e.g. `renovate/ghcr.io-nerddotdad-homelab-alert-bridge-1.0.0`.
 2. Ensure `autoReplaceStringTemplate` includes the YAML prefix (`tag: ` / `image: …:`), not only `1.2.3@sha256:…`.
 3. Re-run Renovate.
