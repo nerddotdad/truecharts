@@ -66,6 +66,8 @@ Pod env (set by GitOps):
 
 **In-cluster docs mirror** (if fetching HTML): `http://homelab-docs-app-template.dashboards.svc.cluster.local:8080/main/kubernetes/…` — same paths as the public site under `HOMELAB_DOCS_BASE_URL`.
 
+**Web search (`web_search`)**: homelab SearXNG at `SEARXNG_URL` (general web / upstream docs). For **this cluster’s** runbooks and MkDocs, prefer `HOMELAB_DOCS_BASE_URL` paths above — do not rely on SearXNG to index private homelab docs.
+
 ### Always check first
 
 1. **`runbook_url`** on the alert annotation in the incident payload (matches ntfy **Runbook** button).

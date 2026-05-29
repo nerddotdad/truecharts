@@ -70,6 +70,28 @@ Skill **`homelab-k8s-flux-triage`** (in the image) instructs the agent to stay r
 
 Default model **`qwen3.5:9b`** at `http://ollama.ai.svc.cluster.local:11434/v1` (seeded in `custom_images/hermes-homelab/config.yaml`). In-cluster clients use Service **`ollama`** (or alias **`ollama-api`**) — not the ingress hostname alone. Change model/URL in WebUI **Control Center** or edit `config.yaml` on the PVC.
 
+## Web search (SearXNG)
+
+Hermes **`web_search`** uses your cluster **SearXNG** (`http://searxng.ai.svc.cluster.local:8080`), configured via GitOps:
+
+- Helm env: `SEARXNG_URL` on `hermes-oncall`
+- Seed `config.yaml`: `web.search_backend: searxng` in `custom_images/hermes-homelab`
+
+SearXNG is **search-only** (no `web_extract`). For homelab MkDocs/runbooks, the agent should use **`HOMELAB_DOCS_BASE_URL`** and the in-cluster docs mirror (see skill `homelab-k8s-flux-triage`). For arbitrary URLs, use terminal `curl` or browser tools.
+
+**Existing PVC** (already has `~/.hermes/config.yaml`): after Flux applies the new env, restart the Hermes pod. If search still fails, add to the PVC config:
+
+```yaml
+web:
+  search_backend: searxng
+```
+
+Or run `hermes tools` → Web Search & Extract → SearXNG inside the pod.
+
+Verify from the cluster: `curl -sS "http://searxng.ai.svc.cluster.local:8080/search?q=test&format=json"` → HTTP 200.
+
+See [Hermes web search docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-search).
+
 ## Troubleshooting
 
 | Issue | Check |

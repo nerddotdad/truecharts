@@ -5,6 +5,11 @@ model:
   base_url: http://ollama.ai.svc.cluster.local:11434/v1
   context_length: 64000
 
+# Web search via in-cluster SearXNG (Service searxng:8080). Search-only — use curl/browser
+# for homelab MkDocs pages (see homelab-k8s-flux-triage skill).
+web:
+  search_backend: searxng
+
 platforms:
   webhook:
     enabled: true

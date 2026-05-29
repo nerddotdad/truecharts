@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "7"
+            homelab.agent-config/version: "8"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -121,6 +121,8 @@ spec:
                 # Homelab docs + dashboards (for agent citations; Flux substitutes DOMAIN_0).
                 HOMELAB_DOCS_BASE_URL: "https://docs.${DOMAIN_0}/main/kubernetes"
                 HOMELAB_GRAFANA_URL: "https://grafana.${DOMAIN_0}"
+                # Hermes web_search → cluster SearXNG (JSON API verified on :8080).
+                SEARXNG_URL: "http://searxng.ai.svc.cluster.local:8080"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
