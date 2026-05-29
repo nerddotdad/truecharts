@@ -5,6 +5,7 @@
 #   kubectl delete job -n ai ollama-model-pull-job
 # - Large pulls may run >12h; KubeJobNotCompleted is suppressed for this job_name (see homelab-ai PrometheusRule).
 #   Delete the Job after success so metrics/alerts clear: kubectl delete job ollama-model-pull-job -n ai
+# - Script is idempotent: skips /api/pull when /api/tags already lists the model (avoids false KubeJobFailed).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,6 +19,9 @@ spec:
   ttlSecondsAfterFinished: 604800
   backoffLimit: 5
   template:
+    metadata:
+      annotations:
+        homelab.dev/pull-script-version: "2-idempotent"
     spec:
       restartPolicy: Never
       containers:
@@ -27,18 +31,34 @@ spec:
             - sh
             - -c
             - |
-              set -e
+              set -eu
               OLLAMA_API=http://ollama-api.ai.svc.cluster.local:11434
+
               until curl -sf "$OLLAMA_API/api/tags" >/dev/null; do
                 echo "waiting for ollama API..."
                 sleep 10
               done
-              echo "pulling qwen3.5:9b (this may take a while)..."
-              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"qwen3.5:9b"}'
-              echo "pull complete"
-              echo "pulling windffooxxyang1130764/mesugaki-R18G:latest..."
-              curl -sf "$OLLAMA_API/api/pull" -d '{"name":"windffooxxyang1130764/mesugaki-R18G:latest"}'
-              echo "pull complete"
+
+              model_present() {
+                model="$1"
+                tags=$(curl -sf "$OLLAMA_API/api/tags") || return 1
+                echo "$tags" | grep -F "\"name\":\"${model}\"" >/dev/null
+              }
+
+              ensure_model() {
+                model="$1"
+                if model_present "$model"; then
+                  echo "$model already present, skipping pull"
+                  return 0
+                fi
+                echo "pulling ${model} (this may take a while)..."
+                curl -sf "$OLLAMA_API/api/pull" -d "{\"name\":\"${model}\"}"
+                echo "pull complete: ${model}"
+              }
+
+              ensure_model "qwen3.5:9b"
+              ensure_model "windffooxxyang1130764/mesugaki-R18G:latest"
+              echo "all models satisfied"
           resources:
             requests:
               cpu: 50m

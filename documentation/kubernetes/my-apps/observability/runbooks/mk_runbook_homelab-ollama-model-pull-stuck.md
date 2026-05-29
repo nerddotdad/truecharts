@@ -35,7 +35,25 @@ Check whether the Job pod is still running, whether Ollama API responds, and whe
 
 ## KubeJobFailed
 
-If you received **KubeJobFailed** for this Job, the pull container exited with failure (not just “still running”). Use the steps below, then delete the Job so the alert clears.
+If you received **HomelabKubeJobFailedOllamaModelPull**, the pull container exited with failure (not just “still running”).
+
+**Common false positive:** the Job was recreated (Flux sync, manual delete, etc.) while models were **already on the Ollama volume**. An older script always called `/api/pull` and could fail even though `/api/tags` listed the models. Since pull-script **v2-idempotent**, the Job exits successfully when models are present.
+
+1. Confirm models exist:
+
+   ```bash
+   curl -s http://ollama-api.ai.svc.cluster.local:11434/api/tags
+   ```
+
+2. If models are present, delete the stale failed Job and let Flux recreate it (or wait for the next apply after updating Git):
+
+   ```bash
+   kubectl delete job ollama-model-pull-job -n ai
+   ```
+
+   The recreated Job should log `already present, skipping pull` and complete.
+
+3. If models are **missing**, check Job logs, Ollama pod health, disk space, and network, then delete the Job and re-apply.
 
 ## Resolve
 
