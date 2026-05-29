@@ -2,12 +2,39 @@
 
 Edit files here and commit — **no `hermes-homelab` image rebuild** required.
 
-| Path | Role |
-|------|------|
-| `SOUL.md` | Agent persona / priorities (`~/.hermes/SOUL.md` in pod) |
-| `USER.md` | Operator context (`~/.hermes/USER.md` in pod) |
-| `skills/*/SKILL.md` | Hermes skills (`HERMES_OPTIONAL_SKILLS_DIR`) |
+## What belongs in Git vs PVC
 
-Kustomize builds ConfigMaps `hermes-oncall-agent` and `hermes-oncall-skills`; the HelmRelease mounts them.
+| File | In Git? | On pod start |
+|------|---------|--------------|
+| `SOUL.md` | Yes — platform persona | **Always** copied to PVC |
+| `skills/homelab-k8s-flux-triage/SKILL.md` | Yes — on-call triage | **Always** copied to PVC |
+| `USER.md` | Optional **seed** only | Copied **only if** PVC has no `memories/USER.md` yet |
+| `MEMORY.md` | **Never** | PVC only — agent-managed |
+| Other `skills/*` | **Never** (unless you promote one) | PVC only — e.g. from WebUI |
 
-After changing these files, bump `homelab.agent-config/version` in `helm-release.yaml` so Flux rolls the pod. The init container `sync-agent-gitops` copies SOUL/USER from the ConfigMap into the PVC on each start.
+Hermes paths (under `HERMES_HOME`):
+
+- `SOUL.md`
+- `memories/USER.md`, `memories/MEMORY.md`
+- `skills/<name>/SKILL.md`
+
+## Chart env vars (`helm-release.yaml`)
+
+| Env var | Role |
+|---------|------|
+| `HERMES_HOME` | Writable PVC (`/home/hermeswebui/.hermes`) |
+| `HERMES_OPTIONAL_SKILLS_DIR` | Extra skill scan (`/opt/homelab-skills`) |
+| `HOMELAB_GITOPS_*` | ConfigMap staging paths for init |
+
+After editing **SOUL** or **skills**, bump `homelab.agent-config/version` in `helm-release.yaml` to roll the pod.
+
+To reset **USER** to the Git seed: delete `memories/USER.md` on the PVC (or remove the file via exec), then roll the pod.
+
+## Verify
+
+```bash
+kubectl exec -n ai deploy/hermes-oncall-app-template -c hermes-oncall-app-template -- \
+  cat /home/hermeswebui/.hermes/memories/USER.md
+```
+
+Pick skill **`homelab-k8s-flux-triage`** in the WebUI for manual triage.

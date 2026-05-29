@@ -60,21 +60,34 @@ spec:
           # GitOps SA + token mount (see rbac.yaml). TrueCharts defaults automount to false.
           serviceAccountName: hermes-oncall
           automountServiceAccountToken: true
-          # Bump when editing agent-config/ (SOUL, USER, skills) to roll the pod.
+          # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "2"
+            homelab.agent-config/version: "5"
           initContainers:
             sync-agent-gitops:
               enabled: true
               type: init
               imageSelector: ubuntuImage
+              # Path contract — anchors defined here; main container and persistence reuse them.
+              env:
+                HERMES_HOME: &hermes_home /home/hermeswebui/.hermes
+                HOMELAB_GITOPS_AGENT_DIR: &gitops_agent /opt/hermes-gitops
+                HOMELAB_GITOPS_SKILL_DIR: &gitops_skill /opt/homelab-skills/homelab-k8s-flux-triage
+                HOMELAB_GITOPS_SKILL_NAME: homelab-k8s-flux-triage
+                HERMES_OPTIONAL_SKILLS_DIR: &skills_root /opt/homelab-skills
               command:
                 - /bin/sh
-                - -c
+                - -ec
                 - |
-                  mkdir -p /home/hermeswebui/.hermes
-                  cp -f /opt/hermes-gitops/SOUL.md /home/hermeswebui/.hermes/SOUL.md
-                  cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/USER.md
+                  mkdir -p "${HERMES_HOME}/memories" "${HERMES_HOME}/skills/${HOMELAB_GITOPS_SKILL_NAME}"
+                  # Platform contract (Git wins on every pod start)
+                  cp -f "${HOMELAB_GITOPS_AGENT_DIR}/SOUL.md" "${HERMES_HOME}/SOUL.md"
+                  cp -f "${HOMELAB_GITOPS_SKILL_DIR}/SKILL.md" \
+                    "${HERMES_HOME}/skills/${HOMELAB_GITOPS_SKILL_NAME}/SKILL.md"
+                  # Baseline operator profile — seed PVC once; Hermes may update afterward
+                  if [ ! -s "${HERMES_HOME}/memories/USER.md" ]; then
+                    cp -f "${HOMELAB_GITOPS_AGENT_DIR}/USER.md" "${HERMES_HOME}/memories/USER.md"
+                  fi
           containers:
             main:
               enabled: true
@@ -88,12 +101,15 @@ spec:
                 HERMES_WEBUI_HOST: "0.0.0.0"
                 HERMES_WEBUI_PORT: "8787"
                 HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
+                HERMES_HOME: *hermes_home
                 HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
-                HERMES_HOME: /home/hermeswebui/.hermes
+                HOMELAB_GITOPS_AGENT_DIR: *gitops_agent
+                HOMELAB_GITOPS_SKILL_DIR: *gitops_skill
+                HOMELAB_GITOPS_SKILL_NAME: homelab-k8s-flux-triage
+                HERMES_OPTIONAL_SKILLS_DIR: *skills_root
                 # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
-                HERMES_OPTIONAL_SKILLS_DIR: /opt/homelab-skills
                 # ntfy Ask AI → homelab-alert-bridge → Hermes webhook (see start-gateway.sh).
                 WEBHOOK_ENABLED: "true"
                 WEBHOOK_PORT: "8644"
@@ -158,7 +174,7 @@ spec:
         storageClass: longhorn
         accessMode: ReadWriteOnce
         size: 20Gi
-        mountPath: /home/hermeswebui/.hermes
+        mountPath: *hermes_home
         readOnly: false
         targetSelector:
           main:
@@ -169,14 +185,14 @@ spec:
         type: emptyDir
         mountPath: /workspace
         targetSelectAll: true
-      # GitOps SOUL/USER: init copies from /opt/hermes-gitops → PVC (avoids duplicate .hermes mount).
+      # GitOps agent files (ConfigMap → staging dir; init copies into $HERMES_HOME).
       homelab-agent:
         enabled: true
         type: configmap
         objectName: hermes-oncall-agent
         expandObjectName: false
         readOnly: true
-        mountPath: /opt/hermes-gitops
+        mountPath: *gitops_agent
         targetSelector:
           main:
             sync-agent-gitops: {}
@@ -186,11 +202,14 @@ spec:
         objectName: hermes-oncall-skills
         expandObjectName: false
         readOnly: true
-        mountPath: /opt/homelab-skills/homelab-k8s-flux-triage
+        mountPath: *gitops_skill
         items:
           - key: SKILL.md
             path: SKILL.md
-        targetSelectAll: true
+        targetSelector:
+          main:
+            main: {}
+            sync-agent-gitops: {}
 
     ingress:
       main:
