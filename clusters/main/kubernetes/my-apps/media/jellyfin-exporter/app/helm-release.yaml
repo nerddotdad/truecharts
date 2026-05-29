@@ -42,6 +42,14 @@ spec:
           containers:
             main:
               enabled: true
+              # Optional collectors (off by default upstream) — required for rebelcore Grafana dashboard sections:
+              # Transcoding, Storage, Scheduled Tasks, Activity.
+              # Activity needs Jellyfin "Playback Reporting" plugin with "Keep data for" = Forever.
+              args:
+                - --collector.transcoding
+                - --collector.storage
+                - --collector.tasks
+                - --collector.activity
               env:
                 JELLYFIN_ADDRESS: http://jellyfin.media.svc.cluster.local:8096
                 JELLYFIN_TOKEN: "${HP_JELLYFIN}"
@@ -70,10 +78,10 @@ spec:
                   periodSeconds: 10
               resources:
                 requests:
-                  cpu: 10m
-                  memory: 32Mi
+                  cpu: 25m
+                  memory: 64Mi
                 limits:
-                  memory: 128Mi
+                  memory: 256Mi
 
     service:
       main:
