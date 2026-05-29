@@ -218,9 +218,9 @@ spec:
         readOnly: true
         mountPath: *skills_root
         items:
-          - key: homelab-k8s-flux-triage/SKILL.md
+          - key: homelab-k8s-flux-triage.SKILL.md
             path: homelab-k8s-flux-triage/SKILL.md
-          - key: jellyfin-api/SKILL.md
+          - key: jellyfin-api.SKILL.md
             path: jellyfin-api/SKILL.md
         targetSelector:
           main:
