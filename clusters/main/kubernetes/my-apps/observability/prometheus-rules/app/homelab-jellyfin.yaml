@@ -85,7 +85,7 @@ spec:
 
         - alert: jellyfin_user_locked
           expr: jellyfin_user_account{namespace="media", admin="0"} == 0
-          for: 2m
+          for: 0
           labels:
             severity: warning
             homelab_team: media
@@ -93,7 +93,7 @@ spec:
             summary: "Jellyfin user {{ $labels.username }} locked or disabled in {{ $labels.namespace }}"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
             description: |-
-              User {{ $labels.username }} (id {{ $labels.user_id }}) has Policy.IsDisabled=true for 2+ minutes (account={{ $value }}).
+              User {{ $labels.username }} (id {{ $labels.user_id }}) has Policy.IsDisabled=true (account={{ $value }}).
               Jellyfin sets this on automatic lockout after failed login attempts; an admin may also have disabled the account manually.
               {{- if and $labels.last_access (ne $labels.last_access "0") }}
 
