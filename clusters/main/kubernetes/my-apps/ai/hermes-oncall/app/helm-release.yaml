@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "6"
+            homelab.agent-config/version: "7"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -110,6 +110,9 @@ spec:
                 # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
+                # alert-handoff.js (custom_images/hermes-homelab/extensions/) — ntfy Ask AI deep links.
+                HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
+                HERMES_WEBUI_EXTENSION_SCRIPT_URLS: /extensions/alert-handoff.js
                 # ntfy Ask AI → homelab-alert-bridge → Hermes webhook (see start-gateway.sh).
                 WEBHOOK_ENABLED: "true"
                 WEBHOOK_PORT: "8644"
