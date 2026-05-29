@@ -28,6 +28,8 @@ Hermes paths (under `HERMES_HOME`):
 
 After editing **SOUL** or **skills**, bump `homelab.agent-config/version` in `helm-release.yaml` to roll the pod.
 
+Init uses **hardcoded paths** in the shell script (not `${VAR}`) because Flux `postBuild` substitution would empty unknown placeholders and break `cp`.
+
 To reset **USER** to the Git seed: delete `memories/USER.md` on the PVC (or remove the file via exec), then roll the pod.
 
 ## Verify

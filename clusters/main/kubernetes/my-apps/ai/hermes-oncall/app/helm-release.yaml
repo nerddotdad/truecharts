@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "5"
+            homelab.agent-config/version: "6"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -79,14 +79,14 @@ spec:
                 - /bin/sh
                 - -ec
                 - |
-                  mkdir -p "${HERMES_HOME}/memories" "${HERMES_HOME}/skills/${HOMELAB_GITOPS_SKILL_NAME}"
-                  # Platform contract (Git wins on every pod start)
-                  cp -f "${HOMELAB_GITOPS_AGENT_DIR}/SOUL.md" "${HERMES_HOME}/SOUL.md"
-                  cp -f "${HOMELAB_GITOPS_SKILL_DIR}/SKILL.md" \
-                    "${HERMES_HOME}/skills/${HOMELAB_GITOPS_SKILL_NAME}/SKILL.md"
-                  # Baseline operator profile — seed PVC once; Hermes may update afterward
-                  if [ ! -s "${HERMES_HOME}/memories/USER.md" ]; then
-                    cp -f "${HOMELAB_GITOPS_AGENT_DIR}/USER.md" "${HERMES_HOME}/memories/USER.md"
+                  # Literal paths only — Flux postBuild strips ${VAR} not in clusterenv (would break cp).
+                  mkdir -p /home/hermeswebui/.hermes/memories \
+                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage
+                  cp -f /opt/hermes-gitops/SOUL.md /home/hermeswebui/.hermes/SOUL.md
+                  cp -f /opt/homelab-skills/homelab-k8s-flux-triage/SKILL.md \
+                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage/SKILL.md
+                  if [ ! -s /home/hermeswebui/.hermes/memories/USER.md ]; then
+                    cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/memories/USER.md
                   fi
           containers:
             main:
