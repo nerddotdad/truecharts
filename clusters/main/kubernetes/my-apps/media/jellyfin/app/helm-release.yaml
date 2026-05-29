@@ -61,6 +61,9 @@ spec:
               env:
                 # Data lives under /config on the local PVC
                 JELLYFIN_DATA_DIR: "/config/data"
+                # Built-in Prometheus at /metrics on a dedicated internal port (not on ingress :8096).
+                JELLYFIN_EnableMetrics: "true"
+                JELLYFIN_MetricsListenPort: "8097"
               resources:
                 requests:
                   cpu: 250m
@@ -69,6 +72,22 @@ spec:
                   cpu: 1500m
                   memory: 6Gi
                   gpu.intel.com/i915: 1
+    service:
+      metrics:
+        enabled: true
+        type: ClusterIP
+        ports:
+          metrics:
+            enabled: true
+            port: 8097
+            targetPort: 8097
+    metrics:
+      main:
+        enabled: true
+        endpoints:
+          - port: metrics
+            path: /metrics
+        targetSelector: metrics
     persistence:
       config:
         enabled: true

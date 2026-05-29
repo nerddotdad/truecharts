@@ -45,6 +45,30 @@ kube-prometheus-stack **TargetDown** in `downloaders` is routed to `null`; this 
 
 4. Common fixes: pod crash loop, wrong metrics port in ServiceMonitor, chart upgrade disabled metrics, network policy blocking scrape.
 
+5. **exportarr / config.xml port mismatch (Radarr):** exportarr reads `CONFIG=/config/config.xml` and uses `<Port>` for API calls. If config still has another app’s port (e.g. `8686` from Lidarr) while Radarr listens on `7878` via `RADARR__SERVER__PORT`, the UI works but metrics time out.
+
+   ```bash
+   kubectl exec -n downloaders deploy/radarr -c radarr -- grep '<Port>' /config/config.xml
+   kubectl logs -n downloaders deploy/radarr -c radarr-exportarr --tail=20 | rg '7878|8686|timeout'
+   ```
+
+   One-time fix on the Radarr PVC (persists across restarts):
+
+   ```bash
+   # confirm mismatch (Radarr should be 7878, not 8686)
+   kubectl exec -n downloaders deploy/radarr -c radarr -- grep '<Port>' /config/config.xml
+
+   kubectl exec -n downloaders deploy/radarr -c radarr -- \
+     sed -i 's|<Port>8686</Port>|<Port>7878</Port>|' /config/config.xml
+
+   # restart pod so exportarr re-reads config
+   kubectl delete pod -n downloaders -l app.kubernetes.io/instance=radarr
+   ```
+
+   Or in Radarr UI: **Settings → General → Port → 7878**, Save. Then restart the pod.
+
+   Confirm: `up{namespace="downloaders",service="radarr-metrics"}==1` (may take up to ~20m for the alert to clear).
+
 ## Resolve
 
 - Fix the workload or ServiceMonitor in GitOps under `my-apps/downloaders/<app>/`.
