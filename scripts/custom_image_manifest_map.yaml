@@ -1,5 +1,5 @@
 # Maps custom_images/<name> to cluster manifests with pinned image tags.
-# Used by scripts/bump_custom_image_manifest.py for manual bumps; Renovate updates manifests in PRs.
+# Used by scripts/bump_custom_image_manifest.py and Renovate (.github/renovate.json5) for image bumps.
 images:
   hermes-homelab:
     registry: ghcr.io/nerddotdad/hermes-homelab
