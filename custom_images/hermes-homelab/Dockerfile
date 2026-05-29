@@ -28,6 +28,7 @@ COPY config.yaml /opt/hermes-seed/config.yaml
 
 # Upstream CMD is /hermeswebui_init.bash — must run as root (UID setup + volume prep).
 RUN chmod 755 /opt/homelab-scripts/start-gateway.sh \
+  /opt/homelab-scripts/ensure-webhook-platform.py \
   && printf '%s\n' \
   '#!/bin/sh' \
   'set -e' \

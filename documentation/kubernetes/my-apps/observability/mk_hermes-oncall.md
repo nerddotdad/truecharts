@@ -11,7 +11,7 @@ AI-assisted alert triage using **[Hermes Agent](https://github.com/NousResearch/
 | Service | URL |
 |---------|-----|
 | **Hermes WebUI** | `https://hermes.${DOMAIN_0}` |
-| **Ask AI** (from ntfy) | `https://hermes.${DOMAIN_0}/?incident=<fingerprint>&autostart=1` |
+| **Ask AI** (from ntfy) | `POST https://hermes.${DOMAIN_0}/homelab/triage` (Bearer `HERMES_ALERT_TRIAGE_SECRET`) |
 | **Incident API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
 
 Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** (same as Grafana).
@@ -21,11 +21,13 @@ Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** 
 ```text
 Prometheus / Grafana → homelab-alert-bridge (stores incident JSON)
                     → alertmanager-ntfy → ntfy (Runbook | Alert | Ask AI)
-Phone → Ask AI → Hermes WebUI (extension loads incident + auto-starts agent)
-      → You chat with Hermes (read-only kubectl / flux)
-      → Agent proposes resolution; you execute via GitOps
-      → Hermes can save a skill for next time
+Phone → Ask AI (POST) → https://hermes.<domain>/homelab/triage (bridge)
+      → Hermes gateway webhook :8644 (/webhooks/homelab-alerts)
+      → Agent triage (read-only kubectl / flux; skill homelab-k8s-flux-triage)
+      → Follow up in Hermes WebUI if needed
 ```
+
+The **Hermes gateway daemon** must run alongside WebUI in Docker. Upstream documents this for cron and messaging; homelab uses the same process for **webhooks** ([gateway daemon](https://github.com/nesquena/hermes-webui/blob/master/docs/docker.md#scheduled-jobs-and-the-gateway-daemon)). The `hermes-homelab` image starts `start-gateway.sh` in the background after WebUI installs `hermes-agent` into `/app/venv`.
 
 ## GitOps layout
 
@@ -77,7 +79,8 @@ Default model **`qwen3.5:9b`** at `http://ollama.ai.svc.cluster.local:11434/v1` 
 | **404 nginx** on `https://hermes.<domain>/` | Hermes HelmRelease not deployed — check `kubectl get helmrelease -n ai hermes-oncall` and `my-apps/ai/kustomization.yaml` includes `hermes-oncall/ks.yaml`. Only `/homelab/api` ingress alone returns 404 on `/`. |
 | WebUI ImagePullBackOff | Build/push `hermes-homelab` image on `main` |
 | Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
-| Ask AI opens empty composer / text flashes then vanishes | Extension ran before WebUI boot finished (`loadSession` clears composer). Rebuild `hermes-homelab` image (includes fixed extension) and ensure `HERMES_WEBUI_EXTENSION_SCRIPT_URLS=/extensions/alert-handoff.js`. Clear `sessionStorage` keys `homelab_handoff_done_*` to retry the same incident. |
+| Ask AI / triage 502 Hermes | Gateway not listening on :8644. WebUI **System Settings** may show “Gateway not configured”. Rebuild `hermes-homelab` ≥ 1.1.2; check `kubectl logs deploy/hermes-oncall-app-template -n ai \| grep start-gateway`. Verify: `kubectl run -n ai curl-test --rm -it --image=curlimages/curl -- curl -sS -o /dev/null -w '%{http_code}' http://hermes-oncall-app-template.ai.svc:8644/webhooks/homelab-alerts` (expect non-000). |
+| Gateway never starts | `start-gateway` waits for `/app/venv/bin/hermes` (WebUI first boot ~5–10 min). Existing PVCs missing `platforms.webhook` in `config.yaml` are patched at gateway start. |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
 | **Connection error** in chat | Hermes logs show `ollama-api.ai.svc.cluster.local`? Use **`ollama.ai.svc.cluster.local:11434/v1`** (Service `ollama`) or apply `ollama-api` cluster DNS alias. `ollama-api.${DOMAIN_0}` is ingress-only. |
