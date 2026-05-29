@@ -20,6 +20,22 @@ INCIDENT_API_BASE = os.environ.get(
     "http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/incidents",
 )
 PENDING_ID_FILE = Path(os.environ.get("PENDING_INCIDENT_FILE", "/data/incidents/.pending_incident"))
+PENDING_INCIDENT_API = os.environ.get(
+    "PENDING_INCIDENT_API",
+    "http://homelab-alert-bridge.observability.svc.cluster.local:8000/homelab/api/pending-incident",
+)
+
+
+def _fetch_pending_incident_id() -> str:
+    """One-shot pending id set by WebUI alert-handoff via homelab-alert-bridge."""
+    url = PENDING_INCIDENT_API.rstrip("/")
+    try:
+        with urllib.request.urlopen(url, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            iid = str(data.get("incident_id") or "").strip()
+            return iid
+    except Exception:
+        return ""
 
 
 def _load_incident(incident_id: str) -> dict | None:
@@ -71,6 +87,8 @@ def main() -> int:
     if not incident_id and PENDING_ID_FILE.is_file():
         incident_id = PENDING_ID_FILE.read_text(encoding="utf-8").strip()
     if not incident_id:
+        incident_id = _fetch_pending_incident_id()
+    if not incident_id:
         return 0
 
     data = _load_incident(incident_id)
@@ -99,7 +117,11 @@ def main() -> int:
                     {
                         "role": "system",
                         "content": (
-                            "You are the homelab on-call agent. Use skill homelab-k8s-flux-triage. "
+                            "You are the homelab on-call agent in the Hermes WebUI pod with an "
+                            "in-cluster ServiceAccount (read-only kubectl/flux). "
+                            "Use skill homelab-k8s-flux-triage. "
+                            "REQUIRED: investigate with the terminal tool (kubectl get/describe/logs, "
+                            "flux get) — do not use web_search for cluster state. "
                             "Read-only cluster access only."
                         ),
                     },

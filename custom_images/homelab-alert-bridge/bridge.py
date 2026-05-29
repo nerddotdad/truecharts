@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
+PENDING_ID_FILE = INCIDENT_DIR / ".pending_incident"
 NTFY_BRIDGE_URL = os.environ.get(
     "NTFY_BRIDGE_URL",
     "http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook",
@@ -109,6 +110,25 @@ def _load_incident(incident_id: str) -> dict | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _set_pending_incident(incident_id: str) -> bool:
+    if not _load_incident(incident_id):
+        return False
+    PENDING_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PENDING_ID_FILE.write_text(incident_id, encoding="utf-8")
+    return True
+
+
+def _take_pending_incident() -> str:
+    if not PENDING_ID_FILE.is_file():
+        return ""
+    iid = PENDING_ID_FILE.read_text(encoding="utf-8").strip()
+    try:
+        PENDING_ID_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+    return iid
+
+
 def _forward_to_hermes(incident: dict) -> tuple[int, bytes]:
     if not HERMES_WEBHOOK_SECRET:
         return 503, b'{"error":"webhook secret not configured"}'
@@ -191,6 +211,10 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, incident)
             return
+        if self.path.split("?", 1)[0] == "/homelab/api/pending-incident":
+            iid = _take_pending_incident()
+            self._json(200, {"incident_id": iid})
+            return
         self._json(404, {"error": "not found"})
 
     def _handle_triage(self) -> None:
@@ -240,6 +264,23 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         if self.path.split("?", 1)[0] == "/homelab/triage":
             self._handle_triage()
+            return
+        if self.path.split("?", 1)[0] == "/homelab/api/pending-incident":
+            payload, err = self._read_json_body()
+            if err == 413:
+                self._json(413, {"error": "payload too large"})
+                return
+            if err == 400:
+                self._json(400, {"error": "invalid json"})
+                return
+            incident_id = self._incident_id_from_request(payload)
+            if not incident_id:
+                self._json(400, {"error": "incident_id required"})
+                return
+            if not _set_pending_incident(incident_id):
+                self._json(404, {"error": "incident not found", "id": incident_id})
+                return
+            self._json(200, {"ok": True, "incident_id": incident_id})
             return
         if self.path not in ("/hook", "/"):
             self._json(404, {"error": "not found"})

@@ -44,7 +44,9 @@
     if (ann.description) parts.push("\n" + ann.description);
     if (ann.runbook_url) parts.push("\nRunbook: " + ann.runbook_url);
     parts.push(
-      "\n\nInvestigate with read-only kubectl/flux, cite the runbook, and propose a resolution plan.",
+      "\n\nInvestigate with read-only **kubectl** and **flux** via the **terminal** tool ",
+      "(this pod has in-cluster ServiceAccount access). Cite the runbook and homelab MkDocs. ",
+      "Do **not** use web_search for cluster state.",
       "Do not apply cluster changes yourself."
     );
     return parts.join("\n");
@@ -133,7 +135,35 @@
     return true;
   }
 
+  async function registerPendingIncident(id) {
+    const res = await fetch("/homelab/api/pending-incident", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ incident_id: id }),
+    });
+    if (!res.ok) {
+      throw new Error("pending incident register HTTP " + res.status);
+    }
+  }
+
+  async function waitForAgentReady(timeoutMs) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch("/api/gateway/status", {
+          credentials: "same-origin",
+        });
+        if (res.ok) return;
+      } catch (e) {
+        /* retry */
+      }
+      await sleep(250);
+    }
+  }
+
   async function startTriage(text) {
+    await registerPendingIncident(incidentId);
     await window.newSession(true, {});
     if (typeof window.renderSessionList === "function") {
       await window.renderSessionList();
@@ -141,7 +171,8 @@
     if (typeof window.renderMessages === "function") {
       window.renderMessages();
     }
-    await sleep(200);
+    await waitForAgentReady(15000);
+    await sleep(400);
     if (!setComposerText(text)) {
       throw new Error("composer input not found");
     }
