@@ -26,7 +26,7 @@
         "# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)",
         "tag:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
       ],
-      "autoReplaceStringTemplate": "{{{newValue}}}@sha256:{{{newDigest}}}"
+      "autoReplaceStringTemplate": "tag: {{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}@sha256:{{{newDigest}}}"
     },
     {
       "customType": "regex",
@@ -39,18 +39,19 @@
         "# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)",
         "image:\\s*[^:]+:(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
       ],
-      "autoReplaceStringTemplate": "{{{newValue}}}@sha256:{{{newDigest}}}"
+      "autoReplaceStringTemplate": "image: {{{depName}}}:{{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}@sha256:{{{newDigest}}}"
     }
   ],
   "packageRules": [
     {
-      "description": "Homelab GHCR custom images — semver tags only (ignore main-*, latest, calver)",
-      "matchDatasources": ["docker"],
+      "description": "Homelab GHCR — already pinned semver@sha256; skip global pinDigests (breaks regex replace)",
+      "matchManagers": ["regex"],
       "matchPackageNames": [
         "ghcr.io/nerddotdad/hermes-homelab",
         "ghcr.io/nerddotdad/homelab-alert-bridge",
         "ghcr.io/nerddotdad/homelab-docs"
       ],
+      "pinDigests": false,
       "versioning": "semver"
     },
     {

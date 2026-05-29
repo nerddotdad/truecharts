@@ -48,6 +48,12 @@ token=$(curl -s "https://ghcr.io/token?service=ghcr.io&scope=repository:nerddotd
 curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/nerddotdad/${img}/tags/list" | jq '.tags | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$")))'
 ```
 
-## After Renovate works
+## `update failure` on Renovate branches
 
-Delete stale branches `renovate/ghcr.io-nerddotdad-*` if they show `update failure`, then re-run Renovate.
+Do **not** delete old GHCR image tags — Renovate picks the newest semver above your cluster pin; extra tags are fine.
+
+1. Delete **stale Git branches** (not registry tags), e.g. `renovate/ghcr.io-nerddotdad-homelab-alert-bridge-1.0.0`.
+2. Ensure `autoReplaceStringTemplate` includes the YAML prefix (`tag: ` / `image: …:`), not only `1.2.3@sha256:…`.
+3. Re-run Renovate.
+
+One-time manual bump in Git is OK if you are blocked (e.g. bridge `1.0.0` → `1.1.1`); Renovate should maintain pins after the template fix.
