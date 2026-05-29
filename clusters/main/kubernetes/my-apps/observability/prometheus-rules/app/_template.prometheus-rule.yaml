@@ -6,6 +6,12 @@
 #   severity: warning | critical
 #   homelab_team: <your team label for routing (optional)>
 #
+# Templating (PrometheusRule):
+#   alert:       stable snake_case ID — not templated (becomes alertname label).
+#   summary:     one-line human title with {{ $labels.* }} / {{ $value }} → ntfy title via alertmanager-ntfy.
+#   description:   responder detail; same Prometheus template vars (not Grafana {{ $values.A.Value }}).
+#   https://grafana.com/docs/grafana/latest/alerting/fundamentals/templates/
+#
 # apiVersion: monitoring.coreos.com/v1
 # kind: PrometheusRule
 # metadata:
@@ -18,7 +24,7 @@
 #     - name: homelab.example
 #       interval: 30s
 #       rules:
-#         - alert: HomelabExampleHighMemory
+#         - alert: example_high_memory
 #           expr: |
 #             (
 #               container_memory_working_set_bytes{namespace="gaming", container!=""}
@@ -30,7 +36,7 @@
 #             severity: warning
 #             homelab_team: gaming
 #           annotations:
-#             summary: "Container {{ $labels.namespace }}/{{ $labels.pod }} memory > 90% of limit"
+#             summary: "Container {{ $labels.namespace }}/{{ $labels.pod }} memory > 90% of limit ({{ $value | humanizePercentage }})"
 #             description: "Investigate memory pressure before OOMKill."
 #             # Tap link in ntfy (copy URL: python scripts/runbook_url.py HomelabExampleHighMemory)
 #             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-example-high-memory/
