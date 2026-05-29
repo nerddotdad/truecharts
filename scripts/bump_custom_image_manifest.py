@@ -27,6 +27,15 @@ def format_tag(version: str, digest: str | None = None) -> str:
     return version
 
 
+def _sub_first_group(pattern: re.Pattern[str], text: str, suffix: str) -> tuple[str, int]:
+    """Replace match; use callable so \\1 is not parsed as group 11 when suffix starts with a digit."""
+
+    def repl(match: re.Match[str]) -> str:
+        return match.group(1) + suffix
+
+    return pattern.subn(repl, text, count=1)
+
+
 def bump_helm_tag(path: Path, registry: str, version: str, digest: str | None = None) -> bool:
     text = path.read_text(encoding="utf-8")
     tag_value = format_tag(version, digest)
@@ -35,13 +44,13 @@ def bump_helm_tag(path: Path, registry: str, version: str, digest: str | None = 
         rf"(# renovate: datasource=\S+ depName={dep}\s*\n\s*tag:\s*)[\"']?[^\"'\s#]+[\"']?",
         re.MULTILINE,
     )
-    new_text, n = pattern.subn(rf"\1{tag_value}", text, count=1)
+    new_text, n = _sub_first_group(pattern, text, tag_value)
     if n == 0:
         pattern2 = re.compile(
             rf"(repository:\s*{dep}\s*\n(?:\s+pullPolicy:.*\n)?\s*tag:\s*)[\"']?[^\"'\s#]+[\"']?",
             re.MULTILINE,
         )
-        new_text, n = pattern2.subn(rf"\1{tag_value}", text, count=1)
+        new_text, n = _sub_first_group(pattern2, text, tag_value)
     if n == 0:
         print(f"  skip {path}: no tag: line found for {registry}", file=sys.stderr)
         return False
@@ -60,10 +69,10 @@ def bump_deployment_image(path: Path, registry: str, version: str, digest: str |
         rf"(# renovate: datasource=\S+ depName={dep}\s*\n\s*image:\s*){dep}:[^\s#]+",
         re.MULTILINE,
     )
-    new_text, n = pattern.subn(rf"\1{registry}:{tag_value}", text, count=1)
+    new_text, n = _sub_first_group(pattern, text, f"{registry}:{tag_value}")
     if n == 0:
         pattern2 = re.compile(rf"(image:\s*){dep}:[^\s#]+", re.MULTILINE)
-        new_text, n = pattern2.subn(rf"\1{registry}:{tag_value}", text, count=1)
+        new_text, n = _sub_first_group(pattern2, text, f"{registry}:{tag_value}")
     if n == 0:
         print(f"  skip {path}: no image: line found for {registry}", file=sys.stderr)
         return False
