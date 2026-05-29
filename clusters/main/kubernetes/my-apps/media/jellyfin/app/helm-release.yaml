@@ -61,9 +61,8 @@ spec:
               env:
                 # Data lives under /config on the local PVC
                 JELLYFIN_DATA_DIR: "/config/data"
-                # Built-in Prometheus at /metrics on a dedicated internal port (not on ingress :8096).
-                JELLYFIN_EnableMetrics: "true"
-                JELLYFIN_MetricsListenPort: "8097"
+                # Jellyfin 10.11.x (TrueCharts 23.3.2): EnableMetrics must be true in /config/system.xml
+                # on the PVC — env overrides for metrics are not wired in this server version yet.
               resources:
                 requests:
                   cpu: 250m
@@ -72,22 +71,13 @@ spec:
                   cpu: 1500m
                   memory: 6Gi
                   gpu.intel.com/i915: 1
-    service:
-      metrics:
-        enabled: true
-        type: ClusterIP
-        ports:
-          metrics:
-            enabled: true
-            port: 8097
-            targetPort: 8097
     metrics:
       main:
         enabled: true
         endpoints:
-          - port: metrics
+          - port: main
             path: /metrics
-        targetSelector: metrics
+        targetSelector: main
     persistence:
       config:
         enabled: true
@@ -109,6 +99,12 @@ spec:
       main:
         enabled: true
         ingressClassName: external
+        annotations:
+          # Metrics live on :8096/metrics (ClusterIP scrape only). Block public ingress access.
+          nginx.ingress.kubernetes.io/server-snippet: |
+            location = /metrics {
+              return 404;
+            }
         hosts: 
           - host: jellyfin.${DOMAIN_0}
             paths:
