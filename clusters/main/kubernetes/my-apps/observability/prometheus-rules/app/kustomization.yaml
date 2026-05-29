@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - homelab-ai.yaml
   - homelab-downloaders.yaml
+  - homelab-jellyfin.yaml
   - homelab-flux.yaml
   - homelab-flux-test.yaml
   - homelab-gitops.yaml

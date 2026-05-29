@@ -1,0 +1,89 @@
+---
+# Jellyfin (media): API health via rebelcore exporter + scrape targets for chart and exporter.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-jellyfin
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.media.jellyfin
+      interval: 30s
+      rules:
+        - alert: HomelabJellyfinApiDown
+          expr: jellyfin_up{namespace="media"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            homelab_team: media
+          annotations:
+            summary: "Jellyfin API unreachable (media)"
+            dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            description: |-
+              jellyfin-exporter reports jellyfin_up=0 for 5+ minutes — the exporter cannot reach the Jellyfin API on :8096 (token, network, or Jellyfin pod down).
+              Streaming and the web UI are likely broken even if the exporter pod is still running.
+              Check: kubectl get pods -n media -l app.kubernetes.io/name=jellyfin
+              kubectl logs -n media deploy/jellyfin-exporter-app-template --tail=50
+
+        - alert: HomelabJellyfinMetricsDown
+          expr: |
+            up{namespace="media", service="jellyfin"} == 0
+            or
+            up{namespace="media", service="jellyfin-exporter-app-template"} == 0
+          for: 15m
+          labels:
+            severity: warning
+            homelab_team: media
+          annotations:
+            summary: "Jellyfin metrics scrape down: {{ $labels.service }} (media)"
+            dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            description: |-
+              Prometheus cannot scrape {{ $labels.service }} in media for 15+ minutes.
+              Jellyfin may still serve users; monitoring and Grafana panels will be stale or empty.
+              Confirm ServiceMonitors and targets: up{namespace="media", service=~"jellyfin.*"}
+
+        - alert: HomelabJellyfinPendingRestart
+          expr: jellyfin_system_pending_restart{namespace="media"} == 1
+          for: 10m
+          labels:
+            severity: warning
+            homelab_team: media
+          annotations:
+            summary: "Jellyfin pending restart (media)"
+            dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            description: |-
+              Jellyfin has reported a pending restart for 10+ minutes (plugin update, config change, or failed graceful restart).
+              Finish the restart from Dashboard → Administration, or recycle the pod after saving work:
+              kubectl get helmrelease jellyfin -n media
+
+        - alert: HomelabJellyfinExporterCollectorFailed
+          expr: |
+            jellyfin_scrape_collector_success{namespace="media", collector!="activity"} == 0
+          for: 15m
+          labels:
+            severity: warning
+            homelab_team: media
+          annotations:
+            summary: "Jellyfin exporter collector failing: {{ $labels.collector }} (media)"
+            dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            description: |-
+              jellyfin-exporter collector {{ $labels.collector }} has failed for 15+ minutes (Jellyfin API or plugin error).
+              The activity collector is excluded — it stays failed until Playback Reporting loads on a matching Jellyfin version.
+              Check exporter logs: kubectl logs -n media deploy/jellyfin-exporter-app-template --tail=100
+
+        - alert: HomelabJellyfinUserLocked
+          expr: jellyfin_user_account{namespace="media", admin="0"} == 0
+          for: 5m
+          labels:
+            severity: warning
+            homelab_team: media
+          annotations:
+            summary: "Jellyfin user locked or disabled: {{ $labels.username }} (media)"
+            dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            description: |-
+              User {{ $labels.username }} (id {{ $labels.user_id }}) has Policy.IsDisabled=true for 5+ minutes.
+              Jellyfin sets this on automatic lockout after failed login attempts; an admin may also have disabled the account manually.
+              Unlock: Dashboard → Users → {{ $labels.username }} → Additional options → uncheck "Disable this user" → Save.
+              Lockouts also appear on the admin Dashboard activity feed.
