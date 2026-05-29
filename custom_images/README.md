@@ -42,6 +42,8 @@ Push custom_images/<name>/  →  CI bumps VERSION (patch)  →  GHCR tag 1.0.5
 3. **Cluster pins** — TrueCharts `tag: 1.1.4@sha256:…` in `helm-release.yaml`, or `image: …:1.0.0@sha256:…` in `deployment.yaml`, each with a `# renovate: datasource=docker depName=…` comment.
 4. **Renovate** (`.github/renovate.json5` regex manager) queries GHCR and opens PRs to bump tag + digest. Merge → Flux reconciles.
 
+   If Renovate shows empty `releases` for GHCR deps, see [`.github/RENOVATE-GHCR.md`](../.github/RENOVATE-GHCR.md).
+
 GHCR also gets `main-<sha>` and `latest` (on `main`); cluster pins should always use the semver@sha256 form above.
 
 ## Adding a New Custom Image

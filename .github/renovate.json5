@@ -44,14 +44,13 @@
   ],
   "packageRules": [
     {
-      "description": "Homelab GHCR — only bare semver tags from CI (1.0.1), never v-prefixed",
+      "description": "Homelab GHCR custom images — semver tags only (ignore main-*, latest, calver)",
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/nerddotdad/hermes-homelab",
         "ghcr.io/nerddotdad/homelab-alert-bridge",
         "ghcr.io/nerddotdad/homelab-docs"
       ],
-      "versionCompatibility": "^\\d+\\.\\d+\\.\\d+$",
       "versioning": "semver"
     },
     {
