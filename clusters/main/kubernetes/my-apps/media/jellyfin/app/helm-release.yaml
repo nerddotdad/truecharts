@@ -42,26 +42,11 @@ spec:
     workload:
       main:
         podSpec:
-          # Remove stale .jellyfin-data marker from /config (Jellyfin 10.9+ expects only .jellyfin-config there)
-          initContainers:
-            remove-data-marker:
-              enabled: true
-              type: init
-              image: docker.io/library/alpine:3.23
-              command:
-                - /bin/sh
-                - -c
-                - "rm -f /config/.jellyfin-data && echo 'Cleaned stale .jellyfin-data marker from /config'"
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
-          # runtimeClassName: "intel-gpu"
           containers:
             main:
               env:
                 # Data lives under /config on the local PVC
                 JELLYFIN_DATA_DIR: "/config/data"
-                # Jellyfin 10.11.x: EnableMetrics must be true in /config/system.xml on the PVC.
               probes:
                 startup:
                   enabled: true
