@@ -92,14 +92,16 @@ image:
   tag: 1.0.0@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
-Use the TrueCharts-style `semver@sha256:…` pin (not bare semver or `latest`). Renovate updates both the semver and digest when CI publishes a new GHCR tag.
+Use the TrueCharts-style `semver@sha256:…` pin (not bare semver or `latest`).
 
 ### Updating Image Versions
 
 1. Make your changes to the Dockerfile or source files
-2. Commit and push to `main` — the build workflow auto-bumps the semver tag pushed to GHCR (patch) unless you edited `VERSION` in the same commit
-3. **Renovate** opens PRs updating pinned `tag:` / `image:` in cluster manifests and `custom_images/*/VERSION` (see `.github/renovate.json5`)
-4. After Renovate PRs merge (automerge is enabled), Flux reconciles and pulls the new semver tag
+2. Commit and push to `main` — **Build Custom Docker Images** publishes the new semver tag to GHCR (patch bump unless you edited `VERSION` in the same commit)
+3. **sync-custom-image-tags** opens a PR updating `custom_images/*/VERSION` and cluster manifest pins (see `.github/workflows/sync-custom-image-tags.yml`)
+4. Merge that PR — Flux reconciles and pulls the new image
+
+Renovate is disabled for `ghcr.io/nerddotdad/*` custom images so it does not fight this CI flow (see `.github/RENOVATE-GHCR.md`).
 
 Helm/deploy manifests use semver@sha256 pins plus Renovate annotations, for example:
 

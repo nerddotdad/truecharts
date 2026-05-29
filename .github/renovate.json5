@@ -1,6 +1,3 @@
-// Custom images: Renovate opens PRs when a new semver tag appears on GHCR.
-// Maps to scripts/custom_image_manifest_map.yaml — only those three manifests are scanned.
-// Setup: .github/RENOVATE-GHCR.md (PAT hostRule if PRs stay errored).
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
@@ -20,68 +17,34 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Custom GHCR — HelmRelease image.tag (hermes-homelab, homelab-docs)",
-      "managerFilePatterns": [
-        "/clusters/main/kubernetes/my-apps/ai/hermes-oncall/app/helm-release\\.yaml/",
-        "/clusters/main/kubernetes/my-apps/dashboards/homelab-docs/app/helm-release\\.yaml/"
-      ],
+      "description": "Homelab custom GHCR images — HelmRelease values.image.tag (semver@sha256 digest pin)",
+      "managerFilePatterns": ["clusters/**/helm-release.yaml"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+tag:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-f0-9]{64})"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "{{depName}}",
-      "versioningTemplate": "semver",
-      "autoReplaceStringTemplate": "{{newValue}}@sha256:{{newDigest}}"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+tag:\\s*[\"']?(?<currentValue>[^@\"'\\s#]+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})[\"']?"
+      ]
     },
     {
       "customType": "regex",
-      "description": "Custom GHCR — Deployment image (homelab-alert-bridge)",
-      "managerFilePatterns": [
-        "/clusters/main/kubernetes/my-apps/observability/homelab-alert-bridge/app/deployment\\.yaml/"
-      ],
+      "description": "Homelab custom GHCR images — Deployment container image (semver@sha256 digest pin)",
+      "managerFilePatterns": ["clusters/**/deployment.yaml"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+image:\\s*[^:]+:(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-f0-9]{64})"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "{{depName}}",
-      "versioningTemplate": "semver",
-      "autoReplaceStringTemplate": "{{depName}}:{{newValue}}@sha256:{{newDigest}}"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+image:\\s*[^:]+:(?<currentValue>[^@\\s#]+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
+      ]
     }
   ],
   "packageRules": [
     {
-      "description": "Custom GHCR — no digest-only PRs when CI rebuilds the same semver tag",
+      "description": "Custom GHCR images — bumped by CI (build-custom-images / build-homelab-docs → sync-custom-image-tags PR)",
       "matchDatasources": ["docker"],
-      "matchManagers": ["regex"],
       "matchPackageNames": [
         "ghcr.io/nerddotdad/hermes-homelab",
         "ghcr.io/nerddotdad/homelab-alert-bridge",
         "ghcr.io/nerddotdad/homelab-docs"
       ],
-      "matchUpdateTypes": ["digest"],
       "enabled": false
     },
     {
-      "description": "Custom GHCR — semver version bumps with digest on the new tag",
-      "matchDatasources": ["docker"],
-      "matchManagers": ["regex"],
-      "matchPackageNames": [
-        "ghcr.io/nerddotdad/hermes-homelab",
-        "ghcr.io/nerddotdad/homelab-alert-bridge",
-        "ghcr.io/nerddotdad/homelab-docs"
-      ],
-      "matchUpdateTypes": ["patch", "minor", "major"],
-      "versioning": "semver",
-      "pinDigests": true,
-      "rangeStrategy": "replace",
-      "automerge": true,
-      "automergeType": "pr",
-      "labels": ["dependencies", "custom-images"],
-      "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "to {{newVersion}}"
-    },
-    {
-      "description": "Talos/kubelet — manual approval",
+      "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",
       "matchPackageNames": [
         "ghcr.io/siderolabs/kubelet",
         "ghcr.io/siderolabs/installer"
