@@ -38,7 +38,7 @@ The **Hermes gateway daemon** must run alongside WebUI in Docker. Upstream docum
 | `my-apps/observability/homelab-alert-bridge/` | Webhook store + proxy + `/homelab/api` ingress |
 | `custom_images/hermes-homelab/` | WebUI image + kubectl/flux + homelab skills |
 | `custom_images/homelab-alert-bridge/` | Incident bridge image |
-| `alertmanager-ntfy/app/configmap.yaml` | **Ask AI** `X-Actions` button |
+| `alertmanager-ntfy/app/configmap.yaml` | **Ask AI** `view` action (URL with `incident_id` + `token`; restart `alertmanager-ntfy` after edits) |
 
 ## Image versions (CI PR)
 

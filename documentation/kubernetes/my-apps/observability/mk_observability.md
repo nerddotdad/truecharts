@@ -72,7 +72,7 @@ Self-hosted **ntfy** runs in this namespace (`ntfy/app/helm-release.yaml`).
 | Action | Header | Opens |
 |--------|--------|--------|
 | Tap notification | `X-Click` | `https://ntfy.<domain>/homelab-alerts` (topic in the ntfy app) |
-| **Ask AI** button | `X-Actions` | `POST https://hermes.<domain>/homelab/triage` → bridge → Hermes webhook ([Hermes on-call](mk_hermes-oncall.md)) |
+| **Ask AI** button | `X-Actions` (`view`, not `http` — mobile ntfy often skips HTTP actions) | Opens `https://hermes.<domain>/homelab/triage?incident_id=…&token=…` → bridge → Hermes webhook ([Hermes on-call](mk_hermes-oncall.md)) |
 | **Runbook** button | `X-Actions` | `runbook_url` annotation, else [prometheus-operator runbooks](https://runbooks.prometheus-operator.dev/) |
 | **Alert** button | `X-Actions` | Grafana Alerting list filtered by `alertname` |
 | **Dashboard** button | `X-Actions` | Only when the rule sets `dashboard_url` (homelab rules) |

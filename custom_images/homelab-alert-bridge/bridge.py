@@ -220,6 +220,18 @@ class Handler(BaseHTTPRequestHandler):
         if status >= 400:
             self._json(status if status != 502 else 502, {"error": "hermes webhook failed", "detail": detail})
             return
+        if self.command == "GET" and "text/html" in (self.headers.get("Accept") or ""):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            page = (
+                f"<!DOCTYPE html><html><body>"
+                f"<p>Triage started for incident <code>{incident_id}</code>. "
+                f"You can close this tab and check Hermes.</p></body></html>"
+            ).encode("utf-8")
+            self.send_header("Content-Length", str(len(page)))
+            self.end_headers()
+            self.wfile.write(page)
+            return
         self._json(200, {"ok": True, "incident_id": incident_id, "hermes": detail})
 
     def do_POST(self) -> None:
