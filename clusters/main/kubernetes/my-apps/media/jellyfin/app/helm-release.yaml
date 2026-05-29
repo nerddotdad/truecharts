@@ -61,8 +61,26 @@ spec:
               env:
                 # Data lives under /config on the local PVC
                 JELLYFIN_DATA_DIR: "/config/data"
-                # Jellyfin 10.11.x (TrueCharts 23.3.2): EnableMetrics must be true in /config/system.xml
-                # on the PVC — env overrides for metrics are not wired in this server version yet.
+                # Jellyfin 10.11.x: EnableMetrics must be true in /config/system.xml on the PVC.
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8096
+                  path: /health
+                  initialDelaySeconds: 20
+                  periodSeconds: 5
+                  failureThreshold: 60
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8096
+                  path: /health
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8096
+                  path: /health
               resources:
                 requests:
                   cpu: 250m

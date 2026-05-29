@@ -4,4 +4,5 @@ resources:
   - namespace.yaml
   - immich/ks.yaml
   - jellyfin/ks.yaml
+  - jellyfin-exporter/ks.yaml
   - owncast/ks.yaml

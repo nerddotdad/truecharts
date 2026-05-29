@@ -1,0 +1,94 @@
+# Jellyfin library/session metrics via rebelcore/jellyfin-exporter (published Docker Hub image).
+# Complements built-in Jellyfin ASP.NET /metrics on the main jellyfin chart.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyfin-exporter
+  namespace: media
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.6.4
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: docker.io/rebelcore/jellyfin-exporter
+      pullPolicy: IfNotPresent
+      # renovate: datasource=docker depName=rebelcore/jellyfin-exporter
+      tag: v1.5.1
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              env:
+                JELLYFIN_ADDRESS: http://jellyfin.media.svc.cluster.local:8096
+                JELLYFIN_TOKEN: "${HP_JELLYFIN}"
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 9594
+                  path: /metrics
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+                  failureThreshold: 12
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 9594
+                  path: /metrics
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 9594
+                  path: /metrics
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 9594
+            protocol: tcp
+            targetPort: 9594
+
+    metrics:
+      main:
+        enabled: true
+
+    ingress:
+      main:
+        enabled: false

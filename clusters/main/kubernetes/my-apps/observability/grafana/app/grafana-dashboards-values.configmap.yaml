@@ -38,3 +38,11 @@ data:
           marketplace:
             id: 13407
             revision: 2
+        jellyfin-rebelcore:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS}
+              value: Prometheus
+          url: https://raw.githubusercontent.com/rebelcore/jellyfin_grafana/master/dashboards/jellyfin.json
