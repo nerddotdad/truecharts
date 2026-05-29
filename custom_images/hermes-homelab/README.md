@@ -10,7 +10,7 @@ Extends [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui) for ho
 
 Built by **Build Custom Docker Images** on push to `custom_images/hermes-homelab/`.
 
-- **CI** ([PaulHatch/semantic-version](https://github.com/PaulHatch/semantic-version)) assigns semver from git tags `x.y.z-hermes-homelab` and pushes to GHCR (patch bump each build on `main`)
-- **Renovate** updates `hermes-oncall/app/helm-release.yaml` when a newer tag appears on GHCR
+- **`VERSION`** + CI publish `x.y.z` to GHCR (auto patch bump when you did not edit `VERSION` in the commit)
+- **Renovate** updates `hermes-oncall/app/helm-release.yaml` (`tag: x.y.z@sha256:…`) when a newer tag is on GHCR
 
 Deploy: `clusters/main/kubernetes/my-apps/ai/hermes-oncall/`

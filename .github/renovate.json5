@@ -17,22 +17,43 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Homelab custom GHCR images — HelmRelease values.image.tag (semver@sha256 digest pin)",
+      "description": "Homelab GHCR — TrueCharts HelmRelease image.tag (semver@sha256)",
       "managerFilePatterns": ["clusters/**/helm-release.yaml"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver",
+      "matchStringsStrategy": "combination",
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+tag:\\s*[\"']?(?<currentValue>[^@\"'\\s#]+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})[\"']?"
-      ]
+        "# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)",
+        "tag:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
+      ],
+      "autoReplaceStringTemplate": "{{{newValue}}}@sha256:{{{newDigest}}}"
     },
     {
       "customType": "regex",
-      "description": "Homelab custom GHCR images — Deployment container image (semver@sha256 digest pin)",
+      "description": "Homelab GHCR — Deployment image (semver@sha256)",
       "managerFilePatterns": ["clusters/**/deployment.yaml"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver",
+      "matchStringsStrategy": "combination",
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)\\s+image:\\s*[^:]+:(?<currentValue>[^@\\s#]+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
-      ]
+        "# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)",
+        "image:\\s*[^:]+:(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})"
+      ],
+      "autoReplaceStringTemplate": "{{{newValue}}}@sha256:{{{newDigest}}}"
     }
   ],
   "packageRules": [
+    {
+      "description": "Homelab GHCR — only bare semver tags from CI (1.0.1), never v-prefixed",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/nerddotdad/hermes-homelab",
+        "ghcr.io/nerddotdad/homelab-alert-bridge",
+        "ghcr.io/nerddotdad/homelab-docs"
+      ],
+      "versionCompatibility": "^\\d+\\.\\d+\\.\\d+$",
+      "versioning": "semver"
+    },
     {
       "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",
       "matchPackageNames": [

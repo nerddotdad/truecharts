@@ -9,4 +9,4 @@ PVC: `/data/incidents` (14-day retention policy can be added later).
 
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 
-CI semver tags (`x.y.z-homelab-alert-bridge` via **PaulHatch/semantic-version**); **Renovate** updates `homelab-alert-bridge/app/deployment.yaml` when a newer tag is published.
+**`VERSION`** drives GHCR tag `x.y.z`; **Renovate** updates `homelab-alert-bridge/app/deployment.yaml` (`image: …:x.y.z@sha256:…`) when a newer tag is on GHCR.

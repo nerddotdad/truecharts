@@ -30,41 +30,26 @@ Images are automatically built and pushed to GitHub Container Registry (GHCR) wh
 
 Images are pushed to: `ghcr.io/nerddotdad/<image-name>`
 
-### Image Versioning
+### Image versioning and Renovate (standard flow)
 
-CI uses **[PaulHatch/semantic-version](https://github.com/PaulHatch/semantic-version)** per image:
-
-- Git tags: `{major}.{minor}.{patch}-{image-name}` (e.g. `1.1.4-hermes-homelab`)
-- Each successful build on `main` bumps the **patch** (`bump_each_commit`)
-- For **minor** / **major** bumps, adjust `bump_each_commit` in the workflow and use conventional commits (`feat:`, `BREAKING CHANGE:`, etc.)
-
-Docker image tags on GHCR:
-
-1. **Semantic version** (primary) — e.g. `1.1.4` — use in Helm/deploy pins via Renovate
-2. **SHA-based** — `main-<sha>`
-3. **`latest`** on `main` only
-
-### One-time baseline tags (after removing `VERSION` files)
-
-If an image already exists on GHCR, seed git tags once so the next CI build does not restart from `0.0.x`:
-
-```bash
-git tag 1.1.3-hermes-homelab
-git tag 1.1.0-homelab-alert-bridge
-git tag 1.0.12-homelab-docs
-git tag 1.0.23-styletts2
-git tag 1.0.4-bark
-git push origin --tags
+```text
+Push custom_images/<name>/  →  CI bumps VERSION (patch)  →  GHCR tag 1.0.5
+                           →  Renovate PR updates cluster pin  →  Flux deploys
 ```
 
-Adjust versions to match what is currently on GHCR.
+1. **`custom_images/<name>/VERSION`** — semver source of truth (`1.1.4`). Edit this file yourself for **minor/major** releases.
+2. **CI** (`docker/metadata-action`) pushes `ghcr.io/nerddotdad/<name>:<VERSION>` on each build. If you did not change `VERSION` in the commit, CI auto-increments **patch** and commits `VERSION` back with `[skip ci]`.
+3. **Cluster pins** — TrueCharts `tag: 1.1.4@sha256:…` in `helm-release.yaml`, or `image: …:1.0.0@sha256:…` in `deployment.yaml`, each with a `# renovate: datasource=docker depName=…` comment.
+4. **Renovate** (`.github/renovate.json5` regex manager) queries GHCR and opens PRs to bump tag + digest. Merge → Flux reconciles.
+
+GHCR also gets `main-<sha>` and `latest` (on `main`); cluster pins should always use the semver@sha256 form above.
 
 ## Adding a New Custom Image
 
 1. Create a new directory: `custom_images/my-new-image/`
 2. Add your `Dockerfile` and any required files
 3. Optionally add a `README.md` with build/usage instructions
-4. Commit and push — the first build creates `0.0.1-my-new-image` (or seed `1.0.0-my-new-image` before the first push if you prefer)
+4. Add `echo "1.0.0" > custom_images/my-new-image/VERSION` and push — CI builds `1.0.0`, then Renovate can pin it in the cluster
 
 ## Using Images in Kubernetes
 

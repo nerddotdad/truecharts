@@ -62,5 +62,5 @@ data:
               {{- $grafanaAlert := printf "https://grafana.${DOMAIN_0}/alerting/list?search=%s" .Labels.alertname -}}
               {{- $incident := or .Fingerprint (printf "%s-%s" .Labels.alertname .Labels.namespace) -}}
               {{- $triageBody := printf "{\"incident_id\":\"%s\"}" $incident -}}
-              http, Ask AI, https://hermes.${DOMAIN_0}/homelab/triage, method=POST, headers.Authorization=Bearer ${HERMES_ALERT_TRIAGE_SECRET}, body={{ $triageBody }}; view, Runbook, {{ $runbook }}; view, Alert, {{ $grafanaAlert }}{{- with index .Annotations "dashboard_url" }}; view, Dashboard, {{ . }}{{- end }}
+              http, Ask AI, https://hermes.${DOMAIN_0}/homelab/triage, method=POST, headers.Authorization=Bearer ${HERMES_ALERT_TRIAGE_SECRET}, body='{{ $triageBody }}'; view, Runbook, {{ $runbook }}; view, Alert, {{ $grafanaAlert }}{{- with index .Annotations "dashboard_url" }}; view, Dashboard, {{ . }}{{- end }}
         async: false

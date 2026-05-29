@@ -12,6 +12,8 @@ on:
       - 'scripts/helmrelease_docs.py'
       - 'scripts/runbook_index.py'
       - 'custom_images/homelab-docs/**'
+    paths-ignore:
+      - 'custom_images/homelab-docs/VERSION'
     branches:
       - main
   workflow_dispatch:
@@ -31,16 +33,29 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine semver
-        id: semver
-        uses: PaulHatch/semantic-version@a8f8f59fd7f0625188492e945240f12d7ad2dca3 # v5.4.0
-        with:
-          tag_prefix: ""
-          namespace: ${{ env.IMAGE_NAME }}
-          change_path: "custom_images/homelab-docs documentation mkdocs scripts"
-          bump_each_commit: true
-          enable_prerelease_mode: true
+      - name: Resolve and bump VERSION
+        id: version
+        run: |
+          set -euo pipefail
+          vf="custom_images/${{ env.IMAGE_NAME }}/VERSION"
+          if [ ! -f "$vf" ]; then
+            echo "1.0.0" > "$vf"
+          fi
+          ver=$(tr -d '[:space:]' < "$vf")
+          version_changed=false
+          if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- "$vf" | grep -q .; then
+              version_changed=true
+            fi
+          fi
+          if [ "$version_changed" = false ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            IFS=. read -r ma mi pa <<< "$ver"
+            ver="${ma}.${mi}.$((pa + 1))"
+            echo "$ver" > "$vf"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
@@ -56,7 +71,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.semver.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -72,27 +87,23 @@ jobs:
             MKDOCS_SITE_URL=${{ vars.DOCS_SITE_URL || 'https://docs.example.com' }}
             DOCS_BUILD_SHA=${{ github.sha }}
             DOCS_BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
-            DOCS_IMAGE_VERSION=${{ steps.semver.outputs.version }}
+            DOCS_IMAGE_VERSION=${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Push version git tag
+      - name: Commit VERSION file
         run: |
           set -euo pipefail
+          vf="custom_images/${{ env.IMAGE_NAME }}/VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          TAG="${{ steps.semver.outputs.version_tag }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists; skipping git tag push"
-            exit 0
-          fi
-          git tag "$TAG" "${{ github.sha }}"
-          git push origin "$TAG"
+          git add "$vf"
+          git diff --staged --quiet || git commit -m "chore(custom_images): bump homelab-docs to ${{ steps.version.outputs.version }} [skip ci]"
+          git diff --staged --quiet || git push
 
       - name: Summary
         run: |
-          echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.semver.outputs.version }}"
-          echo "Git tag: ${{ steps.semver.outputs.version_tag }}"
+          echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
           echo "Digest: ${{ steps.meta.outputs.digest }}"
-          echo "Renovate will open a PR to bump the homelab-docs HelmRelease pin when it detects the new tag on GHCR."
+          echo "Renovate will open a PR updating homelab-docs HelmRelease pin."

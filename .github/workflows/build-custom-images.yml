@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'custom_images/**'
+    paths-ignore:
+      - 'custom_images/**/VERSION'
     branches:
       - main
   workflow_dispatch:
@@ -97,16 +99,30 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine semver
-        id: semver
-        uses: PaulHatch/semantic-version@a8f8f59fd7f0625188492e945240f12d7ad2dca3 # v5.4.0
-        with:
-          tag_prefix: ""
-          namespace: ${{ matrix.image }}
-          change_path: custom_images/${{ matrix.image }}
-          bump_each_commit: true
-          enable_prerelease_mode: true
+      - name: Resolve and bump VERSION
+        id: version
+        run: |
+          set -euo pipefail
+          vf="custom_images/${{ matrix.image }}/VERSION"
+          if [ ! -f "$vf" ]; then
+            echo "1.0.0" > "$vf"
+          fi
+          ver=$(tr -d '[:space:]' < "$vf")
+          version_changed=false
+          if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- "$vf" | grep -q .; then
+              version_changed=true
+            fi
+          fi
+          if [ "$version_changed" = false ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            IFS=. read -r ma mi pa <<< "$ver"
+            ver="${ma}.${mi}.$((pa + 1))"
+            echo "$ver" > "$vf"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${{ matrix.image }}:$ver"
 
       - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
@@ -122,7 +138,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
           tags: |
-            type=raw,value=${{ steps.semver.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -137,22 +153,21 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Push version git tag
+      - name: Commit VERSION file
         run: |
           set -euo pipefail
+          vf="custom_images/${{ matrix.image }}/VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          TAG="${{ steps.semver.outputs.version_tag }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists; skipping git tag push"
+          git add "$vf"
+          if git diff --staged --quiet; then
             exit 0
           fi
-          git tag "$TAG" "${{ github.sha }}"
-          git push origin "$TAG"
+          git commit -m "chore(custom_images): bump ${{ matrix.image }} to ${{ steps.version.outputs.version }} [skip ci]"
+          git push
 
       - name: Summary
         run: |
-          echo "Published ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ steps.semver.outputs.version }}"
-          echo "Git tag: ${{ steps.semver.outputs.version_tag }}"
+          echo "Published ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ steps.version.outputs.version }}"
           echo "Digest: ${{ steps.meta.outputs.digest }}"
-          echo "Renovate will open a PR to bump cluster image pins when it detects the new tag on GHCR."
+          echo "Renovate will open a PR updating cluster pins (helm-release.yaml / deployment.yaml)."
