@@ -18,14 +18,20 @@ metadata:
 rules:
   - apiGroups: [""]
     resources:
+      - nodes
+      - namespaces
       - pods
       - pods/log
       - events
       - services
       - endpoints
       - persistentvolumeclaims
+      - persistentvolumes
       - configmaps
-      - secrets
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources:
