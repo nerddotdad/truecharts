@@ -57,8 +57,9 @@ spec:
     workload:
       main:
         podSpec:
-          # GitOps ServiceAccount (see rbac.yaml), not chart-generated.
-          overrideServiceAccountName: hermes-oncall
+          # GitOps SA + token mount (see rbac.yaml). TrueCharts defaults automount to false.
+          serviceAccountName: hermes-oncall
+          automountServiceAccountToken: true
           containers:
             main:
               enabled: true
