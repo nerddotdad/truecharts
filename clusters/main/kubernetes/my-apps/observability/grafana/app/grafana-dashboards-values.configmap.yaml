@@ -5,7 +5,9 @@ metadata:
   namespace: observability
 data:
   values.yaml: |
-    # Add dashboards under dashboards.grafana.<id> — see README in observability/.
+    # Add dashboards under dashboards.grafana.<id> — see mk_observability.md.
+    # After editing this ConfigMap, reconcile Grafana so the init container re-downloads JSON:
+    #   flux reconcile helmrelease grafana -n observability
     dashboards:
       grafana:
         node-exporter-1860:

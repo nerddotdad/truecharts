@@ -88,6 +88,9 @@ spec:
     metrics:
       main:
         enabled: true
+        endpoints:
+          - port: main
+            path: /metrics
 
     ingress:
       main:
