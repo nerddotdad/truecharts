@@ -34,7 +34,7 @@ spec:
     image:
       repository: ghcr.io/athombv/homey-shs
       pullPolicy: Always
-      tag: latestt
+      tag: latest
 
     securityContext:
       container:
