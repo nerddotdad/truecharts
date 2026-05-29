@@ -241,5 +241,5 @@ jobs:
           echo ""
           echo "Image version: ${{ steps.version.outputs.version }}"
           echo ""
-          echo "Renovate will open PRs to bump cluster image pins and custom_images/*/VERSION."
+          echo "Bump cluster pins: workflow_dispatch sync-custom-image-tags (image=${{ matrix.image }} version=${{ steps.version.outputs.version }} digest=${{ steps.meta.outputs.digest }})"
 

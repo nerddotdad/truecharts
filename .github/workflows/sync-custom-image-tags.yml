@@ -1,0 +1,54 @@
+# Bump cluster HelmRelease/Deployment pins after Build Custom Docker Images.
+# Renovate often cannot refresh ghcr.io digests without a PAT hostRule; this keeps GitOps in sync.
+name: Sync custom image tags
+
+on:
+  workflow_run:
+    workflows: [Build Custom Docker Images]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Image name (e.g. hermes-homelab)
+        required: true
+        type: string
+      version:
+        description: Semver tag already pushed to GHCR
+        required: true
+        type: string
+      digest:
+        description: sha256 digest (with or without sha256: prefix)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  bump-from-dispatch:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-python@83679eac3693e33ee7130f3d0595075eae88e9e # v6
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Bump manifests
+        run: |
+          python scripts/bump_custom_image_manifest.py \
+            --image "${{ inputs.image }}" \
+            --version "${{ inputs.version }}" \
+            --digest "${{ inputs.digest }}"
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add clusters/
+          if git diff --staged --quiet; then
+            echo "No manifest changes"
+            exit 0
+          fi
+          git commit -m "chore(images): bump ${{ inputs.image }} to ${{ inputs.version }}"
+          git push

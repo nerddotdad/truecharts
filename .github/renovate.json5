@@ -31,23 +31,24 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image:\\s+[^:]+:(?<currentValue>[^@\\s#]+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})",
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+image:\\s+[^:]+:(?<currentValue>\\S+)"
       ]
-    },
-    {
-      "customType": "regex",
-      "description": "Homelab custom GHCR images — custom_images/*/VERSION semver pin",
-      "managerFilePatterns": ["/^custom_images/(?<packageName>[^/]+)/VERSION$/"],
-      "matchStrings": ["^(?<currentValue>\\d+\\.\\d+\\.\\d+)\\s*$"],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/nerddotdad/{{packageName}}"
     }
   ],
   "packageRules": [
     {
-      "description": "Homelab custom GHCR tags — published by build-custom-images / build-homelab-docs",
+      "description": "Alert pipeline test — fake chart/image; not a real dependency",
+      "matchFileNames": ["**/alert-test/**"],
+      "enabled": false
+    },
+    {
+      "description": "Homelab custom GHCR — semver bumps only (digest pins updated by CI or scripts/bump_custom_image_manifest.py)",
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/nerddotdad/**"],
+      "matchPackageNames": [
+        "ghcr.io/nerddotdad/hermes-homelab",
+        "ghcr.io/nerddotdad/homelab-alert-bridge",
+        "ghcr.io/nerddotdad/homelab-docs"
+      ],
       "versioning": "semver",
-      "pinDigests": true,
+      "pinDigests": false,
       "automerge": true,
       "automergeType": "pr",
       "labels": ["dependencies", "custom-images"]
