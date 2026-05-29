@@ -24,7 +24,7 @@ GitHub Actions only **builds** the image. **Serving** is your cluster: `app-temp
 ## Document freshness
 
 - Each page: **Last updated (Git)** (last commit for that `mk_*.md` or `helm-release.yaml`).
-- **Home → Site build info**: CI image build time, git SHA, and `VERSION` tag.
+- **Home → Site build info**: CI image build time, git SHA, and semver image tag.
 - Footer: same build metadata on every page.
 
 If ntfy **Runbook** links 404, confirm **Site build info** is newer than your runbook commit and roll `homelab-docs` if needed (`tag: latest` may require a pod restart to re-pull).
@@ -48,7 +48,7 @@ MKDOCS_SITE_URL=http://127.0.0.1:8000 .venv-mkdocs/bin/mkdocs serve -f mkdocs/mk
 | Path | Role |
 |------|------|
 | `Dockerfile` | `collect_mkdocs` + `mkdocs build` → nginx (no `.git` in CI context; uses `DOCS_BUILD_*` args) |
-| `VERSION` | Image tag bumped by CI |
+| Git tags `x.y.z-homelab-docs` | Semver tracked by CI (PaulHatch/semantic-version) |
 | `.github/workflows/build-homelab-docs.yml` | Build and push to GHCR (**repo root** Docker context) |
 | `.github/workflows/build-custom-images.yml` | Does **not** build this image (wrong context) |
 | `clusters/.../homelab-docs/app/helm-release.yaml` | app-template + ingress |

@@ -23,8 +23,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      bumps-json: ${{ steps.bumps-json.outputs.json }}
     permissions:
       contents: write
       packages: write
@@ -34,40 +32,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - name: Determine semver
+        id: semver
+        uses: PaulHatch/semantic-version@a8f8f59fd7f0625188492e945240f12d7ad2dca3 # v5.4.0
+        with:
+          tag_prefix: ""
+          namespace: ${{ env.IMAGE_NAME }}
+          change_path: "custom_images/homelab-docs documentation mkdocs scripts"
+          bump_each_commit: true
+          enable_prerelease_mode: true
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get and bump image version
-        id: version
-        run: |
-          VERSION_FILE="custom_images/${{ env.IMAGE_NAME }}/VERSION"
-          if [ -f "$VERSION_FILE" ]; then
-            CURRENT_VERSION=$(tr -d '[:space:]' < "$VERSION_FILE")
-            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-              VERSION_CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -q "^${VERSION_FILE}$" && echo yes || echo no)
-            else
-              VERSION_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^${VERSION_FILE}$" && echo yes || echo no)
-            fi
-            if [ "$VERSION_CHANGED" = "yes" ]; then
-              VERSION="$CURRENT_VERSION"
-            elif [[ $CURRENT_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
-              echo "$VERSION" > "$VERSION_FILE"
-            else
-              VERSION="$CURRENT_VERSION"
-            fi
-          else
-            VERSION=$(date +"%Y.%m.%d-%H%M")
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Image version: $VERSION"
 
       - name: Extract metadata
         id: meta
@@ -75,7 +56,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.semver.outputs.version }}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -91,35 +72,27 @@ jobs:
             MKDOCS_SITE_URL=${{ vars.DOCS_SITE_URL || 'https://docs.example.com' }}
             DOCS_BUILD_SHA=${{ github.sha }}
             DOCS_BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
-            DOCS_IMAGE_VERSION=${{ steps.version.outputs.version }}
+            DOCS_IMAGE_VERSION=${{ steps.semver.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Prepare bumps JSON for manifest sync
-        id: bumps-json
+      - name: Push version git tag
         run: |
-          jq -n \
-            --arg image "${{ env.IMAGE_NAME }}" \
-            --arg version "${{ steps.version.outputs.version }}" \
-            --arg digest "${{ steps.meta.outputs.digest }}" \
-            '[{image: $image, version: $version, digest: $digest}]' > bumps.json
-          echo "json<<EOF" >> "$GITHUB_OUTPUT"
-          cat bumps.json >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TAG="${{ steps.semver.outputs.version_tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists; skipping git tag push"
+            exit 0
+          fi
+          git tag "$TAG" "${{ github.sha }}"
+          git push origin "$TAG"
 
       - name: Summary
         run: |
-          echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}"
-          echo "Helm tag bump PR follows via sync-custom-image-tags workflow."
-
-  sync-manifests:
-    needs: build
-    if: needs.build.result == 'success'
-    permissions:
-      contents: write
-      pull-requests: write
-    uses: ./.github/workflows/sync-custom-image-tags.yml
-    with:
-      bumps-json: ${{ needs.build.outputs.bumps-json }}
-    secrets: inherit
+          echo "Published ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.semver.outputs.version }}"
+          echo "Git tag: ${{ steps.semver.outputs.version_tag }}"
+          echo "Digest: ${{ steps.meta.outputs.digest }}"
+          echo "Renovate will open a PR to bump the homelab-docs HelmRelease pin when it detects the new tag on GHCR."

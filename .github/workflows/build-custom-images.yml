@@ -25,112 +25,61 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 2  # Need at least 2 commits to compare changes
-      
-      - name: Debug workflow trigger
-        run: |
-          echo "Workflow triggered by: ${{ github.event_name }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "SHA: ${{ github.sha }}"
-          echo "Before SHA: ${{ github.event.before }}"
-          echo ""
-          echo "All custom_images directories:"
-          find custom_images -type d -mindepth 1 -maxdepth 1 2>/dev/null || echo "custom_images directory not found"
-          echo ""
-          echo "All Dockerfiles:"
-          find custom_images -name Dockerfile -type f 2>/dev/null || echo "No Dockerfiles found"
-      
+          fetch-depth: 2
+
       - name: Detect changed images
         id: changes
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Before SHA: ${{ github.event.before }}"
-          echo "Current SHA: ${{ github.sha }}"
-          
-          # homelab-docs Dockerfile needs repo-root context (clusters/, mkdocs/, scripts/).
-          # It is built only by .github/workflows/build-homelab-docs.yml — never here.
           skip_homelab_docs() {
-            if [ "$1" = "homelab-docs" ]; then
-              echo "Skipping homelab-docs (built by Build Homelab Docs workflow)"
-              return 0
-            fi
-            return 1
+            [ "$1" = "homelab-docs" ]
           }
 
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.image }}" ]; then
               if skip_homelab_docs "${{ github.event.inputs.image }}"; then
                 IMAGES="[]"
               else
                 IMAGES="[\"${{ github.event.inputs.image }}\"]"
               fi
-              echo "images=$IMAGES" >> $GITHUB_OUTPUT
             else
-              # Find all directories with Dockerfile (except homelab-docs)
               IMAGES=$(find custom_images -name Dockerfile -type f \
                 | sed 's|custom_images/||' | sed 's|/Dockerfile||' \
                 | grep -vx 'homelab-docs' \
                 | jq -R . | jq -s -c .)
-              echo "images=$IMAGES" >> $GITHUB_OUTPUT
             fi
-          else
-            # For push events, detect which images changed
-            # Since workflow only triggers on custom_images/** path changes, we know something changed
-            CHANGED=""
-            
-            # Try to get the previous commit for comparison
-            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-              echo "Comparing ${{ github.event.before }}..${{ github.sha }}"
-              # Only paths under custom_images/<image>/ (ignore custom_images/README.md etc.)
-              CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-                | grep -E '^custom_images/[^/]+/' || true)
-            else
-              echo "No before SHA, comparing HEAD~1..HEAD"
-              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
-                | grep -E '^custom_images/[^/]+/' || true)
-            fi
-            
-            echo "Changed files under custom_images/<image>/:"
-            echo "$CHANGED_FILES"
-            
-            if [ -n "$CHANGED_FILES" ]; then
-              CHANGED=$(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u)
-              
-              # Filter to only directories that have a Dockerfile
-              VALID_IMAGES=""
-              for img in $CHANGED; do
-                if skip_homelab_docs "$img"; then
-                  continue
-                fi
-                if [ -f "custom_images/$img/Dockerfile" ]; then
-                  if [ -z "$VALID_IMAGES" ]; then
-                    VALID_IMAGES="$img"
-                  else
-                    VALID_IMAGES="$VALID_IMAGES"$'\n'"$img"
-                  fi
-                fi
-              done
-              
-              if [ -n "$VALID_IMAGES" ]; then
-                CHANGED="$VALID_IMAGES"
-              else
-                CHANGED=""
-              fi
-            fi
-            
-            if [ -n "$CHANGED" ]; then
-              echo "Changed images:"
-              echo "$CHANGED"
-              IMAGES=$(echo "$CHANGED" | jq -R . | jq -s -c .)
-            else
-              echo "No image directories changed (root-only edits like custom_images/README.md do not trigger builds)."
-              echo "To rebuild one image manually: Actions → Build Custom Docker Images → Run workflow → image name."
-              IMAGES="[]"
-            fi
-            echo "images=$IMAGES" >> $GITHUB_OUTPUT
+            echo "images=$IMAGES" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          echo "Images to build: $IMAGES"
+
+          CHANGED=""
+          if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            CHANGED_FILES=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+              | grep -E '^custom_images/[^/]+/' || true)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+              | grep -E '^custom_images/[^/]+/' || true)
+          fi
+
+          if [ -n "$CHANGED_FILES" ]; then
+            VALID_IMAGES=""
+            for img in $(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u); do
+              if skip_homelab_docs "$img"; then
+                continue
+              fi
+              if [ -f "custom_images/$img/Dockerfile" ]; then
+                VALID_IMAGES="${VALID_IMAGES}${VALID_IMAGES:+$'\n'}$img"
+              fi
+            done
+            CHANGED="$VALID_IMAGES"
+          fi
+
+          if [ -n "$CHANGED" ]; then
+            IMAGES=$(echo "$CHANGED" | jq -R . | jq -s -c .)
+          else
+            echo "No image directories changed. Use workflow_dispatch to rebuild."
+            IMAGES="[]"
+          fi
+          echo "images=$IMAGES" >> "$GITHUB_OUTPUT"
 
   build:
     needs: detect-changes
@@ -141,76 +90,31 @@ jobs:
       matrix:
         image: ${{ fromJson(needs.detect-changes.outputs.images) }}
     permissions:
-      contents: write  # Need write to commit VERSION file updates
+      contents: write
       packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # Need full history for git operations
+          fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - name: Determine semver
+        id: semver
+        uses: PaulHatch/semantic-version@a8f8f59fd7f0625188492e945240f12d7ad2dca3 # v5.4.0
+        with:
+          tag_prefix: ""
+          namespace: ${{ matrix.image }}
+          change_path: custom_images/${{ matrix.image }}
+          bump_each_commit: true
+          enable_prerelease_mode: true
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get and bump image version
-        id: version
-        run: |
-          VERSION_FILE="custom_images/${{ matrix.image }}/VERSION"
-          
-          # Check if VERSION file exists
-          if [ -f "$VERSION_FILE" ]; then
-            CURRENT_VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
-            echo "Current version in file: $CURRENT_VERSION"
-            
-            # Check if VERSION file was changed in this commit
-            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-              VERSION_CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^$VERSION_FILE$" && echo "yes" || echo "no")
-            else
-              VERSION_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^$VERSION_FILE$" && echo "yes" || echo "no")
-            fi
-            
-            if [ "$VERSION_CHANGED" = "yes" ]; then
-              # VERSION file was manually updated, use that version
-              VERSION="$CURRENT_VERSION"
-              echo "VERSION file was manually updated, using: $VERSION"
-            else
-              # Auto-bump patch version
-              echo "VERSION file unchanged, auto-bumping patch version..."
-              # Extract major.minor.patch
-              if [[ $CURRENT_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-                MAJOR="${BASH_REMATCH[1]}"
-                MINOR="${BASH_REMATCH[2]}"
-                PATCH="${BASH_REMATCH[3]}"
-                NEW_PATCH=$((PATCH + 1))
-                VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-                echo "Bumped version: $CURRENT_VERSION -> $VERSION"
-                
-                # Update VERSION file
-                echo "$VERSION" > "$VERSION_FILE"
-                echo "Updated $VERSION_FILE with new version"
-              else
-                # Version format doesn't match semantic versioning, use as-is
-                VERSION="$CURRENT_VERSION"
-                echo "Version format doesn't match semantic versioning, using as-is: $VERSION"
-              fi
-            fi
-          else
-            # No VERSION file, use date-based versioning
-            VERSION=$(date +"%Y.%m.%d-%H%M")
-            echo "No VERSION file found, using date-based version: $VERSION"
-          fi
-          
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Final image version: $VERSION"
 
       - name: Extract metadata (tags, labels)
         id: meta
@@ -218,7 +122,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
           tags: |
-            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.semver.outputs.version }}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -233,68 +137,22 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-      - name: Record built version for manifest sync
+      - name: Push version git tag
         run: |
-          mkdir -p bump-manifests
-          jq -n \
-            --arg image "${{ matrix.image }}" \
-            --arg version "${{ steps.version.outputs.version }}" \
-            --arg digest "${{ steps.meta.outputs.digest }}" \
-            '{image: $image, version: $version, digest: $digest}' > "bump-manifests/${{ matrix.image }}.json"
-
-      - name: Upload version manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: bump-${{ matrix.image }}
-          path: bump-manifests/${{ matrix.image }}.json
-          retention-days: 1
-
-      - name: Image digest and tags
-        run: |
-          echo "Image pushed with digest: ${{ steps.meta.outputs.digest }}"
-          echo "Image tags:"
-          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
-          echo ""
-          echo "Image version: ${{ steps.version.outputs.version }}"
-          echo ""
-          echo "Cluster pins are updated via the sync-custom-image-tags PR job."
-
-  collect-bumps:
-    needs: build
-    if: needs.build.result == 'success'
-    runs-on: ubuntu-latest
-    outputs:
-      bumps-json: ${{ steps.bumps.outputs.json }}
-    steps:
-      - name: Download built version manifests
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: bump-*
-          merge-multiple: true
-          path: bump-manifests
-
-      - name: Collect bumps JSON
-        id: bumps
-        run: |
-          if [ ! -d bump-manifests ] || [ -z "$(find bump-manifests -name '*.json' -print -quit 2>/dev/null)" ]; then
-            echo "No bump artifacts found"
-            echo 'json=[]' >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TAG="${{ steps.semver.outputs.version_tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists; skipping git tag push"
             exit 0
           fi
-          json=$(jq -s '.' bump-manifests/*.json)
-          echo "Collected bumps: $json"
-          echo "json<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$json" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          git tag "$TAG" "${{ github.sha }}"
+          git push origin "$TAG"
 
-  sync-manifests:
-    needs: collect-bumps
-    if: needs.collect-bumps.outputs.bumps-json != '' && needs.collect-bumps.outputs.bumps-json != '[]'
-    permissions:
-      contents: write
-      pull-requests: write
-    uses: ./.github/workflows/sync-custom-image-tags.yml
-    with:
-      bumps-json: ${{ needs.collect-bumps.outputs.bumps-json }}
-    secrets: inherit
-
+      - name: Summary
+        run: |
+          echo "Published ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ steps.semver.outputs.version }}"
+          echo "Git tag: ${{ steps.semver.outputs.version_tag }}"
+          echo "Digest: ${{ steps.meta.outputs.digest }}"
+          echo "Renovate will open a PR to bump cluster image pins when it detects the new tag on GHCR."

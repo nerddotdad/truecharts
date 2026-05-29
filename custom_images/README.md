@@ -32,53 +32,39 @@ Images are pushed to: `ghcr.io/nerddotdad/<image-name>`
 
 ### Image Versioning
 
-Images are tagged with multiple tags:
+CI uses **[PaulHatch/semantic-version](https://github.com/PaulHatch/semantic-version)** per image:
 
-1. **Semantic Version** (primary tag) - From `VERSION` file or date-based
-   - If `custom_images/<image>/VERSION` exists, uses that version (e.g., `1.0.0`)
-   - Otherwise uses date-based versioning (e.g., `2025.01.14-1706`)
-   - **Use this tag in your Helm charts** to ensure Kubernetes pulls new images
+- Git tags: `{major}.{minor}.{patch}-{image-name}` (e.g. `1.1.4-hermes-homelab`)
+- Each successful build on `main` bumps the **patch** (`bump_each_commit`)
+- For **minor** / **major** bumps, adjust `bump_each_commit` in the workflow and use conventional commits (`feat:`, `BREAKING CHANGE:`, etc.)
 
-2. **SHA-based tag** - `main-<sha>` (e.g., `main-abc123def456`)
-   - Unique per commit, useful for tracking specific builds
+Docker image tags on GHCR:
 
-3. **Latest tag** - `latest` (only on main branch)
-   - Always points to the newest build, but Kubernetes won't auto-pull with `IfNotPresent` policy
+1. **Semantic version** (primary) — e.g. `1.1.4` — use in Helm/deploy pins via Renovate
+2. **SHA-based** — `main-<sha>`
+3. **`latest`** on `main` only
 
-**Example tags for styletts2:**
-- `ghcr.io/nerddotdad/styletts2:1.0.0` (semantic version - use this!)
-- `ghcr.io/nerddotdad/styletts2:main-abc123def456` (SHA-based)
-- `ghcr.io/nerddotdad/styletts2:latest` (always latest)
+### One-time baseline tags (after removing `VERSION` files)
 
-### GitHub Container Registry
+If an image already exists on GHCR, seed git tags once so the next CI build does not restart from `0.0.x`:
 
-GHCR is **free** for:
-- Public repositories (unlimited)
-- Private repositories (generous free tier)
+```bash
+git tag 1.1.3-hermes-homelab
+git tag 1.1.0-homelab-alert-bridge
+git tag 1.0.12-homelab-docs
+git tag 1.0.23-styletts2
+git tag 1.0.4-bark
+git push origin --tags
+```
 
-No authentication needed for public images. For private images, use a GitHub Personal Access Token with `read:packages` scope.
+Adjust versions to match what is currently on GHCR.
 
 ## Adding a New Custom Image
 
 1. Create a new directory: `custom_images/my-new-image/`
 2. Add your `Dockerfile` and any required files
-3. Optionally create a `VERSION` file with semantic version (e.g., `1.0.0`)
-   - If no `VERSION` file exists, date-based versioning will be used
-4. Optionally add a `README.md` with build/usage instructions
-5. Commit and push - the image will be built automatically
-
-### Versioning Your Image
-
-To use semantic versioning, create a `VERSION` file in your image directory:
-
-```bash
-echo "1.0.0" > custom_images/my-new-image/VERSION
-```
-
-When you make changes and want to release a new version, update the `VERSION` file:
-- Patch: `1.0.1` (bug fixes)
-- Minor: `1.1.0` (new features, backwards compatible)
-- Major: `2.0.0` (breaking changes)
+3. Optionally add a `README.md` with build/usage instructions
+4. Commit and push — the first build creates `0.0.1-my-new-image` (or seed `1.0.0-my-new-image` before the first push if you prefer)
 
 ## Using Images in Kubernetes
 
@@ -96,12 +82,9 @@ Use the TrueCharts-style `semver@sha256:…` pin (not bare semver or `latest`).
 
 ### Updating Image Versions
 
-1. Make your changes to the Dockerfile or source files
-2. Commit and push to `main` — **Build Custom Docker Images** publishes the new semver tag to GHCR (patch bump unless you edited `VERSION` in the same commit)
-3. **sync-custom-image-tags** opens a PR updating `custom_images/*/VERSION` and cluster manifest pins (see `.github/workflows/sync-custom-image-tags.yml`)
-4. Merge that PR — Flux reconciles and pulls the new image
-
-Renovate is disabled for `ghcr.io/nerddotdad/*` custom images so it does not fight this CI flow (see `.github/RENOVATE-GHCR.md`).
+1. Change Dockerfile/source and push to `main` — CI publishes the next semver tag to GHCR.
+2. **Renovate** opens a PR updating cluster pins (`helm-release.yaml` / `deployment.yaml`) to the new `semver@sha256:…` tag.
+3. Merge the Renovate PR — Flux reconciles and pulls the new image.
 
 Helm/deploy manifests use semver@sha256 pins plus Renovate annotations, for example:
 
@@ -121,25 +104,14 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: ghcr-secret
-  namespace: your-namespace
 type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: <base64-encoded-docker-config>
 ```
 
-Or use a GitHub Personal Access Token in your HelmRelease values.
+Reference it in your HelmRelease values as an image pull secret.
 
-## Manual Build
+## Workflow Files
 
-To build an image manually:
-
-```bash
-cd custom_images/styletts2
-docker build -t ghcr.io/nerddotdad/styletts2:latest .
-docker push ghcr.io/nerddotdad/styletts2:latest
-```
-
-## Current Images
-
-- **styletts2** - StyleTTS2 TTS API server with voice cloning support
-
+- `.github/workflows/build-custom-images.yml` — all images except `homelab-docs`
+- `.github/workflows/build-homelab-docs.yml` — docs site image (repo root context)

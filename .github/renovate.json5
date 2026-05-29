@@ -34,16 +34,6 @@
   ],
   "packageRules": [
     {
-      "description": "Custom GHCR images — bumped by CI (build-custom-images / build-homelab-docs → sync-custom-image-tags PR)",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "ghcr.io/nerddotdad/hermes-homelab",
-        "ghcr.io/nerddotdad/homelab-alert-bridge",
-        "ghcr.io/nerddotdad/homelab-docs"
-      ],
-      "enabled": false
-    },
-    {
       "description": "Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan",
       "matchPackageNames": [
         "ghcr.io/siderolabs/kubelet",

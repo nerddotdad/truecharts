@@ -42,7 +42,7 @@ The **Hermes gateway daemon** must run alongside WebUI in Docker. Upstream docum
 
 ## Image versions (CI PR)
 
-CI publishes semver tags to GHCR from `custom_images/*/VERSION`, then **Renovate** opens PRs updating cluster image pins (`semver@sha256:…`) and `VERSION` files. Merged PRs let Flux deploy the new tag.
+CI publishes semver tags to GHCR (PaulHatch/semantic-version + git tags `x.y.z-<image>`), then **Renovate** opens PRs updating cluster image pins (`semver@sha256:…`). Merged PRs let Flux deploy the new tag.
 
 | Image | Pin location |
 |-------|----------------|
@@ -51,7 +51,7 @@ CI publishes semver tags to GHCR from `custom_images/*/VERSION`, then **Renovate
 
 ## First deploy
 
-1. **Push to `main`** so GitHub Actions builds `ghcr.io/nerddotdad/hermes-homelab` and `homelab-alert-bridge` (paths under `custom_images/`). First build tags **`1.0.0`** from each `VERSION` file.
+1. **Push to `main`** so GitHub Actions builds `ghcr.io/nerddotdad/hermes-homelab` and `homelab-alert-bridge` (paths under `custom_images/`). Seed git baseline tags if GHCR already has newer semver (see `custom_images/README.md`).
 2. Flux reconciles `homelab-alert-bridge` **before** Alertmanager traffic switches (Kustomization `dependsOn: alertmanager-ntfy` only — bridge should be up when AM config changes).
 3. Open `https://hermes.${DOMAIN_0}`, complete WebUI onboarding if prompted, confirm model **qwen3.5:9b** via Ollama.
 4. Fire a test alert (see `alert-test/`) and tap **Ask AI** on ntfy.
