@@ -52,6 +52,46 @@
     return parts.join("\n");
   }
 
+  /** Sidebar title: prefer Prometheus summary, else alertname (+ namespace). */
+  function sessionTitleFromIncident(data) {
+    const alert = (data && data.alert) || {};
+    const labels = alert.labels || {};
+    const ann = alert.annotations || {};
+    let title = String(ann.summary || "").replace(/\s+/g, " ").trim();
+    if (!title) {
+      const name = labels.alertname || "unknown alert";
+      const ns = labels.namespace;
+      title = ns ? name + " (" + ns + ")" : name;
+    }
+    if (title.length > 100) title = title.slice(0, 97) + "...";
+    return title;
+  }
+
+  async function renameActiveSession(title) {
+    const session =
+      (window.S && window.S.session) ||
+      (typeof S !== "undefined" && S && S.session) ||
+      null;
+    if (!session || !session.session_id) {
+      throw new Error("no active session to rename");
+    }
+    const res = await fetch("/api/session/rename", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ session_id: session.session_id, title: title }),
+    });
+    if (!res.ok) {
+      throw new Error("session rename HTTP " + res.status);
+    }
+    session.title = title;
+    if (window.S && window.S.session) window.S.session.title = title;
+    if (typeof window.syncTopbar === "function") window.syncTopbar();
+    if (typeof window.renderSessionList === "function") {
+      await window.renderSessionList();
+    }
+  }
+
   function showBanner(text) {
     let bar = document.getElementById("homelab-incident-banner");
     if (!bar) {
@@ -162,7 +202,7 @@
     }
   }
 
-  async function startTriage(text) {
+  async function startTriage(text, incidentData) {
     await registerPendingIncident(incidentId);
     await window.newSession(true, {});
     if (typeof window.renderSessionList === "function") {
@@ -171,6 +211,7 @@
     if (typeof window.renderMessages === "function") {
       window.renderMessages();
     }
+    await renameActiveSession(sessionTitleFromIncident(incidentData));
     await waitForAgentReady(15000);
     await sleep(400);
     if (!setComposerText(text)) {
@@ -199,7 +240,7 @@
         if (autostart) {
           showBanner("Starting on-call triage…");
           try {
-            await startTriage(text);
+            await startTriage(text, data);
             clearPending();
             showBanner(
               "On-call triage started — Hermes is investigating. Use Stop to cancel."

@@ -10,6 +10,20 @@ model:
 web:
   search_backend: searxng
 
+# Agent terminal inherits only vars listed here (empty = none). Patched on boot by ensure-homelab-config.py.
+terminal:
+  env_passthrough:
+    - JELLYFIN_API_TOKEN
+    - JELLYFIN_API_URL
+    - JELLYFIN_PUBLIC_URL
+    - HOMELAB_DOCS_BASE_URL
+    - HOMELAB_GRAFANA_URL
+    - SEARXNG_URL
+    - HERMES_HOME
+
+browser:
+  allow_private_urls: true
+
 platforms:
   webhook:
     enabled: true

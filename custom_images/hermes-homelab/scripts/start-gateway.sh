@@ -67,7 +67,7 @@ wait_for_hermes_bin() {
 ensure_webhook_platform() {
   run_as_hermes_user "
     export HERMES_HOME='$HERMES_HOME' WEBHOOK_SECRET='$WEBHOOK_SECRET' WEBHOOK_PORT='$WEBHOOK_PORT'
-    /app/venv/bin/python /opt/homelab-scripts/ensure-webhook-platform.py
+    /app/venv/bin/python /opt/homelab-scripts/ensure-homelab-config.py
   "
 }
 
