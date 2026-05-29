@@ -84,18 +84,35 @@
     });
   }
 
-  /** Wait until Hermes boot IIFE finished (avoids loadSession wiping the composer). */
+  /**
+   * Hermes boot sets S._bootReady in ui.js, but S is not assigned to window — only
+   * poll DOM side effects (model chip label, empty state, topbar) after APIs exist.
+   */
+  function isHermesBootReady() {
+    const msg = document.getElementById("msg");
+    if (
+      !msg ||
+      typeof window.newSession !== "function" ||
+      typeof window.send !== "function"
+    ) {
+      return false;
+    }
+    const modelLabel = document.getElementById("composerModelLabel");
+    if (modelLabel && modelLabel.textContent.trim()) return true;
+    const empty = document.getElementById("emptyState");
+    if (empty && empty.style.display !== "none") return true;
+    const topbar = document.getElementById("topbarTitle");
+    if (topbar && topbar.textContent.trim()) return true;
+    return false;
+  }
+
   function waitForBoot(timeoutMs) {
     return new Promise(function (resolve, reject) {
       const deadline = Date.now() + timeoutMs;
       (function poll() {
-        const bootReady = window.S && window.S._bootReady === true;
-        const msg = document.getElementById("msg");
-        const apisReady =
-          typeof window.send === "function" &&
-          typeof window.newSession === "function";
-        if (bootReady && msg && apisReady) {
-          resolve();
+        if (isHermesBootReady()) {
+          // Let loadSession / checkInflightOnBoot finish after _bootReady.
+          setTimeout(resolve, 450);
           return;
         }
         if (Date.now() >= deadline) {
@@ -117,11 +134,14 @@
   }
 
   async function startTriage(text) {
-    await window.newSession(false, {});
+    await window.newSession(true, {});
     if (typeof window.renderSessionList === "function") {
       await window.renderSessionList();
     }
-    await sleep(150);
+    if (typeof window.renderMessages === "function") {
+      window.renderMessages();
+    }
+    await sleep(200);
     if (!setComposerText(text)) {
       throw new Error("composer input not found");
     }
