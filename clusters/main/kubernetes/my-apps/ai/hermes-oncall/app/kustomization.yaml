@@ -14,6 +14,9 @@ configMapGenerator:
     files:
       - homelab-k8s-flux-triage.SKILL.md=agent-config/skills/homelab-k8s-flux-triage/SKILL.md
       - jellyfin-api.SKILL.md=agent-config/skills/jellyfin-api/SKILL.md
+  - name: hermes-oncall-profiles
+    files:
+      - gemma4.config.yaml=agent-profiles/gemma4/config.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

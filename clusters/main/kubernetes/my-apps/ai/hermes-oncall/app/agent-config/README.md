@@ -9,6 +9,7 @@ Edit files here and commit — **no `hermes-homelab` image rebuild** required.
 | `SOUL.md` | Yes — platform persona | **Always** copied to PVC |
 | `skills/homelab-k8s-flux-triage/SKILL.md` | Yes — on-call triage | **Always** copied to PVC |
 | `skills/jellyfin-api/SKILL.md` | Yes — Jellyfin API investigations | **Always** copied to PVC |
+| `agent-profiles/<name>/config.yaml` | Yes — named Hermes profiles | **Always** copied to `profiles/<name>/` (see `agent-profiles/README.md`) |
 | `USER.md` | Optional **seed** only | Copied **only if** PVC has no `memories/USER.md` yet |
 | `MEMORY.md` | **Never** | PVC only — agent-managed |
 | Other `skills/*` | **Never** (unless you promote one) | PVC only — e.g. from WebUI |

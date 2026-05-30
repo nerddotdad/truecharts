@@ -1,0 +1,13 @@
+# GitOps seed for Hermes profile `gemma4` (~/.hermes/profiles/gemma4/).
+# Synced on every pod start by sync-agent-gitops initContainer.
+model:
+  default: gemma4:latest
+  provider: custom
+  base_url: http://ollama-api.ai.svc.cluster.local:11434/v1
+  context_length: 64000
+
+web:
+  search_backend: searxng
+
+browser:
+  allow_private_urls: true
