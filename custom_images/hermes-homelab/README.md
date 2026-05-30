@@ -8,6 +8,7 @@ Extends [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui) for ho
 - `kubectl` + `flux` CLI (read-only triage via in-cluster ServiceAccount)
 - Skill `homelab-k8s-flux-triage` + `jellyfin-api` (GitOps-mounted from `hermes-oncall/app/agent-config/`, not in image)
 - Alert deep-link extension (`?incident=&autostart=1`) auto-starts triage via WebUI APIs
+- **Hermes Agent dashboard** on `:9119` (`hermes dashboard --host 0.0.0.0 --insecure --tui`) — exposed via separate ingress `hermes-dash.${DOMAIN_0}`
 - Ollama provider seed (`qwen3.5:9b` → in-cluster Ollama), SearXNG web search, terminal `env_passthrough` for homelab secrets
 
 Built by **Build Custom Docker Images** on push to `custom_images/hermes-homelab/`.

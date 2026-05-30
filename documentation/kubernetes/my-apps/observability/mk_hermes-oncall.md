@@ -11,10 +11,13 @@ AI-assisted alert triage using **[Hermes Agent](https://github.com/NousResearch/
 | Service | URL |
 |---------|-----|
 | **Hermes WebUI** | `https://hermes.${DOMAIN_0}` |
+| **Hermes dashboard** | `https://hermes-dash.${DOMAIN_0}` — config, logs, skills, gateway status, embedded TUI chat |
 | **Ask AI** (from ntfy) | Opens `https://hermes.${DOMAIN_0}/?incident=<id>&autostart=1` (WebUI chat). API: `GET/POST /homelab/triage` (token) → gateway webhook |
 | **Incident API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
 
 Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** (same as Grafana).
+
+The **Hermes Agent dashboard** (`hermes dashboard`) runs in the same pod on port **9119**, exposed at **`https://hermes-dash.${DOMAIN_0}`**. It uses `--insecure` (session-token auth, not Nous OAuth) because this is a homelab ingress — it can read/write `config.yaml` and `.env`, so treat the URL like an admin surface. WebUI chat remains at `hermes.${DOMAIN_0}`; use the dashboard for config, cron, logs, skills toggles, and gateway status.
 
 ## Alert flow
 

@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.13
+      tag: 1.1.14
 
     workload:
       main:
@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "11"
+            homelab.agent-config/version: "12"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -135,6 +135,12 @@ spec:
                 JELLYFIN_PUBLIC_URL: "https://jellyfin.${DOMAIN_0}"
                 # Hermes web_search → cluster SearXNG (JSON API verified on :8080).
                 SEARXNG_URL: "http://searxng.ai.svc.cluster.local:8080"
+                # Hermes Agent management dashboard (config, logs, skills, gateway status).
+                DASHBOARD_ENABLED: "true"
+                DASHBOARD_PORT: "9119"
+                GATEWAY_HEALTH_URL: "http://127.0.0.1:8644"
+                HERMES_DASHBOARD_PUBLIC_URL: "https://hermes-dash.${DOMAIN_0}"
+                HERMES_DASHBOARD_TUI: "1"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
@@ -183,6 +189,11 @@ spec:
             port: 8644
             protocol: tcp
             targetPort: 8644
+          dashboard:
+            enabled: true
+            port: 9119
+            protocol: tcp
+            targetPort: 9119
 
     persistence:
       hermes-data:
@@ -252,5 +263,30 @@ spec:
             group: ai
             icon: mdi-robot-happy-outline
             href: https://hermes.${DOMAIN_0}
+            widget:
+              enabled: false
+      dashboard:
+        enabled: true
+        ingressClassName: external
+        targetSelector:
+          main: dashboard
+        hosts:
+          - host: hermes-dash.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Hermes dashboard
+            description: Hermes Agent config, logs, skills, and gateway status
+            group: ai
+            icon: mdi-view-dashboard-outline
+            href: https://hermes-dash.${DOMAIN_0}
             widget:
               enabled: false
