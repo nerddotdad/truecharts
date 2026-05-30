@@ -48,6 +48,7 @@ RUN chmod 755 /opt/homelab-scripts/start-gateway.sh \
   /opt/homelab-scripts/start-dashboard.sh \
   /opt/homelab-scripts/ensure-webhook-platform.py \
   /opt/homelab-scripts/ensure-homelab-config.py \
+  /opt/homelab-scripts/sync-gitops-profiles.py \
   && printf '%s\n' \
   '#!/bin/sh' \
   'set -e' \

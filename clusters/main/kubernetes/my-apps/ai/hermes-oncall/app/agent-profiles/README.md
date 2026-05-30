@@ -1,20 +1,28 @@
 # Hermes named profiles (GitOps)
 
-Named profiles live on the PVC at `~/.hermes/profiles/<name>/`. Each profile is an isolated Hermes home (config, sessions, skills, memory).
+Named profiles live on the PVC at `~/.hermes/profiles/<name>/`.
 
-## In Git
+## How it works
 
-| Path | Profile | Synced to PVC |
-|------|---------|---------------|
-| `gemma4/config.yaml` | `gemma4` | Always — model `gemma4:latest` via Ollama |
+On **gateway start** (after bundled skills sync on the default profile), `sync-gitops-profiles.py`:
 
-On pod start the initContainer also copies **SOUL.md**, **USER.md** (seed-only), and homelab **skills** into each GitOps profile (same as the default profile).
+1. Copies the **full default** `config.yaml` (webhook, terminal, browser, …)
+2. Applies the GitOps **model overlay** from `agent-profiles/<name>/config.yaml`
+3. Mirrors **all skills** from `~/.hermes/skills/`
+4. Copies **SOUL.md** and seeds **USER.md** (if missing)
+5. Mirrors **gateway_state.json** so WebUI shows gateway status (gateway process stays on default)
+
+Result: same capabilities as default, different default model.
+
+## Switch default model without a profile
+
+Edit `agent-config/model.yaml` (default profile) or use **WebUI → Control Center → model picker** (instant; persists on PVC until pod restart).
 
 ## Add another profile
 
-1. Create `agent-profiles/<name>/config.yaml` (`<name>` must match `[a-z0-9][a-z0-9_-]{0,63}`).
-2. Add a ConfigMap entry in `app/kustomization.yaml`.
-3. Add mount `items` + initContainer bootstrap block in `helm-release.yaml` (copy the `gemma4` pattern).
-4. Bump `homelab.agent-config/version` in `helm-release.yaml` to roll the pod.
+1. Create `agent-profiles/<name>/config.yaml` with a `model:` block only.
+2. Add ConfigMap entry in `app/kustomization.yaml`.
+3. Add mount `items` in `helm-release.yaml` (`homelab-profiles` volume).
+4. Bump `homelab.agent-config/version`.
 
-Switch profiles in Hermes WebUI: **Control Center → Profiles**.
+Requires `hermes-homelab` **≥ 1.1.19** (profile sync script in the image).

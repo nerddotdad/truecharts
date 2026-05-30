@@ -10,6 +10,8 @@ import yaml
 
 HERMES_HOME = Path(os.environ.get("HERMES_HOME", "/home/hermeswebui/.hermes"))
 CONFIG_PATH = HERMES_HOME / "config.yaml"
+GITOPS_AGENT_DIR = Path(os.environ.get("HOMELAB_GITOPS_AGENT_DIR", "/opt/hermes-gitops"))
+GITOPS_MODEL_PATH = GITOPS_AGENT_DIR / "model.yaml"
 SECRET = os.environ.get("WEBHOOK_SECRET") or os.environ.get("HERMES_WEBHOOK_SECRET") or ""
 PORT = int(os.environ.get("WEBHOOK_PORT", "8644"))
 
@@ -25,14 +27,30 @@ ENV_PASSTHROUGH = [
 ]
 
 
-def main() -> None:
-    cfg: dict = {}
-    if CONFIG_PATH.is_file():
-        with CONFIG_PATH.open(encoding="utf-8") as fh:
-            loaded = yaml.safe_load(fh)
-            if isinstance(loaded, dict):
-                cfg = loaded
+def _load_yaml(path: Path) -> dict:
+    if not path.is_file():
+        return {}
+    with path.open(encoding="utf-8") as fh:
+        loaded = yaml.safe_load(fh)
+    return loaded if isinstance(loaded, dict) else {}
 
+
+def _deep_merge(base: dict, overlay: dict) -> dict:
+    merged = dict(base)
+    for key, value in overlay.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def main() -> None:
+    cfg = _load_yaml(CONFIG_PATH)
+
+    gitops_model = _load_yaml(GITOPS_MODEL_PATH)
+    if gitops_model.get("model"):
+        cfg = _deep_merge(cfg, {"model": gitops_model["model"]})
     if SECRET:
         platforms = cfg.setdefault("platforms", {})
         if not isinstance(platforms, dict):
@@ -64,6 +82,21 @@ def main() -> None:
     if bundled:
         os.environ.setdefault("HERMES_BUNDLED_SKILLS", bundled)
     sync_bundled_skills()
+    _sync_gitops_profiles()
+
+
+def _sync_gitops_profiles() -> None:
+    script = Path("/opt/homelab-scripts/sync-gitops-profiles.py")
+    if not script.is_file():
+        return
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("sync_gitops_profiles", script)
+    if not spec or not spec.loader:
+        return
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.sync_gitops_profiles()
 
 
 def sync_bundled_skills() -> None:

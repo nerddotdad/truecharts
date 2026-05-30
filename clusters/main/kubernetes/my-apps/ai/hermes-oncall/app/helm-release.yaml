@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.18
+      tag: 1.1.19
 
     workload:
       main:
@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/, agent-profiles/, SOUL or skills.
           annotations:
-            homelab.agent-config/version: "14"
+            homelab.agent-config/version: "15"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -92,27 +92,6 @@ spec:
                   if [ ! -s /home/hermeswebui/.hermes/memories/USER.md ]; then
                     cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/memories/USER.md
                   fi
-                  # GitOps named profile: gemma4 (Ollama gemma4:latest)
-                  GEMMA4_PROFILE=/home/hermeswebui/.hermes/profiles/gemma4
-                  mkdir -p "$GEMMA4_PROFILE"/memories \
-                    "$GEMMA4_PROFILE"/sessions \
-                    "$GEMMA4_PROFILE"/skills/homelab-k8s-flux-triage \
-                    "$GEMMA4_PROFILE"/skills/jellyfin-api \
-                    "$GEMMA4_PROFILE"/workspace \
-                    "$GEMMA4_PROFILE"/cron \
-                    "$GEMMA4_PROFILE"/logs \
-                    "$GEMMA4_PROFILE"/plans \
-                    "$GEMMA4_PROFILE"/skins \
-                    "$GEMMA4_PROFILE"/home
-                  cp -f /opt/hermes-gitops-profiles/gemma4/config.yaml "$GEMMA4_PROFILE/config.yaml"
-                  cp -f /opt/hermes-gitops/SOUL.md "$GEMMA4_PROFILE/SOUL.md"
-                  cp -f /opt/homelab-skills/homelab-k8s-flux-triage/SKILL.md \
-                    "$GEMMA4_PROFILE/skills/homelab-k8s-flux-triage/SKILL.md"
-                  cp -f /opt/homelab-skills/jellyfin-api/SKILL.md \
-                    "$GEMMA4_PROFILE/skills/jellyfin-api/SKILL.md"
-                  if [ ! -s "$GEMMA4_PROFILE/memories/USER.md" ]; then
-                    cp -f /opt/hermes-gitops/USER.md "$GEMMA4_PROFILE/memories/USER.md"
-                  fi
           containers:
             main:
               enabled: true
@@ -129,6 +108,7 @@ spec:
                 HERMES_HOME: *hermes_home
                 HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
                 HOMELAB_GITOPS_AGENT_DIR: *gitops_agent
+                HERMES_GITOPS_PROFILES_DIR: *gitops_profiles
                 HOMELAB_GITOPS_SKILL_DIR: *gitops_skill
                 HOMELAB_GITOPS_SKILL_NAME: homelab-k8s-flux-triage
                 HERMES_OPTIONAL_SKILLS_DIR: *skills_root
@@ -245,6 +225,21 @@ spec:
         mountPath: *gitops_agent
         targetSelector:
           main:
+            main: {}
+            sync-agent-gitops: {}
+      homelab-profiles:
+        enabled: true
+        type: configmap
+        objectName: hermes-oncall-profiles
+        expandObjectName: false
+        readOnly: true
+        mountPath: *gitops_profiles
+        items:
+          - key: gemma4.config.yaml
+            path: gemma4/config.yaml
+        targetSelector:
+          main:
+            main: {}
             sync-agent-gitops: {}
       homelab-skills:
         enabled: true
@@ -261,19 +256,6 @@ spec:
         targetSelector:
           main:
             main: {}
-            sync-agent-gitops: {}
-      homelab-profiles:
-        enabled: true
-        type: configmap
-        objectName: hermes-oncall-profiles
-        expandObjectName: false
-        readOnly: true
-        mountPath: *gitops_profiles
-        items:
-          - key: gemma4.config.yaml
-            path: gemma4/config.yaml
-        targetSelector:
-          main:
             sync-agent-gitops: {}
 
     ingress:

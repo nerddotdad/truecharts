@@ -10,6 +10,7 @@ configMapGenerator:
     files:
       - SOUL.md=agent-config/SOUL.md
       - USER.md=agent-config/USER.md
+      - model.yaml=agent-config/model.yaml
   - name: hermes-oncall-skills
     files:
       - homelab-k8s-flux-triage.SKILL.md=agent-config/skills/homelab-k8s-flux-triage/SKILL.md
