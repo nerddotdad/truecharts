@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -58,6 +59,51 @@ def main() -> None:
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with CONFIG_PATH.open("w", encoding="utf-8") as fh:
         yaml.safe_dump(cfg, fh, default_flow_style=False, sort_keys=False)
+
+    bundled = os.environ.get("HERMES_BUNDLED_SKILLS", "/opt/hermes/skills").strip()
+    if bundled:
+        os.environ.setdefault("HERMES_BUNDLED_SKILLS", bundled)
+    sync_bundled_skills()
+
+
+def sync_bundled_skills() -> None:
+    """Copy bundled agent skills into ~/.hermes/skills (avoids /app/venv/skills exclusion)."""
+    try:
+        from tools.skills_sync import sync_skills
+
+        sync_skills(quiet=True)
+        return
+    except Exception:
+        pass
+
+    venv_python = Path("/app/venv/bin/python3")
+    if venv_python.is_file():
+        try:
+            subprocess.run(
+                [
+                    str(venv_python),
+                    "-c",
+                    "from tools.skills_sync import sync_skills; sync_skills(quiet=True)",
+                ],
+                env=os.environ.copy(),
+                check=False,
+                timeout=120,
+            )
+            return
+        except Exception:
+            pass
+
+    hermes_bin = Path("/app/venv/bin/hermes")
+    if hermes_bin.is_file():
+        try:
+            subprocess.run(
+                [str(hermes_bin), "skills", "sync"],
+                env=os.environ.copy(),
+                check=False,
+                timeout=120,
+            )
+        except Exception:
+            pass  # gateway/WebUI still usable; homelab GitOps skills remain on PVC
 
 
 if __name__ == "__main__":

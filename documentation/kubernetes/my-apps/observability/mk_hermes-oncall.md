@@ -94,7 +94,7 @@ See [Hermes web search docs](https://hermes-agent.nousresearch.com/docs/user-gui
 
 ## Tools not working in WebUI
 
-Hermes installs **hermes-agent** into `/app/venv` on first boot. Plugin-backed tools (`web_search`, `web_extract`, many integrations) load from **`/opt/hermes/plugins`**, not from the venv copy. Without **`HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins`**, `web_search` returns *"No web search provider configured"* even when `SEARXNG_URL` is set.
+Hermes **hermes-homelab** pre-bakes WebUI + `hermes-agent[all]` into `/apptoo/venv` (rsync’d to `/app` on start). Plugin-backed tools (`web_search`, `web_extract`, many integrations) load from **`/opt/hermes/plugins`**, not from the venv copy. Without **`HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins`**, `web_search` returns *"No web search provider configured"* even when `SEARXNG_URL` is set. Bundled agent skills sync from **`HERMES_BUNDLED_SKILLS=/opt/hermes/skills`** (not `/app/venv/skills`, which upstream excludes).
 
 | Symptom | Likely cause | Fix |
 |---------|----------------|-----|
@@ -128,12 +128,13 @@ Expect provider names including `searxng` and `"success": true`.
 | WebUI ImagePullBackOff | Build/push `hermes-homelab` image on `main` |
 | Ask AI 404 incident | Bridge running? `kubectl logs -n observability deploy/homelab-alert-bridge` |
 | Ask AI / triage 502 Hermes | Bridge must use Service **`hermes-oncall-app-template`** (app-template chart name), not `hermes-oncall`. Gateway on :8644: `curl -sS -o /dev/null -w '%{http_code}' http://hermes-oncall-app-template.ai.svc:8644/health` → `200`. Rebuild `hermes-homelab` ≥ 1.1.2 if gateway missing; check `kubectl logs deploy/hermes-oncall-app-template -n ai \| grep start-gateway`. |
-| Gateway never starts | `start-gateway` waits for `/app/venv/bin/hermes` (WebUI first boot ~5–10 min). Existing PVCs missing `platforms.webhook` in `config.yaml` are patched at gateway start. |
+| Gateway never starts | `start-gateway` waits for `/app/venv/bin/hermes` (pre-baked venv rsync ~1 min on 1.1.13+). Existing PVCs missing `platforms.webhook` in `config.yaml` are patched at gateway start. |
 | **Gateway not configured** (orange pill) but `hermes gateway status` OK | Usually **root-owned** `gateway_state.json` from an older image while WebUI runs as `hermeswebui`. Fix: `hermes-homelab` ≥ 1.1.3 runs the gateway as `hermeswebui`, or `chown hermeswebui:hermeswebui ~/.hermes/gateway*` and restart the pod. |
 | No kubectl in chat | Ensure `hermes-homelab` image (not upstream `nesquena/hermes-webui` alone) |
 | Weak responses | Ollama up? `kubectl get pods -n ai -l app.kubernetes.io/instance=ollama` |
 | **Connection error** in chat | Hermes logs show `ollama-api.ai.svc.cluster.local`? Use **`ollama.ai.svc.cluster.local:11434/v1`** (Service `ollama`) or apply `ollama-api` cluster DNS alias. `ollama-api.${DOMAIN_0}` is ingress-only. |
-| **Missing imports: run_agent** | Use **`hermes-homelab`** image (includes agent at `/opt/hermes`), not upstream WebUI alone. After upgrade, **delete the pod** so first-boot `uv pip install` runs again (not only restart). First start can take **~5–10 min**. |
-| Provider incomplete | Wait for startup; check logs for `Adding hermes-agent's pyproject.toml` |
+| **Missing imports: run_agent** | Use **`hermes-homelab`** image (includes agent at `/opt/hermes`), not upstream WebUI alone. Image ≥ **1.1.13** pre-bakes the venv; pod should be ready in ~1–2 min. |
+| **0 builtin skills** | Set **`HERMES_BUNDLED_SKILLS=/opt/hermes/skills`**; gateway/`ensure-homelab-config.py` runs `skills sync` on start. |
+| Provider incomplete | Check logs for `Dependencies already installed — skipping`; rebuild if stuck on runtime `uv pip install`. |
 
 See also [Observability](mk_observability.md) and [Alert runbooks](runbooks/mk_runbook_index.md).

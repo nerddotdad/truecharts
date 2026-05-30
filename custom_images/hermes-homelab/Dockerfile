@@ -19,6 +19,23 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Pre-bake WebUI + Hermes Agent into /apptoo/venv. docker_init.bash rsyncs /apptoo → /app on
+# every start; .deps_installed skips the ~5–10 min runtime uv pip install.
+ENV UV_CACHE_DIR=/uv_cache
+RUN mkdir -p "${UV_CACHE_DIR}" \
+  && cd /apptoo \
+  && uv venv venv \
+  && uv pip install --python venv/bin/python3 -r requirements.txt \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+  && uv pip install --python venv/bin/python3 -U pip setuptools \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+  && uv pip install --python venv/bin/python3 "/opt/hermes[all]" \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+  && uv pip install --python venv/bin/python3 "hindsight-client>=0.4.22" \
+      --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+  && touch venv/.deps_installed \
+  && chown -R hermeswebui:hermeswebui venv "${UV_CACHE_DIR}"
+
 # Skills/SOUL/USER: GitOps ConfigMaps in hermes-oncall/app/agent-config/ (not baked in image).
 COPY scripts /opt/homelab-scripts/
 COPY extensions /opt/hermes-extensions/
@@ -47,7 +64,8 @@ RUN chmod 755 /opt/homelab-scripts/start-gateway.sh \
   > /hermes-homelab-entry.sh \
   && chmod 755 /hermes-homelab-entry.sh
 
-ENV HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins
+ENV HERMES_BUNDLED_SKILLS=/opt/hermes/skills \
+    HERMES_BUNDLED_PLUGINS=/opt/hermes/plugins
 
 USER root
 CMD ["/hermes-homelab-entry.sh"]

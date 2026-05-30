@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.11
+      tag: 1.1.13
 
     workload:
       main:
@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "10"
+            homelab.agent-config/version: "11"
           initContainers:
             sync-agent-gitops:
               enabled: true
@@ -112,6 +112,9 @@ spec:
                 HERMES_OPTIONAL_SKILLS_DIR: *skills_root
                 # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
+                # WebUI installs agent into /app/venv; packaged skills live at /app/venv/skills which
+                # is_excluded_skill_path rejects (path component "venv"). Point sync at repo checkout.
+                HERMES_BUNDLED_SKILLS: /opt/hermes/skills
                 # uv pip install puts hermes-agent in venv; bundled plugins (web_search, etc.) live under /opt/hermes/plugins.
                 HERMES_BUNDLED_PLUGINS: /opt/hermes/plugins
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
@@ -141,10 +144,10 @@ spec:
                   type: http
                   port: 8787
                   path: /health
-                  # First boot runs uv pip install for hermes-agent (can take several minutes).
-                  initialDelaySeconds: 90
-                  periodSeconds: 15
-                  failureThreshold: 24
+                  # Venv pre-baked in hermes-homelab image; allow time for rsync + WebUI bind.
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 18
                 liveness:
                   enabled: true
                   type: http
