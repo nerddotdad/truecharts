@@ -51,6 +51,11 @@ def _load_incident(incident_id: str) -> dict | None:
 
 
 def _format_incident(data: dict) -> str:
+    message = data.get("hermes_message") or data.get("operator_message")
+    if message:
+        return str(message)
+
+    # Legacy incidents without bridge-rendered messages.
     alert = data.get("alert") or {}
     labels = alert.get("labels") or {}
     annotations = alert.get("annotations") or {}

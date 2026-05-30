@@ -14,6 +14,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from message_format import enrich_incident
+
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
 PENDING_ID_FILE = INCIDENT_DIR / ".pending_incident"
 NTFY_BRIDGE_URL = os.environ.get(
@@ -54,16 +56,16 @@ def _store_incidents(payload: dict) -> list[str]:
             continue
         iid = _fingerprint(alert)
         path = INCIDENT_DIR / f"{iid}.json"
+        incident = enrich_incident(
+            {
+                "id": iid,
+                "status": alert.get("status") or payload.get("status"),
+                "receiver": payload.get("receiver"),
+                "alert": alert,
+            }
+        )
         path.write_text(
-            json.dumps(
-                {
-                    "id": iid,
-                    "status": alert.get("status") or payload.get("status"),
-                    "receiver": payload.get("receiver"),
-                    "alert": alert,
-                },
-                indent=2,
-            ),
+            json.dumps(incident, indent=2),
             encoding="utf-8",
         )
         ids.append(iid)
@@ -132,7 +134,7 @@ def _load_incident(incident_id: str) -> dict | None:
     path = INCIDENT_DIR / f"{incident_id}.json"
     if not path.is_file():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    return enrich_incident(json.loads(path.read_text(encoding="utf-8")))
 
 
 def _set_pending_incident(incident_id: str) -> bool:
@@ -179,7 +181,7 @@ def _forward_to_hermes(incident: dict) -> tuple[int, bytes]:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "homelab-alert-bridge/2.0"
+    server_version = "homelab-alert-bridge/2.1"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))

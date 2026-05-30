@@ -19,7 +19,7 @@ Login uses **`HERMES_WEBUI_PASSWORD`** → Flux substitutes **`${ADMIN_PASS}`** 
 
 The **Hermes Agent dashboard** (`hermes dashboard`) runs in the same pod on port **9119**, exposed at **`https://hermes-dash.${DOMAIN_0}`**. It uses `--insecure` (session-token auth, not Nous OAuth) because this is a homelab ingress — it can read/write `config.yaml` and `.env`, so treat the URL like an admin surface. WebUI chat remains at `hermes.${DOMAIN_0}`; use the dashboard for config, cron, logs, skills toggles, and gateway status.
 
-**Ask AI** sends a short user message (alert labels, summary, runbook, **`recommended_ai_skills`**) — not a long injected playbook. Persona and investigation rules live in **SOUL.md**, **USER.md**, and skills. Prometheus rules set `annotations.recommended_ai_skills` (comma-separated) per alert; Jellyfin alerts use `homelab-k8s-flux-triage,jellyfin-api`.
+**Ask AI** sends **`hermes_message`** from the bridge: the same text as the ntfy notification (`operator_message`) plus an **Agent context** block (`recommended_ai_skills`, status, timestamps). Persona and investigation rules live in **SOUL.md**, **USER.md**, and skills.
 
 ## Alert flow
 

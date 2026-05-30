@@ -42,6 +42,13 @@
   }
 
   function formatAlert(data) {
+    if (data && data.hermes_message) {
+      return data.hermes_message;
+    }
+    if (data && data.operator_message) {
+      return data.operator_message;
+    }
+    // Legacy incidents without bridge-rendered messages.
     const alert = (data && data.alert) || {};
     const labels = alert.labels || {};
     const ann = alert.annotations || {};

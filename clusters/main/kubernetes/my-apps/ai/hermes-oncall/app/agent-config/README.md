@@ -49,4 +49,4 @@ Pick skills from **`recommended_ai_skills`** on the alert when present; otherwis
 | `runbook_url` | Primary MkDocs runbook link |
 | `recommended_ai_skills` | Comma-separated Hermes skill names to try first (e.g. `homelab-k8s-flux-triage,jellyfin-api`) |
 
-Set these on `PrometheusRule` alerts in `observability/prometheus-rules/`. SOUL.md and skills define investigation behavior — the WebUI message only carries alert facts + recommended skills.
+Set these on `PrometheusRule` alerts in `observability/prometheus-rules/`. Ask AI sends **`hermes_message`** from the bridge (ntfy text + agent context) — SOUL.md and skills define investigation behavior.
