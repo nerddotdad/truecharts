@@ -78,23 +78,15 @@ ensure_webhook_subscription() {
     export HERMES_HOME='$HERMES_HOME' WEBHOOK_SECRET='$WEBHOOK_SECRET' WEBHOOK_PORT='$WEBHOOK_PORT' HERMES_BIN='$HERMES_BIN'
     SUB_FILE=\"\$HERMES_HOME/webhook_subscriptions.json\"
     if \"\$HERMES_BIN\" webhook list 2>/dev/null | grep -q 'homelab-alerts'; then
-      if [ -f \"\$SUB_FILE\" ] && grep -q 'Homelab alert triage from ntfy' \"\$SUB_FILE\" 2>/dev/null; then
+      if [ -f \"\$SUB_FILE\" ] && grep -q 'homelab-webhook/v2' \"\$SUB_FILE\" 2>/dev/null; then
         exit 0
       fi
       \"\$HERMES_BIN\" webhook unsubscribe homelab-alerts 2>/dev/null || true
     fi
     \"\$HERMES_BIN\" webhook subscribe homelab-alerts \
-      --prompt 'Homelab alert triage from ntfy Ask AI. Use read-only kubectl and flux.
-
-1. If the payload includes alert.annotations.runbook_url, treat that as the primary runbook.
-2. Otherwise map alert.labels.alertname to homelab runbooks under HOMELAB_DOCS_BASE_URL (see skill homelab-k8s-flux-triage).
-3. For jellyfin_* alerts or media playback issues, use skill jellyfin-api (JELLYFIN_API_URL + JELLYFIN_API_TOKEN) alongside homelab-k8s-flux-triage.
-4. Cite doc links in your reply; do not guess URLs.
-
-Incident JSON:
+      --prompt 'Homelab alert incident (follow SOUL.md and USER.md; use alert.annotations.recommended_ai_skills when set):
 
 {__raw__}' \
-      --skills homelab-k8s-flux-triage,jellyfin-api \
       --secret \"\$WEBHOOK_SECRET\"
   "
 }

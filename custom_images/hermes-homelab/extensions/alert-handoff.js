@@ -29,12 +29,24 @@
   const apiUrl =
     "/homelab/api/incidents/" + encodeURIComponent(incidentId);
 
+  function recommendedSkillsLine(ann) {
+    const raw = (ann && (ann.recommended_ai_skills || ann.recommended_skills)) || "";
+    const skills = String(raw)
+      .split(",")
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+    if (!skills.length) return "";
+    return "\nRecommended skills: " + skills.join(", ");
+  }
+
   function formatAlert(data) {
     const alert = (data && data.alert) || {};
     const labels = alert.labels || {};
     const ann = alert.annotations || {};
     const parts = [
-      "Homelab on-call triage for alert `" + (labels.alertname || "unknown") + "`",
+      "Homelab alert `" + (labels.alertname || "unknown") + "`",
       "namespace: `" + (labels.namespace || "n/a") + "`",
       "severity: `" + (labels.severity || "n/a") + "`",
     ];
@@ -43,12 +55,8 @@
     if (ann.summary) parts.push("\nSummary: " + ann.summary);
     if (ann.description) parts.push("\n" + ann.description);
     if (ann.runbook_url) parts.push("\nRunbook: " + ann.runbook_url);
-    parts.push(
-      "\n\nInvestigate with read-only **kubectl** and **flux** via the **terminal** tool ",
-      "(this pod has in-cluster ServiceAccount access). Cite the runbook and homelab MkDocs. ",
-      "Do **not** use web_search for cluster state.",
-      "Do not apply cluster changes yourself."
-    );
+    const skillsLine = recommendedSkillsLine(ann);
+    if (skillsLine) parts.push(skillsLine);
     return parts.join("\n");
   }
 

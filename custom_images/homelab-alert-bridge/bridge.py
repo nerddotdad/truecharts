@@ -290,6 +290,7 @@ def _store_group_incident(
                 "summary": summary,
                 "description": body,
                 "dashboard_url": JELLYFIN_DASHBOARD_URL or None,
+                "recommended_ai_skills": "homelab-k8s-flux-triage,jellyfin-api",
             },
             "fingerprint": group_incident_id,
         },

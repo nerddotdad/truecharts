@@ -10,6 +10,7 @@
 #   alert:       stable snake_case ID — not templated (becomes alertname label).
 #   summary:     one-line human title with {{ $labels.* }} / {{ $value }} → ntfy title via alertmanager-ntfy.
 #   description:   responder detail; same Prometheus template vars (not Grafana {{ $values.A.Value }}).
+#   recommended_ai_skills: comma-separated Hermes skill names for Ask AI (e.g. homelab-k8s-flux-triage,jellyfin-api)
 #   https://grafana.com/docs/grafana/latest/alerting/fundamentals/templates/
 #
 # apiVersion: monitoring.coreos.com/v1

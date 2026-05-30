@@ -55,30 +55,25 @@ def _format_incident(data: dict) -> str:
     labels = alert.get("labels") or {}
     annotations = alert.get("annotations") or {}
     lines = [
-        "Homelab on-call triage session for a firing alert.",
-        "",
-        f"**Status:** {data.get('status', alert.get('status', 'unknown'))}",
-        f"**Alert:** `{labels.get('alertname', 'unknown')}`",
-        f"**Namespace:** `{labels.get('namespace', 'n/a')}`",
-        f"**Severity:** `{labels.get('severity', 'n/a')}`",
+        f"Homelab alert `{labels.get('alertname', 'unknown')}`",
+        f"namespace: `{labels.get('namespace', 'n/a')}`",
+        f"severity: `{labels.get('severity', 'n/a')}`",
     ]
     if labels.get("job_name"):
-        lines.append(f"**Job:** `{labels['job_name']}`")
+        lines.append(f"job: `{labels['job_name']}`")
     if labels.get("pod"):
-        lines.append(f"**Pod:** `{labels['pod']}`")
+        lines.append(f"pod: `{labels['pod']}`")
     if annotations.get("summary"):
         lines.append(f"\n**Summary:** {annotations['summary']}")
     if annotations.get("description"):
         lines.append(f"\n**Description:**\n{annotations['description']}")
     if annotations.get("runbook_url"):
         lines.append(f"\n**Runbook:** {annotations['runbook_url']}")
-    lines.extend(
-        [
-            "",
-            "Investigate with read-only kubectl/flux, cite the runbook, and propose a resolution plan.",
-            "Do not apply cluster changes yourself.",
-        ]
-    )
+    skills = str(
+        annotations.get("recommended_ai_skills") or annotations.get("recommended_skills") or ""
+    ).strip()
+    if skills:
+        lines.append(f"\n**Recommended skills:** {skills}")
     return "\n".join(lines)
 
 
@@ -114,17 +109,6 @@ def main() -> int:
         json.dumps(
             {
                 "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are the homelab on-call agent in the Hermes WebUI pod with an "
-                            "in-cluster ServiceAccount (read-only kubectl/flux). "
-                            "Use skill homelab-k8s-flux-triage. "
-                            "REQUIRED: investigate with the terminal tool (kubectl get/describe/logs, "
-                            "flux get) — do not use web_search for cluster state. "
-                            "Read-only cluster access only."
-                        ),
-                    },
                     {"role": "user", "content": _format_incident(data)},
                 ]
             }

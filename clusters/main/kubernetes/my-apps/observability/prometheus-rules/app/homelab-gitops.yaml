@@ -23,6 +23,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "TLS certificate expiring within 14 days ({{ $labels.name }})"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: >-
               Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in less than 14 days.
               Check cert-manager Certificate or ClusterIssuer status.

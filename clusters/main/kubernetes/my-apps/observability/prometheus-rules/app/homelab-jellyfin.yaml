@@ -29,6 +29,7 @@ spec:
           annotations:
             summary: "Jellyfin API unreachable in {{ $labels.namespace }} (jellyfin_up={{ $value }})"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            recommended_ai_skills: homelab-k8s-flux-triage,jellyfin-api
             description: |-
               jellyfin-exporter cannot reach the Jellyfin API on :8096 for 5+ minutes (jellyfin_up={{ $value }}).
               Streaming and the web UI are likely broken even if the exporter pod is still running.
@@ -48,6 +49,7 @@ spec:
           annotations:
             summary: "Jellyfin metrics scrape down: {{ $labels.service }} in {{ $labels.namespace }} (up={{ $value }})"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            recommended_ai_skills: homelab-k8s-flux-triage,jellyfin-api
             description: |-
               Prometheus cannot scrape {{ $labels.service }} in {{ $labels.namespace }} for 15+ minutes (up={{ $value }}).
               Jellyfin may still serve users; monitoring and Grafana panels will be stale or empty.
@@ -63,6 +65,7 @@ spec:
           annotations:
             summary: "Jellyfin pending restart in {{ $labels.namespace }} (pending_restart={{ $value }})"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            recommended_ai_skills: homelab-k8s-flux-triage,jellyfin-api
             description: |-
               Jellyfin has reported a pending restart for 10+ minutes (plugin update, config change, or failed graceful restart).
               Finish the restart from Dashboard → Administration, or recycle the pod after saving work:
@@ -78,6 +81,7 @@ spec:
           annotations:
             summary: "Jellyfin exporter collector {{ $labels.collector }} failing in {{ $labels.namespace }} (success={{ $value }})"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            recommended_ai_skills: homelab-k8s-flux-triage,jellyfin-api
             description: |-
               jellyfin-exporter collector {{ $labels.collector }} has failed for 15+ minutes (collector_success={{ $value }}).
               The activity collector is excluded — it stays failed until Playback Reporting loads on a matching Jellyfin version.
@@ -92,6 +96,7 @@ spec:
           annotations:
             summary: "Jellyfin user {{ $labels.username }} locked or disabled in {{ $labels.namespace }}"
             dashboard_url: https://grafana.${DOMAIN_0}/d/603679cbda70a9fe/jellyfin
+            recommended_ai_skills: homelab-k8s-flux-triage,jellyfin-api
             description: |-
               User {{ $labels.username }} (id {{ $labels.user_id }}) has Policy.IsDisabled=true (account={{ $value }}).
               Jellyfin sets this on automatic lockout after failed login attempts; an admin may also have disabled the account manually.

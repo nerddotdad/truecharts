@@ -26,6 +26,7 @@ spec:
           annotations:
             summary: "HelmRelease {{ $labels.exported_namespace }}/{{ $labels.name }} — chart {{ $labels.chart }}{{ $labels.chart_ref }} not ready"
             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-flux-helmrelease-not-ready/
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Release: {{ $labels.exported_namespace }}/{{ $labels.name }}
               Chart: {{ $labels.chart }}{{ $labels.chart_ref }} (version {{ $labels.chart_version }}, repo {{ $labels.chart_source }})
@@ -46,6 +47,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Kustomization {{ $labels.exported_namespace }}/{{ $labels.name }} not ready"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: >-
               Flux Kustomization reconciliation is failing. Check: kubectl describe kustomization {{ $labels.name }} -n {{ $labels.exported_namespace }}
 
@@ -62,6 +64,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Flux {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }}{{ if $labels.chart }} — chart {{ $labels.chart }}{{ end }} not ready"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Resource: {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }}
               {{ if $labels.chart }}Chart: {{ $labels.chart }} (version {{ $labels.chart_version }}, source {{ $labels.chart_source }})
@@ -81,6 +84,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Flux {{ $labels.customresource_kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} status unknown"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: >-
               Resource has been in Unknown readiness for 30+ minutes.
 
@@ -98,6 +102,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Flux controller {{ $labels.controller }} reporting reconcile errors"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Controller {{ $labels.controller }} has sustained reconcile errors in flux-system.
               Find failing workloads: kubectl get helmrelease,helmchart,kustomization -A
@@ -118,5 +123,6 @@ spec:
             homelab_team: platform
           annotations:
             summary: "HelmRelease reconciles are very slow (p99 > 5m)"
+            recommended_ai_skills: homelab-k8s-flux-triage
             description: >-
               helm-controller p99 reconcile time exceeds 5 minutes; installs/upgrades may be stuck or overloaded.

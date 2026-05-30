@@ -6,7 +6,7 @@ USER root
 # Hermes Agent source — docker_init.bash installs from /opt/hermes or ~/.hermes/hermes-agent.
 ARG HERMES_AGENT_REF=main
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates git \
+    && apt-get install -y --no-install-recommends curl ca-certificates git jq \
     && git clone --depth 1 --branch "${HERMES_AGENT_REF}" \
       https://github.com/NousResearch/hermes-agent.git /opt/hermes \
     && test -f /opt/hermes/run_agent.py \

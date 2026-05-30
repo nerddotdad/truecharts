@@ -40,4 +40,13 @@ kubectl exec -n ai deploy/hermes-oncall-app-template -c hermes-oncall-app-templa
   cat /home/hermeswebui/.hermes/memories/USER.md
 ```
 
-Pick skills **`homelab-k8s-flux-triage`** and/or **`jellyfin-api`** in the WebUI for manual triage.
+Pick skills from **`recommended_ai_skills`** on the alert when present; otherwise start with **`homelab-k8s-flux-triage`** (and **`jellyfin-api`** for media alerts).
+
+## Alert annotations (Prometheus → Ask AI)
+
+| Annotation | Purpose |
+|------------|---------|
+| `runbook_url` | Primary MkDocs runbook link |
+| `recommended_ai_skills` | Comma-separated Hermes skill names to try first (e.g. `homelab-k8s-flux-triage,jellyfin-api`) |
+
+Set these on `PrometheusRule` alerts in `observability/prometheus-rules/`. SOUL.md and skills define investigation behavior — the WebUI message only carries alert facts + recommended skills.

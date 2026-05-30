@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.15
+      tag: 1.1.17
 
     workload:
       main:
@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/ SOUL or skills (always synced). USER is seed-only.
           annotations:
-            homelab.agent-config/version: "12"
+            homelab.agent-config/version: "13"
           initContainers:
             sync-agent-gitops:
               enabled: true
