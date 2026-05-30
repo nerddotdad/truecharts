@@ -1,6 +1,6 @@
 # Seeded on first boot when ~/.hermes/config.yaml is missing (see helm-release initContainer).
 model:
-  default: qwen3.5:9b
+  default: gemma4:latest
   provider: custom
   base_url: http://ollama.ai.svc.cluster.local:11434/v1
   context_length: 64000
