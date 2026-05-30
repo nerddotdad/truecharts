@@ -10,31 +10,16 @@ import os
 import re
 import sys
 import urllib.error
-import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Callable
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
-GROUP_STATE_DIR = INCIDENT_DIR / "_groups"
 PENDING_ID_FILE = INCIDENT_DIR / ".pending_incident"
 NTFY_BRIDGE_URL = os.environ.get(
     "NTFY_BRIDGE_URL",
     "http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook",
 )
-NTFY_BASE_URL = os.environ.get(
-    "NTFY_BASE_URL",
-    "http://ntfy.observability.svc.cluster.local:10222",
-).rstrip("/")
-NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "homelab-alerts")
-PROMETHEUS_URL = os.environ.get(
-    "PROMETHEUS_URL",
-    "http://kube-prometheus-stack-prometheus.kube-prometheus-stack.svc.cluster.local:9090",
-).rstrip("/")
-GRAFANA_PUBLIC_URL = os.environ.get("GRAFANA_PUBLIC_URL", "").rstrip("/")
-NTFY_CLICK_URL = os.environ.get("NTFY_CLICK_URL", "").rstrip("/")
-JELLYFIN_DASHBOARD_URL = os.environ.get("JELLYFIN_DASHBOARD_URL", "").rstrip("/")
 HERMES_WEBHOOK_URL = os.environ.get(
     "HERMES_WEBHOOK_URL",
     "http://hermes-oncall-app-template.ai.svc.cluster.local:8644/webhooks/homelab-alerts",
@@ -73,7 +58,7 @@ def _store_incidents(payload: dict) -> list[str]:
             json.dumps(
                 {
                     "id": iid,
-                    "status": payload.get("status"),
+                    "status": alert.get("status") or payload.get("status"),
                     "receiver": payload.get("receiver"),
                     "alert": alert,
                 },
@@ -99,362 +84,29 @@ def _proxy_to_ntfy(body: bytes, content_type: str) -> tuple[int, bytes]:
         return exc.code, exc.read()
 
 
-def _prometheus_query(expr: str) -> list[dict]:
-    url = (
-        f"{PROMETHEUS_URL}/api/v1/query?"
-        + urllib.parse.urlencode({"query": expr})
-    )
-    req = urllib.request.Request(url, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError) as exc:
-        sys.stderr.write(f"prometheus query failed: {exc}\n")
-        return []
-    if payload.get("status") != "success":
-        return []
-    return payload.get("data", {}).get("result") or []
-
-
-def _latin1_http_headers(headers: dict[str, str]) -> dict[str, str]:
-    """urllib/http.client requires ISO-8859-1 header values; strip non-ASCII (e.g. emoji titles)."""
-    safe: dict[str, str] = {}
-    for key, value in headers.items():
-        try:
-            value.encode("latin-1")
-            safe[key] = value
-        except UnicodeEncodeError:
-            safe[key] = value.encode("ascii", errors="ignore").strip() or key
-    return safe
-
-
-def _ntfy_publish(body: str, headers: dict[str, str]) -> tuple[int, str | None, str]:
-    url = f"{NTFY_BASE_URL}/{NTFY_TOPIC}"
-    req = urllib.request.Request(
-        url,
-        data=body.encode("utf-8"),
-        method="POST",
-        headers=_latin1_http_headers(headers),
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        return exc.code, None, detail
-    except urllib.error.URLError as exc:
-        return 502, None, str(exc.reason)
-    message_id = None
-    try:
-        message_id = json.loads(raw).get("id")
-    except json.JSONDecodeError:
-        pass
-    return 200, message_id, raw
-
-
-def _ntfy_update(message_id: str, body: str, headers: dict[str, str]) -> tuple[int, str]:
-    url = f"{NTFY_BASE_URL}/{NTFY_TOPIC}/{urllib.parse.quote(message_id, safe='')}"
-    req = urllib.request.Request(
-        url,
-        data=body.encode("utf-8"),
-        method="POST",
-        headers=_latin1_http_headers(headers),
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.status, resp.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as exc:
-        return exc.code, exc.read().decode("utf-8", errors="replace")
-    except urllib.error.URLError as exc:
-        return 502, str(exc.reason)
-
-
-def _group_state_path(group_id: str) -> Path:
-    GROUP_STATE_DIR.mkdir(parents=True, exist_ok=True)
-    return GROUP_STATE_DIR / f"{_safe_id(group_id)}.json"
-
-
-def _load_group_state(group_id: str) -> dict:
-    path = _group_state_path(group_id)
-    if not path.is_file():
-        return {}
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-
-
-def _save_group_state(group_id: str, state: dict) -> None:
-    path = _group_state_path(group_id)
-    path.write_text(json.dumps(state, indent=2), encoding="utf-8")
-
-
-def _format_user_list(users: list[str]) -> str:
-    if not users:
-        return "(none)"
-    return ", ".join(users)
-
-
-def _jellyfin_locked_users(namespace: str, payload: dict) -> list[str]:
-    expr = f'jellyfin_user_account{{namespace="{namespace}", admin="0"}} == 0'
-    users: list[str] = []
-    for sample in _prometheus_query(expr):
-        metric = sample.get("metric") or {}
-        username = str(metric.get("username") or "").strip()
-        if username:
-            users.append(username)
-    if users:
-        return sorted(set(users))
-    # Fallback when Prometheus is briefly stale.
-    for alert in payload.get("alerts") or []:
-        if not isinstance(alert, dict):
-            continue
-        labels = alert.get("labels") or {}
-        if labels.get("alertname") != "jellyfin_user_locked":
-            continue
-        if labels.get("namespace") != namespace:
-            continue
-        if alert.get("status") != "firing":
-            continue
-        username = str(labels.get("username") or "").strip()
-        if username:
-            users.append(username)
-    return sorted(set(users))
-
-
-def _jellyfin_markdown_links(namespace: str) -> str:
-    runbook = "https://runbooks.prometheus-operator.dev/"
-    grafana_alert = (
-        f"{GRAFANA_PUBLIC_URL}/alerting/list?search=jellyfin_user_locked"
-        if GRAFANA_PUBLIC_URL
-        else "https://runbooks.prometheus-operator.dev/"
-    )
-    dashboard = JELLYFIN_DASHBOARD_URL or (
-        f"{GRAFANA_PUBLIC_URL}/d/603679cbda70a9fe/jellyfin"
-        if GRAFANA_PUBLIC_URL
-        else ""
-    )
-    links = f"[Runbook]({runbook})"
-    if dashboard:
-        links += f" · [Dashboard]({dashboard})"
-    links += f" · [Alert in Grafana]({grafana_alert})"
-    return links
-
-
-def _jellyfin_ntfy_headers(
-    *,
-    title: str,
-    group_incident_id: str,
-    resolved: bool,
-) -> dict[str, str]:
-    hermes = f"{HERMES_PUBLIC_BASE_URL}/?incident={group_incident_id}&autostart=1"
-    headers = {
-        "Title": title,
-        "Markdown": "yes",
-        "Priority": "3" if resolved else "4",
-        "Tags": "white_check_mark" if resolved else "warning,rotating_light",
-        "X-Actions": f"view, Ask AI, {hermes}, clear=true",
-    }
-    if NTFY_CLICK_URL:
-        headers["X-Click"] = NTFY_CLICK_URL
-    return headers
-
-
-def _store_group_incident(
-    group_incident_id: str,
-    *,
-    status: str,
-    namespace: str,
-    users: list[str],
-    body: str,
-    receiver: str | None,
-) -> None:
-    summary = (
-        f"Jellyfin: {len(users)} user(s) locked in {namespace}"
-        if users
-        else f"Resolved: Jellyfin user lockouts in {namespace}"
-    )
-    incident = {
-        "id": group_incident_id,
-        "status": status,
-        "receiver": receiver,
-        "alert": {
-            "status": status,
-            "labels": {
-                "alertname": "jellyfin_user_locked",
-                "namespace": namespace,
-                "severity": "warning",
-                "homelab_team": "media",
-            },
-            "annotations": {
-                "summary": summary,
-                "description": body,
-                "dashboard_url": JELLYFIN_DASHBOARD_URL or None,
-                "recommended_ai_skills": "homelab-k8s-flux-triage,jellyfin-api",
-            },
-            "fingerprint": group_incident_id,
-        },
-    }
-    path = INCIDENT_DIR / f"{group_incident_id}.json"
-    path.write_text(json.dumps(incident, indent=2), encoding="utf-8")
-
-
-def _sync_jellyfin_user_locked_group(namespace: str, payload: dict) -> tuple[str, int | None]:
-    group_id = f"jellyfin_user_locked/{namespace}"
-    group_incident_id = _safe_id(f"group-jellyfin_user_locked-{namespace}")
-    state = _load_group_state(group_id)
-    users = _jellyfin_locked_users(namespace, payload)
-    receiver = payload.get("receiver")
-
-    if users:
-        user_line = f"Locked users: {_format_user_list(users)}"
-        active_episode = (
-            state.get("phase") == "active" and bool(state.get("ntfy_message_id"))
-        )
-        if not active_episode:
-            body = user_line
-            phase = "new"
-        elif state.get("last_users") == users:
-            return "unchanged", None
-        else:
-            body = f"{state['body']}\n\n-- Update --\n{user_line}"
-            phase = "updated"
-        title = f"Jellyfin: {len(users)} user(s) locked in {namespace}"
-        body_with_links = f"{body}\n\n---\n\n**Links:** {_jellyfin_markdown_links(namespace)}"
-        headers = _jellyfin_ntfy_headers(
-            title=title,
-            group_incident_id=group_incident_id,
-            resolved=False,
-        )
-        if phase == "new":
-            status, message_id, detail = _ntfy_publish(body_with_links, headers)
-            if status >= 400 or not message_id:
-                sys.stderr.write(f"ntfy publish failed ({status}): {detail}\n")
-                return "error", status or 502
-        else:
-            message_id = state["ntfy_message_id"]
-            status, detail = _ntfy_update(message_id, body_with_links, headers)
-            if status >= 400:
-                sys.stderr.write(f"ntfy update failed ({status}): {detail}\n")
-                return "error", status
-        _save_group_state(
-            group_id,
-            {
-                "group_id": group_id,
-                "group_incident_id": group_incident_id,
-                "namespace": namespace,
-                "alertname": "jellyfin_user_locked",
-                "ntfy_message_id": message_id,
-                "body": body,
-                "last_users": users,
-                "phase": "active",
-            },
-        )
-        _store_group_incident(
-            group_incident_id,
-            status="firing",
-            namespace=namespace,
-            users=users,
-            body=body_with_links,
-            receiver=receiver,
-        )
-        return phase, 200
-
-    if state.get("phase") != "active" or not state.get("ntfy_message_id"):
-        return "unchanged", None
-
-    body = f"{state.get('body', '')}\n\n-- Resolved --\nAll Jellyfin user lockouts cleared."
-    body_with_links = f"{body}\n\n---\n\n**Links:** {_jellyfin_markdown_links(namespace)}"
-    headers = _jellyfin_ntfy_headers(
-        title=f"Resolved: Jellyfin user lockouts ({namespace})",
-        group_incident_id=group_incident_id,
-        resolved=True,
-    )
-    status, detail = _ntfy_update(state["ntfy_message_id"], body_with_links, headers)
-    if status >= 400:
-        sys.stderr.write(f"ntfy resolve update failed ({status}): {detail}\n")
-        return "error", status
-    _save_group_state(
-        group_id,
-        {
-            "group_id": group_id,
-            "group_incident_id": group_incident_id,
-            "namespace": namespace,
-            "alertname": "jellyfin_user_locked",
-            "ntfy_message_id": state["ntfy_message_id"],
-            "body": body,
-            "last_users": [],
-            "phase": "resolved",
-        },
-    )
-    _store_group_incident(
-        group_incident_id,
-        status="resolved",
-        namespace=namespace,
-        users=[],
-        body=body_with_links,
-        receiver=receiver,
-    )
-    return "resolved", 200
-
-
-GROUPED_ALERT_HANDLERS: dict[str, Callable[[str, dict], tuple[str, int | None]]] = {
-    "jellyfin_user_locked": _sync_jellyfin_user_locked_group,
-}
-
-
-def _process_grouped_alerts(payload: dict) -> tuple[set[str], int | None]:
+def _summarize_hook_payload(payload: dict) -> str:
     alerts = payload.get("alerts") or []
-    namespaces_by_alert: dict[str, set[str]] = {}
-    for alert in alerts:
+    parts: list[str] = []
+    for alert in alerts[:12]:
         if not isinstance(alert, dict):
             continue
         labels = alert.get("labels") or {}
-        alertname = labels.get("alertname")
-        namespace = labels.get("namespace")
-        if alertname in GROUPED_ALERT_HANDLERS and namespace:
-            namespaces_by_alert.setdefault(alertname, set()).add(namespace)
-
-    handled: set[str] = set()
-    worst_status: int | None = None
-    for alertname, namespaces in namespaces_by_alert.items():
-        handler = GROUPED_ALERT_HANDLERS[alertname]
-        handled.add(alertname)
-        for namespace in sorted(namespaces):
-            phase, status = handler(namespace, payload)
-            sys.stderr.write(
-                f"grouped alert {alertname}/{namespace}: phase={phase} status={status}\n"
-            )
-            if status and (worst_status is None or status >= worst_status):
-                worst_status = status
-    return handled, worst_status
+        parts.append(
+            f"{alert.get('status', '?')}:{labels.get('alertname', '?')}@{labels.get('namespace', '?')}"
+        )
+    suffix = f" (+{len(alerts) - 12} more)" if len(alerts) > 12 else ""
+    return f"status={payload.get('status')} count={len(alerts)} [{', '.join(parts)}{suffix}]"
 
 
 def _handle_alertmanager_hook(payload: dict) -> tuple[int, bytes]:
-    _store_incidents(payload)
-    handled_names, grouped_status = _process_grouped_alerts(payload)
-
-    remaining = [
-        alert
-        for alert in (payload.get("alerts") or [])
-        if isinstance(alert, dict)
-        and (alert.get("labels") or {}).get("alertname") not in handled_names
-    ]
-    if not remaining:
-        body = json.dumps(
-            {"ok": True, "grouped": sorted(handled_names), "proxied": False}
-        ).encode("utf-8")
-        status = grouped_status if grouped_status and grouped_status >= 400 else 200
-        return status, body
-
-    filtered = dict(payload)
-    filtered["alerts"] = remaining
-    proxy_body = json.dumps(filtered).encode("utf-8")
-    status, resp_body = _proxy_to_ntfy(proxy_body, "application/json")
-    if grouped_status and grouped_status >= 400 and status < 400:
-        return grouped_status, json.dumps(
-            {"ok": False, "grouped_error": grouped_status, "proxy": resp_body.decode("utf-8", errors="replace")[:500]}
-        ).encode("utf-8")
+    sys.stderr.write(f"hook received: {_summarize_hook_payload(payload)}\n")
+    stored = _store_incidents(payload)
+    if stored:
+        sys.stderr.write(f"stored incidents: {', '.join(stored)}\n")
+    body = json.dumps(payload).encode("utf-8")
+    status, resp_body = _proxy_to_ntfy(body, "application/json")
+    if status >= 400:
+        sys.stderr.write(f"ntfy proxy failed ({status}): {resp_body[:500]!r}\n")
     return status, resp_body
 
 
@@ -527,7 +179,7 @@ def _forward_to_hermes(incident: dict) -> tuple[int, bytes]:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "homelab-alert-bridge/1.2"
+    server_version = "homelab-alert-bridge/2.0"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -686,7 +338,6 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     INCIDENT_DIR.mkdir(parents=True, exist_ok=True)
-    GROUP_STATE_DIR.mkdir(parents=True, exist_ok=True)
     server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), Handler)
     print(f"homelab-alert-bridge listening on :{HTTP_PORT}", flush=True)
     server.serve_forever()
