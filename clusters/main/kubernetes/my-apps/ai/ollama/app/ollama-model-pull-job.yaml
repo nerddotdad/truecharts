@@ -58,6 +58,7 @@ spec:
 
               ensure_model "qwen3.5:9b"
               ensure_model "windffooxxyang1130764/mesugaki-R18G:latest"
+              ensure_model "gemma4:latest"
               echo "all models satisfied"
           resources:
             requests:
