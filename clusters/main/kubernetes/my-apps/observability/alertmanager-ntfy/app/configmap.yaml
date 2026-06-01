@@ -62,6 +62,9 @@ data:
           headers:
             # Tap notification → open this topic in the ntfy app (not in-cluster Prometheus).
             X-Click: https://ntfy.${DOMAIN_0}/homelab-alerts
+            # Same Alertmanager fingerprint → update one ntfy notification (firing/resolved/repeat).
+            X-Sequence-ID: |
+              {{ .Fingerprint }}
             # Markdown body links for runbook/dashboard/alert; Ask AI stays a native action button.
             Markdown: "yes"
             X-Actions: |
