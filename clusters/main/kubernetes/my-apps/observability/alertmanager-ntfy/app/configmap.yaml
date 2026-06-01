@@ -12,23 +12,15 @@ data:
       baseurl: http://ntfy.observability.svc.cluster.local:10222
       notification:
         topic: homelab-alerts
+        # https://docs.ntfy.sh/publish/#message-priority
         priority: |
-          status == "firing" && labels.severity == "critical" ? "urgent" : (status == "firing" ? "high" : "default")
-        tags:
-          - tag: rotating_light
-            condition: status == "firing"
-          - tag: white_check_mark
-            condition: status == "resolved"
-          - tag: warning
-            condition: labels.severity == "warning"
-          - tag: skull
-            condition: labels.severity == "critical"
+          status == "resolved" ? "low" : (labels.severity == "critical" ? "urgent" : (labels.severity == "warning" ? "high" : "default"))
         templates:
           title: |
             {{- if eq .Status "resolved" -}}
-            ✅ Resolved: {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
+            Resolved: {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
             {{- else -}}
-            🔥 {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
+            {{ or (index .Annotations "summary") (index .Labels "alertname") "Alert" }}
             {{- end -}}
           description: |
             {{- if index .Annotations "description" -}}
@@ -52,6 +44,7 @@ data:
             Namespace: {{ . }}{{ end }}{{- with .Labels.job_name }}
             Job: {{ . }}{{ end }}{{- with .Labels.pod }}
             Pod: {{ . }}{{ end }}{{- with .Labels.severity }}
+
             Severity: {{ . }}{{ end }}
             {{- $runbook := or (index .Annotations "runbook_url") (index .Annotations "runbook") "https://runbooks.prometheus-operator.dev/" -}}
             {{- $grafanaAlert := printf "https://grafana.${DOMAIN_0}/alerting/list?search=%s" .Labels.alertname -}}

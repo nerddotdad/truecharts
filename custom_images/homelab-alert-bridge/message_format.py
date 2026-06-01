@@ -22,8 +22,33 @@ def ntfy_title(alert: dict) -> str:
         or "Alert"
     )
     if status == "resolved":
-        return f"✅ Resolved: {headline}"
-    return f"🔥 {headline}"
+        return f"Resolved: {headline}"
+    return headline
+
+
+def ntfy_priority(alert: dict) -> str:
+    """ntfy priority: min | low | default | high | urgent (see docs.ntfy.sh/publish)."""
+    status = str(alert.get("status") or "firing")
+    if status == "resolved":
+        return "low"
+    severity = str((alert.get("labels") or {}).get("severity") or "").lower()
+    if severity == "critical":
+        return "urgent"
+    if severity == "warning":
+        return "high"
+    return "default"
+
+
+def ntfy_tags_header(alert: dict) -> str:
+    """Short comma-separated ntfy tags (no Prometheus label dump)."""
+    labels = alert.get("labels") or {}
+    status = str(alert.get("status") or "firing")
+    parts: list[str] = [status]
+    for key in ("severity", "alertname", "namespace"):
+        value = labels.get(key)
+        if value:
+            parts.append(str(value))
+    return ",".join(parts)
 
 
 def ntfy_body(alert: dict) -> str:
@@ -73,22 +98,9 @@ def ntfy_body(alert: dict) -> str:
     return body + "".join(extras) + links
 
 
-def ntfy_tags_line(labels: dict) -> str:
-    """Approximate ntfy client tag line (Prometheus labels)."""
-    if not labels:
-        return ""
-    parts = [f"{key} = {labels[key]}" for key in sorted(labels)]
-    return "Tags: " + ", ".join(parts)
-
-
 def operator_message(alert: dict) -> str:
-    """Full text the operator sees in ntfy (title + body + label tags)."""
-    labels = alert.get("labels") or {}
-    parts = [ntfy_title(alert), "", ntfy_body(alert)]
-    tags = ntfy_tags_line(labels)
-    if tags:
-        parts.extend(["", tags])
-    return "\n".join(parts)
+    """Full text the operator sees in ntfy (title + body)."""
+    return "\n".join([ntfy_title(alert), "", ntfy_body(alert)])
 
 
 def agent_context(incident: dict) -> str:

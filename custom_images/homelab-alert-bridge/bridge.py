@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Store Alertmanager payloads, proxy to alertmanager-ntfy, forward triage to Hermes."""
+"""Store Alertmanager payloads, publish to ntfy, forward triage to Hermes."""
 
 from __future__ import annotations
 
@@ -15,13 +15,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from message_format import enrich_incident
+from ntfy_publish import publish_alerts
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
 PENDING_ID_FILE = INCIDENT_DIR / ".pending_incident"
-NTFY_BRIDGE_URL = os.environ.get(
-    "NTFY_BRIDGE_URL",
-    "http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook",
-)
 HERMES_WEBHOOK_URL = os.environ.get(
     "HERMES_WEBHOOK_URL",
     "http://hermes-oncall-app-template.ai.svc.cluster.local:8644/webhooks/homelab-alerts",
@@ -72,20 +69,6 @@ def _store_incidents(payload: dict) -> list[str]:
     return ids
 
 
-def _proxy_to_ntfy(body: bytes, content_type: str) -> tuple[int, bytes]:
-    req = urllib.request.Request(
-        NTFY_BRIDGE_URL,
-        data=body,
-        method="POST",
-        headers={"Content-Type": content_type or "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.status, resp.read()
-    except urllib.error.HTTPError as exc:
-        return exc.code, exc.read()
-
-
 def _summarize_hook_payload(payload: dict) -> str:
     alerts = payload.get("alerts") or []
     parts: list[str] = []
@@ -105,10 +88,9 @@ def _handle_alertmanager_hook(payload: dict) -> tuple[int, bytes]:
     stored = _store_incidents(payload)
     if stored:
         sys.stderr.write(f"stored incidents: {', '.join(stored)}\n")
-    body = json.dumps(payload).encode("utf-8")
-    status, resp_body = _proxy_to_ntfy(body, "application/json")
+    status, resp_body = publish_alerts(payload)
     if status >= 400:
-        sys.stderr.write(f"ntfy proxy failed ({status}): {resp_body[:500]!r}\n")
+        sys.stderr.write(f"ntfy publish failed ({status}): {resp_body[:500]!r}\n")
     return status, resp_body
 
 

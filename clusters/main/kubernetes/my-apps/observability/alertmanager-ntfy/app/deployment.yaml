@@ -16,7 +16,7 @@ spec:
     metadata:
       annotations:
         # Roll pod when config changes (alertmanager-ntfy reads config only at startup).
-        checksum/config: 7-ntfy-sequence-id-fingerprint
+        checksum/config: 8-no-emoji-priority-tags
       labels:
         app.kubernetes.io/name: alertmanager-ntfy
     spec:

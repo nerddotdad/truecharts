@@ -20,7 +20,7 @@ spec:
       containers:
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:2.1.0
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:2.2.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -28,8 +28,12 @@ spec:
           env:
             - name: INCIDENT_DIR
               value: /data/incidents
-            - name: NTFY_BRIDGE_URL
-              value: http://alertmanager-ntfy.observability.svc.cluster.local:8000/hook
+            - name: NTFY_BASE_URL
+              value: http://ntfy.observability.svc.cluster.local:10222
+            - name: NTFY_TOPIC
+              value: homelab-alerts
+            - name: NTFY_PUBLIC_URL
+              value: https://ntfy.${DOMAIN_0}
             - name: GRAFANA_PUBLIC_URL
               value: https://grafana.${DOMAIN_0}
             - name: HERMES_WEBHOOK_URL
