@@ -8,7 +8,7 @@ metadata:
 spec:
   route:
     groupBy: ["alertname", "namespace", "severity"]
-    groupInterval: 10m
+    groupInterval: 1m
     groupWait: 30s
     receiver: homelab-webhook
     repeatInterval: 12h
