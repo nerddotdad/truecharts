@@ -29,6 +29,18 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: volsync.backube
+              version: v1alpha1
+              kind: ReplicationDestination
+            patch: |
+              - op: replace
+                path: /spec/trigger
+                value:
+                  schedule: "5 1 * * *"
   values:
     credentials:
       truenas_garage:
@@ -55,10 +67,13 @@ spec:
           - name: database
             type: restic
             credentials: truenas_garage
+            cleanupTempPVC: true
             dest:
-              enabled: false
+              enabled: true
             src:
               enabled: true
+              trigger:
+                schedule: "0 1 * * *"
     ingress:
       main:
         enabled: true

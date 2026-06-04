@@ -1,0 +1,47 @@
+# Longhorn maintenance for VolSync (see TrueCharts guide):
+# https://truecharts.org/guides/clustertool/csi/longhorn/#issues-with-longhorn-and-volsync
+#
+# VolSync daily snapshots are removed after backup, but Longhorn can keep reporting
+# that space as "used" until filesystem-trim runs. Without this, schedulable disk can
+# drop even when actual payload size is modest.
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: trim
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: "0 2 * * *"
+  groups:
+    - default
+  task: filesystem-trim
+  retain: 0
+---
+# Removes stale volume snapshots (including user-created ones). Runs before the
+# nightly VolSync window so prior-day snapshot chains do not accumulate.
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-delete
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: "0 22 * * *"
+  groups:
+    - default
+  task: snapshot-delete
+  retain: 0
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-cleanup
+  namespace: longhorn-system
+spec:
+  concurrency: 1
+  cron: "30 22 * * *"
+  groups:
+    - default
+  task: snapshot-cleanup
+  retain: 0

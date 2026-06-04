@@ -29,6 +29,19 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  # TrueCharts sets ReplicationDestination to manual: restore-once; use scheduled restore instead.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: volsync.backube
+              version: v1alpha1
+              kind: ReplicationDestination
+            patch: |
+              - op: replace
+                path: /spec/trigger
+                value:
+                  schedule: "5 0 * * *"
   values:
     credentials:
       truenas_garage:
@@ -51,10 +64,13 @@ spec:
           - name: config
             type: restic
             credentials: truenas_garage
+            cleanupTempPVC: true
             dest:
               enabled: true
             src:
               enabled: true
+              trigger:
+                schedule: "0 0 * * *"
       target: # this is the target location for media
         enabled: true
         type: nfs

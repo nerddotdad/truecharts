@@ -29,6 +29,18 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: volsync.backube
+              version: v1alpha1
+              kind: ReplicationDestination
+            patch: |
+              - op: replace
+                path: /spec/trigger
+                value:
+                  schedule: "25 0 * * *"
   values:
     credentials:
       truenas_garage:
@@ -51,10 +63,13 @@ spec:
           - name: config
             type: restic
             credentials: truenas_garage
+            cleanupTempPVC: true
             dest:
               enabled: true
             src:
               enabled: true
+              trigger:
+                schedule: "20 0 * * *"
       target: # this is the target location for media
         enabled: true
         type: nfs
