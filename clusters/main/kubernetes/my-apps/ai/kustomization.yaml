@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - ollama/ks.yaml
-  - searxng/ks.yaml
+  # - searxng/ks.yaml
   - hermes-oncall/ks.yaml
