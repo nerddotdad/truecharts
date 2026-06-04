@@ -1,0 +1,233 @@
+---
+# Longhorn + VolSync: disk schedulability, backup windows, and mover job health.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-storage
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.longhorn
+      interval: 1m
+      rules:
+        - alert: HomelabLonghornDiskNotSchedulable
+          expr: longhorn_disk_status{condition="schedulable"} == 0
+          for: 10m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "Longhorn disk not schedulable ({{ $labels.node }}/{{ $labels.disk }})"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Longhorn cannot schedule new replicas on {{ $labels.node }} disk {{ $labels.disk }}.
+              VolSync snapshot clones and new PVCs may stay ContainerCreating (faulted volumes).
+              Check Longhorn UI disk free space vs storageMinimalAvailablePercentage (currently 20%).
+              After recovery: pause ReplicationSource, delete faulted volsync-*-src PVCs, unpause.
+
+        - alert: HomelabLonghornDiskSpaceLow
+          expr: |
+            (
+              longhorn_disk_capacity_bytes - longhorn_disk_usage_bytes
+            )
+            / longhorn_disk_capacity_bytes < 0.30
+          for: 30m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Longhorn disk free space below 30% ({{ $labels.node }}/{{ $labels.disk }})"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Filesystem headroom on {{ $labels.node }}/{{ $labels.disk }} is under 30% of capacity.
+              Schedulability may fail near the 20% minimal-available setting. Run trim/snapshot cleanup recurring jobs;
+              remove faulted volsync-*-src PVCs if present.
+
+        - alert: HomelabLonghornNodeStorageScheduledHigh
+          expr: |
+            longhorn_node_storage_scheduled_bytes
+            / longhorn_node_storage_capacity_bytes > 0.85
+          for: 1h
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Longhorn scheduled storage > 85% of node capacity ({{ $labels.node }})"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Node {{ $labels.node }} has high scheduled vs capacity ratio (overprovisioning + snapshots).
+              UI "allocated" can exceed real usage; still worth trimming before disks become unschedulable.
+
+        - alert: HomelabLonghornVolumeFaulted
+          expr: |
+            longhorn_volume_robustness{
+              state="faulted",
+              pvc_namespace=~"downloaders|media|ai",
+              pvc!~"volsync-.*"
+            } == 1
+          for: 30m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "Longhorn volume faulted: {{ $labels.pvc_namespace }}/{{ $labels.pvc }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Application PVC {{ $labels.pvc_namespace }}/{{ $labels.pvc }} is faulted on Longhorn.
+              Check volume events and replica status in Longhorn UI before deleting PVCs.
+
+        - alert: HomelabLonghornVolsyncPvcFaulted
+          expr: longhorn_volume_robustness{state="faulted", pvc=~"volsync-.*"} == 1
+          for: 10m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "Longhorn VolSync temp PVC faulted: {{ $labels.pvc_namespace }}/{{ $labels.pvc }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              VolSync clone/snapshot PVC {{ $labels.pvc }} is faulted. Safe to delete after pausing ReplicationSource
+              (spec.paused: true). App data PVCs are separate; Garage holds Restic backups.
+
+    - name: homelab.volsync
+      interval: 1m
+      rules:
+        - alert: HomelabVolsyncMetricsDown
+          expr: |
+            up{namespace="volsync"} == 0
+            or absent(up{namespace="volsync"})
+          for: 20m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "VolSync Prometheus scrape down (volsync namespace)"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-metrics-down/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Prometheus cannot scrape VolSync operator metrics for 20+ minutes.
+              Backup alerts depending on volsync_* metrics may be blind.
+
+        - alert: HomelabVolsyncMissedBackupInterval
+          expr: |
+            volsync_missed_intervals_total{
+              role="source",
+              obj_namespace=~"downloaders|media|ai"
+            } > 0
+          for: 6h
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "VolSync missed backup interval: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed at least one scheduled Restic interval.
+              Check volsync-src job logs, Longhorn disk schedulability, and faulted volsync-*-src PVCs.
+
+        - alert: HomelabVolsyncMissedBackupIntervalCritical
+          expr: |
+            volsync_missed_intervals_total{
+              role="source",
+              obj_namespace=~"downloaders|media|ai"
+            } > 0
+          for: 30h
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "VolSync backup missed >30h: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              No successful backup window for {{ $labels.obj_namespace }}/{{ $labels.obj_name }} in over 30 hours.
+              Data in Garage may be stale; fix Longhorn/VolSync before the next staggered cron window.
+
+        - alert: HomelabVolsyncSourceOutOfSync
+          expr: |
+            volsync_volume_out_of_sync{
+              role="source",
+              obj_namespace=~"downloaders|media|ai"
+            } == 1
+            and on (method, obj_namespace, obj_name, role)
+            volsync_missed_intervals_total{role="source"} > 0
+          for: 12h
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "VolSync source out of sync: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Source volume {{ $labels.obj_name }} is out of sync with missed intervals (destination role excluded;
+              TrueCharts dest restore-once may stay out of sync by design).
+
+        - alert: HomelabVolsyncSrcJobFailed
+          expr: kube_job_failed{job_name=~"volsync-src.*"} > 0
+          for: 15m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "VolSync src job failed: {{ $labels.namespace }}/{{ $labels.job_name }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Job {{ $labels.namespace }}/{{ $labels.job_name }} failed. Logs: kubectl logs job/{{ $labels.job_name }} -n {{ $labels.namespace }}
+
+        - alert: HomelabVolsyncSrcPodStuck
+          expr: |
+            (
+              time() - kube_pod_start_time{pod=~"volsync-src-.*"}
+            ) > 7200
+            and on (namespace, pod)
+            kube_pod_status_phase{pod=~"volsync-src-.*", phase="Pending"} == 1
+          for: 30m
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "VolSync src pod stuck Pending >2h: {{ $labels.namespace }}/{{ $labels.pod }}"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Mover pod {{ $labels.pod }} has been Pending (often ContainerCreating) for over 2 hours.
+              Typical cause: Longhorn cannot attach volsync-*-src clone (disk not schedulable / faulted volume).
+
+        - alert: HomelabVolsyncSrcJobsConcurrent
+          expr: count(kube_job_status_active{job_name=~"volsync-src.*"} > 0) > 4
+          for: 30m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "Many concurrent VolSync src jobs ({{ $value }} active)"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              More than four volsync-src jobs are active at once. Staggered schedules may have drifted to the same cron,
+              increasing Longhorn snapshot pressure at midnight.
+
+        - alert: HomelabVolsyncReplicationSourceReconcileErrors
+          expr: |
+            increase(controller_runtime_reconcile_errors_total{controller="replicationsource"}[1h]) > 10
+          for: 15m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "VolSync ReplicationSource reconcile errors elevated"
+            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              VolSync operator logged >10 ReplicationSource reconcile errors in the last hour.
+              Pair with src job/pod and Longhorn disk alerts for root cause.
