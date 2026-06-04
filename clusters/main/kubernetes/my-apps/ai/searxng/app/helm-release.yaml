@@ -28,18 +28,6 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              group: volsync.backube
-              version: v1alpha1
-              kind: ReplicationDestination
-            patch: |
-              - op: replace
-                path: /spec/trigger
-                value:
-                  schedule: "15 1 * * *"
   values:
     credentials:
       truenas_garage:
@@ -62,11 +50,14 @@ spec:
           - name: config
             type: restic
             credentials: truenas_garage
-            cleanupTempPVC: true
+            # Keep temp/prime PVCs until Longhorn clone to searxng-config completes (avoids 0-engine source / ClaimMisbound).
+            cleanupTempPVC: false
             dest:
               enabled: true
             src:
               enabled: true
+              # Pause during dest bootstrap; remove paused after pod is Running and clone is Ready.
+              paused: true
               trigger:
                 schedule: "10 1 * * *"
     ingress:
