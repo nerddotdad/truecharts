@@ -35,7 +35,7 @@ spec:
       repository: ghcr.io/nerddotdad/homelab-docs
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-docs
-      tag: 1.0.14@sha256:684c80c9839678b794e39e2e6a4089f49e71bdc8853d8d779a319aa7e9e37826
+      tag: 1.0.14@sha256:1e9a9f6c40435059703c7b52a0735b8c67e590bd9cc5b16c2a3174e25cb96d80
 
     workload:
       main:
