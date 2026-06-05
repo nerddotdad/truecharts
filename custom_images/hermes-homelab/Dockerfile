@@ -1,5 +1,5 @@
 # Hermes WebUI + homelab kubectl/flux + bundled skills/extensions/scripts.
-FROM ghcr.io/nesquena/hermes-webui:latest@sha256:6b5f2fd277c19ad714dd1159b1e67237a14fa024dddd8abe6afa73ac42d7e7e0
+FROM ghcr.io/nesquena/hermes-webui:latest@sha256:4038659de15da48a373904df90bd1e464ac49cd61540ef9430a5a91aa59f2ea4
 
 USER root
 
