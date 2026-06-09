@@ -1,11 +1,12 @@
 # One-time model pull for GitOps bootstrap.
-# Default model: qwen3.5:9b (Hermes Guide pick; 256K native, 64K+ with OLLAMA_CONTEXT_LENGTH on RTX 3090).
+# Active model: qwen3.6:27b (Hermes Guide pick for RTX 3090; see OLLAMA_CONTEXT_LENGTH in helm-release).
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
-# - Job spec.template is immutable: delete before changing the script or model:
+# - Job spec.template is immutable: delete before changing the script or model list:
 #   kubectl delete job -n ai ollama-model-pull-job
 # - Large pulls may run >12h; KubeJobNotCompleted is suppressed for this job_name (see homelab-ai PrometheusRule).
 #   Delete the Job after success so metrics/alerts clear: kubectl delete job ollama-model-pull-job -n ai
 # - Script is idempotent: skips /api/pull when /api/tags already lists the model (avoids false KubeJobFailed).
+# - Unlisted models are deleted before pulls to reclaim disk. Only names in WANTED_MODELS are kept.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -21,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        homelab.dev/pull-script-version: "2-idempotent"
+        homelab.dev/pull-script-version: "3-prune-unlisted"
     spec:
       restartPolicy: Never
       containers:
@@ -34,6 +35,15 @@ spec:
               set -eu
               OLLAMA_API=http://ollama-api.ai.svc.cluster.local:11434
 
+              # Single source of truth — only these models are kept on disk.
+              WANTED_MODELS="
+              qwen3.6:27b
+              "
+
+              # Disk-heavy optional models (not in WANTED_MODELS — pruned on next job run if present):
+              #   windffooxxyang1130764/mesugaki-R18G:latest
+              #   gemma4:latest
+
               until curl -sf "$OLLAMA_API/api/tags" >/dev/null; do
                 echo "waiting for ollama API..."
                 sleep 10
@@ -43,6 +53,30 @@ spec:
                 model="$1"
                 tags=$(curl -sf "$OLLAMA_API/api/tags") || return 1
                 echo "$tags" | grep -F '"name":"'"$model"'"' >/dev/null
+              }
+
+              model_wanted() {
+                model="$1"
+                for want in $WANTED_MODELS; do
+                  if [ "$model" = "$want" ]; then
+                    return 0
+                  fi
+                done
+                return 1
+              }
+
+              remove_unlisted_models() {
+                tags=$(curl -sf "$OLLAMA_API/api/tags") || return 1
+                echo "$tags" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 | sort -u | while read -r installed; do
+                  [ -n "$installed" ] || continue
+                  if model_wanted "$installed"; then
+                    echo "$installed is wanted, keeping"
+                    continue
+                  fi
+                  echo "removing unlisted model: $installed"
+                  curl -sf -X DELETE "$OLLAMA_API/api/delete" -d '{"model":"'"$installed"'"}' \
+                    || echo "warning: failed to delete $installed"
+                done
               }
 
               ensure_model() {
@@ -56,10 +90,13 @@ spec:
                 echo "pull complete: $model"
               }
 
-              ensure_model "qwen3.5:9b"
-              ensure_model "windffooxxyang1130764/mesugaki-R18G:latest"
-              ensure_model "gemma4:latest"
-              echo "all models satisfied"
+              remove_unlisted_models
+
+              for model in $WANTED_MODELS; do
+                ensure_model "$model"
+              done
+
+              echo "all wanted models satisfied"
           resources:
             requests:
               cpu: 50m

@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: jellyfin
-      version: 23.3.5
+      version: 23.3.4
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -29,18 +29,6 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              group: volsync.backube
-              version: v1alpha1
-              kind: ReplicationDestination
-            patch: |
-              - op: replace
-                path: /spec/trigger
-                value:
-                  schedule: "25 1 * * *"
   values:
     credentials:
       truenas_garage:

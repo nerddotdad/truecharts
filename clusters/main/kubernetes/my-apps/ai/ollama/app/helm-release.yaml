@@ -80,7 +80,7 @@ spec:
                 OLLAMA_KV_CACHE_TYPE: "q8_0"
                 OLLAMA_GPU_OVERHEAD: "536870912"
                 # qwen3.5:9b — 256K native; tested ~17GB VRAM at 262144 on RTX 3090 (100% GPU)
-                OLLAMA_CONTEXT_LENGTH: "262144"
+                OLLAMA_CONTEXT_LENGTH: "256000"
       ui:
         enabled: false
 
