@@ -56,8 +56,6 @@ spec:
               enabled: true
             src:
               enabled: true
-              # Pause during dest bootstrap; remove paused after pod is Running and clone is Ready.
-              paused: true
               trigger:
                 schedule: "10 1 * * *"
     ingress:

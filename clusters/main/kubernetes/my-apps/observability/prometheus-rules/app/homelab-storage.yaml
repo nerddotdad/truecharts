@@ -33,18 +33,18 @@ spec:
             (
               longhorn_disk_capacity_bytes - longhorn_disk_usage_bytes
             )
-            / longhorn_disk_capacity_bytes < 0.30
+            / longhorn_disk_capacity_bytes < 0.15
           for: 30m
           labels:
-            severity: warning
+            severity: critical
             homelab_team: platform
           annotations:
-            summary: "Longhorn disk free space below 30% ({{ $labels.node }}/{{ $labels.disk }})"
+            summary: "Longhorn disk free space below 15% ({{ $labels.node }}/{{ $labels.disk }})"
             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
-              Filesystem headroom on {{ $labels.node }}/{{ $labels.disk }} is under 30% of capacity.
-              Schedulability may fail near the 20% minimal-available setting. Run trim/snapshot cleanup recurring jobs;
+              Filesystem headroom on {{ $labels.node }}/{{ $labels.disk }} is under 15% of capacity.
+              Schedulability of node may be lost. Run trim/snapshot cleanup recurring jobs;
               remove faulted volsync-*-src PVCs if present.
 
         - alert: HomelabLonghornNodeStorageScheduledHigh
@@ -117,10 +117,10 @@ spec:
 
         - alert: HomelabVolsyncMissedBackupInterval
           expr: |
-            volsync_missed_intervals_total{
+            increase(volsync_missed_intervals_total{
               role="source",
               obj_namespace=~"downloaders|media|ai"
-            } > 0
+            }[26h]) > 0
           for: 6h
           labels:
             severity: warning
@@ -130,15 +130,15 @@ spec:
             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
-              ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed at least one scheduled Restic interval.
+              ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed a scheduled Restic interval in the last 26 hours.
               Check volsync-src job logs, Longhorn disk schedulability, and faulted volsync-*-src PVCs.
 
         - alert: HomelabVolsyncMissedBackupIntervalCritical
           expr: |
-            volsync_missed_intervals_total{
+            increase(volsync_missed_intervals_total{
               role="source",
               obj_namespace=~"downloaders|media|ai"
-            } > 0
+            }[30h]) > 0
           for: 30h
           labels:
             severity: critical
@@ -148,7 +148,7 @@ spec:
             runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
-              No successful backup window for {{ $labels.obj_namespace }}/{{ $labels.obj_name }} in over 30 hours.
+              ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed backup interval(s) within the last 30 hours and the condition has persisted.
               Data in Garage may be stale; fix Longhorn/VolSync before the next staggered cron window.
 
         - alert: HomelabVolsyncSourceOutOfSync
@@ -158,7 +158,10 @@ spec:
               obj_namespace=~"downloaders|media|ai"
             } == 1
             and on (method, obj_namespace, obj_name, role)
-            volsync_missed_intervals_total{role="source"} > 0
+            increase(volsync_missed_intervals_total{
+              role="source",
+              obj_namespace=~"downloaders|media|ai"
+            }[26h]) > 0
           for: 12h
           labels:
             severity: warning
