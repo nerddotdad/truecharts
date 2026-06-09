@@ -59,7 +59,7 @@ spec:
                 - -c
                 - |
                   # Bump when GitOps homepage config changes; re-seeds PVC from chart ConfigMap.
-                  SEED_VERSION="2026-06-09-single-pane"
+                  SEED_VERSION="2026-06-09-bookmarks-bottom"
                   mkdir -p /app/config
                   if [ ! -f /app/config/.seed-version ] || [ "$(cat /app/config/.seed-version 2>/dev/null)" != "$SEED_VERSION" ]; then
                     echo "Seeding homepage config ($SEED_VERSION)..."
@@ -104,6 +104,12 @@ spec:
               font-size: 0.78rem;
               text-transform: uppercase;
               opacity: 0.88;
+            }
+
+            /* Compact icon-only bookmark rows at page bottom */
+            a.bookmark {
+              min-width: 3rem;
+              justify-content: center;
             }
           kubernetes.yaml: |
             ---
@@ -151,10 +157,7 @@ spec:
               mobileButtonPosition: bottom-right
 
             layout:
-              # Single page — group order and row layouts keep dense sections (esp. downloaders) compact.
-              Cluster:
-                header: false
-
+              # Services first; bookmark link groups at the bottom as compact icon rows.
               media:
                 style: row
                 columns: 4
@@ -204,7 +207,17 @@ spec:
                 columns: 2
                 icon: mdi-web
 
+              Cluster:
+                iconsOnly: true
+                header: false
+                style: row
+                columns: 6
+
               References:
+                iconsOnly: true
+                header: false
+                style: row
+                columns: 4
                 initiallyCollapsed: true
 
           widgets.yaml: |
