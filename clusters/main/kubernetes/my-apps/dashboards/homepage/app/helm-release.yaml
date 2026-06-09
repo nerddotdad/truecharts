@@ -59,7 +59,7 @@ spec:
                 - -c
                 - |
                   # Bump when GitOps homepage config changes; re-seeds PVC from chart ConfigMap.
-                  SEED_VERSION="2026-06-09-clean-layout"
+                  SEED_VERSION="2026-06-09-single-pane"
                   mkdir -p /app/config
                   if [ ! -f /app/config/.seed-version ] || [ "$(cat /app/config/.seed-version 2>/dev/null)" != "$SEED_VERSION" ]; then
                     echo "Seeding homepage config ($SEED_VERSION)..."
@@ -151,71 +151,61 @@ spec:
               mobileButtonPosition: bottom-right
 
             layout:
+              # Single page — group order and row layouts keep dense sections (esp. downloaders) compact.
               Cluster:
-                tab: Overview
                 header: false
-              References:
-                tab: Overview
-                initiallyCollapsed: true
 
               media:
-                tab: Media
                 style: row
                 columns: 4
                 icon: mdi-play-circle-outline
 
               downloaders:
-                tab: Downloaders
                 style: row
-                columns: 4
+                columns: 6
                 icon: mdi-download-network
 
               ai:
-                tab: AI
                 style: row
-                columns: 3
+                columns: 4
                 icon: mdi-robot-outline
 
               observability:
-                tab: Platform
                 style: row
                 columns: 3
                 icon: mdi-chart-timeline-variant
 
               dashboards:
-                tab: Platform
                 style: row
                 columns: 3
                 icon: mdi-view-dashboard-outline
 
               external:
-                tab: Platform
                 style: row
                 columns: 3
                 icon: mdi-server-network
 
               smart-home:
-                tab: Platform
                 style: row
                 columns: 2
                 icon: mdi-home-automation
 
               gaming:
-                tab: Gaming
                 style: row
                 columns: 3
                 icon: mdi-gamepad-variant
 
               tools:
-                tab: Gaming
                 style: row
                 columns: 2
 
               websites:
-                tab: Gaming
                 style: row
                 columns: 2
                 icon: mdi-web
+
+              References:
+                initiallyCollapsed: true
 
           widgets.yaml: |
             ---
