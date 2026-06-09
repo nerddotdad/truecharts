@@ -30,7 +30,7 @@ spec:
       # Overprovisioning might be needed when using volsync
       storageOverProvisioningPercentage: "200"
       storageReservedPercentageForDefaultDisk: "10"
-      storageMinimalAvailablePercentage: "20"
+      storageMinimalAvailablePercentage: "15"
       # v2DataEngine: true
     csi:
       attacherReplicaCount: 1
