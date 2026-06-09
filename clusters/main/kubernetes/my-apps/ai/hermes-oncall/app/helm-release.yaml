@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 18.6.4
+      version: 18.6.8
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -52,7 +52,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.26
+      tag: 1.1.28
 
     workload:
       main:
