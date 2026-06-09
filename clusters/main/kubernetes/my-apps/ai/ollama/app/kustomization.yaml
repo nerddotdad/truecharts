@@ -4,4 +4,3 @@ resources:
   - helm-release.yaml
   - ollama-api-service.yaml
   - ollama-model-pull-job.yaml
-  # - old_working.yaml
