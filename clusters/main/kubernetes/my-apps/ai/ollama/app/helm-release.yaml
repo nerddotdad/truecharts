@@ -89,7 +89,7 @@ spec:
         type: pvc
         storageClass: longhorn
         accessMode: ReadWriteOnce
-        size: 120Gi
+        size: 60Gi
         mountPath: "/root/.ollama"
         targetSelector:
           main:
