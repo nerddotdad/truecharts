@@ -50,7 +50,7 @@ spec:
         - alert: HomelabLonghornNodeStorageScheduledHigh
           expr: |
             longhorn_node_storage_scheduled_bytes
-            / longhorn_node_storage_capacity_bytes > 0.85
+            / longhorn_node_storage_capacity_bytes > 0.90
           for: 1h
           labels:
             severity: warning
