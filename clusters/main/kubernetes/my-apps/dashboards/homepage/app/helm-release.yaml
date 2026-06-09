@@ -58,36 +58,18 @@ spec:
                 - /bin/sh
                 - -c
                 - |
+                  # Bump when GitOps homepage config changes; re-seeds PVC from chart ConfigMap.
+                  SEED_VERSION="2026-06-09-clean-layout"
                   mkdir -p /app/config
-                  if [ ! -f /app/config/bookmarks.yaml ]; then
-                    echo "Bookmarks file not found, copying dummy..."
+                  if [ ! -f /app/config/.seed-version ] || [ "$(cat /app/config/.seed-version 2>/dev/null)" != "$SEED_VERSION" ]; then
+                    echo "Seeding homepage config ($SEED_VERSION)..."
                     cp /dummy-config/bookmarks.yaml /app/config/bookmarks.yaml
-                    echo "Config file copied, you can now edit it at /app/config/bookmarks.yaml"
-                  fi
-                  if [ ! -f /app/config/services.yaml ]; then
-                    echo "services file not found, copying dummy..."
                     cp /dummy-config/services.yaml /app/config/services.yaml
-                    echo "Config file copied, you can now edit it at /app/config/services.yaml"
-                  fi
-                  if [ ! -f /app/config/settings.yaml ]; then
-                    echo "settings file not found, copying dummy..."
                     cp /dummy-config/settings.yaml /app/config/settings.yaml
-                    echo "Config file copied, you can now edit it at /app/config/settings.yaml"
-                  fi
-                  if [ ! -f /app/config/widgets.yaml ]; then
-                    echo "widgets file not found, copying dummy..."
                     cp /dummy-config/widgets.yaml /app/config/widgets.yaml
-                    echo "Config file copied, you can now edit it at /app/config/widgets.yaml"
-                  fi
-                  if [ ! -f /app/config/custom.css ]; then
-                    echo "custom.css file not found, copying dummy..."
                     cp /dummy-config/custom.css /app/config/custom.css
-                    echo "Config file copied, you can now edit it at /app/config/custom.css"
-                  fi
-                  if [ ! -f /app/config/custom.js ]; then
-                    echo "custom.js file not found, copying dummy..."
                     cp /dummy-config/custom.js /app/config/custom.js
-                    echo "Config file copied, you can now edit it at /app/config/custom.js"
+                    echo "$SEED_VERSION" > /app/config/.seed-version
                   fi
           containers:
             main:
@@ -103,23 +85,25 @@ spec:
           custom.js: ""
           custom.css: |
             :root {
-              --card-radius: 14px;
+              --card-radius: 12px;
             }
 
-            .service, .bookmark {
+            .service,
+            .bookmark {
               border-radius: var(--card-radius) !important;
-              border: 1px solid color-mix(in srgb, var(--color-500) 28%, transparent);
-              box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+              border: 1px solid color-mix(in srgb, var(--color-500) 22%, transparent);
             }
 
-            .service:hover, .bookmark:hover {
-              transform: translateY(-2px);
-              transition: transform 0.18s ease-in-out;
+            .service:hover,
+            .bookmark:hover {
+              border-color: color-mix(in srgb, var(--color-400) 40%, transparent);
             }
 
             .group-title {
-              letter-spacing: 0.02em;
+              letter-spacing: 0.05em;
+              font-size: 0.78rem;
               text-transform: uppercase;
+              opacity: 0.88;
             }
           kubernetes.yaml: |
             ---
@@ -130,55 +114,128 @@ spec:
 
           settings.yaml: |
             ---
-            # For configuration options and examples, please see:
-            # https://gethomepage.dev/configs/
+            # https://gethomepage.dev/configs/settings/
 
             providers:
               longhorn:
-                # Use in-cluster Longhorn frontend service to avoid external DNS resolution issues.
                 url: http://longhorn-frontend.longhorn-system.svc
 
-            title: HomeLab Control Center
+            title: Homelab
             description: TrueCharts cluster dashboard
-            language: en
-            headerStyle: underlined
-            cardBlur: sm
-            statusStyle: dot
-            color: slate
+            language: en-US
             theme: dark
-            hideVersion: true
+            color: zinc
+            headerStyle: clean
+            iconStyle: theme
+            statusStyle: dot
+            fullWidth: true
+            maxGroupColumns: 6
+            bookmarksStyle: icons
             useEqualHeights: true
+            hideVersion: true
+            disableUpdateCheck: true
+            disableIndexing: true
             target: _self
 
+            # cardBlur conflicts with background blur/saturate/brightness — use opacity only.
+            cardBlur: md
             background:
               image: https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2400&auto=format&fit=crop
-              blur: sm
-              saturate: 115
-              brightness: 40
-              opacity: 35
+              opacity: 28
 
             quicklaunch:
               searchDescriptions: true
               hideInternetSearch: false
               showSearchSuggestions: true
+              hideVisitURL: false
+              mobileButtonPosition: bottom-right
+
+            layout:
+              Cluster:
+                tab: Overview
+                header: false
+              References:
+                tab: Overview
+                initiallyCollapsed: true
+
+              media:
+                tab: Media
+                style: row
+                columns: 4
+                icon: mdi-play-circle-outline
+
+              downloaders:
+                tab: Downloaders
+                style: row
+                columns: 4
+                icon: mdi-download-network
+
+              ai:
+                tab: AI
+                style: row
+                columns: 3
+                icon: mdi-robot-outline
+
+              observability:
+                tab: Platform
+                style: row
+                columns: 3
+                icon: mdi-chart-timeline-variant
+
+              dashboards:
+                tab: Platform
+                style: row
+                columns: 3
+                icon: mdi-view-dashboard-outline
+
+              external:
+                tab: Platform
+                style: row
+                columns: 3
+                icon: mdi-server-network
+
+              smart-home:
+                tab: Platform
+                style: row
+                columns: 2
+                icon: mdi-home-automation
+
+              gaming:
+                tab: Gaming
+                style: row
+                columns: 3
+                icon: mdi-gamepad-variant
+
+              tools:
+                tab: Gaming
+                style: row
+                columns: 2
+
+              websites:
+                tab: Gaming
+                style: row
+                columns: 2
+                icon: mdi-web
 
           widgets.yaml: |
             ---
-            # For configuration options and examples, please see:
-            # https://gethomepage.dev/widgets/
+            # https://gethomepage.dev/configs/information-widgets/
 
             - greeting:
-                text_size: xl
-                text: "Welcome back"
+                text_size: lg
+                text: "Homelab"
 
-            - resources:
-                cpu: true
-                memory: true
-                disk: /
+            - datetime:
+                text_size: md
+                locale: en-US
+                format:
+                  dateStyle: long
+                  timeStyle: short
 
             - search:
                 provider: duckduckgo
                 target: _blank
+                showSearchSuggestions: true
 
             - kubernetes:
                 cluster:
@@ -186,30 +243,22 @@ spec:
                   cpu: true
                   memory: true
                   showLabel: true
-                  label: "main-cluster"
+                  label: main-cluster
                 nodes:
-                  show: true
-                  cpu: true
-                  memory: true
-                  showLabel: true
+                  show: false
 
             - longhorn:
                 expanded: false
                 total: true
                 labels: true
-                nodes: true
+                nodes: false
 
           services.yaml: |
             ---
-            # For configuration options and examples, please see:
-            # https://gethomepage.dev/configs/services/
-            # Intentionally minimal. Service cards are sourced from each app's
-            # ingress.main.integrations.homepage configuration.
+            # Service cards come from ingress.main.integrations.homepage on each app.
 
           bookmarks.yaml: |
             ---
-            # For configuration options and examples, please see:
-            # https://gethomepage.dev/configs/bookmarks/
             - Cluster:
                 - Flux:
                     - abbr: FX
@@ -223,6 +272,14 @@ spec:
                     - abbr: K8
                       href: https://kubedash.${DOMAIN_0}
                       description: Cluster dashboard
+                - Grafana:
+                    - abbr: GF
+                      href: https://grafana.${DOMAIN_0}
+                      description: Metrics and alerts
+                - Docs:
+                    - abbr: DO
+                      href: https://docs.${DOMAIN_0}
+                      description: Homelab runbooks
 
             - References:
                 - TrueCharts:
@@ -237,7 +294,6 @@ spec:
                     - abbr: TL
                       href: https://www.talos.dev/
                       description: Talos Linux docs
-                    
     ingress:
       main:
         enabled: true
