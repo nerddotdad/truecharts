@@ -1,4 +1,0 @@
-# Model overlay for GitOps profile `gemma4`.
-# sync-gitops-profiles.py clones the full default profile, then applies this block.
-model:
-  default: gemma4:latest
