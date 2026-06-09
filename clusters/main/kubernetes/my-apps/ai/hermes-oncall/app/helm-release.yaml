@@ -62,7 +62,7 @@ spec:
           automountServiceAccountToken: true
           # Bump when editing agent-config/, agent-profiles/, SOUL or skills.
           annotations:
-            homelab.agent-config/version: "15"
+            homelab.agent-config/version: "16"
           initContainers:
             sync-agent-gitops:
               enabled: true

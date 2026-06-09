@@ -1,5 +1,5 @@
 # One-time model pull for GitOps bootstrap.
-# Active model: qwen3.6:27b (Hermes Guide pick for RTX 3090; see OLLAMA_CONTEXT_LENGTH in helm-release).
+# Active model: qwen3.6:27b (Hermes default; Ollama OLLAMA_CONTEXT_LENGTH=64000 matches agent-config/model.yaml).
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model list:
 #   kubectl delete job -n ai ollama-model-pull-job
