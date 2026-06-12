@@ -32,6 +32,15 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
     # Hermes entrypoint must start as root (hermeswebuitoo) to usermod → UID 1024 on the PVC.
     # TrueCharts defaults (runAsUser 568 + RO rootfs) block hermeswebui_init.bash.
     securityContext:
