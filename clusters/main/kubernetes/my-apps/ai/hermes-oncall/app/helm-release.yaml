@@ -1,5 +1,6 @@
 ---
 # Hermes Agent + WebUI — on-call triage at https://hermes.${DOMAIN_0}
+# Agent config (SOUL, skills, profiles, model) lives on the hermes-data PVC — edit via WebUI/dashboard or kubectl exec.
 # Image: custom_images/hermes-homelab (ghcr.io/nerddotdad/hermes-homelab) — build via Build Custom Docker Images workflow.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -60,38 +61,6 @@ spec:
           # GitOps SA + token mount (see rbac.yaml). TrueCharts defaults automount to false.
           serviceAccountName: hermes-oncall
           automountServiceAccountToken: true
-          # Bump when editing agent-config/, agent-profiles/, SOUL or skills.
-          annotations:
-            homelab.agent-config/version: "17"
-          initContainers:
-            sync-agent-gitops:
-              enabled: true
-              type: init
-              imageSelector: ubuntuImage
-              # Path contract — anchors defined here; main container and persistence reuse them.
-              env:
-                HERMES_HOME: &hermes_home /home/hermeswebui/.hermes
-                HOMELAB_GITOPS_AGENT_DIR: &gitops_agent /opt/hermes-gitops
-                HOMELAB_GITOPS_PROFILES_DIR: &gitops_profiles /opt/hermes-gitops-profiles
-                HOMELAB_GITOPS_SKILL_DIR: &gitops_skill /opt/homelab-skills/homelab-k8s-flux-triage
-                HOMELAB_GITOPS_SKILL_NAME: homelab-k8s-flux-triage
-                HERMES_OPTIONAL_SKILLS_DIR: &skills_root /opt/homelab-skills
-              command:
-                - /bin/sh
-                - -ec
-                - |
-                  # Literal paths only — Flux postBuild strips ${VAR} not in clusterenv (would break cp).
-                  mkdir -p /home/hermeswebui/.hermes/memories \
-                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage \
-                    /home/hermeswebui/.hermes/skills/jellyfin-api
-                  cp -f /opt/hermes-gitops/SOUL.md /home/hermeswebui/.hermes/SOUL.md
-                  cp -f /opt/homelab-skills/homelab-k8s-flux-triage/SKILL.md \
-                    /home/hermeswebui/.hermes/skills/homelab-k8s-flux-triage/SKILL.md
-                  cp -f /opt/homelab-skills/jellyfin-api/SKILL.md \
-                    /home/hermeswebui/.hermes/skills/jellyfin-api/SKILL.md
-                  if [ ! -s /home/hermeswebui/.hermes/memories/USER.md ]; then
-                    cp -f /opt/hermes-gitops/USER.md /home/hermeswebui/.hermes/memories/USER.md
-                  fi
           containers:
             main:
               enabled: true
@@ -105,13 +74,8 @@ spec:
                 HERMES_WEBUI_HOST: "0.0.0.0"
                 HERMES_WEBUI_PORT: "8787"
                 HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
-                HERMES_HOME: *hermes_home
+                HERMES_HOME: &hermes_home /home/hermeswebui/.hermes
                 HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
-                HOMELAB_GITOPS_AGENT_DIR: *gitops_agent
-                HERMES_GITOPS_PROFILES_DIR: *gitops_profiles
-                HOMELAB_GITOPS_SKILL_DIR: *gitops_skill
-                HOMELAB_GITOPS_SKILL_NAME: homelab-k8s-flux-triage
-                HERMES_OPTIONAL_SKILLS_DIR: *skills_root
                 # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
                 HERMES_WEBUI_AGENT_DIR: /opt/hermes
                 # WebUI installs agent into /app/venv; packaged skills live at /app/venv/skills which
@@ -206,57 +170,22 @@ spec:
         size: 20Gi
         mountPath: *hermes_home
         readOnly: false
-        targetSelector:
-          main:
-            main: {}
-            sync-agent-gitops: {}
+        volsync:
+          - name: hermes-data
+            type: restic
+            credentials: truenas_garage
+            cleanupTempPVC: true
+            dest:
+              enabled: true
+            src:
+              enabled: true
+              trigger:
+                schedule: "30 1 * * *"
       workspace:
         enabled: true
         type: emptyDir
         mountPath: /workspace
         targetSelectAll: true
-      # GitOps agent files (ConfigMap → staging dir; init copies into $HERMES_HOME).
-      homelab-agent:
-        enabled: true
-        type: configmap
-        objectName: hermes-oncall-agent
-        expandObjectName: false
-        readOnly: true
-        mountPath: *gitops_agent
-        targetSelector:
-          main:
-            main: {}
-            sync-agent-gitops: {}
-      homelab-profiles:
-        enabled: true
-        type: configmap
-        objectName: hermes-oncall-profiles
-        expandObjectName: false
-        readOnly: true
-        mountPath: *gitops_profiles
-        items:
-          - key: gemma4.config.yaml
-            path: gemma4/config.yaml
-        targetSelector:
-          main:
-            main: {}
-            sync-agent-gitops: {}
-      homelab-skills:
-        enabled: true
-        type: configmap
-        objectName: hermes-oncall-skills
-        expandObjectName: false
-        readOnly: true
-        mountPath: *skills_root
-        items:
-          - key: homelab-k8s-flux-triage.SKILL.md
-            path: homelab-k8s-flux-triage/SKILL.md
-          - key: jellyfin-api.SKILL.md
-            path: jellyfin-api/SKILL.md
-        targetSelector:
-          main:
-            main: {}
-            sync-agent-gitops: {}
 
     ingress:
       main:

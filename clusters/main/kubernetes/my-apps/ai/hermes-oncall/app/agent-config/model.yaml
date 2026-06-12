@@ -1,8 +1,0 @@
-# GitOps default model for the default Hermes profile (~/.hermes).
-# Merged on gateway start. To switch models without a separate profile, edit here
-# and bump homelab.agent-config/version — or use WebUI Control Center (PVC; until pod restart).
-model:
-  default: qwen3.6:27b
-  provider: custom
-  base_url: http://ollama-api.ai.svc.cluster.local:11434/v1
-  context_length: 64000

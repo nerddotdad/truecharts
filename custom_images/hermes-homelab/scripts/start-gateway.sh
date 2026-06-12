@@ -69,8 +69,6 @@ ensure_webhook_platform() {
     export HERMES_HOME='$HERMES_HOME' WEBHOOK_SECRET='$WEBHOOK_SECRET' WEBHOOK_PORT='$WEBHOOK_PORT'
     export HERMES_BUNDLED_SKILLS='${HERMES_BUNDLED_SKILLS:-/opt/hermes/skills}'
     export HERMES_BUNDLED_PLUGINS='${HERMES_BUNDLED_PLUGINS:-/opt/hermes/plugins}'
-    export HOMELAB_GITOPS_AGENT_DIR='${HOMELAB_GITOPS_AGENT_DIR:-/opt/hermes-gitops}'
-    export HERMES_GITOPS_PROFILES_DIR='${HERMES_GITOPS_PROFILES_DIR:-/opt/hermes-gitops-profiles}'
     /app/venv/bin/python /opt/homelab-scripts/ensure-homelab-config.py
   "
 }
