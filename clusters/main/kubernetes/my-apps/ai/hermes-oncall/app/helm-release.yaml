@@ -179,6 +179,9 @@ spec:
         size: 20Gi
         mountPath: *hermes_home
         readOnly: false
+        # VolSync must be enabled when the PVC is first created (dataSource is immutable).
+        # To add VolSync to an existing deployment: Longhorn-snapshot the PVC, uninstall Hermes,
+        # delete hermes-oncall-app-template-hermes-data, reconcile, then restore data onto the new PVC.
         volsync:
           - name: hermes-data
             type: restic
