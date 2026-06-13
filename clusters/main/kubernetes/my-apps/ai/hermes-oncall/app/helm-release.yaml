@@ -81,26 +81,16 @@ spec:
                 allowPrivilegeEscalation: true
               env:
                 HERMES_WEBUI_HOST: "0.0.0.0"
-                HERMES_WEBUI_PORT: "8787"
                 HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
+                # Anchor reused by persistence.hermes-data.mountPath below (YAML alias, not part of the env value).
                 HERMES_HOME: &hermes_home /home/hermeswebui/.hermes
-                HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
-                # Baked into hermes-homelab image at /opt/hermes (see custom_images/hermes-homelab/Dockerfile).
-                HERMES_WEBUI_AGENT_DIR: /opt/hermes
-                # WebUI installs agent into /app/venv; packaged skills live at /app/venv/skills which
-                # is_excluded_skill_path rejects (path component "venv"). Point sync at repo checkout.
-                HERMES_BUNDLED_SKILLS: /opt/hermes/skills
-                # uv pip install puts hermes-agent in venv; bundled plugins (web_search, etc.) live under /opt/hermes/plugins.
-                HERMES_BUNDLED_PLUGINS: /opt/hermes/plugins
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 # alert-handoff.js (custom_images/hermes-homelab/extensions/) — ntfy Ask AI deep links.
                 HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions
                 HERMES_WEBUI_EXTENSION_SCRIPT_URLS: /extensions/alert-handoff.js
                 # ntfy Ask AI → homelab-alert-bridge → Hermes webhook (see start-gateway.sh).
                 WEBHOOK_ENABLED: "true"
-                WEBHOOK_PORT: "8644"
                 WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
-                HERMES_WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
                 # Homelab docs + dashboards (for agent citations; Flux substitutes DOMAIN_0).
                 HOMELAB_DOCS_BASE_URL: "https://docs.${DOMAIN_0}/main/kubernetes"
                 HOMELAB_GRAFANA_URL: "https://grafana.${DOMAIN_0}"
@@ -110,12 +100,7 @@ spec:
                 JELLYFIN_PUBLIC_URL: "https://jellyfin.${DOMAIN_0}"
                 # Hermes web_search → cluster SearXNG (JSON API verified on :8080).
                 SEARXNG_URL: "http://searxng.ai.svc.cluster.local:8080"
-                # Hermes Agent management dashboard (config, logs, skills, gateway status).
-                DASHBOARD_ENABLED: "true"
-                DASHBOARD_PORT: "9119"
-                GATEWAY_HEALTH_URL: "http://127.0.0.1:8644"
                 HERMES_DASHBOARD_PUBLIC_URL: "https://hermes-dash.${DOMAIN_0}"
-                HERMES_DASHBOARD_TUI: "1"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"
