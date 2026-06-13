@@ -4,6 +4,7 @@ Extends [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui) for ho
 
 - **[Hermes Agent](https://github.com/NousResearch/hermes-agent)** cloned to `/opt/hermes` at image build (`run_agent` import)
 - **Pre-baked `/apptoo/venv`** — WebUI + `hermes-agent[all]` + plugins deps installed at build time (rsync’d to `/app` on start; skips runtime `uv pip install`)
+- **Dashboard SPA built at image build** — `web/` → `hermes_cli/web_dist` (required for `hermes dashboard` on `:9119`)
 - `HERMES_BUNDLED_SKILLS=/opt/hermes/skills` — upstream `skills_sync` excludes paths containing `venv`; bundled skills sync from the agent checkout instead
 - `kubectl` + `flux` + `jq` CLI (read-only triage via in-cluster ServiceAccount; JSON filtering in agent terminal)
 - Common shell utilities for the agent terminal: `tail`, `head`, `less`, `grep`, `awk`, `sed`, `find`, `ps`, `top`, `ip`, `ping`, `dig`, `nc`, `vim.tiny`, `tar`, `gzip`

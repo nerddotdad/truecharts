@@ -18,6 +18,19 @@ export DASHBOARD_PORT
 export GATEWAY_HEALTH_URL
 export HERMES_BIN
 
+# Resolve packaged web_dist (pip install) or image-baked /opt/hermes copy.
+if [ -z "${HERMES_WEB_DIST:-}" ]; then
+  _web_index="$(find /app/venv/lib -path '*/hermes_cli/web_dist/index.html' 2>/dev/null | head -1 || true)"
+  if [ -n "$_web_index" ]; then
+    HERMES_WEB_DIST="$(dirname "$_web_index")"
+  elif [ -f /opt/hermes/hermes_cli/web_dist/index.html ]; then
+    HERMES_WEB_DIST=/opt/hermes/hermes_cli/web_dist
+  fi
+fi
+if [ -n "${HERMES_WEB_DIST:-}" ]; then
+  export HERMES_WEB_DIST
+fi
+
 run_as_hermes_user() {
   if [ "$(id -u)" -eq 0 ] && id "$HERMES_USER" >/dev/null 2>&1; then
     su -s /bin/sh "$HERMES_USER" -c "$1"
@@ -65,6 +78,7 @@ run_dashboard_loop() {
     echo "start-dashboard: running on 0.0.0.0:${DASHBOARD_PORT} as ${HERMES_USER} ($(date -u +%Y-%m-%dT%H:%M:%SZ))" >&2
     run_as_hermes_user "
       export HERMES_HOME='$HERMES_HOME' GATEWAY_HEALTH_URL='$GATEWAY_HEALTH_URL' HERMES_BIN='$HERMES_BIN'
+      export HERMES_WEB_DIST='${HERMES_WEB_DIST:-}'
       export HERMES_DASHBOARD_PUBLIC_URL='${HERMES_DASHBOARD_PUBLIC_URL:-}'
       export HERMES_DASHBOARD_TUI='${HERMES_DASHBOARD_TUI:-1}'
       exec \"\$HERMES_BIN\" dashboard --host 0.0.0.0 --port '$DASHBOARD_PORT' --no-open --insecure --tui

@@ -1,10 +1,24 @@
 # Hermes WebUI + homelab kubectl/flux + bundled skills/extensions/scripts.
+ARG HERMES_AGENT_REF=main
+
+# `hermes dashboard` serves a Vite-built SPA from hermes_cli/web_dist (not shipped pre-built on PyPI).
+FROM node:22-bookworm-slim AS dashboard-web
+ARG HERMES_AGENT_REF
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates \
+    && git clone --depth 1 --branch "${HERMES_AGENT_REF}" \
+      https://github.com/NousResearch/hermes-agent.git /opt/hermes \
+    && cd /opt/hermes/web && npm ci && npm run build \
+    && test -f /opt/hermes/hermes_cli/web_dist/index.html \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM ghcr.io/nesquena/hermes-webui:latest@sha256:c68ce4f9400803082462060bb5e37bfc0be6679bfb39fd7fb51508c0032ae622
 
 USER root
 
 # Hermes Agent source — docker_init.bash installs from /opt/hermes or ~/.hermes/hermes-agent.
-ARG HERMES_AGENT_REF=main
+ARG HERMES_AGENT_REF
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       curl ca-certificates git jq \
@@ -23,6 +37,8 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=dashboard-web /opt/hermes/hermes_cli/web_dist /opt/hermes/hermes_cli/web_dist
+
 # Pre-bake WebUI + Hermes Agent into /apptoo/venv. docker_init.bash rsyncs /apptoo → /app on
 # every start; .deps_installed skips the ~5–10 min runtime uv pip install.
 ENV UV_CACHE_DIR=/uv_cache
@@ -35,6 +51,7 @@ RUN mkdir -p "${UV_CACHE_DIR}" \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
   && uv pip install --python venv/bin/python3 "/opt/hermes[all]" \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+  && test -n "$(find venv/lib -path '*/hermes_cli/web_dist/index.html' -print -quit)" \
   && uv pip install --python venv/bin/python3 "hindsight-client>=0.4.22" \
       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
   && touch venv/.deps_installed \
