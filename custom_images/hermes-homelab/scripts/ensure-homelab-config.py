@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Merge homelab runtime settings into ~/.hermes/config.yaml on every gateway start."""
+"""Merge homelab runtime settings into ~/.hermes/config.yaml on every gateway start.
+
+Also seeds webui.dashboard link settings when HERMES_DASHBOARD_PUBLIC_URL is set.
+"""
 from __future__ import annotations
 
 import os
