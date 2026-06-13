@@ -84,6 +84,8 @@ spec:
                 HERMES_WEBUI_PASSWORD: "${ADMIN_PASS}"
                 # Anchor reused by persistence.hermes-data.mountPath below (YAML alias, not part of the env value).
                 HERMES_HOME: &hermes_home /home/hermeswebui/.hermes
+                # Required by hermeswebui_init.bash (not inferred from HERMES_HOME).
+                HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
                 # alert-handoff.js (custom_images/hermes-homelab/extensions/) — ntfy Ask AI deep links.
                 HERMES_WEBUI_EXTENSION_DIR: /opt/hermes-extensions

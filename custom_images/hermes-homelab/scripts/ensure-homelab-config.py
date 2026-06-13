@@ -59,6 +59,21 @@ def main() -> None:
     # Allow in-cluster Service URLs (jellyfin.media.svc, homelab-docs, etc.).
     browser["allow_private_urls"] = True
 
+    # WebUI nav-rail link to the official Hermes dashboard (separate ingress).
+    # auto mode skips probing when HERMES_WEBUI_HOST=0.0.0.0; always + public URL is browser-only.
+    dashboard_public_url = os.environ.get("HERMES_DASHBOARD_PUBLIC_URL", "").strip()
+    if dashboard_public_url:
+        webui = cfg.setdefault("webui", {})
+        if not isinstance(webui, dict):
+            webui = {}
+            cfg["webui"] = webui
+        dashboard = webui.setdefault("dashboard", {})
+        if not isinstance(dashboard, dict):
+            dashboard = {}
+            webui["dashboard"] = dashboard
+        dashboard["enabled"] = "always"
+        dashboard["url"] = dashboard_public_url
+
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with CONFIG_PATH.open("w", encoding="utf-8") as fh:
         yaml.safe_dump(cfg, fh, default_flow_style=False, sort_keys=False)
