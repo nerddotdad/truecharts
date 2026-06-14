@@ -62,7 +62,7 @@ spec:
       repository: ghcr.io/nerddotdad/hermes-homelab
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/hermes-homelab
-      tag: 1.1.33@sha256:ebcb5195c92dd60e17a723184fea0b0c9d67b407a2eab31185dd1035635f857c
+      tag: 1.1.33@sha256:d1792fddd0a4e41a4f9a303c6b42360f544a41aa64cdcc79f738b9d8f7ba70d3
 
     workload:
       main:
