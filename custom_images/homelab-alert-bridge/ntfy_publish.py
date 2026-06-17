@@ -49,9 +49,15 @@ def _headers_for_incident(incident: dict[str, Any], *, event: str, topic: str | 
     if INCIDENTS_PUBLIC_BASE_URL and incident_id:
         view = f"{INCIDENTS_PUBLIC_BASE_URL}/incidents/{incident_id}"
         actions.append(f"view, Open incident, {view}, clear=true")
-    if HERMES_PUBLIC_BASE_URL and incident_id:
-        hermes = f"{HERMES_PUBLIC_BASE_URL}/?incident={incident_id}&autostart=1"
-        actions.append(f"view, Ask AI, {hermes}, clear=true")
+    if incident_id:
+        if INCIDENTS_PUBLIC_BASE_URL:
+            ask_ai = f"{INCIDENTS_PUBLIC_BASE_URL.rstrip('/')}/incidents/{incident_id}/ask-ai"
+        elif HERMES_PUBLIC_BASE_URL:
+            ask_ai = f"{HERMES_PUBLIC_BASE_URL}/?incident={incident_id}&autostart=1"
+        else:
+            ask_ai = ""
+        if ask_ai:
+            actions.append(f"view, Ask AI, {ask_ai}, clear=true")
     if actions:
         headers["X-Actions"] = "; ".join(actions)
 

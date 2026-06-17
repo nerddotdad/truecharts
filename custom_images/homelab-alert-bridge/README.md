@@ -53,6 +53,20 @@ Incident and alert lists load **25 rows at a time** with **infinite scroll** (ne
 
 **List APIs** (session cookie or bearer token): `GET /api/list/incidents`, `GET /api/list/alerts` — params: `offset`, `limit`, `status`, `q`.
 
+## Ask AI (Hermes)
+
+Both **ntfy** and the **incident UI** use the same entry point:
+
+```text
+/incidents/<id>/ask-ai  →  redirect  →  hermes/?incident=<id>&autostart=1
+                                              ↓
+                              GET hermes/homelab/api/incidents/<id>
+                                              ↓
+                              hermes_message (full incident dump) → Hermes agent
+```
+
+`hermes_message` includes title, status, severity, summary, **all alerts**, notes, timeline, and recommended skills — not just the primary alert.
+
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 
 **`VERSION`** → GHCR tag; **Renovate** updates `homelab-alert-bridge/app/deployment.yaml`.

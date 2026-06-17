@@ -67,6 +67,15 @@ def _list_params(params: dict[str, list[str]]) -> tuple[int, int, str, str]:
     return offset, limit, status_filter, search_query
 
 
+def _incident_id_from_query(query: str) -> str:
+    params = urllib.parse.parse_qs(query)
+    for key in ("incident_id", "incident", "id"):
+        values = params.get(key)
+        if values and values[0]:
+            return safe_id(str(values[0]))
+    return ""
+
+
 def _summarize_hook_payload(payload: dict) -> str:
     alerts = payload.get("alerts") or []
     parts: list[str] = []
@@ -229,18 +238,15 @@ class Handler(BaseHTTPRequestHandler):
             return None, 400
         return payload, None
 
-    def _incident_id_from_request(self, payload: dict | None) -> str:
+    def _incident_id_from_request(self, payload: dict | None, query: str = "") -> str:
         if payload:
             for key in ("incident_id", "id", "fingerprint"):
                 value = payload.get(key)
                 if value:
                     return safe_id(str(value))
-        query = self.path.split("?", 1)
-        if len(query) == 2:
-            for part in query[1].split("&"):
-                if part.startswith("incident_id="):
-                    return safe_id(urllib.parse.unquote(part.split("=", 1)[1]))
-        return ""
+        if not query and "?" in self.path:
+            query = self.path.split("?", 1)[1]
+        return _incident_id_from_query(query)
 
     def _require_ui_auth(self) -> bool:
         if _has_ui_session(self.headers):
@@ -322,6 +328,29 @@ class Handler(BaseHTTPRequestHandler):
             if not self._require_ui_auth():
                 return
             self._html(200, create_incident_page())
+            return
+
+        if path.startswith("/incidents/") and path.endswith("/ask-ai"):
+            iid = safe_id(path[len("/incidents/") : -len("/ask-ai")].strip("/"))
+            incident = STORE.get_incident(iid)
+            if incident is None:
+                self._html(
+                    404,
+                    f"<!doctype html><html><body><h1>Incident not found</h1><p>{iid}</p></body></html>",
+                )
+                return
+            base = HERMES_PUBLIC_BASE_URL
+            if not base:
+                host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host", "")
+                if host:
+                    proto = self.headers.get("X-Forwarded-Proto", "https")
+                    base = f"{proto}://{host.split(',')[0].strip()}"
+            if not base:
+                self._json(503, {"error": "HERMES_PUBLIC_BASE_URL not configured"})
+                return
+            self._redirect(
+                f"{base}/?incident={urllib.parse.quote(iid)}&autostart=1"
+            )
             return
 
         if path.startswith("/incidents/"):
@@ -786,7 +815,7 @@ class Handler(BaseHTTPRequestHandler):
             if err == 400:
                 self._json(400, {"error": "invalid json"})
                 return
-            incident_id = self._incident_id_from_request(payload)
+            incident_id = self._incident_id_from_request(payload, query)
             if not incident_id:
                 self._json(400, {"error": "incident_id required"})
                 return
@@ -828,14 +857,16 @@ class Handler(BaseHTTPRequestHandler):
         if not _check_auth_token(self.headers, query):
             self._json(401, {"error": "unauthorized"})
             return
-        payload, err = self._read_json_body()
-        if err == 413:
-            self._json(413, {"error": "payload too large"})
-            return
-        if err == 400:
-            self._json(400, {"error": "invalid json"})
-            return
-        incident_id = self._incident_id_from_request(payload)
+        incident_id = _incident_id_from_query(query)
+        if not incident_id:
+            payload, err = self._read_json_body()
+            if err == 413:
+                self._json(413, {"error": "payload too large"})
+                return
+            if err == 400:
+                self._json(400, {"error": "invalid json"})
+                return
+            incident_id = self._incident_id_from_request(payload, query)
         if not incident_id:
             self._json(400, {"error": "incident_id required"})
             return

@@ -67,8 +67,13 @@
     return parts.join("\n");
   }
 
-  /** Sidebar title: prefer Prometheus summary, else alertname (+ namespace). */
+  /** Sidebar title: prefer incident title, else Prometheus summary / alertname. */
   function sessionTitleFromIncident(data) {
+    let title = String((data && data.title) || "").replace(/\s+/g, " ").trim();
+    if (title) {
+      if (title.length > 100) title = title.slice(0, 97) + "...";
+      return title;
+    }
     const alert = (data && data.alert) || {};
     const labels = alert.labels || {};
     const ann = alert.annotations || {};

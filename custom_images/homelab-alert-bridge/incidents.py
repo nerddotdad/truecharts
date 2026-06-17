@@ -9,7 +9,7 @@ from typing import Any
 
 from db import IncidentStore
 from filters import incident_is_noise, is_ignored_alert
-from message_format import enrich_incident, hermes_message, operator_message
+from message_format import build_hermes_message, build_operator_message
 from query_parser import parse_query
 from raise_rules import RaiseSettingsStore
 
@@ -692,36 +692,9 @@ class IncidentService:
             "alert": primary,
             "receiver": (incident.get("enrichment") or {}).get("receiver"),
         }
-        export["operator_message"] = self._operator_message(incident)
-        export["hermes_message"] = hermes_message(
-            enrich_incident(
-                {
-                    "id": incident["id"],
-                    "status": incident["status"],
-                    "alert": primary,
-                }
-            )
-        )
-        if incident.get("summary") and primary:
-            export["hermes_message"] = (
-                f"{export['hermes_message']}\n\n---\n\nIncident summary:\n{incident['summary']}"
-            )
-        notes = (incident.get("enrichment") or {}).get("notes") or []
-        if notes:
-            lines = [f"- {n.get('actor', 'operator')}: {n.get('body', '')}" for n in notes[-5:]]
-            export["hermes_message"] += "\n\nRecent notes:\n" + "\n".join(lines)
+        export["operator_message"] = build_operator_message(incident)
+        export["hermes_message"] = build_hermes_message(incident)
         return export
 
     def _operator_message(self, incident: dict[str, Any]) -> str:
-        alerts = incident.get("alerts") or []
-        header = [
-            incident.get("title") or "Incident",
-            f"Status: {incident.get('status', 'open')} · Severity: {incident.get('severity') or 'unknown'}",
-            f"Alerts: {len(alerts)}",
-        ]
-        if incident.get("summary"):
-            header.extend(["", str(incident["summary"])])
-        bodies = [operator_message(alert) for alert in alerts[:3]]
-        if len(alerts) > 3:
-            bodies.append(f"... and {len(alerts) - 3} more alert(s)")
-        return "\n".join(header + [""] + bodies)
+        return build_operator_message(incident)

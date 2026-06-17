@@ -620,9 +620,7 @@ def incident_detail_page(
     if status == "resolved":
         action_buttons.append(f'<form method="post" action="/incidents/{_esc(iid)}/reopen"><button type="submit">Reopen</button></form>')
 
-    hermes_link = ""
-    if hermes_base:
-        hermes_link = f'<a class="btn primary" href="{_esc(hermes_base)}/?incident={_esc(iid)}&autostart=1" target="_blank" rel="noopener">Ask AI</a>'
+    hermes_link = f'<a class="btn primary" href="/incidents/{_esc(iid)}/ask-ai" target="_blank" rel="noopener">Ask AI</a>'
 
     alert_cards = []
     for alert in incident.get("alerts") or []:

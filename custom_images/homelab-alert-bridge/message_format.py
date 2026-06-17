@@ -137,6 +137,119 @@ def agent_context(incident: dict) -> str:
     return "---\n\nAgent context:\n" + "\n".join(lines)
 
 
+def _collect_recommended_skills(alerts: list[dict]) -> list[str]:
+    skills: set[str] = set()
+    for alert in alerts:
+        annotations = alert.get("annotations") or {}
+        raw = str(
+            annotations.get("recommended_ai_skills") or annotations.get("recommended_skills") or ""
+        ).strip()
+        if raw:
+            skills.update(part.strip() for part in raw.split(",") if part.strip())
+    return sorted(skills)
+
+
+def build_operator_message(incident: dict) -> str:
+    """Operator-facing incident summary (ntfy body style, all alerts)."""
+    alerts = incident.get("alerts") or []
+    header = [
+        incident.get("title") or incident.get("id") or "Incident",
+        f"Status: {incident.get('status', 'open')} · Severity: {incident.get('severity') or 'unknown'}",
+        f"Alerts: {len(alerts)}",
+    ]
+    if incident.get("summary"):
+        header.extend(["", str(incident["summary"])])
+    bodies = [operator_message(alert) for alert in alerts[:3]]
+    if len(alerts) > 3:
+        bodies.append(f"... and {len(alerts) - 3} more alert(s)")
+    return "\n".join(header + [""] + bodies).strip()
+
+
+def build_hermes_message(incident: dict) -> str:
+    """Full incident dump for Hermes Ask AI — shared by UI, ntfy, and /homelab/api."""
+    lines: list[str] = []
+    iid = incident.get("id") or "unknown"
+    title = incident.get("title") or iid
+    lines.append(f"# Incident: {title}")
+    lines.append(f"ID: {iid}")
+    lines.append(f"Status: {incident.get('status', 'open')}")
+    if incident.get("severity"):
+        lines.append(f"Severity: {incident['severity']}")
+    for label, key in (
+        ("Created", "created_at"),
+        ("Updated", "updated_at"),
+        ("Acknowledged", "acknowledged_at"),
+        ("Resolved", "resolved_at"),
+    ):
+        value = incident.get(key)
+        if value:
+            actor_key = key.replace("_at", "_by")
+            actor = incident.get(actor_key)
+            suffix = f" by {actor}" if actor else ""
+            lines.append(f"{label}: {value}{suffix}")
+
+    enrichment = incident.get("enrichment") or {}
+    if enrichment.get("manual"):
+        lines.append("Source: manual incident")
+    tags = enrichment.get("tags") or []
+    if tags:
+        lines.append(f"Tags: {', '.join(str(tag) for tag in tags)}")
+
+    if incident.get("summary"):
+        lines.extend(["", "## Summary", str(incident["summary"])])
+
+    alerts = incident.get("alerts") or []
+    if alerts:
+        lines.extend(["", f"## Alerts ({len(alerts)})"])
+        for index, alert in enumerate(alerts, start=1):
+            labels = alert.get("labels") or {}
+            annotations = alert.get("annotations") or {}
+            headline = annotations.get("summary") or labels.get("alertname") or f"alert-{index}"
+            lines.extend(
+                [
+                    "",
+                    f"### Alert {index}: {headline}",
+                    operator_message(alert),
+                ]
+            )
+            ctx = agent_context({"id": iid, "status": incident.get("status"), "alert": alert})
+            if ctx:
+                lines.append(ctx)
+
+    skills = _collect_recommended_skills(alerts)
+    if skills:
+        lines.extend(["", f"Recommended skills: {', '.join(skills)}"])
+
+    notes = enrichment.get("notes") or []
+    if notes:
+        lines.extend(["", "## Recent notes"])
+        for note in notes[-8:]:
+            lines.append(
+                f"- {note.get('actor', 'operator')} ({note.get('created_at', '')}): {note.get('body', '')}"
+            )
+
+    events = incident.get("events") or []
+    if events:
+        lines.extend(["", "## Timeline"])
+        for event in events[-12:]:
+            detail = event.get("detail") or {}
+            extra = ""
+            if event.get("event_type") == "note_added":
+                extra = f" — {detail.get('body', '')}"
+            elif event.get("event_type") == "merged":
+                extra = f" — into {detail.get('into', '')}"
+            lines.append(
+                f"- {event.get('created_at')} [{event.get('event_type')}] "
+                f"{event.get('actor') or 'system'}{extra}"
+            )
+
+    incidents_base = os.environ.get("INCIDENTS_PUBLIC_BASE_URL", "").rstrip("/")
+    if incidents_base:
+        lines.extend(["", f"Incident UI: {incidents_base}/incidents/{iid}"])
+
+    return "\n".join(lines).strip()
+
+
 def hermes_message(incident: dict) -> str:
     """Operator ntfy text plus agent-only context for Ask AI."""
     alert = incident.get("alert") or {}
