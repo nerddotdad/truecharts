@@ -70,18 +70,16 @@
   /** Sidebar title: prefer incident title, else Prometheus summary / alertname. */
   function sessionTitleFromIncident(data) {
     let title = String((data && data.title) || "").replace(/\s+/g, " ").trim();
-    if (title) {
-      if (title.length > 100) title = title.slice(0, 97) + "...";
-      return title;
-    }
-    const alert = (data && data.alert) || {};
-    const labels = alert.labels || {};
-    const ann = alert.annotations || {};
-    let title = String(ann.summary || "").replace(/\s+/g, " ").trim();
     if (!title) {
-      const name = labels.alertname || "unknown alert";
-      const ns = labels.namespace;
-      title = ns ? name + " (" + ns + ")" : name;
+      const alert = (data && data.alert) || {};
+      const labels = alert.labels || {};
+      const ann = alert.annotations || {};
+      title = String(ann.summary || "").replace(/\s+/g, " ").trim();
+      if (!title) {
+        const name = labels.alertname || "unknown alert";
+        const ns = labels.namespace;
+        title = ns ? name + " (" + ns + ")" : name;
+      }
     }
     if (title.length > 100) title = title.slice(0, 97) + "...";
     return title;
@@ -112,18 +110,47 @@
     }
   }
 
-  function showBanner(text) {
-    let bar = document.getElementById("homelab-incident-banner");
+  var bannerDismissTimer = null;
+
+  function hideBanner() {
+    if (bannerDismissTimer) {
+      clearTimeout(bannerDismissTimer);
+      bannerDismissTimer = null;
+    }
+    var bar = document.getElementById("homelab-incident-banner");
+    if (!bar) return;
+    bar.style.opacity = "0";
+    bar.style.transform = "translateX(-50%) translateY(-8px)";
+    setTimeout(function () {
+      if (bar.parentNode) bar.remove();
+    }, 320);
+  }
+
+  /** durationMs: 0 = stay until next banner; default 4.5s auto-hide for final messages */
+  function showBanner(text, durationMs) {
+    if (bannerDismissTimer) {
+      clearTimeout(bannerDismissTimer);
+      bannerDismissTimer = null;
+    }
+    var bar = document.getElementById("homelab-incident-banner");
     if (!bar) {
       bar = document.createElement("div");
       bar.id = "homelab-incident-banner";
       bar.style.cssText =
-        "position:fixed;top:0;left:0;right:0;z-index:9999;padding:10px 14px;" +
-        "background:#3b2e5a;color:#f5f0ff;font:14px/1.4 system-ui,sans-serif;" +
-        "border-bottom:1px solid #6b4fa0;max-height:40vh;overflow:auto;";
-      document.body.prepend(bar);
+        "position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;" +
+        "max-width:min(520px,calc(100vw - 24px));padding:10px 14px;" +
+        "background:#3b2e5a;color:#f5f0ff;font:13px/1.4 system-ui,sans-serif;" +
+        "border:1px solid #6b4fa0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);" +
+        "pointer-events:none;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;";
+      document.body.appendChild(bar);
     }
     bar.textContent = text;
+    bar.style.opacity = "1";
+    bar.style.transform = "translateX(-50%) translateY(0)";
+    if (durationMs !== 0) {
+      var ms = durationMs == null ? 4500 : durationMs;
+      bannerDismissTimer = setTimeout(hideBanner, ms);
+    }
   }
 
   function clearPending() {
@@ -244,7 +271,8 @@
   showBanner(
     autostart
       ? "Loading alert — waiting for Hermes to finish starting…"
-      : "Loading alert context…"
+      : "Loading alert context…",
+    0
   );
 
   fetch(apiUrl)
@@ -258,19 +286,20 @@
 
       return waitForBoot(120000).then(async function () {
         if (autostart) {
-          showBanner("Starting on-call triage…");
+          showBanner("Starting on-call triage…", 0);
           try {
             await startTriage(text, data);
             clearPending();
             showBanner(
-              "On-call triage started — Hermes is investigating. Use Stop to cancel."
+              "On-call triage started — Hermes is investigating."
             );
           } catch (err) {
             setComposerText(text);
             showBanner(
               "Autostart failed: " +
                 (err && err.message ? err.message : String(err)) +
-                " — message restored in composer; tap Send to retry."
+                " — message restored in composer; tap Send to retry.",
+              10000
             );
           }
           return;
@@ -282,11 +311,12 @@
           return;
         }
         showBanner(
-          "Alert loaded — open a new chat and paste if the composer is not visible."
+          "Alert loaded — open a new chat and paste if the composer is not visible.",
+          8000
         );
       });
     })
     .catch(function (err) {
-      showBanner("Could not load incident " + incidentId + ": " + err.message);
+      showBanner("Could not load incident " + incidentId + ": " + err.message, 10000);
     });
 })();
