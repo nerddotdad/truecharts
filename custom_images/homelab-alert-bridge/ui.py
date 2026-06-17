@@ -99,9 +99,70 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
       const rowsEl = document.getElementById("lazy-rows");
       const statusEl = document.getElementById("list-status");
       const searchEl = document.getElementById("list-search");
-      const sentinelEl = document.getElementById("scroll-sentinel");
+      let sentinelEl = document.getElementById("scroll-sentinel");
       const selectAllEl = document.getElementById("select-all");
       let scrollObserver = null;
+      let scrollBound = false;
+
+      function ensureSentinel() {{
+        if (!rowsEl) return null;
+        if (!sentinelEl) {{
+          sentinelEl = document.createElement("div");
+          sentinelEl.id = "scroll-sentinel";
+          sentinelEl.className = "scroll-sentinel";
+          sentinelEl.setAttribute("aria-hidden", "true");
+        }}
+        rowsEl.appendChild(sentinelEl);
+        return sentinelEl;
+      }}
+
+      function tailInView() {{
+        const sentinel = ensureSentinel();
+        if (!sentinel) return false;
+        const rect = sentinel.getBoundingClientRect();
+        return rect.top <= window.innerHeight + 320;
+      }}
+
+      function maybeLoadMore() {{
+        if (hasMore && !loading && tailInView()) {{
+          loadRows(true);
+        }}
+      }}
+
+      function bindInfiniteScroll() {{
+        const sentinel = ensureSentinel();
+        if (!sentinel || !hasMore) return;
+
+        if ("IntersectionObserver" in window) {{
+          if (scrollObserver) scrollObserver.disconnect();
+          scrollObserver = new IntersectionObserver(
+            (entries) => {{
+              if (entries.some((entry) => entry.isIntersecting)) {{
+                maybeLoadMore();
+              }}
+            }},
+            {{ root: null, rootMargin: "320px 0px", threshold: 0 }}
+          );
+          scrollObserver.observe(sentinel);
+        }}
+
+        if (!scrollBound) {{
+          window.addEventListener("scroll", maybeLoadMore, {{ passive: true }});
+          window.addEventListener("resize", maybeLoadMore, {{ passive: true }});
+          scrollBound = true;
+        }}
+      }}
+
+      function stopInfiniteScroll() {{
+        if (scrollObserver) {{
+          scrollObserver.disconnect();
+          scrollObserver = null;
+        }}
+      }}
+
+      function scheduleTailCheck() {{
+        requestAnimationFrame(() => requestAnimationFrame(maybeLoadMore));
+      }}
 
       if (searchEl) {{
         searchEl.value = query;
@@ -138,19 +199,12 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
       }}
 
       function setupInfiniteScroll() {{
-        if (!sentinelEl || !("IntersectionObserver" in window)) return;
-        if (scrollObserver) scrollObserver.disconnect();
-        if (!hasMore) return;
-        scrollObserver = new IntersectionObserver(
-          (entries) => {{
-            const entry = entries[0];
-            if (entry && entry.isIntersecting && hasMore && !loading) {{
-              loadRows(true);
-            }}
-          }},
-          {{ root: null, rootMargin: "240px 0px", threshold: 0 }}
-        );
-        scrollObserver.observe(sentinelEl);
+        if (hasMore) {{
+          bindInfiniteScroll();
+          scheduleTailCheck();
+        }} else {{
+          stopInfiniteScroll();
+        }}
       }}
 
       async function loadRows(append) {{
@@ -160,8 +214,8 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
           offset = 0;
           hasMore = true;
           rowsEl.innerHTML = '<div class="panel muted">Loading…</div>';
-        }} else if (sentinelEl) {{
-          sentinelEl.classList.add("loading-more");
+        }} else {{
+          ensureSentinel()?.classList.add("loading-more");
         }}
         if (!append) statusEl.textContent = "Loading…";
         try {{
@@ -188,16 +242,18 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
           statusEl.textContent = hasMore
             ? `Showing ${{loadedCount}} — scroll for more`
             : `Showing all ${{loadedCount}} matches`;
-          setupInfiniteScroll();
         }} catch (err) {{
           if (!append) rowsEl.innerHTML = `<div class="panel"><span class="badge severity-critical">${{err.message}}</span></div>`;
           statusEl.textContent = "";
+          stopInfiniteScroll();
         }} finally {{
-          if (sentinelEl) sentinelEl.classList.remove("loading-more");
+          ensureSentinel()?.classList.remove("loading-more");
           loading = false;
+          setupInfiniteScroll();
         }}
       }}
 
+      bindInfiniteScroll();
       loadRows(false);
     }})();
     </script>
@@ -290,9 +346,10 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
     }}
     .list-status {{ color: var(--muted); font-size: 0.9rem; margin: 8px 0; }}
     .scroll-sentinel {{
-      height: 1px;
+      min-height: 4px;
       width: 100%;
       pointer-events: none;
+      grid-column: 1 / -1;
     }}
     .scroll-sentinel.loading-more::after {{
       content: "Loading more…";
@@ -458,7 +515,6 @@ def incident_list_page(
         <span></span><span>Incident</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
       <div id="lazy-rows" class="grid"></div>
-      <div id="scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
     </form>
     {_lazy_list_script(kind="incidents", api_path="/api/list/incidents", status_filter=status_filter, checkbox_name="incident_id", empty_message="No incidents match this search.")}
     """
@@ -509,7 +565,6 @@ def alerts_list_page(
         <span></span><span>Alert</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
       <div id="lazy-rows" class="grid"></div>
-      <div id="scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
     </form>
     {_lazy_list_script(kind="alerts", api_path="/api/list/alerts", status_filter=status_filter, checkbox_name="fingerprint", empty_message="No alerts match this search.")}
     """
