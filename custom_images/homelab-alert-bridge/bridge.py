@@ -20,7 +20,7 @@ from db import IncidentStore
 from filters import filter_alerts, ignored_summary
 from incidents import IncidentService, fingerprint, safe_id
 from ntfy_publish import publish_alerts
-from ui import incident_detail_page, incident_list_page, login_page
+from ui import create_incident_page, incident_detail_page, incident_list_page, login_page
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
 DB_PATH = Path(os.environ.get("INCIDENT_DB", str(INCIDENT_DIR / "incidents.db")))
@@ -155,6 +155,23 @@ def _read_form(handler: BaseHTTPRequestHandler) -> dict[str, str]:
     return {k: v[0] for k, v in urllib.parse.parse_qs(raw).items()}
 
 
+def _read_form_multi(handler: BaseHTTPRequestHandler) -> dict[str, list[str]]:
+    length = int(handler.headers.get("Content-Length", "0"))
+    raw = handler.rfile.read(length).decode("utf-8", errors="replace")
+    return urllib.parse.parse_qs(raw)
+
+
+def _list_redirect_url(*, status: str = "", include_noise: bool = False, message: str = "") -> str:
+    params: list[str] = []
+    if status:
+        params.append(f"status={urllib.parse.quote(status)}")
+    if include_noise:
+        params.append("show_noise=1")
+    if message:
+        params.append(f"msg={urllib.parse.quote(message)}")
+    return "/?" + "&".join(params) if params else "/"
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "homelab-alert-bridge/3.0"
 
@@ -239,6 +256,7 @@ class Handler(BaseHTTPRequestHandler):
             params = urllib.parse.parse_qs(query)
             status_filter = (params.get("status") or [""])[0]
             include_noise = (params.get("show_noise") or ["0"])[0] in ("1", "true", "yes")
+            flash_message = (params.get("msg") or [""])[0]
             incidents = SERVICE.list_for_dashboard(
                 status=status_filter or None,
                 include_noise=include_noise,
@@ -251,8 +269,15 @@ class Handler(BaseHTTPRequestHandler):
                     hermes_base=HERMES_PUBLIC_BASE_URL,
                     include_noise=include_noise,
                     hidden_summary=ignored_summary(),
+                    flash_message=flash_message,
                 ),
             )
+            return
+
+        if path == "/incidents/new":
+            if not self._require_ui_auth():
+                return
+            self._html(200, create_incident_page())
             return
 
         if path.startswith("/incidents/"):
@@ -318,6 +343,55 @@ class Handler(BaseHTTPRequestHandler):
                 self._redirect("/", set_session=True)
             else:
                 self._html(401, login_page("Invalid token"))
+            return
+
+        if path == "/incidents/bulk":
+            if not self._require_ui_auth():
+                return
+            form = _read_form_multi(self)
+            action = (form.get("action") or [""])[0]
+            incident_ids = form.get("incident_id", [])
+            return_status = (form.get("return_status") or [""])[0]
+            return_noise = (form.get("return_noise") or ["0"])[0] in ("1", "true", "yes")
+            result = SERVICE.bulk_apply(action, incident_ids, actor="ui")
+            if result.get("error"):
+                self._redirect(
+                    _list_redirect_url(
+                        status=return_status,
+                        include_noise=return_noise,
+                        message=result["error"],
+                    )
+                )
+                return
+            if action == "merge" and result.get("target_id"):
+                self._redirect(f"/incidents/{result['target_id']}")
+                return
+            self._redirect(
+                _list_redirect_url(
+                    status=return_status,
+                    include_noise=return_noise,
+                    message=str(result.get("message") or "Done"),
+                )
+            )
+            return
+
+        if path == "/incidents/new":
+            if not self._require_ui_auth():
+                return
+            form = _read_form(self)
+            tags = [t.strip() for t in form.get("tags", "").split(",") if t.strip()]
+            incident = SERVICE.create_manual(
+                title=form.get("title", ""),
+                summary=form.get("summary") or None,
+                severity=form.get("severity") or "warning",
+                tags=tags,
+                note=form.get("note") or None,
+                actor="ui",
+            )
+            if incident is None:
+                self._html(400, create_incident_page(error="Title is required"))
+                return
+            self._redirect(f"/incidents/{incident['id']}")
             return
 
         if path.startswith("/incidents/") and path.endswith("/ack"):
@@ -396,6 +470,46 @@ class Handler(BaseHTTPRequestHandler):
                 self._html(404, login_page("Incident not found"))
                 return
             self._redirect(f"/incidents/{iid}")
+            return
+
+        if path == "/api/incidents/bulk":
+            if not self._require_api_auth(query):
+                return
+            payload, err = self._read_json_body()
+            if err:
+                self._json(err, {"error": "invalid request"})
+                return
+            action = str(payload.get("action") or "")
+            raw_ids = payload.get("incident_ids") or payload.get("ids") or []
+            if not isinstance(raw_ids, list):
+                raw_ids = []
+            result = SERVICE.bulk_apply(action, [str(x) for x in raw_ids], actor="api")
+            status = 400 if result.get("error") else 200
+            self._json(status, result)
+            return
+
+        if path == "/api/incidents":
+            if not self._require_api_auth(query):
+                return
+            payload, err = self._read_json_body()
+            if err:
+                self._json(err, {"error": "invalid request"})
+                return
+            tags = payload.get("tags") or []
+            if isinstance(tags, str):
+                tags = [t.strip() for t in tags.split(",") if t.strip()]
+            incident = SERVICE.create_manual(
+                title=str(payload.get("title") or ""),
+                summary=payload.get("summary"),
+                severity=str(payload.get("severity") or "warning"),
+                tags=[str(t) for t in tags] if isinstance(tags, list) else None,
+                note=payload.get("note"),
+                actor="api",
+            )
+            if incident is None:
+                self._json(400, {"error": "title required"})
+                return
+            self._json(201, incident)
             return
 
         if path == "/api/incidents/merge":

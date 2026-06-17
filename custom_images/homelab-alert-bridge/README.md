@@ -47,11 +47,17 @@ Ignored alerts are skipped at ingest, not published to ntfy, and hidden from the
 
 Per-alert opt-out via label or annotation: `homelab_triage: "false"` (or `triage: "false"`).
 
+## UI bulk actions
+
+On the incident list, select rows (or **Select all**) then **Acknowledge**, **Resolve**, **Reopen**, or **Merge into first** (first checked row becomes the target).
+
+**+ New incident** creates a manual ticket (no alert required) with optional summary, severity, tags, and initial note.
+
 ## URLs
 
 | Surface | Path |
 |---------|------|
-| **Incident UI** | `https://incidents.${DOMAIN_0}/` |
+| **Incident UI** | `https://incidents.${DOMAIN_0}/` — multi-select bulk actions, **+ New incident** |
 | **Hermes API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
 | **REST API** | `https://incidents.${DOMAIN_0}/api/incidents` |
 

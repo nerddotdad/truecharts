@@ -68,7 +68,7 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
     .grid {{ display: grid; gap: 12px; }}
     .incident-row {{
       display: grid;
-      grid-template-columns: 1.4fr 0.7fr 0.7fr 0.8fr auto;
+      grid-template-columns: auto 1.4fr 0.7fr 0.7fr 0.8fr auto;
       gap: 12px;
       align-items: center;
       padding: 12px 14px;
@@ -77,6 +77,28 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
       background: var(--panel);
     }}
     .incident-row:hover {{ border-color: var(--accent); }}
+    .incident-row-head {{
+      display: grid;
+      grid-template-columns: auto 1.4fr 0.7fr 0.7fr 0.8fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 0 14px 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }}
+    .bulk-bar {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }}
+    .bulk-bar .actions {{ margin-left: auto; }}
+    .row-check {{ width: 18px; height: 18px; accent-color: var(--accent); }}
+    .row-title {{ font-weight: 600; }}
+    .flash {{ border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }}
     .muted {{ color: var(--muted); font-size: 0.92rem; }}
     .badge {{
       display: inline-block;
@@ -136,7 +158,7 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
     .two-col {{ display: grid; gap: 16px; }}
     @media (min-width: 900px) {{ .two-col {{ grid-template-columns: 1.2fr 0.8fr; }} }}
     @media (max-width: 800px) {{
-      .incident-row {{ grid-template-columns: 1fr; }}
+      .incident-row, .incident-row-head {{ grid-template-columns: auto 1fr; }}
     }}
   </style>
 </head>
@@ -175,6 +197,7 @@ def incident_list_page(
     hermes_base: str,
     include_noise: bool = False,
     hidden_summary: str = "",
+    flash_message: str = "",
 ) -> str:
     def list_url(status: str, *, noise: bool) -> str:
         params: list[str] = []
@@ -203,16 +226,17 @@ def incident_list_page(
         iid = incident["id"]
         rows.append(
             f"""
-            <a class="incident-row" href="/incidents/{_esc(iid)}">
+            <div class="incident-row">
+              <input class="row-check" type="checkbox" name="incident_id" value="{_esc(iid)}">
               <div>
-                <strong>{_esc(incident.get('title') or iid)}</strong>
+                <a class="row-title" href="/incidents/{_esc(iid)}">{_esc(incident.get('title') or iid)}</a>
                 <div class="muted">{_esc(iid)}</div>
               </div>
               <div>{_status_badge(str(incident.get('status') or 'open'))}</div>
               <div>{_severity_badge(incident.get('severity'))}</div>
               <div class="muted">{_esc(incident.get('updated_at') or '')}</div>
-              <div class="muted">view →</div>
-            </a>
+              <div><a href="/incidents/{_esc(iid)}">view →</a></div>
+            </div>
             """
         )
 
@@ -220,12 +244,70 @@ def incident_list_page(
     hidden_note = ""
     if hidden_summary and not include_noise:
         hidden_note = f'<p class="muted">Hidden noise alerts: {_esc(hidden_summary)}. Use <strong>show noise</strong> to reveal them.</p>'
+    flash = f'<div class="panel flash">{_esc(flash_message)}</div>' if flash_message else ""
+    return_hidden = f'<input type="hidden" name="return_status" value="{_esc(status_filter)}">'
+    if include_noise:
+        return_hidden += '<input type="hidden" name="return_noise" value="1">'
+
     body = f"""
-    <div class="filters">{''.join(filters)}</div>
+    <div class="filters">
+      {''.join(filters)}
+      <a class="btn primary" href="/incidents/new">+ New incident</a>
+    </div>
+    {flash}
     {hidden_note}
-    <div class="grid">{rows_html}</div>
+    <form method="post" action="/incidents/bulk" class="grid">
+      {return_hidden}
+      <div class="panel bulk-bar">
+        <label class="muted"><input class="row-check" type="checkbox" id="select-all"> Select all</label>
+        <div class="actions">
+          <button type="submit" name="action" value="ack">Acknowledge</button>
+          <button type="submit" name="action" value="resolve">Resolve</button>
+          <button type="submit" name="action" value="reopen">Reopen</button>
+          <button type="submit" name="action" value="merge" title="Merges into the first selected incident">Merge into first</button>
+        </div>
+      </div>
+      <div class="incident-row-head">
+        <span></span><span>Incident</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
+      </div>
+      <div class="grid">{rows_html}</div>
+    </form>
+    <script>
+    document.getElementById('select-all')?.addEventListener('change', (e) => {{
+      document.querySelectorAll('input[name=incident_id]').forEach((cb) => {{ cb.checked = e.target.checked; }});
+    }});
+    </script>
     """
     return layout("Incidents", body)
+
+
+def create_incident_page(*, error: str = "") -> str:
+    err = f'<div class="panel"><span class="badge severity-critical">{_esc(error)}</span></div>' if error else ""
+    body = f"""
+    <p><a href="/">← All incidents</a></p>
+    {err}
+    <div class="panel">
+      <h2 style="margin-top:0;">New incident</h2>
+      <p class="muted">Create a manual ticket — useful for tracking work that did not come from an alert.</p>
+      <form method="post" action="/incidents/new" class="grid">
+        <input name="title" placeholder="Title" required autofocus>
+        <textarea name="summary" placeholder="What is going on?"></textarea>
+        <select name="severity">
+          <option value="critical">critical</option>
+          <option value="warning" selected>warning</option>
+          <option value="info">info</option>
+          <option value="unknown">unknown</option>
+        </select>
+        <input name="tags" placeholder="Tags (comma-separated)">
+        <textarea name="note" placeholder="Initial note (optional)"></textarea>
+        <div class="actions">
+          <button class="primary" type="submit">Create incident</button>
+          <a class="btn" href="/">Cancel</a>
+        </div>
+      </form>
+    </div>
+    """
+    return layout("New incident", body)
 
 
 def incident_detail_page(
@@ -295,6 +377,7 @@ def incident_detail_page(
         merged_banner = f'<div class="panel">Merged into <a href="/incidents/{_esc(merged_into)}">{_esc(merged_into)}</a></div>'
 
     tag_str = ", ".join(_esc(t) for t in tags)
+    manual_badge = '<span class="badge">manual</span>' if (incident.get("enrichment") or {}).get("manual") else ""
 
     body = f"""
     <p><a href="/">← All incidents</a></p>
@@ -305,7 +388,7 @@ def incident_detail_page(
         <div>
           <h2 style="margin:0 0 8px;">{_esc(incident.get('title') or iid)}</h2>
           <div class="muted">{_esc(iid)} · updated {_esc(incident.get('updated_at'))}</div>
-          <div style="margin-top:8px;">{_status_badge(status)} {_severity_badge(incident.get('severity'))}</div>
+          <div style="margin-top:8px;">{_status_badge(status)} {_severity_badge(incident.get('severity'))} {manual_badge}</div>
         </div>
         <div class="actions">
           {''.join(action_buttons)}

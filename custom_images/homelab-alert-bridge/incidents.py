@@ -275,6 +275,93 @@ class IncidentService:
             return None
         return self.store.add_note(incident_id, body, actor=actor)
 
+    def create_manual(
+        self,
+        *,
+        title: str,
+        summary: str | None = None,
+        severity: str | None = "warning",
+        tags: list[str] | None = None,
+        note: str | None = None,
+        actor: str | None = None,
+    ) -> dict[str, Any] | None:
+        clean_title = title.strip()
+        if not clean_title:
+            return None
+        enrichment: dict[str, Any] = {"manual": True}
+        if tags:
+            enrichment["tags"] = sorted({t.strip() for t in tags if t.strip()})
+        incident = self.store.create_incident(
+            title=clean_title,
+            severity=severity or "warning",
+            summary=(summary or "").strip() or None,
+            enrichment=enrichment,
+        )
+        self.store.update_incident(
+            incident["id"],
+            event_type="manual_created",
+            actor=actor,
+            event_detail={"title": clean_title},
+        )
+        if note and note.strip():
+            self.add_note(incident["id"], note.strip(), actor=actor)
+        return self.store.get_incident(incident["id"])
+
+    def bulk_apply(
+        self,
+        action: str,
+        incident_ids: list[str],
+        *,
+        actor: str | None = None,
+    ) -> dict[str, Any]:
+        ids = list(dict.fromkeys(safe_id(i) for i in incident_ids if i.strip()))
+        if not ids:
+            return {"error": "no incidents selected", "count": 0}
+
+        if action == "merge":
+            if len(ids) < 2:
+                return {"error": "merge requires at least 2 incidents", "count": 0}
+            target_id = ids[0]
+            source_ids = ids[1:]
+            merged = self.merge(target_id, source_ids, actor=actor)
+            if merged is None:
+                return {"error": "merge failed", "count": 0, "target_id": target_id}
+            return {
+                "action": action,
+                "count": len(source_ids),
+                "target_id": target_id,
+                "message": f"Merged {len(source_ids)} incident(s) into {target_id}",
+            }
+
+        handlers = {
+            "ack": self.acknowledge,
+            "resolve": self.resolve,
+            "reopen": self.reopen,
+        }
+        handler = handlers.get(action)
+        if handler is None:
+            return {"error": f"unknown action: {action}", "count": 0}
+
+        applied = 0
+        skipped = 0
+        for iid in ids:
+            result = handler(iid, actor=actor)
+            if result is None:
+                skipped += 1
+            else:
+                applied += 1
+        label = action.capitalize()
+        if action == "ack":
+            label = "Acknowledged"
+        elif action == "resolve":
+            label = "Resolved"
+        elif action == "reopen":
+            label = "Reopened"
+        msg = f"{label} {applied} incident(s)"
+        if skipped:
+            msg += f" ({skipped} skipped)"
+        return {"action": action, "count": applied, "skipped": skipped, "message": msg}
+
     def merge(self, target_id: str, source_ids: list[str], actor: str | None = None) -> dict[str, Any] | None:
         target = self.store.get_incident(target_id)
         if target is None or target.get("status") == "merged":
