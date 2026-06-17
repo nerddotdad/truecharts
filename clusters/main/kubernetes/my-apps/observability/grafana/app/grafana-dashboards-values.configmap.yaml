@@ -5,9 +5,9 @@ metadata:
   namespace: observability
 data:
   values.yaml: |
-    # Add dashboards under dashboards.grafana.<id> — see mk_observability.md.
-    # After editing this ConfigMap, reconcile Grafana so the init container re-downloads JSON:
-    #   flux reconcile helmrelease grafana -n observability
+    # Add marketplace/URL dashboards under dashboards.grafana.<id> — see mk_observability.md.
+    # Those are fetched only when the Grafana pod restarts (Helm upgrade). Custom homelab
+    # dashboards live in labeled ConfigMaps (grafana_dashboard=1) and reload via sidecar.
     dashboards:
       grafana:
         node-exporter-1860:
@@ -48,11 +48,3 @@ data:
             - name: $${DS_PROMETHEUS}
               value: Prometheus
           url: https://raw.githubusercontent.com/rebelcore/jellyfin_grafana/master/dashboards/jellyfin.json
-        homelab-alerts-overview:
-          enabled: true
-          failOnError: false
-          b64content: false
-          datasource:
-            - name: $${DS_PROMETHEUS}
-              value: Prometheus
-          url: https://raw.githubusercontent.com/nerddotdad/truecharts/main/clusters/main/kubernetes/my-apps/observability/grafana/app/dashboards/homelab-alerts-overview.json
