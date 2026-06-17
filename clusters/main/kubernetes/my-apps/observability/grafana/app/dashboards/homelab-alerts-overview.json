@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Current firing and pending alerts from Prometheus and Alertmanager.",
+  "description": "Current firing and pending alerts from Prometheus and Alertmanager. Platform heartbeat and meta alerts (Watchdog, InfoInhibitor, etc.) are hidden by default.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -77,7 +77,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"firing\"} == 1) OR on() vector(0)",
+          "expr": "count(ALERTS{alertstate=\"firing\", alertname!~\"$noise_alert_regex\"} == 1) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Firing",
           "refId": "A"
@@ -116,7 +116,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"pending\"} == 1) OR on() vector(0)",
+          "expr": "count(ALERTS{alertstate=\"pending\", alertname!~\"$noise_alert_regex\"} == 1) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Pending",
           "refId": "A"
@@ -155,7 +155,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\"} == 1) OR on() vector(0)",
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\", alertname!~\"$noise_alert_regex\"} == 1) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Critical",
           "refId": "A"
@@ -194,7 +194,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\"} == 1) OR on() vector(0)",
+          "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\", alertname!~\"$noise_alert_regex\"} == 1) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Warning",
           "refId": "A"
@@ -233,7 +233,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "sum(alertmanager_alerts{state=\"active\"}) OR on() vector(0)",
+          "expr": "sum(alertmanager_alerts{state=\"active\", alertname!~\"$noise_alert_regex\"}) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Active in AM",
           "refId": "A"
@@ -272,7 +272,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "sum(alertmanager_alerts{state=\"suppressed\"}) OR on() vector(0)",
+          "expr": "sum(alertmanager_alerts{state=\"suppressed\", alertname!~\"$noise_alert_regex\"}) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Suppressed",
           "refId": "A"
@@ -321,7 +321,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"firing\", alertname=~\"$alertname\", severity=~\"$severity\"} == 1)",
+          "expr": "count(ALERTS{alertstate=\"firing\", alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\"} == 1)",
           "legendFormat": "Firing",
           "range": true,
           "refId": "A"
@@ -329,7 +329,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "count(ALERTS{alertstate=\"pending\", alertname=~\"$alertname\", severity=~\"$severity\"} == 1)",
+          "expr": "count(ALERTS{alertstate=\"pending\", alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\"} == 1)",
           "legendFormat": "Pending",
           "range": true,
           "refId": "B"
@@ -337,7 +337,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "sum(alertmanager_alerts{state=\"active\", alertname=~\"$alertname\", severity=~\"$severity\"})",
+          "expr": "sum(alertmanager_alerts{state=\"active\", alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\"})",
           "legendFormat": "Alertmanager active",
           "range": true,
           "refId": "C"
@@ -435,7 +435,7 @@
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "ALERTS{alertstate=~\"$alertstate\", alertname=~\"$alertname\", severity=~\"$severity\"} == 1",
+          "expr": "ALERTS{alertstate=~\"$alertstate\", alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\"} == 1",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -517,7 +517,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "alertmanager_alerts{alertname=~\"$alertname\", severity=~\"$severity\", state=~\"$am_state\"}",
+          "expr": "alertmanager_alerts{alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\", state=~\"$am_state\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -539,16 +539,24 @@
   "templating": {
     "list": [
       {
+        "hide": 2,
+        "label": "Excluded alerts",
+        "name": "noise_alert_regex",
+        "query": "Watchdog|InfoInhibitor|DeadMansSwitch",
+        "skipUrlSync": true,
+        "type": "constant"
+      },
+      {
         "current": { "selected": true, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "definition": "label_values(ALERTS, alertname)",
+        "definition": "label_values(ALERTS{alertname!~\"$noise_alert_regex\"}, alertname)",
         "hide": 0,
         "includeAll": true,
         "label": "Alert",
         "multi": true,
         "name": "alertname",
         "options": [],
-        "query": { "qryType": 1, "query": "label_values(ALERTS, alertname)", "refId": "PrometheusVariable-Query" },
+        "query": { "qryType": 1, "query": "label_values(ALERTS{alertname!~\"$noise_alert_regex\"}, alertname)", "refId": "PrometheusVariable-Query" },
         "refresh": 2,
         "regex": "",
         "sort": 1,
@@ -607,5 +615,5 @@
   "timezone": "browser",
   "title": "Homelab Alerts Overview",
   "uid": "homelab-alerts-overview",
-  "version": 1
+  "version": 2
 }
