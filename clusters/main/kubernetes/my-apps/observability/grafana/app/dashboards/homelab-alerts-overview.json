@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Current firing and pending alerts from Prometheus and Alertmanager. Platform heartbeat and meta alerts (Watchdog, InfoInhibitor, etc.) are hidden by default.",
+  "description": "Current firing and pending alerts from Prometheus and Alertmanager. Platform heartbeat and meta alerts (Watchdog, InfoInhibitor, etc.) are hidden by default. Alertmanager aggregate metrics have no per-alert labels, so AM totals subtract known noise alerts.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -233,13 +233,13 @@
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "editorMode": "code",
-          "expr": "sum(alertmanager_alerts{state=\"active\", alertname!~\"$noise_alert_regex\"}) OR on() vector(0)",
+          "expr": "clamp_min(sum(alertmanager_alerts{state=\"active\"}) - count(ALERTS{alertstate=\"firing\", alertname=~\"$noise_alert_regex\"} == 1), 0) OR on() vector(0)",
           "instant": true,
           "legendFormat": "Active in AM",
           "refId": "A"
         }
       ],
-      "title": "Alertmanager active",
+      "title": "Alertmanager active (actionable)",
       "type": "stat"
     },
     {
@@ -337,8 +337,8 @@
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "editorMode": "code",
-          "expr": "sum(alertmanager_alerts{state=\"active\", alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\"})",
-          "legendFormat": "Alertmanager active",
+          "expr": "clamp_min(sum(alertmanager_alerts{state=\"active\"}) - count(ALERTS{alertstate=\"firing\", alertname=~\"$noise_alert_regex\"} == 1), 0) OR on() vector(0)",
+          "legendFormat": "Alertmanager active (actionable)",
           "range": true,
           "refId": "C"
         }
@@ -511,24 +511,45 @@
         "cellHeight": "sm",
         "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
         "showHeader": true,
-        "sortBy": [{ "desc": false, "displayName": "alertname" }]
+        "sortBy": [{ "desc": false, "displayName": "state" }]
       },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "editorMode": "code",
-          "expr": "alertmanager_alerts{alertname=~\"$alertname\", alertname!~\"$noise_alert_regex\", severity=~\"$severity\", state=~\"$am_state\"}",
+          "expr": "label_replace(clamp_min(sum(alertmanager_alerts{state=\"active\"}) - count(ALERTS{alertstate=\"firing\", alertname=~\"$noise_alert_regex\"} == 1), 0) OR on() vector(0), \"queue\", \"active (actionable)\", \"\", \"\")",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "editorMode": "code",
+          "expr": "label_replace(sum(alertmanager_alerts{state=\"suppressed\"}) OR on() vector(0), \"queue\", \"suppressed\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "editorMode": "code",
+          "expr": "label_replace(sum(alertmanager_alerts{state=\"unprocessed\"}) OR on() vector(0), \"queue\", \"unprocessed\", \"\", \"\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "C"
         }
       ],
-      "title": "Alertmanager alerts (all states)",
+      "title": "Alertmanager queue totals",
       "transformations": [
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value": true, "__name__": true, "container": true, "endpoint": true, "instance": true, "job": true, "namespace": true, "pod": true, "service": true }, "indexByName": {}, "renameByName": {} } },
-        { "id": "sortBy", "options": { "fields": {}, "sort": [{ "desc": false, "field": "alertname" }] } }
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "container": true, "endpoint": true, "instance": true, "job": true, "namespace": true, "pod": true, "service": true, "state": true }, "indexByName": { "queue": 0, "Value": 1 }, "renameByName": { "Value": "count", "queue": "state" } } },
+        { "id": "sortBy", "options": { "fields": {}, "sort": [{ "desc": false, "field": "state" }] } }
       ],
       "type": "table"
     }
@@ -591,22 +612,6 @@
         ],
         "query": "firing,pending",
         "type": "custom"
-      },
-      {
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "hide": 0,
-        "includeAll": true,
-        "label": "Alertmanager state",
-        "multi": true,
-        "name": "am_state",
-        "options": [
-          { "selected": true, "text": "All", "value": "$__all" },
-          { "selected": false, "text": "active", "value": "active" },
-          { "selected": false, "text": "suppressed", "value": "suppressed" },
-          { "selected": false, "text": "unprocessed", "value": "unprocessed" }
-        ],
-        "query": "active,suppressed,unprocessed",
-        "type": "custom"
       }
     ]
   },
@@ -615,5 +620,5 @@
   "timezone": "browser",
   "title": "Homelab Alerts Overview",
   "uid": "homelab-alerts-overview",
-  "version": 3
+  "version": 4
 }
