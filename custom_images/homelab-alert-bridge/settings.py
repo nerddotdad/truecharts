@@ -21,6 +21,7 @@ def default_settings() -> dict[str, Any]:
             "acknowledged": False,
             "merged": False,
         },
+        "show_noise": False,
     }
 
 
@@ -47,6 +48,7 @@ class SettingsStore:
         if not str(merged.get("topic") or "").strip():
             merged["topic"] = defaults["topic"]
         merged["enabled"] = bool(merged.get("enabled", True))
+        merged["show_noise"] = bool(raw.get("show_noise", defaults.get("show_noise", False)))
         return merged
 
     def save(self, settings: dict[str, Any]) -> dict[str, Any]:
@@ -60,6 +62,8 @@ class SettingsStore:
             for key, value in settings["events"].items():
                 events[str(key)] = bool(value)
             current["events"] = events
+        if "show_noise" in settings:
+            current["show_noise"] = bool(settings["show_noise"])
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(current, indent=2), encoding="utf-8")
         return current

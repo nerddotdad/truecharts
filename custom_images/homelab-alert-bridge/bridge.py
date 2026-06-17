@@ -20,7 +20,17 @@ from db import IncidentStore
 from filters import ignored_summary
 from incidents import IncidentService, safe_id
 from notifications import NotificationService
-from ui import alerts_list_page, create_incident_page, incident_detail_page, incident_list_page, login_page, settings_page
+from ui import (
+    PAGE_SIZE,
+    alerts_list_page,
+    create_incident_page,
+    incident_detail_page,
+    incident_list_page,
+    login_page,
+    render_alert_rows,
+    render_incident_rows,
+    settings_page,
+)
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
 DB_PATH = Path(os.environ.get("INCIDENT_DB", str(INCIDENT_DIR / "incidents.db")))
@@ -41,6 +51,20 @@ SESSION_COOKIE = "incidents_session"
 STORE = IncidentStore(DB_PATH)
 SERVICE = IncidentService(STORE, INCIDENT_DIR)
 NOTIFIER = NotificationService(STORE, INCIDENT_DIR / "notification_settings.json")
+
+
+def _list_params(params: dict[str, list[str]]) -> tuple[int, int, str, str]:
+    try:
+        offset = max(0, int((params.get("offset") or ["0"])[0] or 0))
+    except ValueError:
+        offset = 0
+    try:
+        limit = min(100, max(1, int((params.get("limit") or [str(PAGE_SIZE)])[0] or PAGE_SIZE)))
+    except ValueError:
+        limit = PAGE_SIZE
+    status_filter = (params.get("status") or [""])[0]
+    search_query = (params.get("q") or [""])[0]
+    return offset, limit, status_filter, search_query
 
 
 def _summarize_hook_payload(payload: dict) -> str:
@@ -154,19 +178,17 @@ def _alerts_redirect_url(*, status: str = "", message: str = "") -> str:
     return "/alerts?" + "&".join(params) if params else "/alerts"
 
 
-def _list_redirect_url(*, status: str = "", include_noise: bool = False, message: str = "") -> str:
+def _list_redirect_url(*, status: str = "", message: str = "") -> str:
     params: list[str] = []
     if status:
         params.append(f"status={urllib.parse.quote(status)}")
-    if include_noise:
-        params.append("show_noise=1")
     if message:
         params.append(f"msg={urllib.parse.quote(message)}")
     return "/?" + "&".join(params) if params else "/"
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "homelab-alert-bridge/3.0"
+    server_version = "homelab-alert-bridge/4.1"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -236,7 +258,7 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition("?")
 
         if path in ("/health", "/healthz"):
-            self._json(200, {"ok": True, "version": "3.0"})
+            self._json(200, {"ok": True, "version": "4.1.0"})
             return
 
         if path == "/login":
@@ -248,21 +270,18 @@ class Handler(BaseHTTPRequestHandler):
                 return
             params = urllib.parse.parse_qs(query)
             status_filter = (params.get("status") or [""])[0]
-            include_noise = (params.get("show_noise") or ["0"])[0] in ("1", "true", "yes")
+            search_query = (params.get("q") or [""])[0]
+            include_noise = bool(NOTIFIER.settings().get("show_noise"))
             flash_message = (params.get("msg") or [""])[0]
-            incidents = SERVICE.list_for_dashboard(
-                status=status_filter or None,
-                include_noise=include_noise,
-            )
             self._html(
                 200,
                 incident_list_page(
-                    incidents,
                     status_filter=status_filter,
                     hermes_base=HERMES_PUBLIC_BASE_URL,
                     include_noise=include_noise,
                     hidden_summary=ignored_summary(),
                     flash_message=flash_message,
+                    search_query=search_query,
                 ),
             )
             return
@@ -287,11 +306,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             params = urllib.parse.parse_qs(query)
             status_filter = (params.get("status") or [""])[0]
+            search_query = (params.get("q") or [""])[0]
             flash_message = (params.get("msg") or [""])[0]
-            alerts = SERVICE.list_inbox(status=status_filter or None)
             self._html(
                 200,
-                alerts_list_page(alerts, status_filter=status_filter, flash_message=flash_message),
+                alerts_list_page(
+                    status_filter=status_filter,
+                    flash_message=flash_message,
+                    search_query=search_query,
+                ),
             )
             return
 
@@ -337,15 +360,90 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, incident)
             return
 
-        if path == "/api/incidents":
+        if path == "/api/list/incidents":
+            if not self._require_api_auth(query):
+                return
             params = urllib.parse.parse_qs(query)
-            status_filter = (params.get("status") or [None])[0]
-            include_noise = (params.get("show_noise") or ["0"])[0] in ("1", "true", "yes")
-            incidents = SERVICE.list_for_dashboard(
-                status=status_filter,
-                include_noise=include_noise,
+            offset, limit, status_filter, search_query = _list_params(params)
+            include_noise = bool(NOTIFIER.settings().get("show_noise"))
+            try:
+                incidents, has_more, next_offset = SERVICE.list_for_dashboard(
+                    status=status_filter or None,
+                    include_noise=include_noise,
+                    query=search_query,
+                    offset=offset,
+                    limit=limit,
+                )
+            except ValueError as exc:
+                self._json(
+                    400,
+                    {"error": str(exc), "html": "", "has_more": False, "next_offset": offset},
+                )
+                return
+            self._json(
+                200,
+                {
+                    "html": render_incident_rows(incidents),
+                    "has_more": has_more,
+                    "next_offset": next_offset,
+                },
             )
-            self._json(200, {"incidents": incidents, "hidden_alertnames": ignored_summary()})
+            return
+
+        if path == "/api/list/alerts":
+            if not self._require_api_auth(query):
+                return
+            params = urllib.parse.parse_qs(query)
+            offset, limit, status_filter, search_query = _list_params(params)
+            try:
+                alerts, has_more, next_offset = SERVICE.list_inbox(
+                    status=status_filter or None,
+                    query=search_query,
+                    offset=offset,
+                    limit=limit,
+                )
+            except ValueError as exc:
+                self._json(
+                    400,
+                    {"error": str(exc), "html": "", "has_more": False, "next_offset": offset},
+                )
+                return
+            self._json(
+                200,
+                {
+                    "html": render_alert_rows(alerts),
+                    "has_more": has_more,
+                    "next_offset": next_offset,
+                },
+            )
+            return
+
+        if path == "/api/incidents":
+            if not self._require_api_auth(query):
+                return
+            params = urllib.parse.parse_qs(query)
+            offset, limit, status_filter, search_query = _list_params(params)
+            include_noise = bool(NOTIFIER.settings().get("show_noise"))
+            try:
+                incidents, has_more, next_offset = SERVICE.list_for_dashboard(
+                    status=status_filter or None,
+                    include_noise=include_noise,
+                    query=search_query,
+                    offset=offset,
+                    limit=limit,
+                )
+            except ValueError as exc:
+                self._json(400, {"error": str(exc)})
+                return
+            self._json(
+                200,
+                {
+                    "incidents": incidents,
+                    "has_more": has_more,
+                    "next_offset": next_offset,
+                    "hidden_alertnames": ignored_summary(),
+                },
+            )
             return
 
         if path == "/homelab/api/pending-incident":
@@ -373,13 +471,11 @@ class Handler(BaseHTTPRequestHandler):
             action = (form.get("action") or [""])[0]
             incident_ids = form.get("incident_id", [])
             return_status = (form.get("return_status") or [""])[0]
-            return_noise = (form.get("return_noise") or ["0"])[0] in ("1", "true", "yes")
             result = SERVICE.bulk_apply(action, incident_ids, actor="ui")
             if result.get("error"):
                 self._redirect(
                     _list_redirect_url(
                         status=return_status,
-                        include_noise=return_noise,
                         message=result["error"],
                     )
                 )
@@ -391,7 +487,6 @@ class Handler(BaseHTTPRequestHandler):
             self._redirect(
                 _list_redirect_url(
                     status=return_status,
-                    include_noise=return_noise,
                     message=str(result.get("message") or "Done"),
                 )
             )
@@ -433,6 +528,14 @@ class Handler(BaseHTTPRequestHandler):
                 }
             )
             self._redirect("/settings?msg=Notification+settings+saved")
+            return
+
+        if path == "/settings/display":
+            if not self._require_ui_auth():
+                return
+            form = _read_form(self)
+            NOTIFIER.save_settings({"show_noise": form.get("show_noise") == "on"})
+            self._redirect("/settings?msg=Display+settings+saved")
             return
 
         if path == "/settings/raise":

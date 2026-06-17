@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Any, Iterator
 
 
+from query_parser import ParsedQuery
+
+
 def utcnow() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -135,6 +138,76 @@ class IncidentStore:
             incident["alerts"] = self.list_alerts(incident["id"])
             incident["events"] = self.list_events(incident["id"])
         return incident
+
+    def search_incidents(
+        self,
+        *,
+        parsed: ParsedQuery | None = None,
+        tab_status: str | None = None,
+        include_merged: bool = False,
+        offset: int = 0,
+        limit: int = 25,
+    ) -> tuple[list[dict[str, Any]], bool]:
+        clauses = ["1=1"]
+        params: list[Any] = []
+        if tab_status:
+            clauses.append("i.status = ?")
+            params.append(tab_status)
+        if not include_merged:
+            clauses.append("i.status != 'merged'")
+        if parsed and parsed.clauses:
+            clauses.extend(parsed.clauses)
+            params.extend(parsed.params)
+        params.extend([limit + 1, offset])
+        query = f"""
+            SELECT i.* FROM incidents i
+            WHERE {' AND '.join(clauses)}
+            ORDER BY i.updated_at DESC
+            LIMIT ? OFFSET ?
+        """
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        return [self._row_to_incident(row, include_alerts=False) for row in rows], has_more
+
+    def search_inbox_alerts(
+        self,
+        *,
+        parsed: ParsedQuery | None = None,
+        tab_status: str | None = None,
+        offset: int = 0,
+        limit: int = 25,
+    ) -> tuple[list[dict[str, Any]], bool]:
+        clauses = ["incident_id IS NULL"]
+        params: list[Any] = []
+        if tab_status:
+            clauses.append("status = ?")
+            params.append(tab_status)
+        if parsed and parsed.clauses:
+            clauses.extend(parsed.clauses)
+            params.extend(parsed.params)
+        params.extend([limit + 1, offset])
+        query = f"""
+            SELECT * FROM alerts
+            WHERE {' AND '.join(clauses)}
+            ORDER BY updated_at DESC
+            LIMIT ? OFFSET ?
+        """
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        alerts: list[dict[str, Any]] = []
+        for row in rows:
+            payload = json.loads(row["payload"])
+            payload["fingerprint"] = row["fingerprint"]
+            payload["status"] = row["status"]
+            payload["incident_id"] = None
+            payload["_received_at"] = row["received_at"]
+            payload["_updated_at"] = row["updated_at"]
+            alerts.append(payload)
+        return alerts, has_more
 
     def list_incidents(
         self,

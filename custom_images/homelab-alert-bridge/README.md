@@ -40,6 +40,19 @@ Alertmanager → alerts inbox (UI: /alerts)
 
 ntfy posts are sent when incidents are raised/updated — not from raw Alertmanager payloads.
 
+## Lazy lists + JQL search
+
+Incident and alert lists load **25 rows at a time** (scroll or **Load more**). A search box filters results with a small JQL-style language (debounced ~300ms; query is stored in `?q=`).
+
+| Surface | Examples |
+|---------|----------|
+| **Incidents** | `status:open severity>=warning title~"flux"` |
+| **Alerts inbox** | `status:firing alertname:Homelab* namespace:flux-system` |
+
+**Syntax:** `field:value`, `field~"text"`, `field>=severity`, `field in (a,b)`, bare text for full-text search, `OR` for alternatives.
+
+**List APIs** (session cookie or bearer token): `GET /api/list/incidents`, `GET /api/list/alerts` — params: `offset`, `limit`, `status`, `q`.
+
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 
 **`VERSION`** → GHCR tag; **Renovate** updates `homelab-alert-bridge/app/deployment.yaml`.

@@ -10,7 +10,8 @@ from typing import Any
 from db import IncidentStore
 from filters import incident_is_noise, is_ignored_alert
 from message_format import enrich_incident, hermes_message, operator_message
-from raise_rules import RaiseSettingsStore, should_auto_raise
+from query_parser import parse_query
+from raise_rules import RaiseSettingsStore
 
 SAFE_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 
@@ -93,30 +94,84 @@ class IncidentService:
         *,
         status: str | None = None,
         include_noise: bool = False,
-        limit: int = 200,
-    ) -> list[dict[str, Any]]:
-        incidents = self.store.list_incidents(status=status, limit=limit)
-        if include_noise:
-            return incidents
-        incident_ids = [inc["id"] for inc in incidents]
-        alerts_by_id = self.store.alerts_by_incident_ids(incident_ids)
+        query: str = "",
+        offset: int = 0,
+        limit: int = 25,
+    ) -> tuple[list[dict[str, Any]], bool, int]:
+        parsed = parse_query(query, mode="incidents")
+        if parsed.errors:
+            raise ValueError("; ".join(parsed.errors))
+        scan_offset = offset
         visible: list[dict[str, Any]] = []
-        for incident in incidents:
-            incident = dict(incident)
-            incident["alerts"] = alerts_by_id.get(incident["id"], [])
-            if not incident_is_noise(incident):
-                incident.pop("alerts", None)
-                visible.append(incident)
-        return visible
+        has_more = False
+        while len(visible) < limit:
+            batch, batch_more = self.store.search_incidents(
+                parsed=parsed,
+                tab_status=status,
+                offset=scan_offset,
+                limit=limit,
+            )
+            if not batch:
+                break
+            if include_noise:
+                visible.extend(batch[: limit - len(visible)])
+            else:
+                incident_ids = [inc["id"] for inc in batch]
+                alerts_by_id = self.store.alerts_by_incident_ids(incident_ids)
+                for incident in batch:
+                    probe = dict(incident)
+                    probe["alerts"] = alerts_by_id.get(incident["id"], [])
+                    if not incident_is_noise(probe):
+                        visible.append(incident)
+                    if len(visible) >= limit:
+                        break
+            scan_offset += len(batch)
+            has_more = batch_more
+            if not batch_more:
+                break
+            if include_noise and len(visible) >= limit:
+                break
+        if len(visible) >= limit and has_more:
+            return visible[:limit], True, scan_offset
+        if not has_more:
+            return visible, False, scan_offset
+        return visible, True, scan_offset
 
     def list_inbox(
         self,
         *,
         status: str | None = None,
-        limit: int = 200,
-    ) -> list[dict[str, Any]]:
-        alerts = self.store.list_inbox_alerts(status=status, limit=limit)
-        return [alert for alert in alerts if not is_ignored_alert(alert)]
+        query: str = "",
+        offset: int = 0,
+        limit: int = 25,
+    ) -> tuple[list[dict[str, Any]], bool, int]:
+        parsed = parse_query(query, mode="alerts")
+        if parsed.errors:
+            raise ValueError("; ".join(parsed.errors))
+        scan_offset = offset
+        visible: list[dict[str, Any]] = []
+        has_more = False
+        while len(visible) < limit:
+            batch, batch_more = self.store.search_inbox_alerts(
+                parsed=parsed,
+                tab_status=status,
+                offset=scan_offset,
+                limit=limit,
+            )
+            if not batch:
+                break
+            for alert in batch:
+                if not is_ignored_alert(alert):
+                    visible.append(alert)
+                if len(visible) >= limit:
+                    break
+            scan_offset += len(batch)
+            has_more = batch_more
+            if not batch_more:
+                break
+        if len(visible) >= limit and has_more:
+            return visible[:limit], True, scan_offset
+        return visible, False, scan_offset
 
     def raise_settings_dict(self) -> dict[str, Any]:
         return self.raise_settings.load()

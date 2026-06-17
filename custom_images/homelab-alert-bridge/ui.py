@@ -21,6 +21,172 @@ def _severity_badge(severity: str | None) -> str:
     return f'<span class="badge severity-{ _esc(sev) }">{ _esc(sev) }</span>'
 
 
+PAGE_SIZE = 25
+
+
+def render_incident_rows(incidents: list[dict[str, Any]]) -> str:
+    if not incidents:
+        return ""
+    rows = []
+    for incident in incidents:
+        iid = incident["id"]
+        rows.append(
+            f"""
+            <div class="incident-row">
+              <input class="row-check" type="checkbox" name="incident_id" value="{_esc(iid)}">
+              <div>
+                <a class="row-title" href="/incidents/{_esc(iid)}">{_esc(incident.get('title') or iid)}</a>
+                <div class="muted">{_esc(iid)}</div>
+              </div>
+              <div>{_status_badge(str(incident.get('status') or 'open'))}</div>
+              <div>{_severity_badge(incident.get('severity'))}</div>
+              <div class="muted">{_esc(incident.get('updated_at') or '')}</div>
+              <div><a href="/incidents/{_esc(iid)}">view →</a></div>
+            </div>
+            """
+        )
+    return "\n".join(rows)
+
+
+def render_alert_rows(alerts: list[dict[str, Any]]) -> str:
+    if not alerts:
+        return ""
+    rows = []
+    for alert in alerts:
+        fp = str(alert.get("fingerprint") or "")
+        labels = alert.get("labels") or {}
+        annotations = alert.get("annotations") or {}
+        title = annotations.get("summary") or labels.get("alertname") or fp
+        rows.append(
+            f"""
+            <div class="incident-row">
+              <input class="row-check" type="checkbox" name="fingerprint" value="{_esc(fp)}">
+              <div>
+                <strong class="row-title">{_esc(title)}</strong>
+                <div class="muted">{_esc(labels.get('alertname', ''))} · {_esc(labels.get('namespace', ''))}</div>
+              </div>
+              <div>{_status_badge(str(alert.get('status') or 'firing'))}</div>
+              <div>{_severity_badge(labels.get('severity'))}</div>
+              <div class="muted">{_esc(alert.get('_updated_at') or '')}</div>
+              <div>
+                <button formaction="/alerts/{_esc(fp)}/raise" formmethod="post" type="submit">Raise</button>
+              </div>
+            </div>
+            """
+        )
+    return "\n".join(rows)
+
+
+def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_name: str, empty_message: str) -> str:
+    placeholder = (
+        'status:open severity>=warning title~"flux"'
+        if kind == "incidents"
+        else 'status:firing alertname:Homelab* namespace:flux-system'
+    )
+    return f"""
+    <script>
+    (function() {{
+      const pageSize = {PAGE_SIZE};
+      const apiPath = {json.dumps(api_path)};
+      const checkboxName = {json.dumps(checkbox_name)};
+      const emptyMessage = {json.dumps(empty_message)};
+      let offset = 0;
+      let hasMore = true;
+      let loading = false;
+      let statusFilter = {json.dumps(status_filter)};
+      let query = new URLSearchParams(window.location.search).get("q") || "";
+
+      const rowsEl = document.getElementById("lazy-rows");
+      const statusEl = document.getElementById("list-status");
+      const searchEl = document.getElementById("list-search");
+      const loadMoreBtn = document.getElementById("load-more");
+      const selectAllEl = document.getElementById("select-all");
+
+      if (searchEl) {{
+        searchEl.value = query;
+        let debounce = null;
+        searchEl.addEventListener("input", () => {{
+          clearTimeout(debounce);
+          debounce = setTimeout(() => {{
+            query = searchEl.value.trim();
+            const url = new URL(window.location.href);
+            if (query) url.searchParams.set("q", query); else url.searchParams.delete("q");
+            window.history.replaceState({{}}, "", url);
+            offset = 0;
+            loadRows(false);
+          }}, 300);
+        }});
+      }}
+
+      document.querySelectorAll("[data-status-filter]").forEach((btn) => {{
+        btn.addEventListener("click", () => {{
+          statusFilter = btn.getAttribute("data-status-filter") || "";
+          document.querySelectorAll("[data-status-filter]").forEach((b) => b.classList.remove("primary"));
+          btn.classList.add("primary");
+          offset = 0;
+          loadRows(false);
+        }});
+      }});
+
+      if (loadMoreBtn) loadMoreBtn.addEventListener("click", () => loadRows(true));
+
+      if (selectAllEl) {{
+        selectAllEl.addEventListener("change", (e) => {{
+          document.querySelectorAll(`input[name="${{checkboxName}}"]`).forEach((cb) => {{
+            cb.checked = e.target.checked;
+          }});
+        }});
+      }}
+
+      async function loadRows(append) {{
+        if (loading) return;
+        loading = true;
+        if (!append) {{
+          offset = 0;
+          hasMore = true;
+          rowsEl.innerHTML = '<div class="panel muted">Loading…</div>';
+        }}
+        statusEl.textContent = "Loading…";
+        loadMoreBtn.style.display = "none";
+        try {{
+          const params = new URLSearchParams({{
+            offset: String(append ? offset : 0),
+            limit: String(pageSize),
+            status: statusFilter,
+            q: query,
+          }});
+          const resp = await fetch(`${{apiPath}}?${{params}}`, {{ credentials: "same-origin" }});
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || "load failed");
+          if (!append) rowsEl.innerHTML = "";
+          if (data.html) {{
+            const wrap = document.createElement("div");
+            wrap.innerHTML = data.html;
+            while (wrap.firstChild) rowsEl.appendChild(wrap.firstChild);
+          }} else if (!append) {{
+            rowsEl.innerHTML = `<div class="panel muted">${{emptyMessage}}</div>`;
+          }}
+          offset = data.next_offset || 0;
+          hasMore = !!data.has_more;
+          const loadedCount = rowsEl.querySelectorAll(".incident-row").length;
+          statusEl.textContent = hasMore
+            ? `Showing ${{loadedCount}} — load more for additional matches`
+            : `Showing all ${{loadedCount}} matches`;
+          loadMoreBtn.style.display = hasMore ? "inline-flex" : "none";
+        }} catch (err) {{
+          if (!append) rowsEl.innerHTML = `<div class="panel"><span class="badge severity-critical">${{err.message}}</span></div>`;
+          statusEl.textContent = "";
+        }} finally {{
+          loading = false;
+        }}
+      }}
+
+      loadRows(false);
+    }})();
+    </script>
+    """
+
+
 def layout(title: str, body: str, *, public_base: str = "") -> str:
     return f"""<!doctype html>
 <html lang="en">
@@ -96,7 +262,18 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
       align-items: center;
       justify-content: space-between;
     }}
-    .bulk-bar .actions {{ margin-left: auto; }}
+    .search-box {{
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }}
+    .search-box input {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92rem;
+    }}
+    .list-status {{ color: var(--muted); font-size: 0.9rem; margin: 8px 0; }}
+    #load-more {{ margin-top: 8px; }}
+    .status-filter {{ cursor: pointer; }}
     .row-check {{ width: 18px; height: 18px; accent-color: var(--accent); }}
     .row-title {{ font-weight: 600; }}
     .flash {{ border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }}
@@ -118,7 +295,16 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
     .severity-critical {{ color: var(--crit); }}
     .severity-warning {{ color: var(--warn); }}
     .severity-info {{ color: var(--accent); }}
-    .actions {{ display: flex; flex-wrap: wrap; gap: 8px; }}
+    .actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
+    .actions form {{ margin: 0; display: inline-flex; }}
+    .actions button, .actions .btn {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      min-height: 38px;
+      line-height: 1.2;
+    }}
     button, .btn {{
       appearance: none;
       border: 1px solid var(--border);
@@ -192,63 +378,27 @@ def login_page(error: str = "") -> str:
 
 
 def incident_list_page(
-    incidents: list[dict[str, Any]],
     *,
     status_filter: str,
     hermes_base: str,
     include_noise: bool = False,
     hidden_summary: str = "",
     flash_message: str = "",
+    search_query: str = "",
 ) -> str:
-    def list_url(status: str, *, noise: bool) -> str:
-        params: list[str] = []
-        if status:
-            params.append(f"status={quote(status)}")
-        if noise:
-            params.append("show_noise=1")
-        return "/?" + "&".join(params) if params else "/"
-
     filters = []
     for status in ("", "open", "acknowledged", "resolved"):
         label = status or "all"
         active = "primary" if status == status_filter else ""
         filters.append(
-            f'<a class="btn {active}" href="{_esc(list_url(status, noise=include_noise))}">{_esc(label)}</a>'
+            f'<button type="button" class="btn status-filter {active}" data-status-filter="{_esc(status)}">{_esc(label)}</button>'
         )
 
-    noise_label = "hide noise" if include_noise else "show noise"
-    noise_active = "primary" if include_noise else ""
-    filters.append(
-        f'<a class="btn {noise_active}" href="{_esc(list_url(status_filter, noise=not include_noise))}">{noise_label}</a>'
-    )
-
-    rows = []
-    for incident in incidents:
-        iid = incident["id"]
-        rows.append(
-            f"""
-            <div class="incident-row">
-              <input class="row-check" type="checkbox" name="incident_id" value="{_esc(iid)}">
-              <div>
-                <a class="row-title" href="/incidents/{_esc(iid)}">{_esc(incident.get('title') or iid)}</a>
-                <div class="muted">{_esc(iid)}</div>
-              </div>
-              <div>{_status_badge(str(incident.get('status') or 'open'))}</div>
-              <div>{_severity_badge(incident.get('severity'))}</div>
-              <div class="muted">{_esc(incident.get('updated_at') or '')}</div>
-              <div><a href="/incidents/{_esc(iid)}">view →</a></div>
-            </div>
-            """
-        )
-
-    rows_html = "\n".join(rows) if rows else '<div class="panel muted">No triage incidents match this filter.</div>'
     hidden_note = ""
     if hidden_summary and not include_noise:
-        hidden_note = f'<p class="muted">Hidden noise alerts: {_esc(hidden_summary)}. Use <strong>show noise</strong> to reveal them.</p>'
+        hidden_note = f'<p class="muted">Hidden noise alerts: {_esc(hidden_summary)}. Enable <strong>Show noise</strong> in <a href="/settings">Settings</a>.</p>'
     flash = f'<div class="panel flash">{_esc(flash_message)}</div>' if flash_message else ""
     return_hidden = f'<input type="hidden" name="return_status" value="{_esc(status_filter)}">'
-    if include_noise:
-        return_hidden += '<input type="hidden" name="return_noise" value="1">'
 
     body = f"""
     <div class="filters">
@@ -259,6 +409,11 @@ def incident_list_page(
     </div>
     {flash}
     {hidden_note}
+    <div class="panel search-box">
+      <label for="list-search"><strong>Search</strong> <span class="muted">JQL-style, e.g. <code>status:open severity>=warning title~"flux"</code></span></label>
+      <input id="list-search" type="search" placeholder="status:open severity>=warning title~&quot;flux&quot;" value="{_esc(search_query)}" autocomplete="off">
+      <div id="list-status" class="list-status"></div>
+    </div>
     <form method="post" action="/incidents/bulk" class="grid">
       {return_hidden}
       <div class="panel bulk-bar">
@@ -273,68 +428,45 @@ def incident_list_page(
       <div class="incident-row-head">
         <span></span><span>Incident</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
-      <div class="grid">{rows_html}</div>
+      <div id="lazy-rows" class="grid"></div>
+      <button type="button" class="btn" id="load-more" style="display:none;">Load more</button>
     </form>
-    <script>
-    document.getElementById('select-all')?.addEventListener('change', (e) => {{
-      document.querySelectorAll('input[name=incident_id]').forEach((cb) => {{ cb.checked = e.target.checked; }});
-    }});
-    </script>
+    {_lazy_list_script(kind="incidents", api_path="/api/list/incidents", status_filter=status_filter, checkbox_name="incident_id", empty_message="No incidents match this search.")}
     """
     return layout("Incidents", body)
 
 
 def alerts_list_page(
-    alerts: list[dict[str, Any]],
     *,
     status_filter: str,
     flash_message: str = "",
+    search_query: str = "",
 ) -> str:
-    def list_url(status: str) -> str:
-        return f"/alerts?status={quote(status)}" if status else "/alerts"
-
     filters = []
     for status in ("", "firing", "resolved"):
         label = status or "all"
         active = "primary" if status == status_filter else ""
-        filters.append(f'<a class="btn {active}" href="{_esc(list_url(status))}">{_esc(label)}</a>')
-
-    rows = []
-    for alert in alerts:
-        fp = str(alert.get("fingerprint") or "")
-        labels = alert.get("labels") or {}
-        annotations = alert.get("annotations") or {}
-        title = annotations.get("summary") or labels.get("alertname") or fp
-        rows.append(
-            f"""
-            <div class="incident-row">
-              <input class="row-check" type="checkbox" name="fingerprint" value="{_esc(fp)}">
-              <div>
-                <strong class="row-title">{_esc(title)}</strong>
-                <div class="muted">{_esc(labels.get('alertname', ''))} · {_esc(labels.get('namespace', ''))}</div>
-              </div>
-              <div>{_status_badge(str(alert.get('status') or 'firing'))}</div>
-              <div>{_severity_badge(labels.get('severity'))}</div>
-              <div class="muted">{_esc(alert.get('_updated_at') or '')}</div>
-              <div>
-                <button formaction="/alerts/{_esc(fp)}/raise" formmethod="post" type="submit">Raise</button>
-              </div>
-            </div>
-            """
+        filters.append(
+            f'<button type="button" class="btn status-filter {active}" data-status-filter="{_esc(status)}">{_esc(label)}</button>'
         )
 
-    rows_html = "\n".join(rows) if rows else '<div class="panel muted">Inbox empty — alerts appear here before an incident is raised.</div>'
     flash = f'<div class="panel flash">{_esc(flash_message)}</div>' if flash_message else ""
     return_hidden = f'<input type="hidden" name="return_status" value="{_esc(status_filter)}">'
 
     body = f"""
+    <p><a href="/">← Incidents</a></p>
     <div class="filters">
       {''.join(filters)}
-      <a class="btn" href="/">Incidents</a>
+      <a class="btn primary" href="/">Incidents</a>
       <a class="btn" href="/settings">Settings</a>
     </div>
     {flash}
     <p class="muted">Alertmanager → <strong>alerts inbox</strong> → raise incident (manual or auto-raise rules in Settings).</p>
+    <div class="panel search-box">
+      <label for="list-search"><strong>Search</strong> <span class="muted">JQL-style, e.g. <code>status:firing alertname:Homelab* namespace:flux-system</code></span></label>
+      <input id="list-search" type="search" placeholder="status:firing alertname:Homelab* text~&quot;disk&quot;" value="{_esc(search_query)}" autocomplete="off">
+      <div id="list-status" class="list-status"></div>
+    </div>
     <form method="post" action="/alerts/raise" class="grid">
       {return_hidden}
       <div class="panel bulk-bar">
@@ -347,13 +479,10 @@ def alerts_list_page(
       <div class="incident-row-head">
         <span></span><span>Alert</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
-      <div class="grid">{rows_html}</div>
+      <div id="lazy-rows" class="grid"></div>
+      <button type="button" class="btn" id="load-more" style="display:none;">Load more</button>
     </form>
-    <script>
-    document.getElementById('select-all')?.addEventListener('change', (e) => {{
-      document.querySelectorAll('input[name=fingerprint]').forEach((cb) => {{ cb.checked = e.target.checked; }});
-    }});
-    </script>
+    {_lazy_list_script(kind="alerts", api_path="/api/list/alerts", status_filter=status_filter, checkbox_name="fingerprint", empty_message="No alerts match this search.")}
     """
     return layout("Alerts", body)
 
@@ -548,6 +677,16 @@ def settings_page(
     body = f"""
     <p><a href="/">Incidents</a> · <a href="/alerts">Alerts inbox</a></p>
     {flash}
+    <div class="panel">
+      <h2 style="margin-top:0;">Display</h2>
+      <form method="post" action="/settings/display" class="grid">
+        <label class="event-toggle">
+          <input type="checkbox" name="show_noise" {"checked" if notifications.get("show_noise") else ""}>
+          <span><strong>Show noise on incident list</strong><br><span class="muted">Include Watchdog, InfoInhibitor, and other filtered alerts in the incidents view</span></span>
+        </label>
+        <div class="actions"><button class="primary" type="submit">Save display</button></div>
+      </form>
+    </div>
     <div class="panel">
       <h2 style="margin-top:0;">Auto-raise rules</h2>
       <p class="muted">
