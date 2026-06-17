@@ -156,3 +156,71 @@ def enrich_incident(incident: dict) -> dict:
     enriched["operator_message"] = operator_message(alert)
     enriched["hermes_message"] = hermes_message(enriched)
     return enriched
+
+
+def incident_ntfy_title(incident: dict[str, Any], *, event: str = "updated") -> str:
+    title = str(incident.get("title") or "Incident")
+    status = str(incident.get("status") or "open")
+    if event == "resolved" or status == "resolved":
+        return f"Resolved: {title}"
+    if event == "manual":
+        return f"New incident: {title}"
+    if event == "reopened":
+        return f"Reopened: {title}"
+    if event == "merged":
+        return f"Merged: {title}"
+    return title
+
+
+def incident_ntfy_priority(incident: dict[str, Any], *, event: str = "updated") -> str:
+    if event == "resolved" or str(incident.get("status")) == "resolved":
+        return "low"
+    severity = str(incident.get("severity") or "").lower()
+    if severity == "critical":
+        return "urgent"
+    if severity == "warning":
+        return "high"
+    return "default"
+
+
+def incident_ntfy_tags(incident: dict[str, Any], *, event: str = "updated") -> str:
+    parts = [str(incident.get("status") or "open"), event]
+    if incident.get("severity"):
+        parts.append(str(incident["severity"]))
+    enrichment = incident.get("enrichment") or {}
+    if enrichment.get("manual"):
+        parts.append("manual")
+    return ",".join(parts)
+
+
+def incident_ntfy_body(incident: dict[str, Any], *, event: str = "updated") -> str:
+    lines: list[str] = []
+    if incident.get("summary"):
+        lines.append(str(incident["summary"]))
+
+    alerts = incident.get("alerts") or []
+    if alerts:
+        lines.append("")
+        lines.append(f"**Alerts attached:** {len(alerts)}")
+        for alert in alerts[:5]:
+            labels = alert.get("labels") or {}
+            annotations = alert.get("annotations") or {}
+            headline = annotations.get("summary") or labels.get("alertname") or "alert"
+            lines.append(f"- {headline} (`{alert.get('status', '?')}`)")
+        if len(alerts) > 5:
+            lines.append(f"- … and {len(alerts) - 5} more")
+    elif (incident.get("enrichment") or {}).get("manual"):
+        lines.append("")
+        lines.append("Manual incident (no alert source).")
+
+    lines.append("")
+    lines.append(f"**Incident status:** {incident.get('status', 'open')}")
+    lines.append(f"**Event:** {event}")
+    if incident.get("id"):
+        lines.append(f"**Incident ID:** `{incident['id']}`")
+
+    tags = (incident.get("enrichment") or {}).get("tags") or []
+    if tags:
+        lines.append(f"**Tags:** {', '.join(str(t) for t in tags)}")
+
+    return "\n".join(lines).strip()

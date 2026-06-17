@@ -17,10 +17,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from db import IncidentStore
-from filters import filter_alerts, ignored_summary
-from incidents import IncidentService, fingerprint, safe_id
-from ntfy_publish import publish_alerts
-from ui import create_incident_page, incident_detail_page, incident_list_page, login_page
+from filters import ignored_summary
+from incidents import IncidentService, safe_id
+from notifications import NotificationService
+from ui import alerts_list_page, create_incident_page, incident_detail_page, incident_list_page, login_page, settings_page
 
 INCIDENT_DIR = Path(os.environ.get("INCIDENT_DIR", "/data/incidents"))
 DB_PATH = Path(os.environ.get("INCIDENT_DB", str(INCIDENT_DIR / "incidents.db")))
@@ -40,6 +40,7 @@ SESSION_COOKIE = "incidents_session"
 
 STORE = IncidentStore(DB_PATH)
 SERVICE = IncidentService(STORE, INCIDENT_DIR)
+NOTIFIER = NotificationService(STORE, INCIDENT_DIR / "notification_settings.json")
 
 
 def _summarize_hook_payload(payload: dict) -> str:
@@ -58,31 +59,14 @@ def _summarize_hook_payload(payload: dict) -> str:
 
 def _handle_alertmanager_hook(payload: dict) -> tuple[int, bytes]:
     sys.stderr.write(f"hook received: {_summarize_hook_payload(payload)}\n")
-    incident_ids = SERVICE.ingest_alertmanager_payload(payload)
-    if incident_ids:
-        sys.stderr.write(f"incidents touched: {', '.join(incident_ids)}\n")
-
-    triage_alerts = filter_alerts(
-        [alert for alert in (payload.get("alerts") or []) if isinstance(alert, dict)]
-    )
-    if not triage_alerts:
-        return 200, b'{"ok":true,"skipped":"ignored alerts"}'
-
-    enriched_payload = dict(payload)
-    enriched_alerts = []
-    for alert in triage_alerts:
-        copy = dict(alert)
-        fp = fingerprint(alert)
-        incident = STORE.get_incident_by_fingerprint(fp)
-        if incident:
-            copy["_incident_id"] = incident["id"]
-        enriched_alerts.append(copy)
-    enriched_payload["alerts"] = enriched_alerts
-
-    status, resp_body = publish_alerts(enriched_payload)
-    if status >= 400:
-        sys.stderr.write(f"ntfy publish failed ({status}): {resp_body[:500]!r}\n")
-    return status, resp_body
+    events = SERVICE.ingest_alertmanager_payload(payload)
+    if events:
+        ids = ", ".join(sorted({iid for iid, _ in events}))
+        sys.stderr.write(f"incidents touched: {ids}\n")
+        NOTIFIER.notify_many(events)
+    if not events:
+        return 200, b'{"ok":true,"skipped":"ignored or empty alerts"}'
+    return 200, json.dumps({"ok": True, "incidents": len(events)}).encode("utf-8")
 
 
 def _sign_webhook(body: bytes, secret: str) -> str:
@@ -159,6 +143,15 @@ def _read_form_multi(handler: BaseHTTPRequestHandler) -> dict[str, list[str]]:
     length = int(handler.headers.get("Content-Length", "0"))
     raw = handler.rfile.read(length).decode("utf-8", errors="replace")
     return urllib.parse.parse_qs(raw)
+
+
+def _alerts_redirect_url(*, status: str = "", message: str = "") -> str:
+    params: list[str] = []
+    if status:
+        params.append(f"status={urllib.parse.quote(status)}")
+    if message:
+        params.append(f"msg={urllib.parse.quote(message)}")
+    return "/alerts?" + "&".join(params) if params else "/alerts"
 
 
 def _list_redirect_url(*, status: str = "", include_noise: bool = False, message: str = "") -> str:
@@ -274,6 +267,34 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
 
+        if path == "/settings":
+            if not self._require_ui_auth():
+                return
+            params = urllib.parse.parse_qs(query)
+            flash_message = (params.get("msg") or [""])[0]
+            self._html(
+                200,
+                settings_page(
+                    NOTIFIER.settings(),
+                    SERVICE.raise_settings_dict(),
+                    flash_message=flash_message,
+                ),
+            )
+            return
+
+        if path == "/alerts":
+            if not self._require_ui_auth():
+                return
+            params = urllib.parse.parse_qs(query)
+            status_filter = (params.get("status") or [""])[0]
+            flash_message = (params.get("msg") or [""])[0]
+            alerts = SERVICE.list_inbox(status=status_filter or None)
+            self._html(
+                200,
+                alerts_list_page(alerts, status_filter=status_filter, flash_message=flash_message),
+            )
+            return
+
         if path == "/incidents/new":
             if not self._require_ui_auth():
                 return
@@ -363,6 +384,7 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 )
                 return
+            NOTIFIER.notify_many(result.get("notify") or [])
             if action == "merge" and result.get("target_id"):
                 self._redirect(f"/incidents/{result['target_id']}")
                 return
@@ -391,6 +413,84 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(400, create_incident_page(error="Title is required"))
                 return
+            NOTIFIER.notify(incident["id"], "manual")
+            self._redirect(f"/incidents/{incident['id']}")
+            return
+
+        if path == "/settings":
+            if not self._require_ui_auth():
+                return
+            form = _read_form(self)
+            events = {
+                key: form.get(f"event_{key}") == "on"
+                for key in ("created", "updated", "resolved", "reopened", "manual", "acknowledged", "merged")
+            }
+            NOTIFIER.save_settings(
+                {
+                    "enabled": form.get("enabled") == "on",
+                    "topic": form.get("topic", ""),
+                    "events": events,
+                }
+            )
+            self._redirect("/settings?msg=Notification+settings+saved")
+            return
+
+        if path == "/settings/raise":
+            if not self._require_ui_auth():
+                return
+            form = _read_form(self)
+            SERVICE.save_raise_settings(
+                {
+                    "enabled": form.get("raise_enabled") == "on",
+                    "group_open": form.get("group_open") == "on",
+                    "min_severity": form.get("min_severity", "critical"),
+                    "alertnames": form.get("alertnames", ""),
+                    "label_rules": form.get("label_rules", ""),
+                }
+            )
+            self._redirect("/settings?msg=Auto-raise+settings+saved")
+            return
+
+        if path == "/alerts/raise":
+            if not self._require_ui_auth():
+                return
+            form = _read_form_multi(self)
+            fingerprints = form.get("fingerprint", [])
+            title = (form.get("title") or [""])[0].strip() or None
+            return_status = (form.get("return_status") or [""])[0]
+            incident, kind = SERVICE.raise_from_alerts(
+                fingerprints,
+                title=title,
+                actor="ui",
+                group_open=False,
+            )
+            if incident is None:
+                self._redirect(_alerts_redirect_url(status=return_status, message="Could not raise incident"))
+                return
+            if kind == "already_raised":
+                self._redirect(
+                    _alerts_redirect_url(
+                        status=return_status,
+                        message=f"Alert already on incident {incident['id']}",
+                    )
+                )
+                return
+            NOTIFIER.notify(incident["id"], "created" if kind == "created" else "updated")
+            self._redirect(f"/incidents/{incident['id']}")
+            return
+
+        if path.startswith("/alerts/") and path.endswith("/raise"):
+            if not self._require_ui_auth():
+                return
+            fp = safe_id(path[len("/alerts/") : -6].strip("/"))
+            incident, kind = SERVICE.raise_from_alerts([fp], actor="ui", group_open=False)
+            if incident is None:
+                self._redirect(_alerts_redirect_url(message="Could not raise incident"))
+                return
+            if kind == "already_raised":
+                self._redirect(f"/incidents/{incident['id']}")
+                return
+            NOTIFIER.notify(incident["id"], "created" if kind == "created" else "updated")
             self._redirect(f"/incidents/{incident['id']}")
             return
 
@@ -402,6 +502,7 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(404, login_page("Incident not found"))
                 return
+            NOTIFIER.notify(iid, "acknowledged")
             self._redirect(f"/incidents/{iid}")
             return
 
@@ -413,6 +514,7 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(404, login_page("Incident not found"))
                 return
+            NOTIFIER.notify(iid, "resolved")
             self._redirect(f"/incidents/{iid}")
             return
 
@@ -424,6 +526,7 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(404, login_page("Incident not found"))
                 return
+            NOTIFIER.notify(iid, "reopened")
             self._redirect(f"/incidents/{iid}")
             return
 
@@ -469,6 +572,7 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(404, login_page("Incident not found"))
                 return
+            NOTIFIER.notify(iid, "merged")
             self._redirect(f"/incidents/{iid}")
             return
 
@@ -484,6 +588,7 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(raw_ids, list):
                 raw_ids = []
             result = SERVICE.bulk_apply(action, [str(x) for x in raw_ids], actor="api")
+            NOTIFIER.notify_many(result.get("notify") or [])
             status = 400 if result.get("error") else 200
             self._json(status, result)
             return
@@ -509,6 +614,7 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._json(400, {"error": "title required"})
                 return
+            NOTIFIER.notify(incident["id"], "manual")
             self._json(201, incident)
             return
 

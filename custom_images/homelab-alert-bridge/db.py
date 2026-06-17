@@ -81,9 +81,39 @@ class IncidentStore:
                 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
                 CREATE INDEX IF NOT EXISTS idx_incidents_updated ON incidents(updated_at DESC);
                 CREATE INDEX IF NOT EXISTS idx_alerts_incident ON alerts(incident_id);
+                CREATE INDEX IF NOT EXISTS idx_alerts_inbox ON alerts(updated_at DESC) WHERE incident_id IS NULL;
                 CREATE INDEX IF NOT EXISTS idx_events_incident ON incident_events(incident_id, created_at);
                 """
             )
+            self._migrate_alerts_nullable(conn)
+
+    def _migrate_alerts_nullable(self, conn: sqlite3.Connection) -> None:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='alerts'"
+        ).fetchone()
+        if row is None:
+            return
+        create_sql = str(row["sql"] or "")
+        if "incident_id TEXT," in create_sql or "incident_id TEXT NOT NULL" not in create_sql:
+            return
+        conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS alerts_new (
+                fingerprint TEXT PRIMARY KEY,
+                incident_id TEXT REFERENCES incidents(id) ON DELETE SET NULL,
+                status TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                received_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            INSERT INTO alerts_new (fingerprint, incident_id, status, payload, received_at, updated_at)
+            SELECT fingerprint, incident_id, status, payload, received_at, updated_at FROM alerts;
+            DROP TABLE alerts;
+            ALTER TABLE alerts_new RENAME TO alerts;
+            CREATE INDEX IF NOT EXISTS idx_alerts_incident ON alerts(incident_id);
+            CREATE INDEX IF NOT EXISTS idx_alerts_inbox ON alerts(updated_at DESC) WHERE incident_id IS NULL;
+            """
+        )
 
     def _row_to_incident(self, row: sqlite3.Row, *, include_alerts: bool = True) -> dict[str, Any]:
         incident = {
@@ -204,14 +234,142 @@ class IncidentStore:
         assert incident is not None
         return incident
 
-    def upsert_alert(
+    def get_alert(self, fingerprint: str) -> dict[str, Any] | None:
+        with self._conn() as conn:
+            row = conn.execute("SELECT * FROM alerts WHERE fingerprint = ?", (fingerprint,)).fetchone()
+        if row is None:
+            return None
+        payload = json.loads(row["payload"])
+        payload["fingerprint"] = row["fingerprint"]
+        payload["status"] = row["status"]
+        payload["incident_id"] = row["incident_id"]
+        payload["_received_at"] = row["received_at"]
+        payload["_updated_at"] = row["updated_at"]
+        return payload
+
+    def list_inbox_alerts(
         self,
         *,
-        incident_id: str,
+        status: str | None = None,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        clauses = ["incident_id IS NULL"]
+        params: list[Any] = []
+        if status:
+            clauses.append("status = ?")
+            params.append(status)
+        params.append(limit)
+        query = f"""
+            SELECT * FROM alerts
+            WHERE {' AND '.join(clauses)}
+            ORDER BY updated_at DESC
+            LIMIT ?
+        """
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+        alerts: list[dict[str, Any]] = []
+        for row in rows:
+            payload = json.loads(row["payload"])
+            payload["fingerprint"] = row["fingerprint"]
+            payload["status"] = row["status"]
+            payload["incident_id"] = None
+            payload["_received_at"] = row["received_at"]
+            payload["_updated_at"] = row["updated_at"]
+            alerts.append(payload)
+        return alerts
+
+    def upsert_inbox_alert(
+        self,
+        *,
         fingerprint: str,
         status: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
+        now = utcnow()
+        raw = json.dumps(payload)
+        with self._conn() as conn:
+            existing = conn.execute(
+                "SELECT incident_id FROM alerts WHERE fingerprint = ?", (fingerprint,)
+            ).fetchone()
+            if existing and existing["incident_id"]:
+                return self.upsert_alert(
+                    incident_id=str(existing["incident_id"]),
+                    fingerprint=fingerprint,
+                    status=status,
+                    payload=payload,
+                )
+            if existing:
+                conn.execute(
+                    """
+                    UPDATE alerts
+                    SET status = ?, payload = ?, updated_at = ?
+                    WHERE fingerprint = ?
+                    """,
+                    (status, raw, now, fingerprint),
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO alerts (fingerprint, incident_id, status, payload, received_at, updated_at)
+                    VALUES (?, NULL, ?, ?, ?, ?)
+                    """,
+                    (fingerprint, status, raw, now, now),
+                )
+        result = dict(payload)
+        result["fingerprint"] = fingerprint
+        result["status"] = status
+        result["incident_id"] = None
+        return result
+
+    def attach_alerts(self, incident_id: str, fingerprints: list[str], *, actor: str | None = None) -> int:
+        now = utcnow()
+        attached = 0
+        with self._conn() as conn:
+            for fp in fingerprints:
+                row = conn.execute(
+                    "SELECT fingerprint, payload FROM alerts WHERE fingerprint = ?", (fp,)
+                ).fetchone()
+                if row is None:
+                    continue
+                conn.execute(
+                    """
+                    UPDATE alerts SET incident_id = ?, updated_at = ? WHERE fingerprint = ?
+                    """,
+                    (incident_id, now, fp),
+                )
+                payload = json.loads(row["payload"])
+                self._add_event(
+                    conn,
+                    incident_id,
+                    "alert_attached",
+                    actor,
+                    {
+                        "fingerprint": fp,
+                        "alertname": (payload.get("labels") or {}).get("alertname"),
+                    },
+                )
+                attached += 1
+            if attached:
+                conn.execute(
+                    "UPDATE incidents SET updated_at = ? WHERE id = ?",
+                    (now, incident_id),
+                )
+        return attached
+
+    def upsert_alert(
+        self,
+        *,
+        incident_id: str | None,
+        fingerprint: str,
+        status: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not incident_id:
+            return self.upsert_inbox_alert(
+                fingerprint=fingerprint,
+                status=status,
+                payload=payload,
+            )
         now = utcnow()
         raw = json.dumps(payload)
         with self._conn() as conn:

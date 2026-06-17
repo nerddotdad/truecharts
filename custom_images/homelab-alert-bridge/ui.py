@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 from typing import Any
 from urllib.parse import quote
 
@@ -252,7 +253,9 @@ def incident_list_page(
     body = f"""
     <div class="filters">
       {''.join(filters)}
+      <a class="btn" href="/alerts">Alerts inbox</a>
       <a class="btn primary" href="/incidents/new">+ New incident</a>
+      <a class="btn" href="/settings">Settings</a>
     </div>
     {flash}
     {hidden_note}
@@ -279,6 +282,80 @@ def incident_list_page(
     </script>
     """
     return layout("Incidents", body)
+
+
+def alerts_list_page(
+    alerts: list[dict[str, Any]],
+    *,
+    status_filter: str,
+    flash_message: str = "",
+) -> str:
+    def list_url(status: str) -> str:
+        return f"/alerts?status={quote(status)}" if status else "/alerts"
+
+    filters = []
+    for status in ("", "firing", "resolved"):
+        label = status or "all"
+        active = "primary" if status == status_filter else ""
+        filters.append(f'<a class="btn {active}" href="{_esc(list_url(status))}">{_esc(label)}</a>')
+
+    rows = []
+    for alert in alerts:
+        fp = str(alert.get("fingerprint") or "")
+        labels = alert.get("labels") or {}
+        annotations = alert.get("annotations") or {}
+        title = annotations.get("summary") or labels.get("alertname") or fp
+        rows.append(
+            f"""
+            <div class="incident-row">
+              <input class="row-check" type="checkbox" name="fingerprint" value="{_esc(fp)}">
+              <div>
+                <strong class="row-title">{_esc(title)}</strong>
+                <div class="muted">{_esc(labels.get('alertname', ''))} · {_esc(labels.get('namespace', ''))}</div>
+              </div>
+              <div>{_status_badge(str(alert.get('status') or 'firing'))}</div>
+              <div>{_severity_badge(labels.get('severity'))}</div>
+              <div class="muted">{_esc(alert.get('_updated_at') or '')}</div>
+              <div>
+                <button formaction="/alerts/{_esc(fp)}/raise" formmethod="post" type="submit">Raise</button>
+              </div>
+            </div>
+            """
+        )
+
+    rows_html = "\n".join(rows) if rows else '<div class="panel muted">Inbox empty — alerts appear here before an incident is raised.</div>'
+    flash = f'<div class="panel flash">{_esc(flash_message)}</div>' if flash_message else ""
+    return_hidden = f'<input type="hidden" name="return_status" value="{_esc(status_filter)}">'
+
+    body = f"""
+    <div class="filters">
+      {''.join(filters)}
+      <a class="btn" href="/">Incidents</a>
+      <a class="btn" href="/settings">Settings</a>
+    </div>
+    {flash}
+    <p class="muted">Alertmanager → <strong>alerts inbox</strong> → raise incident (manual or auto-raise rules in Settings).</p>
+    <form method="post" action="/alerts/raise" class="grid">
+      {return_hidden}
+      <div class="panel bulk-bar">
+        <label class="muted"><input class="row-check" type="checkbox" id="select-all"> Select all</label>
+        <input name="title" placeholder="Incident title (optional)" style="max-width:280px;">
+        <div class="actions">
+          <button class="primary" type="submit">Raise incident</button>
+        </div>
+      </div>
+      <div class="incident-row-head">
+        <span></span><span>Alert</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
+      </div>
+      <div class="grid">{rows_html}</div>
+    </form>
+    <script>
+    document.getElementById('select-all')?.addEventListener('change', (e) => {{
+      document.querySelectorAll('input[name=fingerprint]').forEach((cb) => {{ cb.checked = e.target.checked; }});
+    }});
+    </script>
+    """
+    return layout("Alerts", body)
 
 
 def create_incident_page(*, error: str = "") -> str:
@@ -446,3 +523,90 @@ def incident_detail_page(
     </div>
     """
     return layout(incident.get("title") or iid, body)
+
+
+def settings_page(
+    notifications: dict[str, Any],
+    raise_settings: dict[str, Any],
+    *,
+    flash_message: str = "",
+) -> str:
+    events = notifications.get("events") or {}
+    flash = f'<div class="panel flash">{_esc(flash_message)}</div>' if flash_message else ""
+    alertnames = ", ".join(raise_settings.get("alertnames") or [])
+    label_rules = json.dumps(raise_settings.get("label_rules") or [], indent=2)
+
+    def event_checkbox(name: str, label: str, hint: str) -> str:
+        checked = "checked" if events.get(name, False) else ""
+        return f"""
+        <label class="event-toggle">
+          <input type="checkbox" name="event_{_esc(name)}" {checked}>
+          <span><strong>{_esc(label)}</strong><br><span class="muted">{_esc(hint)}</span></span>
+        </label>
+        """
+
+    body = f"""
+    <p><a href="/">Incidents</a> · <a href="/alerts">Alerts inbox</a></p>
+    {flash}
+    <div class="panel">
+      <h2 style="margin-top:0;">Auto-raise rules</h2>
+      <p class="muted">
+        Alertmanager webhooks land in the <strong>alerts inbox</strong> first.
+        Matching rules automatically raise an incident and attach the alert.
+      </p>
+      <form method="post" action="/settings/raise" class="grid">
+        <label class="event-toggle">
+          <input type="checkbox" name="raise_enabled" {"checked" if raise_settings.get("enabled", True) else ""}>
+          <span><strong>Auto-raise enabled</strong></span>
+        </label>
+        <label class="event-toggle">
+          <input type="checkbox" name="group_open" {"checked" if raise_settings.get("group_open", True) else ""}>
+          <span><strong>Group into open incidents</strong><br><span class="muted">Attach to an open incident with the same alertname + namespace</span></span>
+        </label>
+        <select name="min_severity">
+          {''.join(f'<option value="{_esc(s)}" {"selected" if raise_settings.get("min_severity")==s else ""}>{_esc(s)} and above</option>' for s in ("critical", "warning", "info", "unknown"))}
+        </select>
+        <input name="alertnames" placeholder="Alertnames only (comma-separated, empty = all)" value="{_esc(alertnames)}">
+        <textarea name="label_rules" placeholder='Label rules JSON e.g. [{{"alertname":"Foo","namespace":"bar"}}]'>{_esc(label_rules)}</textarea>
+        <div class="actions"><button class="primary" type="submit">Save auto-raise</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2 style="margin-top:0;">Notification settings</h2>
+      <p class="muted">When an incident is raised or updated, notifications flow <strong>incident → ntfy</strong>.</p>
+      <form method="post" action="/settings" class="grid">
+        <label class="event-toggle">
+          <input type="checkbox" name="enabled" {"checked" if notifications.get("enabled", True) else ""}>
+          <span><strong>Notifications enabled</strong><br><span class="muted">Master switch for all ntfy posts</span></span>
+        </label>
+        <input name="topic" placeholder="ntfy topic" value="{_esc(notifications.get('topic') or '')}" required>
+        <div class="panel" style="margin:0;">
+          <h3 style="margin-top:0;">Notify on</h3>
+          <div class="grid">
+            {event_checkbox("created", "New incident", "Incident raised from alert(s) or manual create")}
+            {event_checkbox("updated", "Incident updated", "More alerts attached or severity changes")}
+            {event_checkbox("resolved", "Resolved", "All alerts cleared or you resolve from UI")}
+            {event_checkbox("reopened", "Reopened", "Firing alert returns after resolve")}
+            {event_checkbox("manual", "Manual incident", "You create a ticket without alerts")}
+            {event_checkbox("acknowledged", "Acknowledged", "Ack from UI or bulk actions")}
+            {event_checkbox("merged", "Merged", "Incidents combined in UI")}
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Save notifications</button>
+        </div>
+      </form>
+    </div>
+    <style>
+      .event-toggle {{
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }}
+      .event-toggle:last-child {{ border-bottom: 0; }}
+      .event-toggle input {{ width: auto; margin-top: 4px; }}
+    </style>
+    """
+    return layout("Settings", body)

@@ -8,8 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from db import IncidentStore
-from filters import filter_alerts, incident_is_noise, is_ignored_alert
+from filters import incident_is_noise, is_ignored_alert
 from message_format import enrich_incident, hermes_message, operator_message
+from raise_rules import RaiseSettingsStore, should_auto_raise
 
 SAFE_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 
@@ -49,9 +50,12 @@ def severity_rank(severity: str | None) -> int:
 
 
 class IncidentService:
-    def __init__(self, store: IncidentStore, legacy_dir: Path) -> None:
+    def __init__(self, store: IncidentStore, legacy_dir: Path, *, raise_settings_path: Path | None = None) -> None:
         self.store = store
         self.legacy_dir = legacy_dir
+        self.raise_settings = RaiseSettingsStore(
+            raise_settings_path or legacy_dir / "auto_raise_settings.json"
+        )
 
     def migrate_legacy_json(self) -> int:
         if not self.legacy_dir.is_dir():
@@ -105,55 +109,252 @@ class IncidentService:
                 visible.append(incident)
         return visible
 
-    def ingest_alertmanager_payload(self, payload: dict[str, Any]) -> list[str]:
-        touched: list[str] = []
+    def list_inbox(
+        self,
+        *,
+        status: str | None = None,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        alerts = self.store.list_inbox_alerts(status=status, limit=limit)
+        return [alert for alert in alerts if not is_ignored_alert(alert)]
+
+    def raise_settings_dict(self) -> dict[str, Any]:
+        return self.raise_settings.load()
+
+    def save_raise_settings(self, settings: dict[str, Any]) -> dict[str, Any]:
+        return self.raise_settings.save(settings)
+
+    def ingest_alertmanager_payload(self, payload: dict[str, Any]) -> list[tuple[str, str]]:
+        events: list[tuple[str, str]] = []
+        rules = self.raise_settings.load()
         for alert in payload.get("alerts") or []:
             if not isinstance(alert, dict):
                 continue
-            incident_id = self._ingest_alert(alert, receiver=payload.get("receiver"))
-            if incident_id:
-                touched.append(incident_id)
-        return list(dict.fromkeys(touched))
+            result = self._ingest_alert(alert, receiver=payload.get("receiver"), rules=rules)
+            if result:
+                events.append(result)
+        return events
 
-    def _ingest_alert(self, alert: dict[str, Any], *, receiver: str | None = None) -> str | None:
+    def _ingest_alert(
+        self,
+        alert: dict[str, Any],
+        *,
+        receiver: str | None = None,
+        rules: dict[str, Any] | None = None,
+    ) -> tuple[str, str] | None:
         if is_ignored_alert(alert):
             return None
+
         fp = fingerprint(alert)
-        labels = alert.get("labels") or {}
-        alertname = str(labels.get("alertname") or "alert")
-        namespace = str(labels.get("namespace") or "")
         status = str(alert.get("status") or "firing")
-        severity = alert_severity(alert)
+        rules = rules or self.raise_settings.load()
 
-        existing = self.store.get_incident_by_fingerprint(fp)
-        if existing and existing.get("status") == "merged" and existing.get("merged_into_id"):
-            existing = self.store.get_incident(existing["merged_into_id"])
-
-        incident: dict[str, Any] | None = existing
-        if incident is None:
-            incident = self.store.find_open_incident(alertname, namespace)
-        if incident is None:
-            incident = self.store.create_incident(
-                title=alert_title(alert),
-                severity=severity,
-                summary=(alert.get("annotations") or {}).get("description"),
+        existing = self.store.get_alert(fp)
+        if existing and existing.get("incident_id"):
+            return self._update_attached_alert(
+                fp,
+                alert,
+                status,
+                str(existing["incident_id"]),
+                receiver=receiver,
             )
-        elif severity and severity_rank(severity) < severity_rank(incident.get("severity")):
-            self.store.update_incident(incident["id"], severity=severity)
+
+        self.store.upsert_inbox_alert(fingerprint=fp, status=status, payload=alert)
+
+        if status == "resolved":
+            return None
+
+        if not should_auto_raise(alert, rules):
+            return None
+
+        return self._raise_incident_for_alerts(
+            [fp],
+            actor="auto_raise",
+            receiver=receiver,
+            group_open=bool(rules.get("group_open", True)),
+        )
+
+    def _update_attached_alert(
+        self,
+        fp: str,
+        alert: dict[str, Any],
+        status: str,
+        incident_id: str,
+        *,
+        receiver: str | None = None,
+    ) -> tuple[str, str] | None:
+        incident = self.store.get_incident(incident_id)
+        if incident is None or incident.get("status") == "merged":
+            if incident and incident.get("merged_into_id"):
+                incident_id = str(incident["merged_into_id"])
+                incident = self.store.get_incident(incident_id)
+            else:
+                self.store.upsert_inbox_alert(fingerprint=fp, status=status, payload=alert)
+                return None
+
+        incident_before = str(incident.get("status") or "open")
+        reopened = False
+        if incident_before == "resolved" and status != "resolved":
+            self.store.update_incident(
+                incident_id,
+                status="open",
+                event_type="reopened",
+                event_detail={"reason": "firing alert received"},
+            )
+            reopened = True
+
+        severity = alert_severity(alert)
+        if severity and severity_rank(severity) < severity_rank(incident.get("severity")):
+            self.store.update_incident(incident_id, severity=severity)
 
         self.store.upsert_alert(
-            incident_id=incident["id"],
+            incident_id=incident_id,
             fingerprint=fp,
             status=status,
             payload=alert,
         )
 
-        if incident.get("status") == "resolved" and status != "resolved":
+        enrichment = dict(incident.get("enrichment") or {})
+        if receiver and not enrichment.get("receiver"):
+            enrichment["receiver"] = receiver
+            self.store.update_incident(incident_id, enrichment=enrichment)
+
+        status_before_resolve = str(
+            (self.store.get_incident(incident_id) or {}).get("status") or "open"
+        )
+        self._maybe_auto_resolve(incident_id)
+        after = self.store.get_incident(incident_id)
+        if after is None:
+            return None
+
+        if after.get("status") == "resolved" and status_before_resolve in ("open", "acknowledged"):
+            return (incident_id, "resolved")
+        if reopened:
+            return (incident_id, "reopened")
+        return (incident_id, "updated")
+
+    def raise_from_alerts(
+        self,
+        fingerprints: list[str],
+        *,
+        title: str | None = None,
+        summary: str | None = None,
+        actor: str | None = None,
+        group_open: bool = False,
+    ) -> tuple[dict[str, Any] | None, str]:
+        fps = list(dict.fromkeys(safe_id(fp) for fp in fingerprints if fp.strip()))
+        if not fps:
+            return None, "error"
+
+        alerts: list[dict[str, Any]] = []
+        for fp in fps:
+            row = self.store.get_alert(fp)
+            if row is None:
+                continue
+            if row.get("incident_id"):
+                incident = self.store.get_incident(str(row["incident_id"]))
+                if incident:
+                    return incident, "already_raised"
+            alerts.append(row)
+
+        if not alerts:
+            return None, "error"
+
+        event = self._raise_incident_for_alerts(
+            [str(a["fingerprint"]) for a in alerts],
+            title=title,
+            summary=summary,
+            actor=actor,
+            group_open=group_open,
+        )
+        if event is None:
+            return None, "error"
+        incident = self.store.get_incident(event[0])
+        return incident, event[1]
+
+    def _raise_incident_for_alerts(
+        self,
+        fingerprints: list[str],
+        *,
+        title: str | None = None,
+        summary: str | None = None,
+        actor: str | None = None,
+        receiver: str | None = None,
+        group_open: bool = False,
+    ) -> tuple[str, str] | None:
+        fps = list(dict.fromkeys(fingerprints))
+        alert_rows: list[dict[str, Any]] = []
+        for fp in fps:
+            row = self.store.get_alert(fp)
+            if row is None:
+                payload = {"fingerprint": fp, "labels": {}, "status": "firing"}
+                self.store.upsert_inbox_alert(fingerprint=fp, status="firing", payload=payload)
+                row = self.store.get_alert(fp)
+            if row and not row.get("incident_id"):
+                alert_rows.append(row)
+
+        if not alert_rows:
+            for fp in fps:
+                row = self.store.get_alert(fp)
+                if row and row.get("incident_id"):
+                    return (str(row["incident_id"]), "updated")
+            return None
+
+        primary = alert_rows[0]
+        labels = primary.get("labels") or {}
+        alertname = str(labels.get("alertname") or "alert")
+        namespace = str(labels.get("namespace") or "")
+
+        incident: dict[str, Any] | None = None
+        created = False
+        if group_open and alertname:
+            incident = self.store.find_open_incident(alertname, namespace)
+
+        if incident is None:
+            if len(alert_rows) == 1:
+                inc_title = title or alert_title(primary)
+                inc_summary = summary or (primary.get("annotations") or {}).get("description")
+            else:
+                inc_title = title or f"{alert_title(primary)} (+{len(alert_rows) - 1} alerts)"
+                inc_summary = summary
+            severities = [alert_severity(a) for a in alert_rows]
+            best = min(severities, key=severity_rank) if severities else alert_severity(primary)
+            enrichment: dict[str, Any] = {}
+            if actor == "auto_raise":
+                enrichment["auto_raised"] = True
+            elif actor:
+                enrichment["raised_by"] = actor
+            incident = self.store.create_incident(
+                title=inc_title,
+                severity=best,
+                summary=inc_summary,
+                enrichment=enrichment,
+            )
+            created = True
             self.store.update_incident(
                 incident["id"],
-                status="open",
-                event_type="reopened",
-                event_detail={"reason": "firing alert received"},
+                event_type="raised" if actor != "auto_raise" else "auto_raised",
+                actor=actor,
+                event_detail={"fingerprints": fps},
+            )
+        elif title or summary:
+            self.store.update_incident(
+                incident["id"],
+                title=title or None,
+                summary=summary or None,
+                actor=actor,
+            )
+
+        attached = self.store.attach_alerts(incident["id"], [str(a["fingerprint"]) for a in alert_rows], actor=actor)
+        if attached == 0:
+            return None
+
+        for alert_row in alert_rows:
+            self.store.upsert_alert(
+                incident_id=incident["id"],
+                fingerprint=str(alert_row["fingerprint"]),
+                status=str(alert_row.get("status") or "firing"),
+                payload=alert_row,
             )
 
         enrichment = dict(incident.get("enrichment") or {})
@@ -162,7 +363,7 @@ class IncidentService:
             self.store.update_incident(incident["id"], enrichment=enrichment)
 
         self._maybe_auto_resolve(incident["id"])
-        return incident["id"]
+        return (incident["id"], "created" if created else "updated")
 
     def reconcile_resolved_incidents(self) -> int:
         """Close open/ack incidents whose alerts are all resolved (e.g. after legacy import)."""
@@ -331,6 +532,7 @@ class IncidentService:
                 "count": len(source_ids),
                 "target_id": target_id,
                 "message": f"Merged {len(source_ids)} incident(s) into {target_id}",
+                "notify": [(target_id, "merged")],
             }
 
         handlers = {
@@ -344,12 +546,15 @@ class IncidentService:
 
         applied = 0
         skipped = 0
+        notify: list[tuple[str, str]] = []
+        event_map = {"ack": "acknowledged", "resolve": "resolved", "reopen": "reopened"}
         for iid in ids:
             result = handler(iid, actor=actor)
             if result is None:
                 skipped += 1
             else:
                 applied += 1
+                notify.append((iid, event_map[action]))
         label = action.capitalize()
         if action == "ack":
             label = "Acknowledged"
@@ -360,7 +565,7 @@ class IncidentService:
         msg = f"{label} {applied} incident(s)"
         if skipped:
             msg += f" ({skipped} skipped)"
-        return {"action": action, "count": applied, "skipped": skipped, "message": msg}
+        return {"action": action, "count": applied, "skipped": skipped, "message": msg, "notify": notify}
 
     def merge(self, target_id: str, source_ids: list[str], actor: str | None = None) -> dict[str, Any] | None:
         target = self.store.get_incident(target_id)

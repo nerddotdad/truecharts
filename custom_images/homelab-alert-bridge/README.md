@@ -1,82 +1,44 @@
 # homelab-alert-bridge
 
-Lightweight incident funnel + ticketing for homelab alerts — a PagerDuty-style incident layer without on-call scheduling.
+Lightweight incident funnel + ticketing for homelab alerts.
 
-## What it does
-
-1. **`POST /hook`** — ingest Alertmanager webhooks into SQLite, auto-group related firing alerts, publish to ntfy
-2. **Web UI** — organize incidents: ack, resolve, merge, enrich (title/summary/tags), notes, timeline
-3. **`GET /homelab/api/incidents/<id>`** — legacy/Hermes export (`operator_message`, `hermes_message`)
-4. **`POST /homelab/triage`** — optional Hermes webhook forward (Bearer / `?token=`)
-5. **REST API** — `/api/incidents`, ack/resolve/merge/notes for automation
+## Flow
 
 ```text
-Alertmanager → bridge (SQLite incidents) → ntfy (Open incident | Ask AI)
-                    ↓
-              incidents.<domain> UI
-                    ↓
-              Hermes Ask AI (on demand)
+Alertmanager → alerts inbox (UI: /alerts)
+                    ↓ auto-raise rules (Settings) OR manual "Raise incident"
+              incident record
+                    ↓ notification settings
+                  ntfy
 ```
 
-## Incident model
-
-| Concept | Behavior |
-|---------|----------|
-| **Ingest** | Each alert stored by fingerprint; new alerts attach to an open incident with same `alertname` + `namespace` |
-| **Merge** | Move alerts from source incidents into a target; sources marked `merged` |
-| **Enrich** | Edit title, summary, severity, tags; appended to timeline |
-| **Lifecycle** | `open` → `acknowledged` → `resolved` (auto-resolve when all alerts resolve) |
-| **Notes** | Operator notes stored on incident + timeline |
-
-No on-call scheduler — ntfy remains the paging channel.
-
-## Noise filtering
-
-The dashboard hides alerts that are not meaningful for triage. Built-in rules mirror `AlertmanagerConfig` null routes:
-
-- `Watchdog`, `InfoInhibitor`
-- `TargetDown` in namespace `downloaders`
-- `KubeJobNotCompleted` / `KubeJobFailed` for `ollama-model-pull-job`
-
-Ignored alerts are skipped at ingest, not published to ntfy, and hidden from the default dashboard list. Use **show noise** in the UI (or `?show_noise=1` on the API) to reveal them.
-
-| Variable | Purpose |
-|----------|---------|
-| `IGNORED_ALERTNAMES` | Extra comma-separated alertnames to hide |
-| `IGNORED_ALERT_RULES` | JSON list of label matchers, e.g. `[{"alertname":"Foo","namespace":"bar"}]` |
-
-Per-alert opt-out via label or annotation: `homelab_triage: "false"` (or `triage: "false"`).
-
-## UI bulk actions
-
-On the incident list, select rows (or **Select all**) then **Acknowledge**, **Resolve**, **Reopen**, or **Merge into first** (first checked row becomes the target).
-
-**+ New incident** creates a manual ticket (no alert required) with optional summary, severity, tags, and initial note.
+1. **`POST /hook`** — ingest alerts into the **inbox** (not incidents by default)
+2. **Auto-raise** — configurable rules create incidents automatically (default: `critical` only)
+3. **Alerts inbox** — review, multi-select, **Raise incident** (bundle alerts into one ticket)
+4. **Incidents UI** — ack, merge, enrich, resolve; notifications flow **incident → ntfy**
+5. **Manual incidents** — `+ New incident` without any alert
 
 ## URLs
 
 | Surface | Path |
 |---------|------|
-| **Incident UI** | `https://incidents.${DOMAIN_0}/` — multi-select bulk actions, **+ New incident** |
-| **Hermes API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
-| **REST API** | `https://incidents.${DOMAIN_0}/api/incidents` |
+| **Incidents** | `https://incidents.${DOMAIN_0}/` |
+| **Alerts inbox** | `https://incidents.${DOMAIN_0}/alerts` |
+| **Settings** | `https://incidents.${DOMAIN_0}/settings` |
 
-Login uses `INCIDENTS_AUTH_TOKEN` (defaults to `TRIAGE_AUTH_TOKEN` / `HERMES_ALERT_TRIAGE_SECRET`).
+## Auto-raise (Settings)
 
-## Environment
+| Option | Purpose |
+|--------|---------|
+| **Enabled** | Turn auto-raise on/off |
+| **Min severity** | e.g. `critical` — only matching severities raise |
+| **Alertnames** | Comma list (empty = all names that meet severity) |
+| **Label rules** | JSON matchers `[{"alertname":"Foo","namespace":"bar"}]` |
+| **Group open** | Attach to existing open incident (same alertname + namespace) |
 
-| Variable | Purpose |
-|----------|---------|
-| `INCIDENT_DIR` | PVC mount (default `/data/incidents`) |
-| `INCIDENT_DB` | SQLite path (default `/data/incidents/incidents.db`) |
-| `INCIDENTS_PUBLIC_BASE_URL` | ntfy X-Click + Open incident action |
-| `NTFY_BASE_URL` / `NTFY_TOPIC` / `NTFY_PUBLIC_URL` | ntfy publish |
-| `GRAFANA_PUBLIC_URL` | Links in notification body |
-| `HERMES_WEBHOOK_URL` / `HERMES_WEBHOOK_SECRET` | Triage webhook |
-| `HERMES_PUBLIC_BASE_URL` | Ask AI action button |
-| `INCIDENTS_AUTH_TOKEN` / `TRIAGE_AUTH_TOKEN` | UI + API auth |
+## Notifications (Settings)
 
-Legacy `{fingerprint}.json` files on the PVC are imported into SQLite on startup.
+ntfy posts are sent when incidents are raised/updated — not from raw Alertmanager payloads.
 
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 
