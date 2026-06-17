@@ -99,8 +99,9 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
       const rowsEl = document.getElementById("lazy-rows");
       const statusEl = document.getElementById("list-status");
       const searchEl = document.getElementById("list-search");
-      const loadMoreBtn = document.getElementById("load-more");
+      const sentinelEl = document.getElementById("scroll-sentinel");
       const selectAllEl = document.getElementById("select-all");
+      let scrollObserver = null;
 
       if (searchEl) {{
         searchEl.value = query;
@@ -128,14 +129,28 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
         }});
       }});
 
-      if (loadMoreBtn) loadMoreBtn.addEventListener("click", () => loadRows(true));
-
       if (selectAllEl) {{
         selectAllEl.addEventListener("change", (e) => {{
           document.querySelectorAll(`input[name="${{checkboxName}}"]`).forEach((cb) => {{
             cb.checked = e.target.checked;
           }});
         }});
+      }}
+
+      function setupInfiniteScroll() {{
+        if (!sentinelEl || !("IntersectionObserver" in window)) return;
+        if (scrollObserver) scrollObserver.disconnect();
+        if (!hasMore) return;
+        scrollObserver = new IntersectionObserver(
+          (entries) => {{
+            const entry = entries[0];
+            if (entry && entry.isIntersecting && hasMore && !loading) {{
+              loadRows(true);
+            }}
+          }},
+          {{ root: null, rootMargin: "240px 0px", threshold: 0 }}
+        );
+        scrollObserver.observe(sentinelEl);
       }}
 
       async function loadRows(append) {{
@@ -145,9 +160,10 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
           offset = 0;
           hasMore = true;
           rowsEl.innerHTML = '<div class="panel muted">Loading…</div>';
+        }} else if (sentinelEl) {{
+          sentinelEl.classList.add("loading-more");
         }}
-        statusEl.textContent = "Loading…";
-        loadMoreBtn.style.display = "none";
+        if (!append) statusEl.textContent = "Loading…";
         try {{
           const params = new URLSearchParams({{
             offset: String(append ? offset : 0),
@@ -170,13 +186,14 @@ def _lazy_list_script(*, kind: str, api_path: str, status_filter: str, checkbox_
           hasMore = !!data.has_more;
           const loadedCount = rowsEl.querySelectorAll(".incident-row").length;
           statusEl.textContent = hasMore
-            ? `Showing ${{loadedCount}} — load more for additional matches`
+            ? `Showing ${{loadedCount}} — scroll for more`
             : `Showing all ${{loadedCount}} matches`;
-          loadMoreBtn.style.display = hasMore ? "inline-flex" : "none";
+          setupInfiniteScroll();
         }} catch (err) {{
           if (!append) rowsEl.innerHTML = `<div class="panel"><span class="badge severity-critical">${{err.message}}</span></div>`;
           statusEl.textContent = "";
         }} finally {{
+          if (sentinelEl) sentinelEl.classList.remove("loading-more");
           loading = false;
         }}
       }}
@@ -272,7 +289,19 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
       font-size: 0.92rem;
     }}
     .list-status {{ color: var(--muted); font-size: 0.9rem; margin: 8px 0; }}
-    #load-more {{ margin-top: 8px; }}
+    .scroll-sentinel {{
+      height: 1px;
+      width: 100%;
+      pointer-events: none;
+    }}
+    .scroll-sentinel.loading-more::after {{
+      content: "Loading more…";
+      display: block;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 12px 0 4px;
+    }}
     .status-filter {{ cursor: pointer; }}
     .row-check {{ width: 18px; height: 18px; accent-color: var(--accent); }}
     .row-title {{ font-weight: 600; }}
@@ -429,7 +458,7 @@ def incident_list_page(
         <span></span><span>Incident</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
       <div id="lazy-rows" class="grid"></div>
-      <button type="button" class="btn" id="load-more" style="display:none;">Load more</button>
+      <div id="scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
     </form>
     {_lazy_list_script(kind="incidents", api_path="/api/list/incidents", status_filter=status_filter, checkbox_name="incident_id", empty_message="No incidents match this search.")}
     """
@@ -480,7 +509,7 @@ def alerts_list_page(
         <span></span><span>Alert</span><span>Status</span><span>Severity</span><span>Updated</span><span></span>
       </div>
       <div id="lazy-rows" class="grid"></div>
-      <button type="button" class="btn" id="load-more" style="display:none;">Load more</button>
+      <div id="scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
     </form>
     {_lazy_list_script(kind="alerts", api_path="/api/list/alerts", status_filter=status_filter, checkbox_name="fingerprint", empty_message="No alerts match this search.")}
     """

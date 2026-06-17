@@ -42,7 +42,7 @@ ntfy posts are sent when incidents are raised/updated — not from raw Alertmana
 
 ## Lazy lists + JQL search
 
-Incident and alert lists load **25 rows at a time** (scroll or **Load more**). A search box filters results with a small JQL-style language (debounced ~300ms; query is stored in `?q=`).
+Incident and alert lists load **25 rows at a time** with **infinite scroll** (next page loads as you reach the bottom). A search box filters results with a small JQL-style language (debounced ~300ms; query is stored in `?q=`).
 
 | Surface | Examples |
 |---------|----------|
