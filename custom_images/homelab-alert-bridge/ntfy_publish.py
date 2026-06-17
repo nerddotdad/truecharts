@@ -15,6 +15,7 @@ NTFY_BASE_URL = os.environ.get(
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "homelab-alerts")
 NTFY_PUBLIC_URL = os.environ.get("NTFY_PUBLIC_URL", "https://ntfy.example.com").rstrip("/")
 HERMES_PUBLIC_BASE_URL = os.environ.get("HERMES_PUBLIC_BASE_URL", "").rstrip("/")
+INCIDENTS_PUBLIC_BASE_URL = os.environ.get("INCIDENTS_PUBLIC_BASE_URL", "").rstrip("/")
 
 
 def _ntfy_post_url() -> str:
@@ -24,14 +25,19 @@ def _ntfy_post_url() -> str:
 def _headers_for_alert(alert: dict) -> dict[str, str]:
     labels = alert.get("labels") or {}
     fingerprint = str(alert.get("fingerprint") or "").strip()
-    incident = fingerprint or f"{labels.get('alertname', 'alert')}-{labels.get('namespace', 'ns')}"
+    incident_id = str(alert.get("_incident_id") or "").strip()
+    incident = incident_id or fingerprint or f"{labels.get('alertname', 'alert')}-{labels.get('namespace', 'ns')}"
+
+    click_url = f"{NTFY_PUBLIC_URL}/{NTFY_TOPIC}"
+    if INCIDENTS_PUBLIC_BASE_URL and incident_id:
+        click_url = f"{INCIDENTS_PUBLIC_BASE_URL}/incidents/{incident_id}"
 
     headers = {
         "Content-Type": "text/plain; charset=utf-8",
         "X-Title": ntfy_title(alert),
         "X-Priority": ntfy_priority(alert),
         "Markdown": "yes",
-        "X-Click": f"{NTFY_PUBLIC_URL}/{NTFY_TOPIC}",
+        "X-Click": click_url,
     }
 
     tags = ntfy_tags_header(alert)
@@ -41,9 +47,15 @@ def _headers_for_alert(alert: dict) -> dict[str, str]:
     if fingerprint:
         headers["X-Sequence-ID"] = fingerprint
 
+    actions: list[str] = []
+    if INCIDENTS_PUBLIC_BASE_URL and incident_id:
+        view = f"{INCIDENTS_PUBLIC_BASE_URL}/incidents/{incident_id}"
+        actions.append(f"view, Open incident, {view}, clear=true")
     if HERMES_PUBLIC_BASE_URL:
         hermes = f"{HERMES_PUBLIC_BASE_URL}/?incident={incident}&autostart=1"
-        headers["X-Actions"] = f"view, Ask AI, {hermes}, clear=true"
+        actions.append(f"view, Ask AI, {hermes}, clear=true")
+    if actions:
+        headers["X-Actions"] = "; ".join(actions)
 
     return headers
 

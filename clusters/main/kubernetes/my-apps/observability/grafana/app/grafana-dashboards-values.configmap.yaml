@@ -48,3 +48,11 @@ data:
             - name: $${DS_PROMETHEUS}
               value: Prometheus
           url: https://raw.githubusercontent.com/rebelcore/jellyfin_grafana/master/dashboards/jellyfin.json
+        homelab-alerts-overview:
+          enabled: true
+          failOnError: false
+          b64content: false
+          datasource:
+            - name: $${DS_PROMETHEUS}
+              value: Prometheus
+          url: https://raw.githubusercontent.com/nerddotdad/truecharts/main/clusters/main/kubernetes/my-apps/observability/grafana/app/dashboards/homelab-alerts-overview.json

@@ -1,31 +1,59 @@
 # homelab-alert-bridge
 
-Alert-agnostic pipe between Alertmanager and homelab notifications:
+Lightweight incident funnel + ticketing for homelab alerts — a PagerDuty-style incident layer without on-call scheduling.
 
-1. **`POST /hook`** — store each alert as JSON (key = Alertmanager `fingerprint`), **publish to ntfy** (title, body, priority, headers)
-2. **`GET /homelab/api/incidents/<fingerprint>`** — incident JSON for Hermes WebUI Ask AI, including:
-   - **`operator_message`** — same text the operator sees in ntfy (`message_format.py`)
-   - **`hermes_message`** — `operator_message` plus an **Agent context** block (`recommended_ai_skills`, timestamps, incident id)
-3. **`POST /homelab/triage`** — optional Hermes webhook forward (Bearer / `?token=`)
-4. **`GET /health`**
+## What it does
 
-No alert-specific logic. Grouping belongs in **AlertmanagerConfig**; human-readable text in **PrometheusRule annotations** (`summary`, `description`).
+1. **`POST /hook`** — ingest Alertmanager webhooks into SQLite, auto-group related firing alerts, publish to ntfy
+2. **Web UI** — organize incidents: ack, resolve, merge, enrich (title/summary/tags), notes, timeline
+3. **`GET /homelab/api/incidents/<id>`** — legacy/Hermes export (`operator_message`, `hermes_message`)
+4. **`POST /homelab/triage`** — optional Hermes webhook forward (Bearer / `?token=`)
+5. **REST API** — `/api/incidents`, ack/resolve/merge/notes for automation
 
-Publishing uses **ntfy priority** (`urgent` / `high` / `default` / `low`) from severity and status — not emoji tags. The bridge publishes directly to ntfy so Prometheus labels are not dumped into the notification (unlike stock `alertmanager-ntfy`, which appends every label as an `X-Tag`).
+```text
+Alertmanager → bridge (SQLite incidents) → ntfy (Open incident | Ask AI)
+                    ↓
+              incidents.<domain> UI
+                    ↓
+              Hermes Ask AI (on demand)
+```
 
-PVC: `/data/incidents` (one `{fingerprint}.json` per alert).
+## Incident model
+
+| Concept | Behavior |
+|---------|----------|
+| **Ingest** | Each alert stored by fingerprint; new alerts attach to an open incident with same `alertname` + `namespace` |
+| **Merge** | Move alerts from source incidents into a target; sources marked `merged` |
+| **Enrich** | Edit title, summary, severity, tags; appended to timeline |
+| **Lifecycle** | `open` → `acknowledged` → `resolved` (auto-resolve when all alerts resolve) |
+| **Notes** | Operator notes stored on incident + timeline |
+
+No on-call scheduler — ntfy remains the paging channel.
+
+## URLs
+
+| Surface | Path |
+|---------|------|
+| **Incident UI** | `https://incidents.${DOMAIN_0}/` |
+| **Hermes API** | `https://hermes.${DOMAIN_0}/homelab/api/incidents/<id>` |
+| **REST API** | `https://incidents.${DOMAIN_0}/api/incidents` |
+
+Login uses `INCIDENTS_AUTH_TOKEN` (defaults to `TRIAGE_AUTH_TOKEN` / `HERMES_ALERT_TRIAGE_SECRET`).
+
+## Environment
 
 | Variable | Purpose |
 |----------|---------|
-| `NTFY_BASE_URL` | In-cluster ntfy base URL (default `http://ntfy.observability.svc.cluster.local:10222`) |
-| `NTFY_TOPIC` | Topic name (default `homelab-alerts`) |
-| `NTFY_PUBLIC_URL` | Tap-to-open URL (`X-Click`) |
-| `GRAFANA_PUBLIC_URL` | Grafana links in message body |
-| `HERMES_WEBHOOK_URL` / `HERMES_WEBHOOK_SECRET` | Optional triage → Hermes gateway |
-| `HERMES_PUBLIC_BASE_URL` | Ask AI action button URL |
-| `TRIAGE_AUTH_TOKEN` | Auth for `/homelab/triage` |
+| `INCIDENT_DIR` | PVC mount (default `/data/incidents`) |
+| `INCIDENT_DB` | SQLite path (default `/data/incidents/incidents.db`) |
+| `INCIDENTS_PUBLIC_BASE_URL` | ntfy X-Click + Open incident action |
+| `NTFY_BASE_URL` / `NTFY_TOPIC` / `NTFY_PUBLIC_URL` | ntfy publish |
+| `GRAFANA_PUBLIC_URL` | Links in notification body |
+| `HERMES_WEBHOOK_URL` / `HERMES_WEBHOOK_SECRET` | Triage webhook |
+| `HERMES_PUBLIC_BASE_URL` | Ask AI action button |
+| `INCIDENTS_AUTH_TOKEN` / `TRIAGE_AUTH_TOKEN` | UI + API auth |
 
-`alertmanager-ntfy` remains in the cluster for reference/fallback; the live path is bridge → ntfy.
+Legacy `{fingerprint}.json` files on the PVC are imported into SQLite on startup.
 
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 

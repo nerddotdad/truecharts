@@ -34,3 +34,32 @@ spec:
                 name: homelab-alert-bridge
                 port:
                   number: 8000
+---
+# Operator-facing incident UI (ack, merge, enrich, notes).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homelab-incidents-ui
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/part-of: homelab-observability
+  annotations:
+    cert-manager.io/cluster-issuer: domain-0-le-prod
+spec:
+  ingressClassName: external
+  tls:
+    - hosts:
+        - incidents.${DOMAIN_0}
+      secretName: homelab-incidents-ui-tls
+  rules:
+    - host: incidents.${DOMAIN_0}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homelab-alert-bridge
+                port:
+                  number: 8000

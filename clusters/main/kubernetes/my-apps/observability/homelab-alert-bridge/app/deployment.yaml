@@ -20,7 +20,7 @@ spec:
       containers:
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:2.2.1
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:3.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -44,15 +44,19 @@ spec:
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
             - name: HERMES_PUBLIC_BASE_URL
               value: "https://hermes.${DOMAIN_0}"
+            - name: INCIDENTS_PUBLIC_BASE_URL
+              value: "https://incidents.${DOMAIN_0}"
+            - name: INCIDENTS_AUTH_TOKEN
+              value: "${HERMES_ALERT_TRIAGE_SECRET}"
           volumeMounts:
             - name: incidents
               mountPath: /data/incidents
           resources:
             requests:
-              cpu: 10m
-              memory: 64Mi
+              cpu: 25m
+              memory: 128Mi
             limits:
-              memory: 256Mi
+              memory: 512Mi
           readinessProbe:
             httpGet:
               path: /health
