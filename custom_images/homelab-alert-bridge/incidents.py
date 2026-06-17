@@ -148,9 +148,7 @@ class IncidentService:
             payload=alert,
         )
 
-        if status == "resolved":
-            self._maybe_auto_resolve(incident["id"])
-        elif incident.get("status") == "resolved":
+        if incident.get("status") == "resolved" and status != "resolved":
             self.store.update_incident(
                 incident["id"],
                 status="open",
@@ -163,7 +161,27 @@ class IncidentService:
             enrichment["receiver"] = receiver
             self.store.update_incident(incident["id"], enrichment=enrichment)
 
+        self._maybe_auto_resolve(incident["id"])
         return incident["id"]
+
+    def reconcile_resolved_incidents(self) -> int:
+        """Close open/ack incidents whose alerts are all resolved (e.g. after legacy import)."""
+        fixed = 0
+        for incident in self.store.list_incidents(status=None, limit=5000, include_merged=False):
+            if incident.get("status") not in ("open", "acknowledged"):
+                continue
+            full = self.store.get_incident(incident["id"])
+            if full is None:
+                continue
+            alerts = full.get("alerts") or []
+            if not alerts:
+                continue
+            before = full.get("status")
+            self._maybe_auto_resolve(full["id"])
+            after = self.store.get_incident(full["id"])
+            if after and after.get("status") == "resolved" and before != "resolved":
+                fixed += 1
+        return fixed
 
     def _maybe_auto_resolve(self, incident_id: str) -> None:
         incident = self.store.get_incident(incident_id)

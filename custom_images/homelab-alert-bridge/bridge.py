@@ -556,6 +556,9 @@ def main() -> None:
     imported = SERVICE.migrate_legacy_json()
     if imported:
         print(f"migrated {imported} legacy incident file(s)", flush=True)
+    fixed = SERVICE.reconcile_resolved_incidents()
+    if fixed:
+        print(f"reconciled {fixed} stale open incident(s) (all alerts already resolved)", flush=True)
     server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), Handler)
     print(f"homelab-alert-bridge 3.0 listening on :{HTTP_PORT}", flush=True)
     server.serve_forever()
