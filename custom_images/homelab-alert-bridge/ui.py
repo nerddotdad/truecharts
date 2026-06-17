@@ -173,12 +173,30 @@ def incident_list_page(
     *,
     status_filter: str,
     hermes_base: str,
+    include_noise: bool = False,
+    hidden_summary: str = "",
 ) -> str:
+    def list_url(status: str, *, noise: bool) -> str:
+        params: list[str] = []
+        if status:
+            params.append(f"status={quote(status)}")
+        if noise:
+            params.append("show_noise=1")
+        return "/?" + "&".join(params) if params else "/"
+
     filters = []
     for status in ("", "open", "acknowledged", "resolved"):
         label = status or "all"
         active = "primary" if status == status_filter else ""
-        filters.append(f'<a class="btn {active}" href="/?status={quote(status)}">{_esc(label)}</a>')
+        filters.append(
+            f'<a class="btn {active}" href="{_esc(list_url(status, noise=include_noise))}">{_esc(label)}</a>'
+        )
+
+    noise_label = "hide noise" if include_noise else "show noise"
+    noise_active = "primary" if include_noise else ""
+    filters.append(
+        f'<a class="btn {noise_active}" href="{_esc(list_url(status_filter, noise=not include_noise))}">{noise_label}</a>'
+    )
 
     rows = []
     for incident in incidents:
@@ -198,9 +216,13 @@ def incident_list_page(
             """
         )
 
-    rows_html = "\n".join(rows) if rows else '<div class="panel muted">No incidents yet.</div>'
+    rows_html = "\n".join(rows) if rows else '<div class="panel muted">No triage incidents match this filter.</div>'
+    hidden_note = ""
+    if hidden_summary and not include_noise:
+        hidden_note = f'<p class="muted">Hidden noise alerts: {_esc(hidden_summary)}. Use <strong>show noise</strong> to reveal them.</p>'
     body = f"""
     <div class="filters">{''.join(filters)}</div>
+    {hidden_note}
     <div class="grid">{rows_html}</div>
     """
     return layout("Incidents", body)

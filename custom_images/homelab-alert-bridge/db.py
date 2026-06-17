@@ -268,6 +268,27 @@ class IncidentStore:
             alerts.append(payload)
         return alerts
 
+    def alerts_by_incident_ids(self, incident_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
+        if not incident_ids:
+            return {}
+        placeholders = ",".join("?" for _ in incident_ids)
+        with self._conn() as conn:
+            rows = conn.execute(
+                f"""
+                SELECT * FROM alerts
+                WHERE incident_id IN ({placeholders})
+                ORDER BY updated_at DESC
+                """,
+                incident_ids,
+            ).fetchall()
+        grouped: dict[str, list[dict[str, Any]]] = {iid: [] for iid in incident_ids}
+        for row in rows:
+            payload = json.loads(row["payload"])
+            payload["fingerprint"] = row["fingerprint"]
+            payload["status"] = row["status"]
+            grouped.setdefault(row["incident_id"], []).append(payload)
+        return grouped
+
     def list_events(self, incident_id: str) -> list[dict[str, Any]]:
         with self._conn() as conn:
             rows = conn.execute(

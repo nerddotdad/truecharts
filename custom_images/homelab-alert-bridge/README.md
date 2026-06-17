@@ -30,6 +30,23 @@ Alertmanager → bridge (SQLite incidents) → ntfy (Open incident | Ask AI)
 
 No on-call scheduler — ntfy remains the paging channel.
 
+## Noise filtering
+
+The dashboard hides alerts that are not meaningful for triage. Built-in rules mirror `AlertmanagerConfig` null routes:
+
+- `Watchdog`, `InfoInhibitor`
+- `TargetDown` in namespace `downloaders`
+- `KubeJobNotCompleted` / `KubeJobFailed` for `ollama-model-pull-job`
+
+Ignored alerts are skipped at ingest, not published to ntfy, and hidden from the default dashboard list. Use **show noise** in the UI (or `?show_noise=1` on the API) to reveal them.
+
+| Variable | Purpose |
+|----------|---------|
+| `IGNORED_ALERTNAMES` | Extra comma-separated alertnames to hide |
+| `IGNORED_ALERT_RULES` | JSON list of label matchers, e.g. `[{"alertname":"Foo","namespace":"bar"}]` |
+
+Per-alert opt-out via label or annotation: `homelab_triage: "false"` (or `triage: "false"`).
+
 ## URLs
 
 | Surface | Path |

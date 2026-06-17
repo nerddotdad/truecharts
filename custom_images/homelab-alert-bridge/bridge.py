@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from db import IncidentStore
+from filters import filter_alerts, ignored_summary
 from incidents import IncidentService, fingerprint, safe_id
 from ntfy_publish import publish_alerts
 from ui import incident_detail_page, incident_list_page, login_page
@@ -61,11 +62,15 @@ def _handle_alertmanager_hook(payload: dict) -> tuple[int, bytes]:
     if incident_ids:
         sys.stderr.write(f"incidents touched: {', '.join(incident_ids)}\n")
 
+    triage_alerts = filter_alerts(
+        [alert for alert in (payload.get("alerts") or []) if isinstance(alert, dict)]
+    )
+    if not triage_alerts:
+        return 200, b'{"ok":true,"skipped":"ignored alerts"}'
+
     enriched_payload = dict(payload)
     enriched_alerts = []
-    for alert in payload.get("alerts") or []:
-        if not isinstance(alert, dict):
-            continue
+    for alert in triage_alerts:
         copy = dict(alert)
         fp = fingerprint(alert)
         incident = STORE.get_incident_by_fingerprint(fp)
@@ -233,10 +238,20 @@ class Handler(BaseHTTPRequestHandler):
                 return
             params = urllib.parse.parse_qs(query)
             status_filter = (params.get("status") or [""])[0]
-            incidents = STORE.list_incidents(status=status_filter or None)
+            include_noise = (params.get("show_noise") or ["0"])[0] in ("1", "true", "yes")
+            incidents = SERVICE.list_for_dashboard(
+                status=status_filter or None,
+                include_noise=include_noise,
+            )
             self._html(
                 200,
-                incident_list_page(incidents, status_filter=status_filter, hermes_base=HERMES_PUBLIC_BASE_URL),
+                incident_list_page(
+                    incidents,
+                    status_filter=status_filter,
+                    hermes_base=HERMES_PUBLIC_BASE_URL,
+                    include_noise=include_noise,
+                    hidden_summary=ignored_summary(),
+                ),
             )
             return
 
@@ -279,8 +294,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/incidents":
             params = urllib.parse.parse_qs(query)
             status_filter = (params.get("status") or [None])[0]
-            incidents = STORE.list_incidents(status=status_filter)
-            self._json(200, {"incidents": incidents})
+            include_noise = (params.get("show_noise") or ["0"])[0] in ("1", "true", "yes")
+            incidents = SERVICE.list_for_dashboard(
+                status=status_filter,
+                include_noise=include_noise,
+            )
+            self._json(200, {"incidents": incidents, "hidden_alertnames": ignored_summary()})
             return
 
         if path == "/homelab/api/pending-incident":

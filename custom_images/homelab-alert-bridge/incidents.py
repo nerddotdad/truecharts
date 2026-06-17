@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from db import IncidentStore
+from filters import filter_alerts, incident_is_noise, is_ignored_alert
 from message_format import enrich_incident, hermes_message, operator_message
 
 SAFE_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
@@ -62,6 +63,8 @@ class IncidentService:
             except (json.JSONDecodeError, OSError):
                 continue
             alert = raw.get("alert") or {}
+            if is_ignored_alert(alert):
+                continue
             fp = fingerprint(alert)
             if self.store.get_incident_by_fingerprint(fp):
                 continue
@@ -81,6 +84,27 @@ class IncidentService:
             imported += 1
         return imported
 
+    def list_for_dashboard(
+        self,
+        *,
+        status: str | None = None,
+        include_noise: bool = False,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        incidents = self.store.list_incidents(status=status, limit=limit)
+        if include_noise:
+            return incidents
+        incident_ids = [inc["id"] for inc in incidents]
+        alerts_by_id = self.store.alerts_by_incident_ids(incident_ids)
+        visible: list[dict[str, Any]] = []
+        for incident in incidents:
+            incident = dict(incident)
+            incident["alerts"] = alerts_by_id.get(incident["id"], [])
+            if not incident_is_noise(incident):
+                incident.pop("alerts", None)
+                visible.append(incident)
+        return visible
+
     def ingest_alertmanager_payload(self, payload: dict[str, Any]) -> list[str]:
         touched: list[str] = []
         for alert in payload.get("alerts") or []:
@@ -92,6 +116,8 @@ class IncidentService:
         return list(dict.fromkeys(touched))
 
     def _ingest_alert(self, alert: dict[str, Any], *, receiver: str | None = None) -> str | None:
+        if is_ignored_alert(alert):
+            return None
         fp = fingerprint(alert)
         labels = alert.get("labels") or {}
         alertname = str(labels.get("alertname") or "alert")
