@@ -12,11 +12,11 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from db import IncidentStore
+from filters import ignored_summary
 from hermes_client import HermesClient, HermesError
 from incidents import IncidentService, safe_id
 from notifications import NotificationService
@@ -24,9 +24,9 @@ from ui import (
     PAGE_SIZE,
     alerts_list_page,
     create_incident_page,
+    error_page,
     incident_detail_page,
     incident_list_page,
-    login_page,
     render_alert_rows,
     render_incident_rows,
     settings_page,
@@ -41,12 +41,11 @@ HERMES_WEBHOOK_URL = os.environ.get(
 )
 HERMES_WEBHOOK_SECRET = os.environ.get("HERMES_WEBHOOK_SECRET", "")
 TRIAGE_AUTH_TOKEN = os.environ.get("TRIAGE_AUTH_TOKEN", "")
-INCIDENTS_AUTH_TOKEN = os.environ.get("INCIDENTS_AUTH_TOKEN", TRIAGE_AUTH_TOKEN)
+INCIDENTS_AUTH_TOKEN = os.environ.get("INCIDENTS_AUTH_TOKEN", "")
 HERMES_PUBLIC_BASE_URL = os.environ.get("HERMES_PUBLIC_BASE_URL", "").rstrip("/")
 INCIDENTS_PUBLIC_BASE_URL = os.environ.get("INCIDENTS_PUBLIC_BASE_URL", "").rstrip("/")
 HTTP_PORT = int(os.environ.get("HTTP_PORT", "8000"))
 MAX_BODY = int(os.environ.get("MAX_BODY_BYTES", str(2 * 1024 * 1024)))
-SESSION_COOKIE = "incidents_session"
 
 STORE = IncidentStore(DB_PATH)
 SERVICE = IncidentService(STORE, INCIDENT_DIR)
@@ -77,9 +76,9 @@ def _incident_id_from_query(query: str) -> str:
 
 
 def _investigate_actor(headers) -> str:
-    if _has_ui_session(headers):
-        return "ui"
-    return "api"
+    if INCIDENTS_AUTH_TOKEN and _token_matches(headers, "", INCIDENTS_AUTH_TOKEN):
+        return "api"
+    return "ui"
 
 
 def _start_investigation(handler: BaseHTTPRequestHandler, iid: str, *, force: bool = False) -> None:
@@ -124,40 +123,30 @@ def _sign_webhook(body: bytes, secret: str) -> str:
     return hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 
-def _check_auth_token(headers, query: str = "") -> bool:
-    if not INCIDENTS_AUTH_TOKEN:
+def _token_matches(headers, query: str, token: str) -> bool:
+    if not token:
         return False
     auth = headers.get("Authorization", "")
-    if auth.startswith("Bearer ") and auth[7:].strip() == INCIDENTS_AUTH_TOKEN:
+    if auth.startswith("Bearer ") and auth[7:].strip() == token:
         return True
-    if headers.get("X-Homelab-Triage-Token") == INCIDENTS_AUTH_TOKEN:
+    if headers.get("X-Homelab-Triage-Token") == token:
         return True
     for part in query.split("&"):
-        if part.startswith("token=") and part[6:] == INCIDENTS_AUTH_TOKEN:
+        if part.startswith("token=") and urllib.parse.unquote(part[6:]) == token:
             return True
     return False
 
 
-def _parse_cookie(header_value: str) -> dict[str, str]:
-    jar = cookies.SimpleCookie()
-    jar.load(header_value)
-    return {key: morsel.value for key, morsel in jar.items()}
-
-
-def _has_ui_session(headers) -> bool:
+def _check_incidents_auth(headers, query: str = "") -> bool:
     if not INCIDENTS_AUTH_TOKEN:
         return True
-    raw = headers.get("Cookie", "")
-    if not raw:
+    return _token_matches(headers, query, INCIDENTS_AUTH_TOKEN)
+
+
+def _check_triage_auth(headers, query: str = "") -> bool:
+    if not TRIAGE_AUTH_TOKEN:
         return False
-    return _parse_cookie(raw).get(SESSION_COOKIE) == INCIDENTS_AUTH_TOKEN
-
-
-def _set_session_cookie(handler: BaseHTTPRequestHandler) -> None:
-    handler.send_header(
-        "Set-Cookie",
-        f"{SESSION_COOKIE}={INCIDENTS_AUTH_TOKEN}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800",
-    )
+    return _token_matches(headers, query, TRIAGE_AUTH_TOKEN)
 
 
 def _forward_to_hermes(incident: dict) -> tuple[int, bytes]:
@@ -233,11 +222,9 @@ class Handler(BaseHTTPRequestHandler):
     def _json(self, status: int, payload: dict) -> None:
         self._send_bytes(status, json.dumps(payload).encode("utf-8"), "application/json")
 
-    def _redirect(self, location: str, *, set_session: bool = False) -> None:
+    def _redirect(self, location: str) -> None:
         self.send_response(302)
         self.send_header("Location", location)
-        if set_session:
-            _set_session_cookie(self)
         self.send_header("Content-Length", "0")
         self.end_headers()
 
@@ -267,13 +254,10 @@ class Handler(BaseHTTPRequestHandler):
         return _incident_id_from_query(query)
 
     def _require_ui_auth(self) -> bool:
-        if _has_ui_session(self.headers):
-            return True
-        self._html(200, login_page())
-        return False
+        return True
 
     def _require_api_auth(self, query: str = "") -> bool:
-        if _check_auth_token(self.headers, query) or _has_ui_session(self.headers):
+        if _check_incidents_auth(self.headers, query):
             return True
         self._json(401, {"error": "unauthorized"})
         return False
@@ -299,11 +283,11 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition("?")
 
         if path in ("/health", "/healthz"):
-            self._json(200, {"ok": True, "version": "5.0.0"})
+            self._json(200, {"ok": True, "version": "5.0.2"})
             return
 
         if path == "/login":
-            self._html(200, login_page())
+            self._redirect("/")
             return
 
         if path == "/":
@@ -369,9 +353,6 @@ class Handler(BaseHTTPRequestHandler):
             iid = safe_id(path[len("/incidents/") : -len("/investigate")].strip("/"))
             params = urllib.parse.parse_qs(query)
             force = (params.get("force") or [""])[0] in ("1", "true", "yes")
-            if not (_has_ui_session(self.headers) or _check_auth_token(self.headers, query)):
-                self._html(200, login_page())
-                return
             _start_investigation(self, iid, force=force)
             return
 
@@ -381,7 +362,7 @@ class Handler(BaseHTTPRequestHandler):
             iid = safe_id(path[len("/incidents/") :].strip("/"))
             incident = STORE.get_incident(iid)
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             params = urllib.parse.parse_qs(query)
             auto_investigate = (params.get("investigate") or [""])[0] in ("1", "true", "yes")
@@ -558,11 +539,7 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition("?")
 
         if path == "/login":
-            form = _read_form(self)
-            if form.get("token") == INCIDENTS_AUTH_TOKEN:
-                self._redirect("/", set_session=True)
-            else:
-                self._html(401, login_page("Invalid token"))
+            self._redirect("/")
             return
 
         if path == "/incidents/bulk":
@@ -713,7 +690,7 @@ class Handler(BaseHTTPRequestHandler):
             iid = safe_id(path[len("/incidents/") : -4].strip("/"))
             incident = SERVICE.acknowledge(iid, actor="ui")
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             NOTIFIER.notify(iid, "acknowledged")
             self._redirect(f"/incidents/{iid}")
@@ -725,7 +702,7 @@ class Handler(BaseHTTPRequestHandler):
             iid = safe_id(path[len("/incidents/") : -8].strip("/"))
             incident = SERVICE.resolve(iid, actor="ui")
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             NOTIFIER.notify(iid, "resolved")
             self._redirect(f"/incidents/{iid}")
@@ -737,7 +714,7 @@ class Handler(BaseHTTPRequestHandler):
             iid = safe_id(path[len("/incidents/") : -7].strip("/"))
             incident = SERVICE.reopen(iid, actor="ui")
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             NOTIFIER.notify(iid, "reopened")
             self._redirect(f"/incidents/{iid}")
@@ -750,7 +727,7 @@ class Handler(BaseHTTPRequestHandler):
             form = _read_form(self)
             incident = SERVICE.add_note(iid, form.get("body", ""), actor="ui")
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             self._redirect(f"/incidents/{iid}")
             return
@@ -770,7 +747,7 @@ class Handler(BaseHTTPRequestHandler):
                 actor="ui",
             )
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             self._redirect(f"/incidents/{iid}")
             return
@@ -783,7 +760,7 @@ class Handler(BaseHTTPRequestHandler):
             source_ids = [safe_id(part) for part in re.split(r"[\s,]+", form.get("source_ids", "")) if part.strip()]
             incident = SERVICE.merge(iid, source_ids, actor="ui")
             if incident is None:
-                self._html(404, login_page("Incident not found"))
+                self._html(404, error_page("Incident not found"))
                 return
             NOTIFIER.notify(iid, "merged")
             self._redirect(f"/incidents/{iid}")
@@ -955,7 +932,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _handle_triage(self) -> None:
         _, _, query = self.path.partition("?")
-        if not _check_auth_token(self.headers, query):
+        if not _check_triage_auth(self.headers, query):
             self._json(401, {"error": "unauthorized"})
             return
         incident_id = _incident_id_from_query(query)

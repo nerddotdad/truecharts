@@ -466,20 +466,14 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
 </html>"""
 
 
-def login_page(error: str = "") -> str:
-    err = f'<p class="badge severity-critical">{_esc(error)}</p>' if error else ""
+def error_page(message: str) -> str:
     body = f"""
-    <div class="panel" style="max-width:420px;margin:48px auto;">
-      <h2 style="margin-top:0;">Sign in</h2>
-      <p class="muted">Use your incidents API token.</p>
-      {err}
-      <form method="post" action="/login" class="grid">
-        <input type="password" name="token" placeholder="Token" required autofocus>
-        <button class="primary" type="submit">Continue</button>
-      </form>
+    <div class="panel" style="max-width:520px;margin:48px auto;">
+      <h2 style="margin-top:0;">{_esc(message)}</h2>
+      <p><a href="/">← Back to incidents</a></p>
     </div>
     """
-    return layout("Sign in", body)
+    return layout("Error", body)
 
 
 def incident_list_page(
