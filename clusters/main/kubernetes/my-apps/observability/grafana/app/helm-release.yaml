@@ -62,6 +62,22 @@ spec:
             # labeled ConfigMaps so we do not rely on an emptyDir + separate Flux-managed CM.
             datasources:
               enabled: false
+            # Sidecar bursts on API sync were throttling at the chart default 200m CPU limit.
+            dashboards:
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+            # No labeled ConfigMaps to watch — disable idle sidecars (poll cluster every ~60s).
+            alerts:
+              enabled: false
+            plugins:
+              enabled: false
+            notifiers:
+              enabled: false
 
     configmap:
       prometheus-kube-datasource:
