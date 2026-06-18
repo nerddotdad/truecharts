@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import re
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
-from db import IncidentStore
+from db import IncidentStore, utcnow
 from filters import incident_is_noise, is_ignored_alert
+from hermes_client import HermesClient, HermesError
 from message_format import build_hermes_message, build_operator_message
 from query_parser import parse_query
 from raise_rules import RaiseSettingsStore
@@ -530,6 +532,115 @@ class IncidentService:
         if not body.strip():
             return None
         return self.store.add_note(incident_id, body, actor=actor)
+
+    def investigate(self, incident_id: str, *, force: bool = False, actor: str = "bridge") -> dict[str, Any]:
+        incident = self.store.get_incident(incident_id)
+        if incident is None:
+            raise ValueError("incident not found")
+
+        enrichment = dict(incident.get("enrichment") or {})
+        hermes = dict(enrichment.get("hermes") or {})
+        if not force and hermes.get("session_id") and hermes.get("status") == "running":
+            return self._investigate_result(incident_id, hermes)
+
+        export = self.export_legacy(incident_id)
+        if export is None:
+            raise ValueError("incident not found")
+
+        client = HermesClient()
+        session_id = client.new_session()
+        title = str(incident.get("title") or incident_id)
+        client.rename_session(session_id, title)
+        stream_id = client.start_chat(session_id, export["hermes_message"])
+
+        hermes = {
+            "session_id": session_id,
+            "stream_id": stream_id,
+            "status": "running",
+            "started_at": utcnow(),
+            "started_by": actor,
+        }
+        enrichment["hermes"] = hermes
+        self.store.update_incident(
+            incident_id,
+            enrichment=enrichment,
+            actor=actor,
+            event_type="investigation_started",
+            event_detail={"session_id": session_id},
+        )
+        return self._investigate_result(incident_id, hermes)
+
+    def _investigate_result(self, incident_id: str, hermes: dict[str, Any]) -> dict[str, Any]:
+        import os
+
+        base = os.environ.get("HERMES_PUBLIC_BASE_URL", "").rstrip("/")
+        session_id = str(hermes.get("session_id") or "")
+        return {
+            "incident_id": incident_id,
+            "session_id": session_id,
+            "stream_id": hermes.get("stream_id"),
+            "status": hermes.get("status"),
+            "hermes_url": f"{base}/?session_id={urllib.parse.quote(session_id)}" if base and session_id else None,
+        }
+
+    def mark_hermes_complete(self, incident_id: str) -> None:
+        incident = self.store.get_incident(incident_id)
+        if incident is None:
+            return
+        enrichment = dict(incident.get("enrichment") or {})
+        hermes = dict(enrichment.get("hermes") or {})
+        if hermes.get("status") != "running":
+            return
+        hermes["status"] = "complete"
+        enrichment["hermes"] = hermes
+        self.store.update_incident(
+            incident_id,
+            enrichment=enrichment,
+            actor="bridge",
+            event_type="investigation_complete",
+            event_detail={"session_id": hermes.get("session_id")},
+        )
+
+    def get_agent_session(self, incident_id: str) -> dict[str, Any] | None:
+        incident = self.store.get_incident(incident_id)
+        if incident is None:
+            return None
+        hermes = (incident.get("enrichment") or {}).get("hermes") or {}
+        session_id = str(hermes.get("session_id") or "")
+        if not session_id:
+            return None
+        try:
+            data = HermesClient().get_session(session_id)
+        except HermesError:
+            return None
+        session = data.get("session") if isinstance(data.get("session"), dict) else data
+        messages = session.get("messages") if isinstance(session, dict) else data.get("messages")
+        return {
+            "session_id": session_id,
+            "status": hermes.get("status"),
+            "stream_id": hermes.get("stream_id"),
+            "title": session.get("title") if isinstance(session, dict) else None,
+            "messages": self._simplify_messages(messages or []),
+        }
+
+    @staticmethod
+    def _simplify_messages(messages: list[Any]) -> list[dict[str, str]]:
+        simplified: list[dict[str, str]] = []
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue
+            role = str(msg.get("role") or "")
+            content = msg.get("content")
+            if isinstance(content, list):
+                parts = [
+                    str(part.get("text") or "")
+                    for part in content
+                    if isinstance(part, dict) and part.get("type") == "text"
+                ]
+                content = "\n".join(part for part in parts if part)
+            if role and content:
+                simplified.append({"role": role, "content": str(content)})
+        return simplified
 
     def create_manual(
         self,

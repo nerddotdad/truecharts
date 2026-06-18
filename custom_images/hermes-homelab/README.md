@@ -9,7 +9,7 @@ Extends [nesquena/hermes-webui](https://github.com/nesquena/hermes-webui) for ho
 - `kubectl` + `flux` + `jq` CLI (read-only triage via in-cluster ServiceAccount; JSON filtering in agent terminal)
 - Common shell utilities for the agent terminal: `tail`, `head`, `less`, `grep`, `awk`, `sed`, `find`, `ps`, `top`, `ip`, `ping`, `dig`, `nc`, `vim.tiny`, `tar`, `gzip`
 - Homelab skills (`homelab-k8s-flux-triage`, `jellyfin-api`, etc.) live on the `hermes-data` PVC under `~/.hermes/skills/`
-- Alert deep-link extension (`?incident=&autostart=1`) auto-starts triage via WebUI APIs
+- Incident investigations are started by **homelab-alert-bridge** via the WebUI API; open chats with `?session_id=<id>`
 - **Hermes Agent dashboard** on `:9119` (`hermes dashboard --host 0.0.0.0 --insecure --tui`) — exposed via separate ingress `hermes-dash.${DOMAIN_0}`
 - Ollama provider seed (`qwen3.5:9b` → in-cluster Ollama), SearXNG web search, terminal `env_passthrough` for homelab secrets
 

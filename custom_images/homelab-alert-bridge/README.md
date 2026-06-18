@@ -53,19 +53,22 @@ Incident and alert lists load **25 rows at a time** with **infinite scroll** (ne
 
 **List APIs** (session cookie or bearer token): `GET /api/list/incidents`, `GET /api/list/alerts` — params: `offset`, `limit`, `status`, `q`.
 
-## Ask AI (Hermes)
+## Agent investigations (Hermes)
 
-Both **ntfy** and the **incident UI** use the same entry point:
+Investigations are started from the **incident UI** (or ntfy **Investigate** action). The bridge calls the Hermes WebUI API in-cluster — no browser extension.
 
 ```text
-/incidents/<id>/ask-ai  →  redirect  →  hermes/?incident=<id>&autostart=1
-                                              ↓
-                              GET hermes/homelab/api/incidents/<id>
-                                              ↓
-                              hermes_message (full incident dump) → Hermes agent
+Investigate → POST /api/incidents/<id>/investigate (or UI form)
+           → Hermes: session/new + chat/start
+           → incident.enrichment.hermes { session_id, stream_id, status }
+           → Agent panel on incident page (SSE proxy + session poll)
+Open in Hermes → https://hermes.<domain>/?session_id=<id>
 ```
 
-`hermes_message` includes title, status, severity, summary, **all alerts**, notes, timeline, and recommended skills — not just the primary alert.
+**API:** `POST /api/incidents/<id>/investigate` (bearer token) → `{ session_id, stream_id, hermes_url }`  
+**Feed:** `GET /api/incidents/<id>/agent/session` · `GET /api/incidents/<id>/agent/stream?stream_id=…`
+
+Requires `HERMES_WEBUI_URL` + `HERMES_WEBUI_PASSWORD` on the bridge deployment.
 
 Built by **Build Custom Docker Images** on push to `custom_images/homelab-alert-bridge/`.
 

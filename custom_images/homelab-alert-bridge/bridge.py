@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from db import IncidentStore
-from filters import ignored_summary
+from hermes_client import HermesClient, HermesError
 from incidents import IncidentService, safe_id
 from notifications import NotificationService
 from ui import (
@@ -74,6 +74,24 @@ def _incident_id_from_query(query: str) -> str:
         if values and values[0]:
             return safe_id(str(values[0]))
     return ""
+
+
+def _investigate_actor(headers) -> str:
+    if _has_ui_session(headers):
+        return "ui"
+    return "api"
+
+
+def _start_investigation(handler: BaseHTTPRequestHandler, iid: str, *, force: bool = False) -> None:
+    try:
+        result = SERVICE.investigate(iid, force=force, actor=_investigate_actor(handler.headers))
+    except ValueError as exc:
+        handler._json(404, {"error": str(exc)})
+        return
+    except HermesError as exc:
+        handler._json(502, {"error": "hermes investigation failed", "detail": str(exc), "hermes": exc.detail})
+        return
+    handler._redirect(f"/incidents/{iid}#agent")
 
 
 def _summarize_hook_payload(payload: dict) -> str:
@@ -197,7 +215,7 @@ def _list_redirect_url(*, status: str = "", message: str = "") -> str:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "homelab-alert-bridge/4.1"
+    server_version = "homelab-alert-bridge/5.0"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -260,11 +278,28 @@ class Handler(BaseHTTPRequestHandler):
         self._json(401, {"error": "unauthorized"})
         return False
 
+    def _proxy_hermes_stream(self, stream_id: str, incident_id: str) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        try:
+            client = HermesClient()
+            for chunk in client.iter_stream(stream_id):
+                self.wfile.write(chunk)
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except HermesError as exc:
+            sys.stderr.write(f"agent stream error incident={incident_id}: {exc}\n")
+        finally:
+            SERVICE.mark_hermes_complete(incident_id)
+
     def do_GET(self) -> None:
         path, _, query = self.path.partition("?")
 
         if path in ("/health", "/healthz"):
-            self._json(200, {"ok": True, "version": "4.1.0"})
+            self._json(200, {"ok": True, "version": "5.0.0"})
             return
 
         if path == "/login":
@@ -330,27 +365,14 @@ class Handler(BaseHTTPRequestHandler):
             self._html(200, create_incident_page())
             return
 
-        if path.startswith("/incidents/") and path.endswith("/ask-ai"):
-            iid = safe_id(path[len("/incidents/") : -len("/ask-ai")].strip("/"))
-            incident = STORE.get_incident(iid)
-            if incident is None:
-                self._html(
-                    404,
-                    f"<!doctype html><html><body><h1>Incident not found</h1><p>{iid}</p></body></html>",
-                )
+        if path.startswith("/incidents/") and path.endswith("/investigate"):
+            iid = safe_id(path[len("/incidents/") : -len("/investigate")].strip("/"))
+            params = urllib.parse.parse_qs(query)
+            force = (params.get("force") or [""])[0] in ("1", "true", "yes")
+            if not (_has_ui_session(self.headers) or _check_auth_token(self.headers, query)):
+                self._html(200, login_page())
                 return
-            base = HERMES_PUBLIC_BASE_URL
-            if not base:
-                host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host", "")
-                if host:
-                    proto = self.headers.get("X-Forwarded-Proto", "https")
-                    base = f"{proto}://{host.split(',')[0].strip()}"
-            if not base:
-                self._json(503, {"error": "HERMES_PUBLIC_BASE_URL not configured"})
-                return
-            self._redirect(
-                f"{base}/?incident={urllib.parse.quote(iid)}&autostart=1"
-            )
+            _start_investigation(self, iid, force=force)
             return
 
         if path.startswith("/incidents/"):
@@ -361,9 +383,15 @@ class Handler(BaseHTTPRequestHandler):
             if incident is None:
                 self._html(404, login_page("Incident not found"))
                 return
+            params = urllib.parse.parse_qs(query)
+            auto_investigate = (params.get("investigate") or [""])[0] in ("1", "true", "yes")
             self._html(
                 200,
-                incident_detail_page(incident, hermes_base=HERMES_PUBLIC_BASE_URL),
+                incident_detail_page(
+                    incident,
+                    hermes_base=HERMES_PUBLIC_BASE_URL,
+                    auto_investigate=auto_investigate,
+                ),
             )
             return
 
@@ -378,6 +406,50 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(404, {"error": "incident not found", "id": iid})
                 return
             self._json(200, incident)
+            return
+
+        if path.startswith("/api/incidents/") and path.endswith("/agent/stream"):
+            if not self._require_api_auth(query):
+                return
+            iid = safe_id(path[len("/api/incidents/") : -len("/agent/stream")].strip("/"))
+            params = urllib.parse.parse_qs(query)
+            stream_id = (params.get("stream_id") or [""])[0]
+            if not stream_id:
+                incident = STORE.get_incident(iid)
+                if incident:
+                    stream_id = str((incident.get("enrichment") or {}).get("hermes", {}).get("stream_id") or "")
+            if not stream_id:
+                self._json(400, {"error": "stream_id required"})
+                return
+            self._proxy_hermes_stream(stream_id, iid)
+            return
+
+        if path.startswith("/api/incidents/") and path.endswith("/agent/session"):
+            if not self._require_api_auth(query):
+                return
+            iid = safe_id(path[len("/api/incidents/") : -len("/agent/session")].strip("/"))
+            data = SERVICE.get_agent_session(iid)
+            if data is None:
+                self._json(404, {"error": "no agent session for incident", "id": iid})
+                return
+            self._json(200, data)
+            return
+
+        if path.startswith("/api/incidents/") and path.endswith("/investigate"):
+            if not self._require_api_auth(query):
+                return
+            iid = safe_id(path[len("/api/incidents/") : -len("/investigate")].strip("/"))
+            params = urllib.parse.parse_qs(query)
+            force = (params.get("force") or [""])[0] in ("1", "true", "yes")
+            try:
+                result = SERVICE.investigate(iid, force=force, actor="api")
+            except ValueError as exc:
+                self._json(404, {"error": str(exc)})
+                return
+            except HermesError as exc:
+                self._json(502, {"error": "hermes investigation failed", "detail": str(exc)})
+                return
+            self._json(200, result)
             return
 
         if path.startswith("/api/incidents/"):
@@ -626,6 +698,15 @@ class Handler(BaseHTTPRequestHandler):
             self._redirect(f"/incidents/{incident['id']}")
             return
 
+        if path.startswith("/incidents/") and path.endswith("/investigate"):
+            if not self._require_ui_auth():
+                return
+            iid = safe_id(path[len("/incidents/") : -len("/investigate")].strip("/"))
+            form = _read_form(self)
+            force = form.get("force", "") in ("1", "true", "on", "yes")
+            _start_investigation(self, iid, force=force)
+            return
+
         if path.startswith("/incidents/") and path.endswith("/ack"):
             if not self._require_ui_auth():
                 return
@@ -788,6 +869,26 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, incident)
             return
 
+        if path.startswith("/api/incidents/") and path.endswith("/investigate"):
+            if not self._require_api_auth(query):
+                return
+            iid = safe_id(path[len("/api/incidents/") : -len("/investigate")].strip("/"))
+            payload, err = self._read_json_body()
+            if err == 413:
+                self._json(413, {"error": "payload too large"})
+                return
+            force = bool(payload and payload.get("force"))
+            try:
+                result = SERVICE.investigate(iid, force=force, actor="api")
+            except ValueError as exc:
+                self._json(404, {"error": str(exc)})
+                return
+            except HermesError as exc:
+                self._json(502, {"error": "hermes investigation failed", "detail": str(exc)})
+                return
+            self._json(200, result)
+            return
+
         if path.startswith("/api/incidents/") and path.endswith("/notes"):
             if not self._require_api_auth(query):
                 return
@@ -914,7 +1015,7 @@ def main() -> None:
     if fixed:
         print(f"reconciled {fixed} stale open incident(s) (all alerts already resolved)", flush=True)
     server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), Handler)
-    print(f"homelab-alert-bridge 3.0 listening on :{HTTP_PORT}", flush=True)
+    print(f"homelab-alert-bridge 5.0 listening on :{HTTP_PORT}", flush=True)
     server.serve_forever()
 
 

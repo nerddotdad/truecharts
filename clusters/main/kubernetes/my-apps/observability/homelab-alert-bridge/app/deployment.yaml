@@ -20,7 +20,7 @@ spec:
       containers:
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:4.2.0
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:5.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -48,6 +48,10 @@ spec:
               value: "https://incidents.${DOMAIN_0}"
             - name: INCIDENTS_AUTH_TOKEN
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
+            - name: HERMES_WEBUI_URL
+              value: http://hermes-oncall-app-template.ai.svc.cluster.local:8787
+            - name: HERMES_WEBUI_PASSWORD
+              value: "${ADMIN_PASS}"
           volumeMounts:
             - name: incidents
               mountPath: /data/incidents

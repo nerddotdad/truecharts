@@ -363,6 +363,25 @@ def layout(title: str, body: str, *, public_base: str = "") -> str:
     .row-check {{ width: 18px; height: 18px; accent-color: var(--accent); }}
     .row-title {{ font-weight: 600; }}
     .flash {{ border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }}
+    .agent-feed {{ display: grid; gap: 10px; max-height: 420px; overflow: auto; }}
+    .agent-msg {{
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--panel);
+      white-space: pre-wrap;
+      font-size: 0.92rem;
+    }}
+    .agent-msg.user {{ border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }}
+    .agent-msg.assistant {{ border-color: color-mix(in srgb, var(--ok) 35%, var(--border)); }}
+    .agent-msg .role {{
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }}
+    .agent-status {{ color: var(--muted); font-size: 0.9rem; }}
     .muted {{ color: var(--muted); font-size: 0.92rem; }}
     .badge {{
       display: inline-block;
@@ -600,11 +619,104 @@ def create_incident_page(*, error: str = "") -> str:
     return layout("New incident", body)
 
 
+def _agent_panel_script(iid: str, hermes: dict[str, Any], *, auto_investigate: bool = False) -> str:
+    session_id = str(hermes.get("session_id") or "")
+    stream_id = str(hermes.get("stream_id") or "")
+    status = str(hermes.get("status") or "")
+    return f"""
+    <script>
+    (function() {{
+      const incidentId = {json.dumps(iid)};
+      const sessionId = {json.dumps(session_id)};
+      const streamId = {json.dumps(stream_id)};
+      const status = {json.dumps(status)};
+      const autoInvestigate = {json.dumps(auto_investigate)};
+      const feedEl = document.getElementById("agent-feed");
+      const statusEl = document.getElementById("agent-status");
+      let streamSource = null;
+
+      function renderMessages(messages) {{
+        if (!feedEl) return;
+        feedEl.innerHTML = "";
+        if (!messages || !messages.length) {{
+          feedEl.innerHTML = '<div class="muted">No agent messages yet.</div>';
+          return;
+        }}
+        for (const msg of messages) {{
+          const role = msg.role || "message";
+          const block = document.createElement("div");
+          block.className = "agent-msg " + role;
+          const roleEl = document.createElement("div");
+          roleEl.className = "role";
+          roleEl.textContent = role;
+          const bodyEl = document.createElement("div");
+          bodyEl.textContent = msg.content || "";
+          block.appendChild(roleEl);
+          block.appendChild(bodyEl);
+          feedEl.appendChild(block);
+        }}
+        feedEl.scrollTop = feedEl.scrollHeight;
+      }}
+
+      async function refreshSession() {{
+        try {{
+          const resp = await fetch("/api/incidents/" + encodeURIComponent(incidentId) + "/agent/session", {{
+            credentials: "same-origin",
+          }});
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const data = await resp.json();
+          renderMessages(data.messages || []);
+          if (statusEl) {{
+            statusEl.textContent = data.status === "running"
+              ? "Agent is investigating…"
+              : (data.messages && data.messages.length ? "Agent session ready" : "Waiting for agent output");
+          }}
+        }} catch (err) {{
+          if (statusEl) statusEl.textContent = "Could not load agent feed: " + err.message;
+        }}
+      }}
+
+      function connectStream() {{
+        if (!streamId || status !== "running") return;
+        if (streamSource) streamSource.close();
+        streamSource = new EventSource(
+          "/api/incidents/" + encodeURIComponent(incidentId) + "/agent/stream?stream_id=" + encodeURIComponent(streamId)
+        );
+        if (statusEl) statusEl.textContent = "Streaming agent response…";
+        streamSource.onmessage = () => refreshSession();
+        streamSource.addEventListener("end", () => {{
+          streamSource.close();
+          refreshSession();
+        }});
+        streamSource.onerror = () => {{
+          streamSource.close();
+          refreshSession();
+        }};
+      }}
+
+      if (autoInvestigate && !sessionId) {{
+        window.location.replace("/incidents/" + encodeURIComponent(incidentId) + "/investigate");
+        return;
+      }}
+
+      if (sessionId) {{
+        refreshSession();
+        connectStream();
+        if (status !== "running") {{
+          window.setInterval(refreshSession, 5000);
+        }}
+      }}
+    }})();
+    </script>
+    """
+
+
 def incident_detail_page(
     incident: dict[str, Any],
     *,
     hermes_base: str,
     message: str = "",
+    auto_investigate: bool = False,
 ) -> str:
     iid = incident["id"]
     status = str(incident.get("status") or "open")
@@ -620,7 +732,46 @@ def incident_detail_page(
     if status == "resolved":
         action_buttons.append(f'<form method="post" action="/incidents/{_esc(iid)}/reopen"><button type="submit">Reopen</button></form>')
 
-    hermes_link = f'<a class="btn primary" href="/incidents/{_esc(iid)}/ask-ai" target="_blank" rel="noopener">Ask AI</a>'
+    hermes = (incident.get("enrichment") or {}).get("hermes") or {}
+    hermes_session_id = str(hermes.get("session_id") or "")
+    hermes_status = str(hermes.get("status") or "")
+
+    investigate_btn = (
+        f'<form method="post" action="/incidents/{_esc(iid)}/investigate">'
+        f'<button class="primary" type="submit">Investigate</button></form>'
+    )
+    if hermes_session_id:
+        investigate_btn += (
+            f'<form method="post" action="/incidents/{_esc(iid)}/investigate">'
+            f'<input type="hidden" name="force" value="1">'
+            f'<button type="submit">New investigation</button></form>'
+        )
+
+    hermes_link = ""
+    if hermes_base and hermes_session_id:
+        hermes_url = f"{hermes_base.rstrip('/')}/?session_id={urllib.parse.quote(hermes_session_id)}"
+        hermes_link = f'<a class="btn" href="{_esc(hermes_url)}" target="_blank" rel="noopener">Open in Hermes</a>'
+
+    agent_status = ""
+    if hermes_session_id:
+        agent_status = f'<div id="agent-status" class="agent-status">Status: {_esc(hermes_status or "unknown")}</div>'
+    else:
+        agent_status = '<div id="agent-status" class="agent-status">No agent session yet — start an investigation.</div>'
+
+    agent_panel = f"""
+    <div class="panel" id="agent">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
+        <h3 style="margin:0;">Agent</h3>
+        <div class="actions">
+          {investigate_btn}
+          {hermes_link}
+        </div>
+      </div>
+      {agent_status}
+      <div id="agent-feed" class="agent-feed" style="margin-top:12px;"></div>
+    </div>
+    {_agent_panel_script(iid, hermes, auto_investigate=auto_investigate)}
+    """
 
     alert_cards = []
     for alert in incident.get("alerts") or []:
@@ -680,12 +831,13 @@ def incident_detail_page(
         </div>
         <div class="actions">
           {''.join(action_buttons)}
-          {hermes_link}
         </div>
       </div>
       {f'<p>{_esc(incident.get("summary") or "")}</p>' if incident.get("summary") else ''}
       {f'<p class="muted">Tags: {tag_str}</p>' if tags else ''}
     </div>
+
+    {agent_panel}
 
     <div class="two-col">
       <div class="panel">
