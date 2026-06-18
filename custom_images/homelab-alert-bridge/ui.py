@@ -743,7 +743,7 @@ def incident_detail_page(
 
     hermes_link = ""
     if hermes_base and hermes_session_id:
-        hermes_url = f"{hermes_base.rstrip('/')}/?session_id={urllib.parse.quote(hermes_session_id)}"
+        hermes_url = f"{hermes_base.rstrip('/')}/?session_id={quote(hermes_session_id)}"
         hermes_link = f'<a class="btn" href="{_esc(hermes_url)}" target="_blank" rel="noopener">Open in Hermes</a>'
 
     agent_status = ""
