@@ -1,0 +1,42 @@
+---
+# TrueNAS / NAS reachability via prometheus-blackbox-exporter (see blackbox-exporter HelmRelease).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-nas
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.nas
+      interval: 15s
+      rules:
+        - alert: HomelabNasNfsDown
+          expr: probe_success{target="homelab-nas-nfs"} == 0
+          for: 45s
+          labels:
+            severity: critical
+            homelab_team: platform
+          annotations:
+            summary: "NAS NFS unreachable at {{ $labels.instance }} (probe failed {{ $value }}s)"
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              Prometheus cannot open TCP {{ $labels.instance }} (NFS) for 45+ seconds.
+              Media, downloaders, and other NFS-backed workloads will fail mounts or I/O.
+              Check TrueNAS power, networking, and the NFS service on the pool.
+              Probe target label: {{ $labels.target }}
+
+        - alert: HomelabNasManagementDown
+          expr: probe_success{target="homelab-nas-https"} == 0
+          for: 2m
+          labels:
+            severity: warning
+            homelab_team: platform
+          annotations:
+            summary: "NAS HTTPS unreachable at {{ $labels.instance }} (management UI down)"
+            recommended_ai_skills: homelab-k8s-flux-triage
+            description: |-
+              TrueNAS HTTPS (port 443) on {{ $labels.instance }} has been unreachable for 2+ minutes.
+              NFS may still work; use this alert for host/OS issues or when the web UI is required.
+              If NFS is also down, HomelabNasNfsDown (critical) should already be firing.

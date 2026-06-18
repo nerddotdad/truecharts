@@ -1,0 +1,66 @@
+---
+# Probes ${NAS_IP} from inside the cluster (TCP connect). Targets feed probe_success metrics.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: blackbox-exporter
+  namespace: observability
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: prometheus-blackbox-exporter
+      version: 9.4.0
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 15m
+  timeout: 10m
+  maxHistory: 3
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    fullnameOverride: blackbox-exporter
+    releaseLabel: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
+    config:
+      modules:
+        http_2xx:
+          prober: http
+          timeout: 5s
+          http:
+            valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+            follow_redirects: true
+            preferred_ip_protocol: ip4
+        tcp_connect:
+          prober: tcp
+          timeout: 5s
+          tcp:
+            preferred_ip_protocol: ip4
+    serviceMonitor:
+      enabled: true
+      defaults:
+        interval: 15s
+        scrapeTimeout: 10s
+        module: tcp_connect
+      targets:
+        # NFS — what Radarr/Jellyfin/Immich PVC mounts depend on.
+        - name: homelab-nas-nfs
+          url: ${NAS_IP}:2049
+        # TrueNAS web UI / API — host may be up while NFS is wedged (or vice versa).
+        - name: homelab-nas-https
+          url: ${NAS_IP}:443
