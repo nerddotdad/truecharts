@@ -1,4 +1,4 @@
-# Hermes WebUI + homelab kubectl/flux + bundled skills/extensions/scripts.
+# Hermes WebUI + homelab kubectl/flux + bundled skills/scripts.
 ARG HERMES_AGENT_REF=main
 
 # `hermes dashboard` serves a Vite-built SPA from hermes_cli/web_dist (not shipped pre-built on PyPI).
@@ -59,7 +59,6 @@ RUN mkdir -p "${UV_CACHE_DIR}" \
 
 # SOUL, skills, profiles, and model config live on the hermes-data PVC (not baked in image).
 COPY scripts /opt/homelab-scripts/
-COPY extensions /opt/hermes-extensions/
 
 # Seed Ollama provider when config.yaml does not exist yet (PVC first boot).
 COPY config.yaml /opt/hermes-seed/config.yaml
