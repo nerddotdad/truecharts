@@ -28,15 +28,15 @@ spec:
               Probe target label: {{ $labels.target }}
 
         - alert: HomelabNasManagementDown
-          expr: probe_success{target="homelab-nas-https"} == 0
+          expr: probe_success{target="homelab-nas-http"} == 0
           for: 2m
           labels:
             severity: warning
             homelab_team: platform
           annotations:
-            summary: "NAS HTTPS unreachable at {{ $labels.instance }} (management UI down)"
+            summary: "NAS web UI unreachable at {{ $labels.instance }} (HTTP :81 down)"
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
-              TrueNAS HTTPS (port 443) on {{ $labels.instance }} has been unreachable for 2+ minutes.
+              TrueNAS HTTP UI on {{ $labels.instance }} has been unreachable for 2+ minutes.
               NFS may still work; use this alert for host/OS issues or when the web UI is required.
               If NFS is also down, HomelabNasNfsDown (critical) should already be firing.

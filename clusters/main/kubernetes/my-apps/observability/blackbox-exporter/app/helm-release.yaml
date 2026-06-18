@@ -1,5 +1,5 @@
 ---
-# Probes ${NAS_IP} from inside the cluster (TCP connect). Targets feed probe_success metrics.
+# Probes ${NAS_IP} from inside the cluster (NFS TCP + TrueNAS HTTP UI). Targets feed probe_success metrics.
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -61,6 +61,7 @@ spec:
         # NFS — what Radarr/Jellyfin/Immich PVC mounts depend on.
         - name: homelab-nas-nfs
           url: ${NAS_IP}:2049
-        # TrueNAS web UI / API — host may be up while NFS is wedged (or vice versa).
-        - name: homelab-nas-https
-          url: ${NAS_IP}:443
+        # TrueNAS web UI (HTTP on :81) — host may be up while NFS is wedged (or vice versa).
+        - name: homelab-nas-http
+          url: http://${NAS_IP}:81
+          module: http_2xx
