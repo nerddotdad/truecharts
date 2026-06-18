@@ -19,6 +19,11 @@ HERMES_PUBLIC_BASE_URL = os.environ.get("HERMES_PUBLIC_BASE_URL", "").rstrip("/"
 INCIDENTS_PUBLIC_BASE_URL = os.environ.get("INCIDENTS_PUBLIC_BASE_URL", "").rstrip("/")
 
 
+def _http_header(value: str) -> str:
+    """urllib requires ISO-8859-1 header values (e.g. ntfy X-Title)."""
+    return value.encode("latin-1", errors="replace").decode("latin-1")
+
+
 def _ntfy_post_url(topic: str | None = None) -> str:
     return f"{NTFY_BASE_URL}/{topic or NTFY_TOPIC}"
 
@@ -32,15 +37,15 @@ def _headers_for_incident(incident: dict[str, Any], *, event: str, topic: str | 
 
     headers = {
         "Content-Type": "text/plain; charset=utf-8",
-        "X-Title": incident_ntfy_title(incident, event=event),
-        "X-Priority": incident_ntfy_priority(incident, event=event),
+        "X-Title": _http_header(incident_ntfy_title(incident, event=event)),
+        "X-Priority": _http_header(incident_ntfy_priority(incident, event=event)),
         "Markdown": "yes",
-        "X-Click": click_url,
+        "X-Click": _http_header(click_url),
     }
 
     tags = incident_ntfy_tags(incident, event=event)
     if tags:
-        headers["X-Tags"] = tags
+        headers["X-Tags"] = _http_header(tags)
 
     if incident_id:
         headers["X-Sequence-ID"] = incident_id
@@ -54,7 +59,7 @@ def _headers_for_incident(incident: dict[str, Any], *, event: str, topic: str | 
             investigate = f"{INCIDENTS_PUBLIC_BASE_URL.rstrip('/')}/incidents/{incident_id}/investigate"
             actions.append(f"view, Investigate, {investigate}, clear=true")
     if actions:
-        headers["X-Actions"] = "; ".join(actions)
+        headers["X-Actions"] = _http_header("; ".join(actions))
 
     return headers
 

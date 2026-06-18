@@ -13,7 +13,7 @@ from filters import incident_is_noise, is_ignored_alert
 from hermes_client import HermesClient, HermesError
 from message_format import build_hermes_message, build_operator_message
 from query_parser import parse_query
-from raise_rules import RaiseSettingsStore
+from raise_rules import RaiseSettingsStore, should_auto_raise
 
 SAFE_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 

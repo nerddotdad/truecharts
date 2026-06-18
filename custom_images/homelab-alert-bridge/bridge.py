@@ -283,7 +283,7 @@ class Handler(BaseHTTPRequestHandler):
         path, _, query = self.path.partition("?")
 
         if path in ("/health", "/healthz"):
-            self._json(200, {"ok": True, "version": "5.0.3"})
+            self._json(200, {"ok": True, "version": "5.0.4"})
             return
 
         if path == "/login":
