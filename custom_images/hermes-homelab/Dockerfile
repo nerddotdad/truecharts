@@ -13,7 +13,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-FROM ghcr.io/nesquena/hermes-webui:latest@sha256:9aecc8c2aca70a7c7f366c871b9712b860a5029bb9dc3ea071a4f9a8edeaa7a2
+FROM ghcr.io/nesquena/hermes-webui:latest@sha256:1de8b99b71cc3cc467ab0752a99e17a14985fb1bccb8f87186f1d19f1e388f05
 
 USER root
 
