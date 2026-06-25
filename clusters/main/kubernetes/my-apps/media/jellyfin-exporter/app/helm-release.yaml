@@ -34,7 +34,7 @@ spec:
       repository: docker.io/rebelcore/jellyfin-exporter
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=rebelcore/jellyfin-exporter
-      tag: v1.5.1
+      tag: v1.5.2
 
     workload:
       main:
