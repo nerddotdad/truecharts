@@ -2,7 +2,7 @@
 ARG HERMES_AGENT_REF=main
 
 # `hermes dashboard` serves a Vite-built SPA from hermes_cli/web_dist (not shipped pre-built on PyPI).
-FROM node:22-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS dashboard-web
+FROM node:22-bookworm-slim@sha256:813a7480f28fdadac1f7f5c824bcdad435b5bc1322a5968bbbdef8d058f9dff4 AS dashboard-web
 ARG HERMES_AGENT_REF
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates \
@@ -13,7 +13,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-FROM ghcr.io/nesquena/hermes-webui:latest@sha256:c1f17145eeb707d10c227de67fddaf48b751a008d7060a16f9a4128e236435db
+FROM ghcr.io/nesquena/hermes-webui:latest@sha256:3074609fb84c3982ca950a076f59c5bad0738a2e905d395cb292d3011b9a2c08
 
 USER root
 

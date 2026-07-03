@@ -1,5 +1,5 @@
 # Build static docs from documentation/ + clusters/ helm manifests (repo root context).
-FROM python:3.14-slim@sha256:44dd04494ee8f3b538294360e7c4b3acb87c8268e4d0a4828a6500b1eff50061 AS builder
+FROM python:3.14-slim@sha256:b877e50bd90de10af8d82c57a022fc2e0dc731c5320d762a27986facfc3355c1 AS builder
 
 WORKDIR /src
 
@@ -32,7 +32,7 @@ ENV DOCS_IMAGE_VERSION=${DOCS_IMAGE_VERSION}
 RUN python scripts/collect_mkdocs.py \
     && mkdocs build -f mkdocs/mkdocs.generated.yml
 
-FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:fafa1102c789119971b3d83f9293f1ef5526bc73583a12e13ff5cd1299ed8b6c
+FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:fd3314e343bad2de4e1127ef58be122abbfa7e09572fa46ae62fcddb6b3f21c5
 
 COPY --from=builder /src/mkdocs/site /usr/share/nginx/html
 
