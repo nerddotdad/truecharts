@@ -1,0 +1,146 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: windrose
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.6.9
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
+    image:
+      repository: mornedhels/windrose-server
+      pullPolicy: IfNotPresent
+      tag: stable-wine
+
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+      pod:
+        fsGroup: 0
+
+    workload:
+      main:
+        podSpec:
+          terminationGracePeriodSeconds: 90
+          initContainers:
+            fix-permissions:
+              enabled: true
+              type: init
+              image: docker.io/library/alpine:3.23
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  chown -R 4711:4711 /opt/windrose || true
+                  chmod -R 755 /opt/windrose || true
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+          containers:
+            main:
+              enabled: true
+              securityContext:
+                readOnlyRootFilesystem: false
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
+              probes:
+                startup:
+                  enabled: false
+                liveness:
+                  enabled: false
+                readiness:
+                  enabled: false
+              env:
+                # Windrose server environment variables
+                # See: https://hub.docker.com/r/mornedhels/windrose-server
+                SERVER_NAME: "Hoth Windrose Server"
+                SERVER_PASSWORD: "${ENSHROUDED_MEMBER_PASSs}"
+                SERVER_MAX_PLAYER_COUNT: "4"
+                SERVER_USER_SELECTED_REGION: "NA"
+                SERVER_USE_DIRECT_CONNECTION: "true"
+                SERVER_DIRECT_CONNECTION_SERVER_ADDRESS: "${WINDROSE_IP}"
+                SERVER_DIRECT_CONNECTION_SERVER_PORT: "7777"
+                PUID: "4711"
+                PGID: "4711"
+                UPDATE_CRON: "*/30 * * * *"
+                BACKUP_CRON: "0 */6 * * *"
+                BACKUP_MAX_COUNT: "20"
+              resources:
+                requests:
+                  memory: "8Gi"
+                  cpu: "2000m"
+                limits:
+                  memory: "12Gi"
+                  cpu: "4000m"
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        loadBalancerIP: ${WINDROSE_IP}
+        externalTrafficPolicy: Local
+        integrations:
+          metallb:
+            enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 7777
+            protocol: tcp
+          game-udp:
+            enabled: true
+            port: 7777
+            targetPort: 7777
+            protocol: udp
+
+    persistence:
+      data:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 40Gi
+        mountPath: /opt/windrose
+        volsync:
+          - name: data
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: false
+            src:
+              enabled: false
