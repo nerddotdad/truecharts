@@ -46,11 +46,12 @@ spec:
     securityContext:
       container:
         readOnlyRootFilesystem: false
-        runAsNonRoot: false
-        runAsUser: 0
-        runAsGroup: 0
+        # Set to 4711 so chart sets PUID/PGID=4711 in fixedEnv (windrose image default)
+        runAsNonRoot: true
+        runAsUser: 4711
+        runAsGroup: 4711
       pod:
-        fsGroup: 0
+        fsGroup: 4711
 
     workload:
       main:
@@ -89,14 +90,12 @@ spec:
                 # Windrose server environment variables
                 # See: https://hub.docker.com/r/mornedhels/windrose-server
                 SERVER_NAME: "Hoth Windrose Server"
-                SERVER_PASSWORD: "${ENSHROUDED_MEMBER_PASSs}"
+                SERVER_PASSWORD: "${ENSHROUDED_MEMBER_PASS}"
                 SERVER_MAX_PLAYER_COUNT: "4"
                 SERVER_USER_SELECTED_REGION: "NA"
                 SERVER_USE_DIRECT_CONNECTION: "true"
                 SERVER_DIRECT_CONNECTION_SERVER_ADDRESS: "${WINDROSE_IP}"
                 SERVER_DIRECT_CONNECTION_SERVER_PORT: "7777"
-                PUID: "4711"
-                PGID: "4711"
                 UPDATE_CRON: "*/30 * * * *"
                 BACKUP_CRON: "0 */6 * * *"
                 BACKUP_MAX_COUNT: "20"
