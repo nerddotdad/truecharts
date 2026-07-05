@@ -60,7 +60,7 @@ spec:
             init-runtime-dir:
               enabled: true
               type: init
-              image: docker.io/library/alpine:3.23
+              image: docker.io/library/alpine:3.24
               command:
                 - /bin/sh
                 - -c
