@@ -65,10 +65,12 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  mkdir -p /var/run/windrose
+                  mkdir -p /var/run/windrose /var/spool/cron/crontabs
                   chown -R 4711:4711 /var/run/windrose || true
                   chown -R 4711:4711 /opt/windrose || true
                   chmod -R 755 /opt/windrose || true
+                  # bootstrap runs as windrose (4711) and installs UPDATE_CRON/BACKUP_CRON via crontab
+                  chmod 1777 /var/spool/cron/crontabs || true
               securityContext:
                 runAsUser: 0
                 runAsGroup: 0
@@ -94,12 +96,14 @@ spec:
                 SERVER_PASSWORD: "${ENSHROUDED_MEMBER_PASS}"
                 SERVER_INVITE_CODE: "hothsystems"
                 SERVER_MAX_PLAYER_COUNT: "4"
-                SERVER_USER_SELECTED_REGION: "NA"
+                SERVER_USER_SELECTED_REGION: "EU"
                 SERVER_USE_DIRECT_CONNECTION: "true"
                 SERVER_DIRECT_CONNECTION_SERVER_ADDRESS: "${WINDROSE_IP}"
                 SERVER_DIRECT_CONNECTION_SERVER_PORT: "7777"
                 XDG_RUNTIME_DIR: /var/run/windrose
+                # Game files update via SteamCMD on this schedule (independent of container image tag)
                 UPDATE_CRON: "*/30 * * * *"
+                UPDATE_CHECK_PLAYERS: "true"
                 BACKUP_CRON: "0 */6 * * *"
                 BACKUP_MAX_COUNT: "20"
               resources:
