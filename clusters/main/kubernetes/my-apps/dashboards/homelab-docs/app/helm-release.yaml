@@ -11,7 +11,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 18.10.2
+      version: 18.14.3
       sourceRef:
         kind: HelmRepository
         name: truecharts
@@ -35,7 +35,7 @@ spec:
       repository: ghcr.io/nerddotdad/homelab-docs
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-docs
-      tag: 1.0.14@sha256:c4e00c0036bf2138400616bf8d62be6e551dbb0dc9874fcd02e600fe9838d816
+      tag: 1.0.14@sha256:ce79ca3c71e94bf61b4e6c8e63727c9254df5bd11ebcdc8d9455efac06196dc6
 
     workload:
       main:

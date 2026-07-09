@@ -42,7 +42,7 @@ spec:
     image:
       repository: ghcr.io/wizarrrr/wizarr
       pullPolicy: IfNotPresent
-      tag: latest@sha256:19da537e01b5470cb34b083b5ac64cb534dd27084d9d66bc634e96c1f3976884
+      tag: latest@sha256:606f9b88b0303daae11f595e424756b588d9365021c53dcb4d1369f2efc0543c
     persistence:
       database:
         enabled: true
