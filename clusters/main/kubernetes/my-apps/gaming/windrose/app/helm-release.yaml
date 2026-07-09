@@ -49,6 +49,7 @@ spec:
         runAsNonRoot: false
         runAsUser: 0
         runAsGroup: 0
+        allowPrivilegeEscalation: true
       pod:
         fsGroup: 0
 
@@ -56,24 +57,6 @@ spec:
       main:
         podSpec:
           terminationGracePeriodSeconds: 90
-          initContainers:
-            init-runtime-dir:
-              enabled: true
-              type: init
-              image: docker.io/library/alpine:3.24
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mkdir -p /var/run/windrose /var/spool/cron/crontabs
-                  chown -R 4711:4711 /var/run/windrose || true
-                  chown -R 4711:4711 /opt/windrose || true
-                  chmod -R 755 /opt/windrose || true
-                  # bootstrap runs as windrose (4711) and installs UPDATE_CRON/BACKUP_CRON via crontab
-                  chmod 1777 /var/spool/cron/crontabs || true
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
           containers:
             main:
               enabled: true
@@ -82,6 +65,7 @@ spec:
                 runAsNonRoot: false
                 runAsUser: 0
                 runAsGroup: 0
+                allowPrivilegeEscalation: true
               probes:
                 startup:
                   enabled: false
@@ -150,3 +134,15 @@ spec:
               enabled: false
             src:
               enabled: false
+      # Writable runtime dir (image entrypoint chowns this for the windrose user)
+      windrose-run:
+        enabled: true
+        type: emptyDir
+        mountPath: /var/run/windrose
+        targetSelectAll: true
+      # Replace image crontabs dir so bootstrap can install UPDATE_CRON/BACKUP_CRON as windrose
+      cron-spool:
+        enabled: true
+        type: emptyDir
+        mountPath: /var/spool/cron/crontabs
+        targetSelectAll: true
