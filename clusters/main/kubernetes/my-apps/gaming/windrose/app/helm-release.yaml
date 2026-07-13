@@ -78,7 +78,7 @@ spec:
                 # See: https://hub.docker.com/r/mornedhels/windrose-server
                 SERVER_NAME: "Hoth Windrose Server"
                 SERVER_PASSWORD: "${ENSHROUDED_MEMBER_PASS}"
-                SERVER_INVITE_CODE: "hothserv"
+                SERVER_INVITE_CODE: "${WINDROSE_INVITE_CODE}"
                 SERVER_MAX_PLAYER_COUNT: "4"
                 SERVER_USER_SELECTED_REGION: "EU"
                 SERVER_USE_DIRECT_CONNECTION: "false"
