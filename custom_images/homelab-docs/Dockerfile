@@ -32,7 +32,7 @@ ENV DOCS_IMAGE_VERSION=${DOCS_IMAGE_VERSION}
 RUN python scripts/collect_mkdocs.py \
     && mkdocs build -f mkdocs/mkdocs.generated.yml
 
-FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:ee7b7bc02a4af72c98d4365151f92d9b380c482c48d8c84bbbe44bd3192ba463
+FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:b3f2436575bd5be7386518084d842dac414ab4962712afa31e99e0942a56e3b2
 
 COPY --from=builder /src/mkdocs/site /usr/share/nginx/html
 
