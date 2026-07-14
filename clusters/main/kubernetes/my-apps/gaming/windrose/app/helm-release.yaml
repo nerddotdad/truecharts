@@ -68,11 +68,46 @@ spec:
                 allowPrivilegeEscalation: true
               probes:
                 startup:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      supervisorctl status windrose-server 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-updater 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-bootstrap 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-force-update 2>/dev/null | grep -q RUNNING && exit 0
+                      exit 1
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 40
                 liveness:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      supervisorctl status windrose-server 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-updater 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-bootstrap 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status windrose-force-update 2>/dev/null | grep -q RUNNING && exit 0
+                      exit 1
+                  periodSeconds: 60
+                  timeoutSeconds: 10
+                  failureThreshold: 3
                 readiness:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - supervisorctl status windrose-server 2>/dev/null | grep -q RUNNING
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 3
               env:
                 # Windrose server environment variables
                 # See: https://hub.docker.com/r/mornedhels/windrose-server
