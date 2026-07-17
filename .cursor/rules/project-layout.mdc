@@ -1,0 +1,35 @@
+---
+description: Repo file map — talconfig, clusterenv, SOPS, patches, generated, kubernetes layout
+alwaysApply: false
+---
+
+# Project layout reference
+
+Use when creating or navigating cluster/Talos/Flux files.
+
+| Path | Purpose |
+|------|---------|
+| `talconfig.yaml` | Talos cluster layout |
+| `clusterenv.yaml` | Chart + Talos variables (plaintext; encrypt with clustertool) |
+| `talsecret.yaml` | Talos encryption keys |
+| `age.agekey` | SOPS age key — **local only, never commit**; keep an offline backup |
+| `.sops.yaml` | SOPS encryption rules |
+| `.pre-commit-config.yaml` | pre-commit hooks |
+| `talconfig.json` | Schema for `talconfig.yaml` |
+| `/patches/` | Stock Talos machine patches (don't alter stock; you may add your own) |
+| `/generated/` | Bootstrap / Flux-consumed generated files |
+| `.devcontainer` | Dev container for clustertool |
+| `.vscode` | Recommended VS Code extensions |
+| `/repositories/` | Flux HelmRepository defs |
+| `/clusters/` | Cluster definitions (this repo may host multiple) |
+| `/kubernetes/` | Per-cluster Kubernetes manifests (under `clusters/<name>/`) |
+| `/custom_images/` | Custom Docker images built by CI |
+| Homelab docs | [nerd.dad](https://github.com/nerddotdad/nerd.dad) → `docs/homelab/` (GitHub Pages) |
+
+Example TrueCharts clusters for patterns:
+
+- https://github.com/alfi0812/talos
+- https://github.com/kqmaverick/cluster
+- https://github.com/PrivatePuffin/cluster
+- https://github.com/xstar97/cluster
+- https://github.com/Boemeltrein/TalosCluster

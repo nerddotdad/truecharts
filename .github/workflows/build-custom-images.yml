@@ -30,21 +30,12 @@ jobs:
       - name: Detect changed images
         id: changes
         run: |
-          skip_homelab_docs() {
-            [ "$1" = "homelab-docs" ]
-          }
-
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             if [ -n "${{ github.event.inputs.image }}" ]; then
-              if skip_homelab_docs "${{ github.event.inputs.image }}"; then
-                IMAGES="[]"
-              else
-                IMAGES="[\"${{ github.event.inputs.image }}\"]"
-              fi
+              IMAGES="[\"${{ github.event.inputs.image }}\"]"
             else
               IMAGES=$(find custom_images -name Dockerfile -type f \
                 | sed 's|custom_images/||' | sed 's|/Dockerfile||' \
-                | grep -vx 'homelab-docs' \
                 | jq -R . | jq -s -c .)
             fi
             echo "images=$IMAGES" >> "$GITHUB_OUTPUT"
@@ -63,9 +54,6 @@ jobs:
           if [ -n "$CHANGED_FILES" ]; then
             VALID_IMAGES=""
             for img in $(echo "$CHANGED_FILES" | sed 's|^custom_images/||' | cut -d'/' -f1 | sort -u); do
-              if skip_homelab_docs "$img"; then
-                continue
-              fi
               # Skip [skip ci] VERSION-only commits (no rebuild loop)
               real_changes=$(echo "$CHANGED_FILES" | grep -E "^custom_images/${img}/" | grep -vE '/VERSION$' || true)
               if [ -z "$real_changes" ]; then

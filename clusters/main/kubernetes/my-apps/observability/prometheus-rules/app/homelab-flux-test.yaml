@@ -29,7 +29,7 @@ spec:
             alert_test: "true"
           annotations:
             summary: "[TEST] observability/alert-test-fail — chart {{ $labels.chart }}{{ $labels.chart_ref }} not ready"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-flux-helmrelease-test-fail/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-flux-helmrelease-test-fail/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Release: observability/alert-test-fail

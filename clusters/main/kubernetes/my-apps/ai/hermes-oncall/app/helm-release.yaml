@@ -90,8 +90,8 @@ spec:
                 # Incident investigations start via homelab-alert-bridge (Hermes WebUI API).
                 WEBHOOK_ENABLED: "true"
                 WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
-                # Homelab docs + dashboards (for agent citations; Flux substitutes DOMAIN_0).
-                HOMELAB_DOCS_BASE_URL: "https://docs.${DOMAIN_0}/main/kubernetes"
+                # Homelab docs on GitHub Pages (nerd.dad) + dashboards.
+                HOMELAB_DOCS_BASE_URL: "https://nerd.dad/latest/homelab/kubernetes"
                 HOMELAB_GRAFANA_URL: "https://grafana.${DOMAIN_0}"
                 # Jellyfin API (same key as Homepage widget HP_JELLYFIN in clusterenv.yaml).
                 JELLYFIN_API_TOKEN: "${HP_JELLYFIN}"

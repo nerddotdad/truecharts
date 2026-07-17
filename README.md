@@ -1,5 +1,8 @@
-# itzteajay's truecharts cluster
+# truecharts
 
-This is a work in progress but feel free to use it as a reference.
+GitOps cluster config for a Talos + Flux + TrueCharts (ClusterTool) homelab.
 
-This is a kubernetes cluster Powered by TrueCharts ClusterTool
+**Documentation:** [https://nerd.dad/latest/homelab/](https://nerd.dad/latest/homelab/)  
+**Docs source:** [nerddotdad/nerd.dad](https://github.com/nerddotdad/nerd.dad) → `docs/homelab/`
+
+Do not add prose guides in this repository — edit nerd.dad instead.

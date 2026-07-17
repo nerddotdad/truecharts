@@ -48,8 +48,7 @@
       "matchManagers": ["regex"],
       "matchPackageNames": [
         "ghcr.io/nerddotdad/hermes-homelab",
-        "ghcr.io/nerddotdad/homelab-alert-bridge",
-        "ghcr.io/nerddotdad/homelab-docs"
+        "ghcr.io/nerddotdad/homelab-alert-bridge"
       ],
       "pinDigests": false,
       "versioning": "semver"

@@ -24,7 +24,7 @@ Images are automatically built and pushed to GitHub Container Registry (GHCR) wh
 1. **Files in `custom_images/` are changed** and pushed to `main` branch
 2. **Manually triggered** via GitHub Actions workflow dispatch
 
-**Exception — `homelab-docs`:** uses **Build Homelab Docs** (`.github/workflows/build-homelab-docs.yml`) with the **repository root** as Docker context (`clusters/`, `mkdocs/`, `scripts/`). It is excluded from **Build Custom Docker Images**.
+Homelab prose docs are **not** built here — they live in [nerd.dad](https://github.com/nerddotdad/nerd.dad) and publish on GitHub Pages.
 
 ### Image Registry
 
@@ -100,5 +100,4 @@ Reference it in your HelmRelease values as an image pull secret.
 
 ## Workflow Files
 
-- `.github/workflows/build-custom-images.yml` — all images except `homelab-docs`
-- `.github/workflows/build-homelab-docs.yml` — docs site image (repo root context)
+- `.github/workflows/build-custom-images.yml` — builds images under `custom_images/`

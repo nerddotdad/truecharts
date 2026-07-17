@@ -20,7 +20,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Longhorn disk not schedulable ({{ $labels.node }}/{{ $labels.disk }})"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Longhorn cannot schedule new replicas on {{ $labels.node }} disk {{ $labels.disk }}.
@@ -40,7 +40,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Longhorn disk free space below 15% ({{ $labels.node }}/{{ $labels.disk }})"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Filesystem headroom on {{ $labels.node }}/{{ $labels.disk }} is under 15% of capacity.
@@ -57,7 +57,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Longhorn scheduled storage > 85% of node capacity ({{ $labels.node }})"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-disk-not-schedulable/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Node {{ $labels.node }} has high scheduled vs capacity ratio (overprovisioning + snapshots).
@@ -76,7 +76,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Longhorn volume faulted: {{ $labels.pvc_namespace }}/{{ $labels.pvc }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Application PVC {{ $labels.pvc_namespace }}/{{ $labels.pvc }} is faulted on Longhorn.
@@ -90,7 +90,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Longhorn VolSync temp PVC faulted: {{ $labels.pvc_namespace }}/{{ $labels.pvc }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-longhorn-volume-faulted/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               VolSync clone/snapshot PVC {{ $labels.pvc }} is faulted. Safe to delete after pausing ReplicationSource
@@ -109,7 +109,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync Prometheus scrape down (volsync namespace)"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-metrics-down/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-metrics-down/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Prometheus cannot scrape VolSync operator metrics for 20+ minutes.
@@ -127,7 +127,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync missed backup interval: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed a scheduled Restic interval in the last 26 hours.
@@ -145,7 +145,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync backup missed >30h: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               ReplicationSource {{ $labels.obj_namespace }}/{{ $labels.obj_name }} missed backup interval(s) within the last 30 hours and the condition has persisted.
@@ -168,7 +168,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync source out of sync: {{ $labels.obj_namespace }}/{{ $labels.obj_name }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Source volume {{ $labels.obj_name }} is out of sync with missed intervals (destination role excluded;
@@ -182,7 +182,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync src job failed: {{ $labels.namespace }}/{{ $labels.job_name }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Job {{ $labels.namespace }}/{{ $labels.job_name }} failed. Logs: kubectl logs job/{{ $labels.job_name }} -n {{ $labels.namespace }}
@@ -200,7 +200,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync src pod stuck Pending >2h: {{ $labels.namespace }}/{{ $labels.pod }}"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Mover pod {{ $labels.pod }} has been Pending (often ContainerCreating) for over 2 hours.
@@ -214,7 +214,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "Many concurrent VolSync src jobs ({{ $value }} active)"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               More than four volsync-src jobs are active at once. Staggered schedules may have drifted to the same cron,
@@ -229,7 +229,7 @@ spec:
             homelab_team: platform
           annotations:
             summary: "VolSync ReplicationSource reconcile errors elevated"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-volsync-missed-backup/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               VolSync operator logged >10 ReplicationSource reconcile errors in the last hour.

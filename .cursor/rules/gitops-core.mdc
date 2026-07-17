@@ -1,0 +1,43 @@
+---
+description: GitOps workflow — edit repo only, Flux applies; never mutate the live cluster
+alwaysApply: true
+---
+
+# TrueCharts GitOps
+
+**ALL cluster changes MUST go through Git.** Flux reconciles; do not mutate the live cluster.
+
+## Workflow
+
+1. Edit manifests / HelmReleases / config in the repo
+2. Commit (and push) with a clear message
+3. Monitor Flux: `kubectl get helmrelease`, `kubectl describe helmrelease`
+4. Validate with `kubectl get` / `describe` / events only
+
+## Never
+
+- `kubectl apply`, `kubectl patch`, or any direct cluster edits
+- Manual restarts (`kubectl rollout restart`), `kubectl scale`, or live resource edits
+
+## Always
+
+- Change files under `clusters/`, `repositories/`, etc.
+- Let Flux deploy; use kubectl/flux only to **observe**
+- After changes: check HelmRelease status, pods, and events
+
+## Key paths
+
+- `clusters/main/kubernetes/` — manifests and Helm releases
+- `repositories/` — Helm repo definitions
+- `clusters/main/talos/` — Talos config
+- `custom_images/` — custom images (see custom-images rule)
+- `clusters/main/clusterenv.yaml` — plaintext cluster/chart vars (encrypt via clustertool)
+- Homelab **prose** docs — **nerd.dad** `docs/homelab/` → https://nerd.dad/latest/homelab/ (see homelab-docs rule)
+
+## Tools
+
+- **flux** v2.7.2 — deployment/reconciliation
+- **talosctl** client v1.11.3 / server v1.11.2 — Talos OS
+- **kustomize** — repo layout
+- **clustertool** — Talos/Flux/SOPS wrapper (see clustertool rule)
+- Charts: [TrueCharts common](https://truecharts.org/common/)

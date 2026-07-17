@@ -25,7 +25,7 @@ spec:
             homelab_team: ai
           annotations:
             summary: "Ollama model pull job still running after 36h ({{ $labels.job_name }})"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Job ai/ollama-model-pull-job has been active for 36+ hours. Large model pulls can take hours; beyond 36h the pull may be stuck (network, disk, or Ollama API).
@@ -38,7 +38,7 @@ spec:
             homelab_team: ai
           annotations:
             summary: "Ollama model pull job failed (ai/ollama-model-pull-job)"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-ollama-model-pull-stuck/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               The bootstrap Job that pulls Ollama models failed. Check Job logs and Ollama API health.

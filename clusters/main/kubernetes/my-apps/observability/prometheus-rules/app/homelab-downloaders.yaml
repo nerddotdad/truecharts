@@ -23,7 +23,7 @@ spec:
             homelab_team: downloaders
           annotations:
             summary: "Downloader metrics down: {{ $labels.service }}{{ $labels.job }} (downloaders)"
-            runbook_url: https://docs.${DOMAIN_0}/main/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-downloader-metrics-down/
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-downloader-metrics-down/
             recommended_ai_skills: homelab-k8s-flux-triage
             description: |-
               Prometheus cannot scrape metrics for {{ $labels.service }}{{ $labels.job }} (job={{ $labels.job }}, service={{ $labels.service }}) in downloaders for 20+ minutes.

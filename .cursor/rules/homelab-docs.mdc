@@ -1,0 +1,18 @@
+---
+description: Homelab documentation is authored in nerd.dad (GitHub Pages), not this repo
+alwaysApply: true
+---
+
+# Homelab documentation
+
+**Create or update homelab / cluster documentation in [nerd.dad](https://github.com/nerddotdad/nerd.dad)** under `docs/homelab/`. It is published via GitHub Pages at https://nerd.dad/latest/homelab/.
+
+| Task | Where |
+|------|--------|
+| Guides (cluster overview, kubectl ref, etc.) | **nerd.dad** → `docs/homelab/guides/` |
+| Hand-written docs, runbooks | **nerd.dad** → `docs/homelab/` |
+| Runbook snippets | **nerd.dad** → `includes/homelab/runbook/` |
+| HelmRelease / PrometheusRule / Flux YAML | this repo (`clusters/`) |
+| Alert `runbook_url` annotations | this repo — use `https://nerd.dad/latest/homelab/kubernetes/...` |
+
+Keep this repo **manifests-only**: no root `*.md` guides (except a short `README.md` pointing at nerd.dad).

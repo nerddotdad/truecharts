@@ -1,0 +1,28 @@
+---
+description: Custom Docker images under custom_images/ — GHCR build and HelmRelease usage
+globs: custom_images/**,.github/workflows/build-custom-images.yml
+alwaysApply: false
+---
+
+# Custom Docker images
+
+When an app needs a custom image (not upstream, or needs baked-in deps):
+
+1. Put files in `custom_images/<image-name>/` with a `Dockerfile` (plus sources/scripts; optional README)
+2. CI builds/pushes to GHCR on push to `main` when `custom_images/` changes:
+   - Registry: `ghcr.io/nerddotdad/<image-name>`
+   - Tags: semver (`x.y.z-<image>`), `main-<sha>`, `latest` on main
+   - Workflow: `.github/workflows/build-custom-images.yml` (also manual via Actions UI)
+3. Reference in HelmRelease:
+
+```yaml
+image:
+  repository: ghcr.io/nerddotdad/<image-name>
+  pullPolicy: IfNotPresent
+  tag: "latest"  # or main-<sha> / semver
+```
+
+## Practices
+
+- One app per image; only necessary deps; multi-stage when useful
+- Document build notes in README; test locally before commit

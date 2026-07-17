@@ -59,7 +59,7 @@ def main() -> None:
     if not isinstance(browser, dict):
         browser = {}
         cfg["browser"] = browser
-    # Allow in-cluster Service URLs (jellyfin.media.svc, homelab-docs, etc.).
+    # Allow in-cluster Service URLs (jellyfin.media.svc, etc.).
     browser["allow_private_urls"] = True
 
     # WebUI nav-rail link to the official Hermes dashboard (separate ingress).

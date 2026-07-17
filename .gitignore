@@ -10,12 +10,6 @@ clustertool
 kompose
 kubectl
 
-# MkDocs generated output (built in CI / Docker)
-mkdocs/staging/
-mkdocs/site/
-mkdocs/mkdocs.generated.yml
-.venv-mkdocs/
-
 # Local backups (not tracked in git)
 .backups/
 
