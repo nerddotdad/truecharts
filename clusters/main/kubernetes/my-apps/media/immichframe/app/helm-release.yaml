@@ -42,8 +42,9 @@ spec:
           containers:
             main:
               enabled: true
-              env:
+              fixedEnv:
                 TZ: America/Los_Angeles
+              env:
                 ImmichServerUrl: http://immich.media.svc.cluster.local:10323
                 ApiKey: "${IMMICHFRAME_API_KEY}"
                 AuthenticationSecret: "${IMMICHFRAME_AUTH_SECRET}"
