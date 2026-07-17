@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - immich/ks.yaml
+  - immichframe/ks.yaml
   - jellyfin/ks.yaml
   - jellyfin-exporter/ks.yaml
   - owncast/ks.yaml
