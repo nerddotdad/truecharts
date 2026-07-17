@@ -1,1 +1,0 @@
-Use this runbook when the alert fires. Start with **Triage** (confirm it is real), then **Diagnose**, then **Resolve**. Document anything unique to your environment in the app-specific `mk_runbook.md` next to the HelmRelease if needed.
