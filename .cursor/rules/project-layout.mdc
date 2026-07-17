@@ -23,7 +23,7 @@ Use when creating or navigating cluster/Talos/Flux files.
 | `/repositories/` | Flux HelmRepository defs |
 | `/clusters/` | Cluster definitions (this repo may host multiple) |
 | `/kubernetes/` | Per-cluster Kubernetes manifests (under `clusters/<name>/`) |
-| `/custom_images/` | Custom Docker images built by CI |
+| Custom Docker images | Dedicated repos — see `custom-images` rule |
 | Homelab docs | [nerd.dad](https://github.com/nerddotdad/nerd.dad) → `docs/homelab/` (GitHub Pages) |
 
 Example TrueCharts clusters for patterns:

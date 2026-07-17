@@ -1,28 +1,25 @@
 ---
-description: Custom Docker images under custom_images/ — GHCR build and HelmRelease usage
-globs: custom_images/**,.github/workflows/build-custom-images.yml
+description: Custom homelab Docker images — built in dedicated repos; truecharts pins GHCR tags only
+globs: clusters/**/helm-release.yaml,clusters/**/deployment.yaml
 alwaysApply: false
 ---
 
 # Custom Docker images
 
-When an app needs a custom image (not upstream, or needs baked-in deps):
+Homelab custom images are **not** built from this repo. Each image has its own GitHub repository and `Build Image` workflow; CI publishes to GHCR.
 
-1. Put files in `custom_images/<image-name>/` with a `Dockerfile` (plus sources/scripts; optional README)
-2. CI builds/pushes to GHCR on push to `main` when `custom_images/` changes:
-   - Registry: `ghcr.io/nerddotdad/<image-name>`
-   - Tags: semver (`x.y.z-<image>`), `main-<sha>`, `latest` on main
-   - Workflow: `.github/workflows/build-custom-images.yml` (also manual via Actions UI)
-3. Reference in HelmRelease:
+| Image | Source repo | GHCR |
+|-------|-------------|------|
+| hermes-homelab | [nerddotdad/hermes-homelab](https://github.com/nerddotdad/hermes-homelab) | `ghcr.io/nerddotdad/hermes-homelab` |
+| homelab-alert-bridge | [nerddotdad/homelab-alert-bridge](https://github.com/nerddotdad/homelab-alert-bridge) | `ghcr.io/nerddotdad/homelab-alert-bridge` |
 
-```yaml
-image:
-  repository: ghcr.io/nerddotdad/<image-name>
-  pullPolicy: IfNotPresent
-  tag: "latest"  # or main-<sha> / semver
-```
+## truecharts (this repo)
 
-## Practices
+- Pin `image.repository` + semver `tag` (and digest when Renovate opens PRs) in HelmRelease / Deployment manifests under `clusters/`.
+- Do **not** add Docker sources or image build workflows here.
 
-- One app per image; only necessary deps; multi-stage when useful
-- Document build notes in README; test locally before commit
+## Image repos
+
+- Edit `Dockerfile`, sources, and `VERSION` in the dedicated repo.
+- `.github/workflows/build-image.yml` bumps patch `VERSION` on push (unless you edited `VERSION` in the commit) and pushes to GHCR.
+- Manual rebuild: **Actions → Build Image → Run workflow** in the image repo.

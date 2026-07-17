@@ -1,7 +1,7 @@
 ---
 # Hermes Agent + WebUI — on-call triage at https://hermes.${DOMAIN_0}
 # Agent config (SOUL, skills, profiles, model) lives on the hermes-data PVC — edit via WebUI/dashboard or kubectl exec.
-# Image: custom_images/hermes-homelab (ghcr.io/nerddotdad/hermes-homelab) — build via Build Custom Docker Images workflow.
+# Image: https://github.com/nerddotdad/hermes-homelab → ghcr.io/nerddotdad/hermes-homelab (Build Image workflow in that repo).
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:

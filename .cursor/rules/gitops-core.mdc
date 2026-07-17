@@ -30,7 +30,7 @@ alwaysApply: true
 - `clusters/main/kubernetes/` — manifests and Helm releases
 - `repositories/` — Helm repo definitions
 - `clusters/main/talos/` — Talos config
-- `custom_images/` — custom images (see custom-images rule)
+- Dedicated image repos — see custom-images rule
 - `clusters/main/clusterenv.yaml` — plaintext cluster/chart vars (encrypt via clustertool)
 - Homelab **prose** docs — **nerd.dad** `docs/homelab/` → https://nerd.dad/latest/homelab/ (see homelab-docs rule)
 
