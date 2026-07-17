@@ -33,8 +33,9 @@ spec:
     image:
       repository: ghcr.io/immichframe/immichframe
       pullPolicy: IfNotPresent
+      # Pin to last Immich 2.x-compatible release; v1.0.34+ requires Immich v3.
       # renovate: datasource=docker depName=ghcr.io/immichframe/immichframe
-      tag: v1.0.36.0
+      tag: v1.0.33.0
 
     workload:
       main:
