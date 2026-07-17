@@ -31,6 +31,9 @@ spec:
       storageOverProvisioningPercentage: "200"
       storageReservedPercentageForDefaultDisk: "10"
       storageMinimalAvailablePercentage: "15"
+      # Single-node: don't block node drain when this node holds the only replica
+      # (default block-if-contains-last-replica wedges Talos/SUC upgrades).
+      nodeDrainPolicy: allow-if-replica-is-stopped
       # v2DataEngine: true
     csi:
       attacherReplicaCount: 1

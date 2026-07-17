@@ -35,7 +35,8 @@ spec:
             env:
               SYSTEM_UPGRADE_CONTROLLER_DEBUG: false
               SYSTEM_UPGRADE_CONTROLLER_THREADS: 2
-              SYSTEM_UPGRADE_JOB_ACTIVE_DEADLINE_SECONDS: 900
+              # Staged Talos upgrade = download + reboot + early-boot install; 15m is too tight.
+              SYSTEM_UPGRADE_JOB_ACTIVE_DEADLINE_SECONDS: 1800
               SYSTEM_UPGRADE_JOB_BACKOFF_LIMIT: 99
               SYSTEM_UPGRADE_JOB_IMAGE_PULL_POLICY: IfNotPresent
               SYSTEM_UPGRADE_JOB_KUBECTL_IMAGE: registry.k8s.io/kubectl:v1.36.2
@@ -67,6 +68,10 @@ spec:
           operator: Exists
           effect: NoSchedule
         - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        # Single-node: SUC must schedule while the upgrade plan has the node cordoned.
+        - key: node.kubernetes.io/unschedulable
           operator: Exists
           effect: NoSchedule
     serviceAccount:

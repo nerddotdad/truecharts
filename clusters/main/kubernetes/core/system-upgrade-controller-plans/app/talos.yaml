@@ -40,5 +40,7 @@ spec:
     args:
       - --node=$(NODE)
       - --tag=$(SYSTEM_UPGRADE_PLAN_LATEST_VERSION)
-      ## Reenable if your setup REALLY needs full reboots
-      # - --powercycle
+      # Stage+reboot avoids in-place unmount hangs (Longhorn/NFS) on single-node.
+      # powercycle escapes kexec hangs if the node wedges mid-upgrade.
+      - --staged
+      - --powercycle
