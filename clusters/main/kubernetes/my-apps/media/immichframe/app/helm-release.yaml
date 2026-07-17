@@ -49,6 +49,7 @@ spec:
                 ImmichServerUrl: http://immich.media.svc.cluster.local:10323
                 ApiKey: "${IMMICHFRAME_API_KEY}"
                 AuthenticationSecret: "${IMMICHFRAME_AUTH_SECRET}"
+                Albums: "7b245103-e180-4451-b25c-a2cea5d7bfd0"
                 ShowClock: "true"
                 ShowProgressBar: "true"
                 ShowPhotoDate: "true"
