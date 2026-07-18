@@ -73,5 +73,13 @@
       dependencyDashboardApproval: true,
       automerge: false,
     },
+    {
+      description: 'ImmichFrame — manual approval (frame hardware + Immich API coupling; no automerge)',
+      matchPackageNames: [
+        'ghcr.io/immichframe/immichframe',
+      ],
+      dependencyDashboardApproval: true,
+      automerge: false,
+    },
   ],
 }
