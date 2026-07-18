@@ -16,7 +16,8 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 5m
+  # Image pull + Immich API warmup can exceed 5m after node upgrades.
+  timeout: 10m
   maxHistory: 3
   driftDetection:
     mode: warn
@@ -33,9 +34,9 @@ spec:
     image:
       repository: ghcr.io/immichframe/immichframe
       pullPolicy: IfNotPresent
-      # Pin to last Immich 2.x-compatible release; v1.0.34+ requires Immich v3.
+      # Immich v3+ required (AlbumUserRole includes "owner"). v1.0.33 is Immich 2.x-only.
       # renovate: datasource=docker depName=ghcr.io/immichframe/immichframe
-      tag: v1.0.36.0
+      tag: v1.0.37.0
 
     workload:
       main:

@@ -6,6 +6,7 @@ resources:
   - homelab-storage.yaml
   - homelab-downloaders.yaml
   - homelab-jellyfin.yaml
+  - homelab-immichframe.yaml
   - homelab-flux.yaml
   - homelab-flux-test.yaml
   - homelab-gitops.yaml

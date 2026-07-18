@@ -1,0 +1,31 @@
+---
+# ImmichFrame: functional asset API via blackbox-exporter (pod / can be healthy while this fails).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-immichframe
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  groups:
+    - name: homelab.media.immichframe
+      interval: 30s
+      rules:
+        - alert: HomelabImmichframeAssetApiDown
+          expr: probe_success{target="homelab-immichframe-asset"} == 0
+          for: 5m
+          labels:
+            severity: warning
+            homelab_team: media
+          annotations:
+            summary: "ImmichFrame asset API failing (probe_success={{ $value }})"
+            recommended_ai_skills: homelab-k8s-flux-triage
+            runbook_url: https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/runbooks/mk_runbook_homelab-immichframe-asset-api-down/
+            description: |-
+              Blackbox cannot get HTTP 200 from ImmichFrame /api/Asset/RandomImageAndInfo for 5+ minutes.
+              The web UI / readiness probe on / may still pass while albums/images fail (e.g. Immich
+              API deserialize errors such as AlbumUserRole "owner" after an Immich major bump).
+              Check ImmichFrame image vs Immich server version, HelmRelease status, and pod logs:
+              kubectl logs -n media deploy/immichframe-app-template --tail=50
+              Probe target: {{ $labels.target }} instance={{ $labels.instance }}
