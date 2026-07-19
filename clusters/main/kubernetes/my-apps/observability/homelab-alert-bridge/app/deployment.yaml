@@ -20,7 +20,7 @@ spec:
       containers:
         # Product UI brand: Hearth (image repo still homelab-alert-bridge)
         - name: bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:6.1.1
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:6.1.2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
