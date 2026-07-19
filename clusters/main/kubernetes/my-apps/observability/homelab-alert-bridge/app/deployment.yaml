@@ -21,7 +21,7 @@ spec:
         # Product UI brand: Hearth (image repo still homelab-alert-bridge)
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:5.0.4
+          image: ghcr.io/nerddotdad/homelab-alert-bridge:6.0.0@sha256:f40e73c6b77da1dadbffb5a62aa6804765c6afc82b92a934d7813f6592a504fb
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
