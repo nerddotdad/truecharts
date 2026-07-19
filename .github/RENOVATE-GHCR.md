@@ -52,9 +52,11 @@ curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/nerddotdad/${img}/
 
 Do **not** delete old GHCR image tags — Renovate picks the newest semver above your cluster pin; extra tags are fine.
 
+Common cause for homelab GHCR pins: **`currentDigest` / `newDigest` must include the `sha256:` prefix**. Templates must use `@{{{newDigest}}}` — not `@sha256:{{{newDigest}}}` (that doubles the prefix and Renovate fails while rewriting the file).
+
 1. Delete **stale Git branches** (not registry tags), e.g. `renovate/ghcr.io-nerddotdad-homelab-alert-bridge-1.0.0`.
-2. Ensure `autoReplaceStringTemplate` includes the YAML prefix (`tag: ` / `image: …:`), not only `1.2.3@sha256:…`.
-3. Re-run Renovate.
+2. Ensure `autoReplaceStringTemplate` includes the YAML prefix (`tag: ` / `image: …:`) and digest as `@{{{newDigest}}}`.
+3. Re-run Renovate (`renovate:retry` on the Dependency Dashboard).
 
 One-time manual bump in Git is OK if you are blocked (e.g. bridge `1.0.0` → `1.1.1`); Renovate should maintain pins after the template fix.
 

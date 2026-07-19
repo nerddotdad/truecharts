@@ -26,9 +26,11 @@
       matchStringsStrategy: 'combination',
       matchStrings: [
         '# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)',
-        'tag:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})',
+        // currentDigest must include the sha256: prefix — Renovate's newDigest does too
+        'tag:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-fA-F0-9]{64})',
       ],
-      autoReplaceStringTemplate: 'tag: {{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}@sha256:{{{newDigest}}}',
+      autoReplaceStringTemplate:
+        'tag: {{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
     {
       customType: 'regex',
@@ -38,12 +40,12 @@
       ],
       datasourceTemplate: 'docker',
       versioningTemplate: 'semver',
-      matchStringsStrategy: 'combination',
+      // Single matchString so replace rewrites the full image line (depName + tag + digest)
       matchStrings: [
-        '# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)',
-        'image:\\s*[^:]+:(?<currentValue>\\d+\\.\\d+\\.\\d+)@sha256:(?<currentDigest>[a-fA-F0-9]{64})',
+        'image:\\s*(?<depName>ghcr\\.io/nerddotdad/[\\w-]+):(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-fA-F0-9]{64})',
       ],
-      autoReplaceStringTemplate: 'image: {{{depName}}}:{{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}@sha256:{{{newDigest}}}',
+      autoReplaceStringTemplate:
+        'image: {{{depName}}}:{{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
   ],
   packageRules: [
