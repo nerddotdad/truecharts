@@ -18,6 +18,7 @@ spec:
         app.kubernetes.io/name: homelab-alert-bridge
     spec:
       containers:
+        # Product UI brand: Hearth (image repo still homelab-alert-bridge)
         - name: bridge
           # renovate: datasource=docker depName=ghcr.io/nerddotdad/homelab-alert-bridge
           image: ghcr.io/nerddotdad/homelab-alert-bridge:5.0.4
