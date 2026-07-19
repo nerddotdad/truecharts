@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Custom Docker images
 
-Homelab custom images are **not** built from this repo. Each image has its own GitHub repository and `Build Image` workflow; CI publishes to GHCR.
+Homelab custom images are **not** built from this repo. Each image has its own GitHub repository and `Build Image` workflow; CI publishes **bare semver** to GHCR (no `latest` / `main-<sha>`).
 
 | Image | Source repo | GHCR |
 |-------|-------------|------|
@@ -15,11 +15,14 @@ Homelab custom images are **not** built from this repo. Each image has its own G
 
 ## truecharts (this repo)
 
-- Pin `image.repository` + semver `tag` (and digest when Renovate opens PRs) in HelmRelease / Deployment manifests under `clusters/`.
+- Pin bare semver only: HelmRelease `tag: X.Y.Z` or Deployment `image: ghcr.io/nerddotdad/…:X.Y.Z`.
+- Do **not** pin `@sha256` digests for these images (keeps Renovate simple).
+- HelmRelease: keep `# renovate: datasource=docker depName=ghcr.io/nerddotdad/…` above `tag:`.
+- Deployment: no comment needed — regex custom manager matches the image line.
 - Do **not** add Docker sources or image build workflows here.
 
 ## Image repos
 
 - Edit `Dockerfile`, sources, and `VERSION` in the dedicated repo.
-- `.github/workflows/build-image.yml` bumps patch `VERSION` on push (unless you edited `VERSION` in the commit) and pushes to GHCR.
+- `.github/workflows/build-image.yml` bumps patch `VERSION` on push (unless you edited `VERSION` in the commit) and pushes one GHCR tag = that version.
 - Manual rebuild: **Actions → Build Image → Run workflow** in the image repo.

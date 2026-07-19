@@ -14,51 +14,29 @@
     '**/resources/**',
     '**/alert-test/**',
   ],
+  // HelmRelease `tag:` is covered by TrueCharts YAML regex + flux.
+  // Deployment `image: repo:tag` needs a tiny regex (preset captures the whole ref).
   customManagers: [
     {
       customType: 'regex',
-      description: 'Homelab GHCR — TrueCharts HelmRelease image.tag (semver@sha256)',
-      managerFilePatterns: [
-        'clusters/**/helm-release.yaml',
-      ],
-      datasourceTemplate: 'docker',
-      versioningTemplate: 'semver',
-      matchStringsStrategy: 'combination',
-      matchStrings: [
-        '# renovate: datasource=docker depName=(?<depName>ghcr\\.io/nerddotdad/[\\w-]+)',
-        // currentDigest must include the sha256: prefix — Renovate's newDigest does too
-        'tag:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-fA-F0-9]{64})',
-      ],
-      autoReplaceStringTemplate:
-        'tag: {{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
-    },
-    {
-      customType: 'regex',
-      description: 'Homelab GHCR — Deployment image (semver@sha256)',
+      description: 'Homelab GHCR — Deployment image tags',
       managerFilePatterns: [
         'clusters/**/deployment.yaml',
       ],
       datasourceTemplate: 'docker',
       versioningTemplate: 'semver',
-      // Single matchString so replace rewrites the full image line (depName + tag + digest)
       matchStrings: [
-        'image:\\s*(?<depName>ghcr\\.io/nerddotdad/[\\w-]+):(?<currentValue>\\d+\\.\\d+\\.\\d+)@(?<currentDigest>sha256:[a-fA-F0-9]{64})',
+        'image:\\s*(?<depName>ghcr\\.io/nerddotdad/[\\w-]+):(?<currentValue>\\d+\\.\\d+\\.\\d+)\\b',
       ],
-      autoReplaceStringTemplate:
-        'image: {{{depName}}}:{{#if newValue}}{{{newValue}}}{{else}}{{{currentValue}}}{{/if}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
   ],
   packageRules: [
     {
-      description: 'Homelab GHCR — already pinned semver@sha256; skip global pinDigests (breaks regex replace)',
-      matchManagers: [
-        'custom.regex',
-      ],
+      description: 'Homelab GHCR — bare semver only (ignore latest / main-* / calver leftovers)',
       matchPackageNames: [
         'ghcr.io/nerddotdad/hermes-homelab',
         'ghcr.io/nerddotdad/homelab-alert-bridge',
       ],
-      pinDigests: false,
       versioning: 'semver',
     },
     {
