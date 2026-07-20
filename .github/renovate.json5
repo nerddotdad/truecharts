@@ -27,6 +27,8 @@
       versioningTemplate: 'semver',
       matchStrings: [
         'image:\\s*(?<depName>ghcr\\.io/nerddotdad/[\\w-]+):(?<currentValue>\\d+\\.\\d+\\.\\d+)\\b',
+        'value:\\s*(?<depName>ghcr\\.io/nerddotdad/hearth-sandbox):(?<currentValue>\\d+\\.\\d+\\.\\d+)\\b',
+        'image:\\s*(?<depName>nousresearch/hermes-agent):(?<currentValue>v?[\\w.]+)\\b',
       ],
     },
   ],
@@ -36,8 +38,18 @@
       matchPackageNames: [
         'ghcr.io/nerddotdad/hermes-homelab',
         'ghcr.io/nerddotdad/hearth',
+        'ghcr.io/nerddotdad/hearth-sandbox',
       ],
       versioning: 'semver',
+    },
+    {
+      description: 'Hermes Agent sidecar (Nous) — calver tags; manual approval',
+      matchPackageNames: [
+        'nousresearch/hermes-agent',
+      ],
+      versioning: 'loose',
+      dependencyDashboardApproval: true,
+      automerge: false,
     },
     {
       description: 'Talos/kubelet bumps need manual approval (patch/minor/major); OS applies via system-upgrade Plan',

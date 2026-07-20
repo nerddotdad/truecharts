@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hearth-agent-data
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: hearth
+    app.kubernetes.io/part-of: hearth
+    app.kubernetes.io/component: agent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi

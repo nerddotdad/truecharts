@@ -100,6 +100,9 @@ spec:
                 # Hermes web_search → cluster SearXNG (JSON API verified on :8080).
                 SEARXNG_URL: "http://searxng.ai.svc.cluster.local:8080"
                 HERMES_DASHBOARD_PUBLIC_URL: "https://hermes-dash.${DOMAIN_0}"
+                # Hearth sandbox MCP (agent tools for kubectl/flux triage).
+                HEARTH_SANDBOX_AGENT_API_KEY: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+                HEARTH_MCP_URL: "http://hearth.observability.svc.cluster.local:8000/mcp"
                 WANTED_UID: "1024"
                 # Match fsGroup / PVC; init may auto-detect GID from an existing volume.
                 WANTED_GID: "1024"

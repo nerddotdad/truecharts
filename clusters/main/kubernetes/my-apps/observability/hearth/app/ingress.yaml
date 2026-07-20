@@ -46,10 +46,11 @@ metadata:
     app.kubernetes.io/part-of: homelab-observability
   annotations:
     cert-manager.io/cluster-issuer: domain-0-le-prod
-    # Keep /api/events SSE alive through nginx (no buffering, long read timeout).
+    # Keep /api/events SSE + sandbox terminal WebSocket alive through nginx.
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
 spec:
   ingressClassName: external
   tls:

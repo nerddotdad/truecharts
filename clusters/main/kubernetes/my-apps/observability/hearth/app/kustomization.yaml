@@ -4,4 +4,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - pvc.yaml
+  - pvc-agent.yaml
   - ingress.yaml
+  - sandbox-rbac.yaml
+  - agent-seed-configmap.yaml

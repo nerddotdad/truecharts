@@ -6,7 +6,7 @@ metadata:
   namespace: observability
   labels:
     app.kubernetes.io/name: hearth
-    app.kubernetes.io/part-of: homelab-observability
+    app.kubernetes.io/part-of: hearth
 spec:
   replicas: 1
   selector:
@@ -16,7 +16,12 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: hearth
+        app.kubernetes.io/part-of: hearth
     spec:
+      serviceAccountName: hearth
+      # Agent image may chown PVC; incidents volume stays hearth-owned.
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: hearth
           image: ghcr.io/nerddotdad/hearth:7.1.5
@@ -49,6 +54,29 @@ spec:
               value: http://hermes-oncall-app-template.ai.svc.cluster.local:8787
             - name: HERMES_WEBUI_PASSWORD
               value: "${ADMIN_PASS}"
+            - name: HEARTH_SANDBOX_ENABLED
+              value: "true"
+            - name: HEARTH_SANDBOX_BACKEND
+              value: kubernetes
+            - name: HEARTH_SANDBOX_NAMESPACE
+              value: hearth-sandboxes
+            - name: HEARTH_SANDBOX_IMAGE
+              value: ghcr.io/nerddotdad/hearth-sandbox:0.1.0
+            - name: HEARTH_SANDBOX_SERVICE_ACCOUNT
+              value: hearth-sandbox
+            - name: HEARTH_SANDBOX_CLUSTER_BASE_URL
+              value: http://hearth.observability.svc.cluster.local:8000
+            - name: HEARTH_SANDBOX_PUBLIC_BASE_URL
+              value: "https://incidents.${DOMAIN_0}"
+            - name: HEARTH_SANDBOX_AGENT_API_KEY
+              value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            - name: HEARTH_AIOPS_PROVIDER
+              value: "agent"
+            # Sidecar on localhost — same pod as hearth.
+            - name: HEARTH_AGENT_URL
+              value: http://127.0.0.1:8642
+            - name: HEARTH_AGENT_API_KEY
+              value: "${HEARTH_AGENT_API_KEY}"
           volumeMounts:
             - name: incidents
               mountPath: /data/incidents
@@ -70,8 +98,97 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 30
+
+        # Hermes Agent core (headless). Investigate API for Hearth; tools via Hearth MCP.
+        - name: agent
+          image: nousresearch/hermes-agent:v2026.7.7.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: agent
+              containerPort: 8642
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              HERMES_HOME="${HERMES_HOME:-/opt/data}"
+              mkdir -p "$HERMES_HOME"
+              if [ -f /seed/config.yaml ] && [ ! -f "$HERMES_HOME/config.yaml" ]; then
+                cp /seed/config.yaml "$HERMES_HOME/config.yaml"
+              fi
+              if [ -f /seed/ensure-mcp.py ]; then
+                python3 /seed/ensure-mcp.py || true
+              fi
+              touch "$HERMES_HOME/.env"
+              grep -q '^API_SERVER_ENABLED=' "$HERMES_HOME/.env" 2>/dev/null \
+                || echo 'API_SERVER_ENABLED=true' >> "$HERMES_HOME/.env"
+              if [ -n "${API_SERVER_KEY:-}" ]; then
+                sed -i '/^API_SERVER_KEY=/d' "$HERMES_HOME/.env" || true
+                echo "API_SERVER_KEY=${API_SERVER_KEY}" >> "$HERMES_HOME/.env"
+              fi
+              grep -q '^API_SERVER_HOST=' "$HERMES_HOME/.env" 2>/dev/null \
+                || echo 'API_SERVER_HOST=0.0.0.0' >> "$HERMES_HOME/.env"
+              exec hermes gateway run
+          env:
+            - name: HERMES_HOME
+              value: /opt/data
+            - name: API_SERVER_ENABLED
+              value: "true"
+            - name: API_SERVER_HOST
+              value: "0.0.0.0"
+            - name: API_SERVER_KEY
+              value: "${HEARTH_AGENT_API_KEY}"
+            - name: HEARTH_SANDBOX_AGENT_API_KEY
+              value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            # Same pod as Hearth — prefer loopback MCP.
+            - name: HEARTH_MCP_URL
+              value: http://127.0.0.1:8000/mcp
+            - name: SEARXNG_URL
+              value: http://searxng.ai.svc.cluster.local:8080
+            - name: HOMELAB_DOCS_BASE_URL
+              value: "https://nerd.dad/latest/homelab/kubernetes"
+            - name: HOMELAB_GRAFANA_URL
+              value: "https://grafana.${DOMAIN_0}"
+          volumeMounts:
+            - name: agent-data
+              mountPath: /opt/data
+            - name: agent-seed
+              mountPath: /seed
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: agent
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: agent
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: agent
+            initialDelaySeconds: 60
+            periodSeconds: 30
+
       volumes:
         - name: incidents
           persistentVolumeClaim:
             # Keep legacy PVC name so existing incident data is preserved across the rename.
             claimName: homelab-alert-bridge-incidents
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: hearth-agent-data
+        - name: agent-seed
+          configMap:
+            name: hearth-agent-seed
