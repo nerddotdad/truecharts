@@ -58,10 +58,10 @@ data:
             # Same Alertmanager fingerprint → update one ntfy notification (firing/resolved/repeat).
             X-Sequence-ID: |
               {{ .Fingerprint }}
-            # Markdown body links for runbook/dashboard/alert; Ask AI stays a native action button.
+            # Markdown body links for runbook/dashboard/alert; Ask AI opens Hearth Investigate.
             Markdown: "yes"
             X-Actions: |
-              {{- $incident := or .Fingerprint (printf "%s-%s" .Labels.alertname .Labels.namespace) -}}
-              {{- $hermesTriage := printf "https://hermes.${DOMAIN_0}/?incident=%s&autostart=1" $incident -}}
-              view, Ask AI, {{ $hermesTriage }}, clear=true
+              {{- $fp := or .Fingerprint (printf "%s-%s" .Labels.alertname .Labels.namespace) -}}
+              {{- $hearthInvestigate := printf "https://incidents.${DOMAIN_0}/go/alert?fingerprint=%s&investigate=1" $fp -}}
+              view, Ask AI, {{ $hearthInvestigate }}, clear=true
         async: false

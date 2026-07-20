@@ -24,7 +24,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: hearth
-          image: ghcr.io/nerddotdad/hearth:7.1.6
+          image: ghcr.io/nerddotdad/hearth:7.1.7
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -40,20 +40,10 @@ spec:
               value: https://ntfy.${DOMAIN_0}
             - name: GRAFANA_PUBLIC_URL
               value: https://grafana.${DOMAIN_0}
-            - name: HERMES_WEBHOOK_URL
-              value: http://hermes-oncall-app-template.ai.svc.cluster.local:8644/webhooks/homelab-alerts
-            - name: HERMES_WEBHOOK_SECRET
-              value: "${HERMES_ALERT_TRIAGE_SECRET}"
             - name: TRIAGE_AUTH_TOKEN
               value: "${HERMES_ALERT_TRIAGE_SECRET}"
-            - name: HERMES_PUBLIC_BASE_URL
-              value: "https://hermes.${DOMAIN_0}"
             - name: INCIDENTS_PUBLIC_BASE_URL
               value: "https://incidents.${DOMAIN_0}"
-            - name: HERMES_WEBUI_URL
-              value: http://hermes-oncall-app-template.ai.svc.cluster.local:8787
-            - name: HERMES_WEBUI_PASSWORD
-              value: "${ADMIN_PASS}"
             - name: HEARTH_SANDBOX_ENABLED
               value: "true"
             - name: HEARTH_SANDBOX_BACKEND
@@ -99,13 +89,15 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 30
 
-        # Hermes Agent core (headless). Investigate API for Hearth; tools via Hearth MCP.
+        # Hermes Agent core + dashboard. Investigate API for Hearth; tools via Hearth MCP.
         - name: agent
           image: nousresearch/hermes-agent:v2026.7.7.2
           imagePullPolicy: IfNotPresent
           ports:
             - name: agent
               containerPort: 8642
+            - name: dashboard
+              containerPort: 9119
           command:
             - /bin/sh
             - -c
@@ -128,6 +120,8 @@ spec:
               fi
               grep -q '^API_SERVER_HOST=' "$HERMES_HOME/.env" 2>/dev/null \
                 || echo 'API_SERVER_HOST=0.0.0.0' >> "$HERMES_HOME/.env"
+              # Custom command skips image s6; start dashboard alongside gateway.
+              hermes dashboard &
               exec hermes gateway run
           env:
             - name: HERMES_HOME
@@ -149,6 +143,19 @@ spec:
               value: "https://nerd.dad/latest/homelab/kubernetes"
             - name: HOMELAB_GRAFANA_URL
               value: "https://grafana.${DOMAIN_0}"
+            # Official Hermes dashboard (ingress → hermes-dash.${DOMAIN_0})
+            - name: HERMES_DASHBOARD
+              value: "1"
+            - name: HERMES_DASHBOARD_HOST
+              value: "0.0.0.0"
+            - name: HERMES_DASHBOARD_PORT
+              value: "9119"
+            - name: HERMES_DASHBOARD_BASIC_AUTH_USERNAME
+              value: admin
+            - name: HERMES_DASHBOARD_BASIC_AUTH_PASSWORD
+              value: "${ADMIN_PASS}"
+            - name: HERMES_DASHBOARD_BASIC_AUTH_SECRET
+              value: "${HEARTH_AGENT_API_KEY}"
           volumeMounts:
             - name: agent-data
               mountPath: /opt/data

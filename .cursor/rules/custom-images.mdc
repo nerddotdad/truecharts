@@ -10,7 +10,6 @@ Homelab custom images are **not** built from this repo. Each image has its own G
 
 | Image | Source repo | GHCR |
 |-------|-------------|------|
-| hermes-homelab | [nerddotdad/hermes-homelab](https://github.com/nerddotdad/hermes-homelab) | `ghcr.io/nerddotdad/hermes-homelab` |
 | hearth | [nerddotdad/hearth](https://github.com/nerddotdad/hearth) | `ghcr.io/nerddotdad/hearth` |
 | hearth-sandbox | [nerddotdad/hearth](https://github.com/nerddotdad/hearth) (`sandbox-image/`) | `ghcr.io/nerddotdad/hearth-sandbox` |
 | hearth agent sidecar | upstream [nousresearch/hermes-agent](https://hub.docker.com/r/nousresearch/hermes-agent) (pinned in Hearth Deployment) | Docker Hub |

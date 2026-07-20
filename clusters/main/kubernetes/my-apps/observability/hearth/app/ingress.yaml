@@ -1,41 +1,5 @@
 ---
-# Incident API on the same host as Hermes WebUI (path /homelab/api → this Service).
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: hermes-incident-api
-  namespace: observability
-  labels:
-    app.kubernetes.io/name: hearth
-    app.kubernetes.io/part-of: homelab-observability
-  annotations:
-    cert-manager.io/cluster-issuer: domain-0-le-prod
-spec:
-  ingressClassName: external
-  tls:
-    - hosts:
-        - hermes.${DOMAIN_0}
-      secretName: hermes-incident-api-tls
-  rules:
-    - host: hermes.${DOMAIN_0}
-      http:
-        paths:
-          - path: /homelab/api
-            pathType: Prefix
-            backend:
-              service:
-                name: hearth
-                port:
-                  number: 8000
-          - path: /homelab/triage
-            pathType: Prefix
-            backend:
-              service:
-                name: hearth
-                port:
-                  number: 8000
----
-# Operator-facing incident UI (ack, merge, enrich, notes).
+# Operator-facing incident UI (ack, merge, enrich, notes, Investigate, triage sandbox).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -68,3 +32,33 @@ spec:
                 name: hearth
                 port:
                   number: 8000
+---
+# Official Hermes Agent dashboard (sidecar in hearth pod). Basic auth via ADMIN_PASS.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hearth-agent-dashboard
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: hearth
+    app.kubernetes.io/component: agent-dashboard
+    app.kubernetes.io/part-of: hearth
+  annotations:
+    cert-manager.io/cluster-issuer: domain-0-le-prod
+spec:
+  ingressClassName: external
+  tls:
+    - hosts:
+        - hermes-dash.${DOMAIN_0}
+      secretName: hearth-agent-dashboard-tls
+  rules:
+    - host: hermes-dash.${DOMAIN_0}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hearth
+                port:
+                  number: 9119
