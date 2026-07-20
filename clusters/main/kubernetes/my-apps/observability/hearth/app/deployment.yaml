@@ -19,9 +19,57 @@ spec:
         app.kubernetes.io/part-of: hearth
     spec:
       serviceAccountName: hearth
-      # Agent image may chown PVC; incidents volume stays hearth-owned.
+      # Match HERMES_UID below so Longhorn PVC is group-writable for agent + hearth.
       securityContext:
         fsGroup: 1000
+      initContainers:
+        # Seed agent home before /init chowns and drops privileges.
+        - name: agent-seed
+          image: nousresearch/hermes-agent:v2026.7.7.2
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              # $$ escapes for Flux postBuild envsubst — shell sees single $.
+              H=/opt/data
+              mkdir -p "$$H/logs"
+              if [ -f /seed/config.yaml ]; then
+                if [ ! -f "$$H/config.yaml" ] || ! python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" "$$H/config.yaml" 2>/dev/null; then
+                  cp /seed/config.yaml "$$H/config.yaml"
+                fi
+              fi
+              if [ -f /seed/ensure-mcp.py ]; then
+                HERMES_HOME="$$H" python3 /seed/ensure-mcp.py || true
+              fi
+              touch "$$H/.env"
+              grep -q '^API_SERVER_ENABLED=' "$$H/.env" 2>/dev/null \
+                || echo 'API_SERVER_ENABLED=true' >> "$$H/.env"
+              if [ -n "$${API_SERVER_KEY:-}" ]; then
+                sed -i '/^API_SERVER_KEY=/d' "$$H/.env" || true
+                echo "API_SERVER_KEY=$${API_SERVER_KEY}" >> "$$H/.env"
+              fi
+              grep -q '^API_SERVER_HOST=' "$$H/.env" 2>/dev/null \
+                || echo 'API_SERVER_HOST=0.0.0.0' >> "$$H/.env"
+              chown -R 1000:1000 "$$H" || true
+          env:
+            - name: HERMES_HOME
+              value: /opt/data
+            - name: API_SERVER_KEY
+              value: "${HEARTH_AGENT_API_KEY}"
+            - name: HEARTH_SANDBOX_AGENT_API_KEY
+              value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            - name: HEARTH_MCP_URL
+              value: http://127.0.0.1:8000/mcp
+            - name: SEARXNG_URL
+              value: http://searxng.ai.svc.cluster.local:8080
+          volumeMounts:
+            - name: agent-data
+              mountPath: /opt/data
+            - name: agent-seed
+              mountPath: /seed
+              readOnly: true
       containers:
         - name: hearth
           image: ghcr.io/nerddotdad/hearth:7.1.7
@@ -89,7 +137,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 30
 
-        # Hermes Agent core + dashboard. Investigate API for Hearth; tools via Hearth MCP.
+        # Hermes Agent core + dashboard via image /init (s6). Do not override ENTRYPOINT.
         - name: agent
           image: nousresearch/hermes-agent:v2026.7.7.2
           imagePullPolicy: IfNotPresent
@@ -98,35 +146,18 @@ spec:
               containerPort: 8642
             - name: dashboard
               containerPort: 9119
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -e
-              # $$ escapes for Flux postBuild envsubst — shell sees single $.
-              HERMES_HOME="$${HERMES_HOME:-/opt/data}"
-              mkdir -p "$$HERMES_HOME"
-              if [ -f /seed/config.yaml ] && [ ! -f "$$HERMES_HOME/config.yaml" ]; then
-                cp /seed/config.yaml "$$HERMES_HOME/config.yaml"
-              fi
-              if [ -f /seed/ensure-mcp.py ]; then
-                python3 /seed/ensure-mcp.py || true
-              fi
-              touch "$$HERMES_HOME/.env"
-              grep -q '^API_SERVER_ENABLED=' "$$HERMES_HOME/.env" 2>/dev/null \
-                || echo 'API_SERVER_ENABLED=true' >> "$$HERMES_HOME/.env"
-              if [ -n "$${API_SERVER_KEY:-}" ]; then
-                sed -i '/^API_SERVER_KEY=/d' "$$HERMES_HOME/.env" || true
-                echo "API_SERVER_KEY=$${API_SERVER_KEY}" >> "$$HERMES_HOME/.env"
-              fi
-              grep -q '^API_SERVER_HOST=' "$$HERMES_HOME/.env" 2>/dev/null \
-                || echo 'API_SERVER_HOST=0.0.0.0' >> "$$HERMES_HOME/.env"
-              # Custom command skips image s6; start dashboard alongside gateway.
-              hermes dashboard &
-              exec hermes gateway run
+          # Image ENTRYPOINT is /init; args become the main program (gateway run).
+          args:
+            - gateway
+            - run
           env:
             - name: HERMES_HOME
               value: /opt/data
+            # Align with pod fsGroup so Longhorn volume is writable after /init drop.
+            - name: HERMES_UID
+              value: "1000"
+            - name: HERMES_GID
+              value: "1000"
             - name: API_SERVER_ENABLED
               value: "true"
             - name: API_SERVER_HOST
@@ -144,7 +175,7 @@ spec:
               value: "https://nerd.dad/latest/homelab/kubernetes"
             - name: HOMELAB_GRAFANA_URL
               value: "https://grafana.${DOMAIN_0}"
-            # Official Hermes dashboard (ingress → hermes-dash.${DOMAIN_0})
+            # Official Hermes dashboard supervised by s6 (ingress → hermes-dash.${DOMAIN_0})
             - name: HERMES_DASHBOARD
               value: "1"
             - name: HERMES_DASHBOARD_HOST
@@ -160,9 +191,6 @@ spec:
           volumeMounts:
             - name: agent-data
               mountPath: /opt/data
-            - name: agent-seed
-              mountPath: /seed
-              readOnly: true
           resources:
             requests:
               cpu: 100m
@@ -173,9 +201,9 @@ spec:
             httpGet:
               path: /health
               port: agent
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 36
           readinessProbe:
             httpGet:
               path: /health
