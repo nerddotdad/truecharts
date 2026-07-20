@@ -72,7 +72,7 @@ spec:
               readOnly: true
       containers:
         - name: hearth
-          image: ghcr.io/nerddotdad/hearth:7.1.7
+          image: ghcr.io/nerddotdad/hearth:7.2.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -110,6 +110,13 @@ spec:
               value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
             - name: HEARTH_AIOPS_PROVIDER
               value: "agent"
+            - name: HEARTH_AIOPS_AGENT
+              value: hermes
+            - name: HEARTH_MODEL_PLATFORM
+              value: ollama
+            - name: HEARTH_OLLAMA_URL
+              value: http://ollama.ai.svc.cluster.local:11434
+            # Model is chosen in Settings → AIOps and sent per-request to Hermes (not pinned here).
             # Sidecar on localhost — same pod as hearth.
             - name: HEARTH_AGENT_URL
               value: http://127.0.0.1:8642

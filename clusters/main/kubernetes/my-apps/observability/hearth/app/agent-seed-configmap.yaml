@@ -1,5 +1,6 @@
 ---
-# Seed Hermes Agent config on first boot (agent-data PVC). MCP auth from env via ensure-mcp.py.
+# Seed Hermes Agent config on first boot (agent-data PVC).
+# Hearth sends the selected Ollama model in each API call; Hermes honors it via model_routes.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,7 +13,8 @@ metadata:
 data:
   config.yaml: |
     model:
-      default: qwen3.5:9b
+      # Fallback only when a request omits model / has no model_routes match.
+      default: qwen3.6:27b
       provider: custom
       base_url: http://ollama.ai.svc.cluster.local:11434/v1
       context_length: 64000
@@ -29,15 +31,25 @@ data:
             - sandbox_ensure
     browser:
       allow_private_urls: true
+    platforms:
+      api_server:
+        enabled: true
+        extra:
+          # Populated every boot by ensure-mcp.py from Ollama /api/tags.
+          model_routes: {}
   ensure-mcp.py: |
     #!/usr/bin/env python3
-    """Patch MCP Authorization from HEARTH_SANDBOX_AGENT_API_KEY into config.yaml."""
+    """Patch MCP auth + sync Ollama model_routes so Hearth's request model is honored."""
+    import json
     import os
+    import urllib.error
+    import urllib.request
     from pathlib import Path
     try:
         import yaml
     except ImportError:
         raise SystemExit(0)
+
     home = Path(os.environ.get("HERMES_HOME", "/opt/data"))
     cfg_path = home / "config.yaml"
     if not cfg_path.is_file():
@@ -46,6 +58,66 @@ data:
         cfg = yaml.safe_load(fh) or {}
     if not isinstance(cfg, dict):
         cfg = {}
+
+    ollama_base = os.environ.get(
+        "HEARTH_AGENT_BASE_URL", "http://ollama.ai.svc.cluster.local:11434/v1"
+    ).strip().rstrip("/")
+    # /api/tags is on the Ollama root, not under /v1
+    ollama_root = ollama_base[:-3] if ollama_base.endswith("/v1") else ollama_base
+
+    model = cfg.setdefault("model", {})
+    if not isinstance(model, dict):
+        model = {}
+        cfg["model"] = model
+    # Keep provider + base_url in sync; do not pin default from Hearth — request model wins via routes.
+    if not str(model.get("default") or "").strip():
+        model["default"] = "qwen3.6:27b"
+    model["provider"] = "custom"
+    model["base_url"] = ollama_base
+    model["context_length"] = int(os.environ.get("HEARTH_AGENT_CONTEXT_LENGTH", "64000") or "64000")
+
+    # Sync model_routes from installed Ollama models so API "model" field selects the LLM.
+    routes = {}
+    try:
+        req = urllib.request.Request(
+            f"{ollama_root}/api/tags",
+            method="GET",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            payload = json.loads(resp.read().decode("utf-8") or "{}")
+        for item in payload.get("models") or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or item.get("model") or "").strip()
+            if not name:
+                continue
+            routes[name] = {
+                "model": name,
+                "provider": "custom",
+                "base_url": ollama_base,
+            }
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError):
+        pass
+
+    platforms = cfg.setdefault("platforms", {})
+    if not isinstance(platforms, dict):
+        platforms = {}
+        cfg["platforms"] = platforms
+    api_server = platforms.setdefault("api_server", {})
+    if not isinstance(api_server, dict):
+        api_server = {}
+        platforms["api_server"] = api_server
+    api_server["enabled"] = True
+    extra = api_server.setdefault("extra", {})
+    if not isinstance(extra, dict):
+        extra = {}
+        api_server["extra"] = extra
+    if routes:
+        extra["model_routes"] = routes
+    else:
+        extra.setdefault("model_routes", {})
+
     mcp = cfg.setdefault("mcp_servers", {})
     if not isinstance(mcp, dict):
         mcp = {}
