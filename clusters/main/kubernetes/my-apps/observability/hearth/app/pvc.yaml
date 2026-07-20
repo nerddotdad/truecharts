@@ -5,8 +5,11 @@ metadata:
   name: homelab-alert-bridge-incidents
   namespace: observability
   labels:
-    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/name: hearth
     app.kubernetes.io/part-of: homelab-observability
+  annotations:
+    # Preserve volume if the Flux Kustomization is renamed/replaced.
+    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   accessModes:
     - ReadWriteOnce

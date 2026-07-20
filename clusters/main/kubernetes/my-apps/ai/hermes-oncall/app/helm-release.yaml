@@ -87,7 +87,7 @@ spec:
                 # Required by hermeswebui_init.bash (not inferred from HERMES_HOME).
                 HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
                 HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
-                # Incident investigations start via homelab-alert-bridge (Hermes WebUI API).
+                # Incident investigations start via hearth (Hermes WebUI API).
                 WEBHOOK_ENABLED: "true"
                 WEBHOOK_SECRET: "${HERMES_ALERT_TRIAGE_SECRET}"
                 # Homelab docs on GitHub Pages (nerd.dad) + dashboards.

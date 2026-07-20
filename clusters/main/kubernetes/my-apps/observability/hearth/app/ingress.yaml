@@ -6,7 +6,7 @@ metadata:
   name: hermes-incident-api
   namespace: observability
   labels:
-    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/name: hearth
     app.kubernetes.io/part-of: homelab-observability
   annotations:
     cert-manager.io/cluster-issuer: domain-0-le-prod
@@ -24,14 +24,14 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: homelab-alert-bridge
+                name: hearth
                 port:
                   number: 8000
           - path: /homelab/triage
             pathType: Prefix
             backend:
               service:
-                name: homelab-alert-bridge
+                name: hearth
                 port:
                   number: 8000
 ---
@@ -42,7 +42,7 @@ metadata:
   name: homelab-incidents-ui
   namespace: observability
   labels:
-    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/name: hearth
     app.kubernetes.io/part-of: homelab-observability
   annotations:
     cert-manager.io/cluster-issuer: domain-0-le-prod
@@ -60,6 +60,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: homelab-alert-bridge
+                name: hearth
                 port:
                   number: 8000

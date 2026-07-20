@@ -35,7 +35,7 @@
       description: 'Homelab GHCR — bare semver only (ignore latest / main-* / calver leftovers)',
       matchPackageNames: [
         'ghcr.io/nerddotdad/hermes-homelab',
-        'ghcr.io/nerddotdad/homelab-alert-bridge',
+        'ghcr.io/nerddotdad/hearth',
       ],
       versioning: 'semver',
     },

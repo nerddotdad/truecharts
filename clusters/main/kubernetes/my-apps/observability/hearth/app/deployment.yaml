@@ -2,25 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: homelab-alert-bridge
+  name: hearth
   namespace: observability
   labels:
-    app.kubernetes.io/name: homelab-alert-bridge
+    app.kubernetes.io/name: hearth
     app.kubernetes.io/part-of: homelab-observability
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: homelab-alert-bridge
+      app.kubernetes.io/name: hearth
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: homelab-alert-bridge
+        app.kubernetes.io/name: hearth
     spec:
       containers:
-        # Product UI brand: Hearth (image repo still homelab-alert-bridge)
-        - name: bridge
-          image: ghcr.io/nerddotdad/homelab-alert-bridge:6.1.2
+        - name: hearth
+          image: ghcr.io/nerddotdad/hearth:6.2.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -74,4 +73,5 @@ spec:
       volumes:
         - name: incidents
           persistentVolumeClaim:
+            # Keep legacy PVC name so existing incident data is preserved across the rename.
             claimName: homelab-alert-bridge-incidents

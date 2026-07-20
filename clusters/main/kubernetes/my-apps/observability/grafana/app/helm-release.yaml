@@ -110,7 +110,7 @@ spec:
                   - uid: homelab-ntfy-webhook
                     type: webhook
                     settings:
-                      url: http://homelab-alert-bridge.observability.svc.cluster.local:8000/hook
+                      url: http://hearth.observability.svc.cluster.local:8000/hook
                     disableResolveMessage: false
           # Grafana webhook uses Prometheus webhook JSON — same format alertmanager-ntfy expects.
           policies.yaml: |-

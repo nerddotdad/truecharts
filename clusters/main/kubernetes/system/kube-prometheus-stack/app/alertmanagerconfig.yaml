@@ -65,6 +65,6 @@ spec:
     - name: homelab-webhook
       webhookConfigs:
         # Formats Alertmanager JSON → readable ntfy title/message (topic: homelab-alerts)
-        - url: http://homelab-alert-bridge.observability.svc.cluster.local:8000/hook
+        - url: http://hearth.observability.svc.cluster.local:8000/hook
           sendResolved: true
           maxAlerts: 10

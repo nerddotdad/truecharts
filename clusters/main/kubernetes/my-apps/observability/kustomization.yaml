@@ -5,7 +5,7 @@ resources:
   - grafana/ks.yaml
   - ntfy/ks.yaml
   - alertmanager-ntfy/ks.yaml
-  - homelab-alert-bridge/ks.yaml
+  - hearth/ks.yaml
   - blackbox-exporter/ks.yaml
   - prometheus-rules/ks.yaml
   # Remove after alert pipeline test — see https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/alert-test/mk_alert-test/

@@ -11,7 +11,7 @@ Homelab custom images are **not** built from this repo. Each image has its own G
 | Image | Source repo | GHCR |
 |-------|-------------|------|
 | hermes-homelab | [nerddotdad/hermes-homelab](https://github.com/nerddotdad/hermes-homelab) | `ghcr.io/nerddotdad/hermes-homelab` |
-| homelab-alert-bridge | [nerddotdad/homelab-alert-bridge](https://github.com/nerddotdad/homelab-alert-bridge) | `ghcr.io/nerddotdad/homelab-alert-bridge` |
+| hearth | [nerddotdad/hearth](https://github.com/nerddotdad/hearth) | `ghcr.io/nerddotdad/hearth` |
 
 ## truecharts (this repo)
 

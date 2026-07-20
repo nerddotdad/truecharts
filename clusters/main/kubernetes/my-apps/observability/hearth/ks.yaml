@@ -1,11 +1,11 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: homelab-alert-bridge
+  name: hearth
   namespace: flux-system
 spec:
   interval: 10m
-  path: clusters/main/kubernetes/my-apps/observability/homelab-alert-bridge/app
+  path: clusters/main/kubernetes/my-apps/observability/hearth/app
   prune: true
   sourceRef:
     kind: GitRepository

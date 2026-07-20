@@ -12,7 +12,7 @@ Custom images publish **bare semver** tags only (`6.1.1`). Cluster pins match th
 ## Verify tags
 
 ```bash
-img=homelab-alert-bridge
+img=hearth
 token=$(curl -s "https://ghcr.io/token?service=ghcr.io&scope=repository:nerddotdad/${img}:pull" | jq -r .token)
 curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/nerddotdad/${img}/tags/list" \
   | jq '.tags | map(select(test("^[0-9]+\\.[0-9]+\\.[0-9]+$")))'
