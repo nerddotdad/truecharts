@@ -103,23 +103,24 @@ spec:
             - -c
             - |
               set -e
-              HERMES_HOME="${HERMES_HOME:-/opt/data}"
-              mkdir -p "$HERMES_HOME"
-              if [ -f /seed/config.yaml ] && [ ! -f "$HERMES_HOME/config.yaml" ]; then
-                cp /seed/config.yaml "$HERMES_HOME/config.yaml"
+              # $$ escapes for Flux postBuild envsubst — shell sees single $.
+              HERMES_HOME="$${HERMES_HOME:-/opt/data}"
+              mkdir -p "$$HERMES_HOME"
+              if [ -f /seed/config.yaml ] && [ ! -f "$$HERMES_HOME/config.yaml" ]; then
+                cp /seed/config.yaml "$$HERMES_HOME/config.yaml"
               fi
               if [ -f /seed/ensure-mcp.py ]; then
                 python3 /seed/ensure-mcp.py || true
               fi
-              touch "$HERMES_HOME/.env"
-              grep -q '^API_SERVER_ENABLED=' "$HERMES_HOME/.env" 2>/dev/null \
-                || echo 'API_SERVER_ENABLED=true' >> "$HERMES_HOME/.env"
-              if [ -n "${API_SERVER_KEY:-}" ]; then
-                sed -i '/^API_SERVER_KEY=/d' "$HERMES_HOME/.env" || true
-                echo "API_SERVER_KEY=${API_SERVER_KEY}" >> "$HERMES_HOME/.env"
+              touch "$$HERMES_HOME/.env"
+              grep -q '^API_SERVER_ENABLED=' "$$HERMES_HOME/.env" 2>/dev/null \
+                || echo 'API_SERVER_ENABLED=true' >> "$$HERMES_HOME/.env"
+              if [ -n "$${API_SERVER_KEY:-}" ]; then
+                sed -i '/^API_SERVER_KEY=/d' "$$HERMES_HOME/.env" || true
+                echo "API_SERVER_KEY=$${API_SERVER_KEY}" >> "$$HERMES_HOME/.env"
               fi
-              grep -q '^API_SERVER_HOST=' "$HERMES_HOME/.env" 2>/dev/null \
-                || echo 'API_SERVER_HOST=0.0.0.0' >> "$HERMES_HOME/.env"
+              grep -q '^API_SERVER_HOST=' "$$HERMES_HOME/.env" 2>/dev/null \
+                || echo 'API_SERVER_HOST=0.0.0.0' >> "$$HERMES_HOME/.env"
               # Custom command skips image s6; start dashboard alongside gateway.
               hermes dashboard &
               exec hermes gateway run
