@@ -106,6 +106,13 @@ spec:
         mountPath: /media
         path: ${NFS_MEDIA}
         server: ${NAS_IP}
+      # Moonfin / game ROMs (NAS: /mnt/vault/roms)
+      roms:
+        enabled: true
+        type: nfs
+        mountPath: /roms
+        path: ${NFS_ROMS}
+        server: ${NAS_IP}
     ingress:
       main:
         enabled: true
