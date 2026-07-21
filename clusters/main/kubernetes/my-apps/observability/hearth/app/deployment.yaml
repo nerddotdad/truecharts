@@ -72,7 +72,7 @@ spec:
               readOnly: true
       containers:
         - name: hearth
-          image: ghcr.io/nerddotdad/hearth:7.3.0
+          image: ghcr.io/nerddotdad/hearth:7.5.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -122,9 +122,17 @@ spec:
               value: http://127.0.0.1:8642
             - name: HEARTH_AGENT_API_KEY
               value: "${HEARTH_AGENT_API_KEY}"
+            - name: HEARTH_AGENT_HOME
+              value: /opt/agent-data
+            - name: HEARTH_SECRETS_TOKEN
+              value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            - name: HEARTH_SECRETS_EXPORT_URL
+              value: http://127.0.0.1:8000/api/aiops/secrets/export
           volumeMounts:
             - name: incidents
               mountPath: /data/incidents
+            - name: agent-data
+              mountPath: /opt/agent-data
           resources:
             requests:
               cpu: 25m
@@ -173,6 +181,10 @@ spec:
               value: "${HEARTH_AGENT_API_KEY}"
             - name: HEARTH_SANDBOX_AGENT_API_KEY
               value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            - name: HEARTH_SECRETS_TOKEN
+              value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
+            - name: HEARTH_SECRETS_EXPORT_URL
+              value: http://127.0.0.1:8000/api/aiops/secrets/export
             # Same pod as Hearth — prefer loopback MCP.
             - name: HEARTH_MCP_URL
               value: http://127.0.0.1:8000/mcp
