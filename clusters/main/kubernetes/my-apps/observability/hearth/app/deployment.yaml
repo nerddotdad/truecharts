@@ -25,7 +25,7 @@ spec:
       initContainers:
         # Seed agent home before /init chowns and drops privileges.
         - name: agent-seed
-          image: nousresearch/hermes-agent:v2026.7.7.2
+          image: nousresearch/hermes-agent:v2026.7.20
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -154,7 +154,7 @@ spec:
 
         # Hermes Agent core + dashboard via image /init (s6). Do not override ENTRYPOINT.
         - name: agent
-          image: nousresearch/hermes-agent:v2026.7.7.2
+          image: nousresearch/hermes-agent:v2026.7.20
           imagePullPolicy: IfNotPresent
           ports:
             - name: agent
