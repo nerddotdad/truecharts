@@ -31,6 +31,9 @@ data:
             - sandbox_ensure
     browser:
       allow_private_urls: true
+    plugins:
+      enabled:
+        - hearth-secrets
     platforms:
       api_server:
         enabled: true
@@ -132,6 +135,19 @@ data:
     key = os.environ.get("HEARTH_SANDBOX_AGENT_API_KEY", "").strip()
     if key:
         hearth["headers"] = {"Authorization": f"Bearer {key}"}
+    # Opt-in Hermes plugins (dashboard shows them disabled until listed).
+    plugins = cfg.setdefault("plugins", {})
+    if not isinstance(plugins, dict):
+        plugins = {}
+        cfg["plugins"] = plugins
+    enabled = plugins.get("enabled") or []
+    if not isinstance(enabled, list):
+        enabled = []
+    names = [str(x) for x in enabled]
+    if "hearth-secrets" not in names:
+        names.append("hearth-secrets")
+    plugins["enabled"] = names
+
     searx = os.environ.get("SEARXNG_URL", "").strip()
     if searx:
         web = cfg.setdefault("web", {})
