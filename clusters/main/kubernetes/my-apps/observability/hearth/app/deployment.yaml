@@ -124,6 +124,11 @@ spec:
               value: "${HEARTH_AGENT_API_KEY}"
             - name: HEARTH_AGENT_HOME
               value: /opt/agent-data
+            # tjhoth.me profile — GET /api/public/status (Bearer token)
+            - name: HEARTH_CLUSTER_NAME
+              value: main
+            - name: HEARTH_PUBLIC_STATUS_TOKEN
+              value: "${HEARTH_PUBLIC_STATUS_TOKEN}"
             - name: HEARTH_SECRETS_TOKEN
               value: "${HEARTH_SANDBOX_AGENT_API_KEY}"
             - name: HEARTH_SECRETS_EXPORT_URL

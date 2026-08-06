@@ -104,6 +104,9 @@ subjects:
   - kind: ServiceAccount
     name: hearth-sandbox
     namespace: hearth-sandboxes
+  - kind: ServiceAccount
+    name: hearth
+    namespace: observability
 ---
 # Hearth controller: create/delete/list sandbox pods (+ get for status).
 apiVersion: rbac.authorization.k8s.io/v1
