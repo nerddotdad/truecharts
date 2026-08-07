@@ -72,7 +72,7 @@ spec:
               readOnly: true
       containers:
         - name: hearth
-          image: ghcr.io/nerddotdad/hearth:8.0.0
+          image: ghcr.io/nerddotdad/hearth:8.0.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
