@@ -158,7 +158,7 @@ spec:
         expandObjectName: false
         mountPath: /config
         readOnly: true
-        defaultMode: 0444
+        defaultMode: "0444"
       uploads:
         enabled: true
         type: pvc
