@@ -78,9 +78,10 @@ spec:
                 - -c
                 - |
                   set -eu
-                  ./libredesk --install --idempotent-install --yes --config=""
-                  ./libredesk --upgrade --yes --config=""
-                  exec ./libredesk --config=""
+                  CFG=/config/config.toml
+                  ./libredesk --install --idempotent-install --yes --config="$CFG"
+                  ./libredesk --upgrade --yes --config="$CFG"
+                  exec ./libredesk --config="$CFG"
               probes:
                 startup:
                   enabled: true
@@ -103,25 +104,9 @@ spec:
                   path: /health
                   periodSeconds: 10
               env:
+                # Secrets / runtime overrides (env wins over config.toml)
                 LIBREDESK_SYSTEM_USER_PASSWORD: ${ADMIN_PASS}
-                LIBREDESK_APP__ENV: prod
-                LIBREDESK_APP__LOG_LEVEL: info
-                LIBREDESK_APP__CHECK_UPDATES: "true"
                 LIBREDESK_APP__ENCRYPTION_KEY: ${LIBREDESK_ENCRYPTION_KEY}
-                LIBREDESK_APP__SERVER__ADDRESS: 0.0.0.0:9000
-                LIBREDESK_APP__SERVER__DISABLE_SECURE_COOKIES: "false"
-                LIBREDESK_UPLOAD__PROVIDER: fs
-                LIBREDESK_UPLOAD__FS__UPLOAD_PATH: uploads
-                LIBREDESK_DB__PORT: "5432"
-                LIBREDESK_DB__USER: libredesk
-                LIBREDESK_DB__DATABASE: libredesk
-                LIBREDESK_DB__SSL_MODE: require
-                # Required when using --config="" (no TOML defaults)
-                LIBREDESK_DB__MAX_OPEN: "30"
-                LIBREDESK_DB__MAX_IDLE: "30"
-                LIBREDESK_DB__MAX_LIFETIME: "300s"
-                LIBREDESK_REDIS__DB: "0"
-                LIBREDESK_SSRF__ENABLED: "false"
                 LIBREDESK_DB__HOST:
                   secretKeyRef:
                     name: cnpg-main-urls
@@ -159,6 +144,14 @@ spec:
             targetPort: 9000
 
     persistence:
+      config:
+        enabled: true
+        type: configmap
+        objectName: libredesk-config
+        expandObjectName: false
+        mountPath: /config
+        readOnly: true
+        defaultMode: 0444
       uploads:
         enabled: true
         type: pvc
