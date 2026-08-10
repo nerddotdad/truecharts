@@ -8,7 +8,8 @@ metadata:
   name: libredesk
   namespace: communication
 spec:
-  interval: 15m
+  # Faster Git→Helm apply while debugging; raise to 15m once stable.
+  interval: 1m
   chart:
     spec:
       chart: app-template
@@ -18,17 +19,17 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 15m
+  timeout: 10m
   maxHistory: 3
   driftDetection:
     mode: warn
   install:
     remediation:
-      retries: 5
+      retries: 3
   upgrade:
     cleanupOnFail: true
     remediation:
-      retries: 3
+      retries: 2
   uninstall:
     keepHistory: false
   values:

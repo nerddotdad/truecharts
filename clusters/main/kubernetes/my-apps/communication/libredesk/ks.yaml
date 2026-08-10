@@ -4,7 +4,8 @@ metadata:
   name: libredesk
   namespace: flux-system
 spec:
-  interval: 10m
+  # Faster feedback while bringing Libredesk up; raise to 10m once stable.
+  interval: 1m
   path: clusters/main/kubernetes/my-apps/communication/libredesk/app
   prune: true
   sourceRef:
