@@ -115,6 +115,10 @@ spec:
                 LIBREDESK_DB__USER: libredesk
                 LIBREDESK_DB__DATABASE: libredesk
                 LIBREDESK_DB__SSL_MODE: require
+                # Required when using --config="" (no TOML defaults)
+                LIBREDESK_DB__MAX_OPEN: "30"
+                LIBREDESK_DB__MAX_IDLE: "30"
+                LIBREDESK_DB__MAX_LIFETIME: "300s"
                 LIBREDESK_REDIS__DB: "0"
                 LIBREDESK_SSRF__ENABLED: "false"
                 LIBREDESK_DB__HOST:
@@ -125,8 +129,11 @@ spec:
                   secretKeyRef:
                     name: cnpg-main-user
                     key: password
-                # plainhost has no port; Libredesk wants host:port
-                LIBREDESK_REDIS__ADDRESS: '{{ printf "%s-redis:6379" .Release.Name }}'
+                LIBREDESK_REDIS__ADDRESS:
+                  secretKeyRef:
+                    expandObjectName: false
+                    name: '{{ printf "%s-%s" .Release.Name "rediscreds" }}'
+                    key: plainporthost
                 LIBREDESK_REDIS__PASSWORD:
                   secretKeyRef:
                     expandObjectName: false
