@@ -172,6 +172,14 @@ spec:
         enabled: true
         ingressClassName: external
         annotations:
+          # Libredesk Widget API is used cross-origin from tjhoth.me (Pages);
+          # upstream does not emit CORS — nginx handles preflight for the terminal client.
+          nginx.ingress.kubernetes.io/enable-cors: "true"
+          nginx.ingress.kubernetes.io/cors-allow-origin: "https://tjhoth.me, https://www.tjhoth.me"
+          nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+          nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,X-Libredesk-Inbox-ID,X-Libredesk-Visitor-Token"
+          nginx.ingress.kubernetes.io/cors-expose-headers: "X-Libredesk-Clear-Visitor"
+          nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
           nginx.ingress.kubernetes.io/proxy-body-size: 30m
           nginx.ingress.kubernetes.io/proxy-buffering: "off"
           nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
