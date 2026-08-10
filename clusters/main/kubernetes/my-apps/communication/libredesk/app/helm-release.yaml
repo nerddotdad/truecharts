@@ -1,0 +1,190 @@
+# Libredesk via TrueCharts app-template:
+# - cnpg.main from common (https://truecharts.org/common/cnpg/cnpg/)
+# - redis.enabled → Valkey subchart (app-template Chart.yaml dependency)
+# Env wiring follows onlyoffice-document-server pattern (cnpg-main-* + rediscreds secrets).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: libredesk
+  namespace: communication
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.16.6
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 15m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    remediation:
+      retries: 5
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: docker.io/libredesk/libredesk
+      pullPolicy: IfNotPresent
+      # renovate: datasource=docker depName=libredesk/libredesk
+      tag: v2.7.0
+
+    cnpg:
+      main:
+        enabled: true
+        primary: true
+        type: postgres
+        pgVersion: 16
+        database: libredesk
+        user: libredesk
+        password: ${LIBREDESK_DB_PASSWORD}
+        cluster:
+          instances: 1
+          singleNode: true
+          storage:
+            size: 5Gi
+            storageClass: longhorn
+
+    redis:
+      enabled: true
+      password: ${LIBREDESK_REDIS_PASSWORD}
+
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              primary: true
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  ./libredesk --install --idempotent-install --yes --config=""
+                  ./libredesk --upgrade --yes --config=""
+                  exec ./libredesk --config=""
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  failureThreshold: 30
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  periodSeconds: 30
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 9000
+                  path: /health
+                  periodSeconds: 10
+              env:
+                LIBREDESK_SYSTEM_USER_PASSWORD: ${LIBREDESK_SYSTEM_USER_PASSWORD}
+                LIBREDESK_APP__ENV: prod
+                LIBREDESK_APP__LOG_LEVEL: info
+                LIBREDESK_APP__CHECK_UPDATES: "true"
+                LIBREDESK_APP__ENCRYPTION_KEY: ${LIBREDESK_ENCRYPTION_KEY}
+                LIBREDESK_APP__SERVER__ADDRESS: 0.0.0.0:9000
+                LIBREDESK_APP__SERVER__DISABLE_SECURE_COOKIES: "false"
+                LIBREDESK_UPLOAD__PROVIDER: fs
+                LIBREDESK_UPLOAD__FS__UPLOAD_PATH: uploads
+                LIBREDESK_DB__PORT: "5432"
+                LIBREDESK_DB__USER: libredesk
+                LIBREDESK_DB__DATABASE: libredesk
+                LIBREDESK_DB__SSL_MODE: require
+                LIBREDESK_REDIS__DB: "0"
+                LIBREDESK_SSRF__ENABLED: "false"
+                LIBREDESK_DB__HOST:
+                  secretKeyRef:
+                    name: cnpg-main-urls
+                    key: host
+                LIBREDESK_DB__PASSWORD:
+                  secretKeyRef:
+                    name: cnpg-main-user
+                    key: password
+                # plainhost has no port; Libredesk wants host:port
+                LIBREDESK_REDIS__ADDRESS: '{{ printf "%s-redis:6379" .Release.Name }}'
+                LIBREDESK_REDIS__PASSWORD:
+                  secretKeyRef:
+                    expandObjectName: false
+                    name: '{{ printf "%s-%s" .Release.Name "rediscreds" }}'
+                    key: redis-password
+              resources:
+                requests:
+                  memory: 256Mi
+                  cpu: 100m
+                limits:
+                  memory: 1Gi
+                  cpu: "1"
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 9000
+            protocol: tcp
+            targetPort: 9000
+
+    persistence:
+      uploads:
+        enabled: true
+        type: pvc
+        size: 5Gi
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        mountPath: /libredesk/uploads
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-body-size: 30m
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+        hosts:
+          - host: support.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Libredesk
+            description: Self-hosted support inbox for tjhoth.me
+            group: communication
+            icon: mdi-headset
+            widget:
+              enabled: false
