@@ -19,17 +19,24 @@ spec:
         name: truecharts
         namespace: flux-system
       interval: 15m
-  timeout: 10m
+  # Don't block Helm on Deployment Ready — CrashLoop was preventing config upgrades.
+  timeout: 5m
   maxHistory: 3
   driftDetection:
     mode: warn
   install:
+    disableWait: true
+    disableWaitForJobs: true
     remediation:
-      retries: 3
+      retries: 1
+      remediateLastFailure: false
   upgrade:
+    disableWait: true
+    disableWaitForJobs: true
     cleanupOnFail: true
     remediation:
-      retries: 2
+      retries: 1
+      remediateLastFailure: false
   uninstall:
     keepHistory: false
   values:
