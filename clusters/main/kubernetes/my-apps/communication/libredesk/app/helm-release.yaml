@@ -103,7 +103,7 @@ spec:
                   path: /health
                   periodSeconds: 10
               env:
-                LIBREDESK_SYSTEM_USER_PASSWORD: ${LIBREDESK_SYSTEM_USER_PASSWORD}
+                LIBREDESK_SYSTEM_USER_PASSWORD: ${ADMIN_PASS}
                 LIBREDESK_APP__ENV: prod
                 LIBREDESK_APP__LOG_LEVEL: info
                 LIBREDESK_APP__CHECK_UPDATES: "true"
