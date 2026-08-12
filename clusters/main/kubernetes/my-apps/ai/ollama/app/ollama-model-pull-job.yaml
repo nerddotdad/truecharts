@@ -1,5 +1,6 @@
 # One-time model pull for GitOps bootstrap.
-# Active model: qwen3.6:27b (Hermes default on PVC; Ollama OLLAMA_CONTEXT_LENGTH=64000 matches ~/.hermes/config.yaml).
+# Active models: qwen3.6:27b (Hermes/Libredesk completion) + qwen3-embedding:0.6b (Libredesk RAG).
+# Ollama OLLAMA_CONTEXT_LENGTH=64000 matches ~/.hermes/config.yaml.
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model list:
 #   kubectl delete job -n ai ollama-model-pull-job
@@ -7,6 +8,8 @@
 #   Delete the Job after success so metrics/alerts clear: kubectl delete job ollama-model-pull-job -n ai
 # - Script is idempotent: skips /api/pull when /api/tags already lists the model (avoids false KubeJobFailed).
 # - Unlisted models are deleted before pulls to reclaim disk. Only names in WANTED_MODELS are kept.
+# - qwen3-embedding:0.6b (~639MB, 1024-dim) stays resident with the 27B on a 24GB GPU.
+#   Do not pull qwen3-embedding:latest (8b / 4.7GB) — it will evict the 27B under OLLAMA_MAX_LOADED_MODELS=2.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -22,7 +25,7 @@ spec:
   template:
     metadata:
       annotations:
-        homelab.dev/pull-script-version: "3-prune-unlisted"
+        homelab.dev/pull-script-version: "4-qwen3-embedding-0.6b"
     spec:
       restartPolicy: Never
       containers:
@@ -38,6 +41,7 @@ spec:
               # Single source of truth — only these models are kept on disk.
               WANTED_MODELS="
               qwen3.6:27b
+              qwen3-embedding:0.6b
               "
 
               # Disk-heavy optional models (not in WANTED_MODELS — pruned on next job run if present):

@@ -75,7 +75,8 @@ spec:
                 OLLAMA_ORIGINS: "*"
                 OLLAMA_FLASH_ATTENTION: "1"
                 OLLAMA_KEEP_ALIVE: "24h"
-                OLLAMA_MAX_LOADED_MODELS: "1"
+                # 2 so qwen3.6:27b (chat) and qwen3-embedding:0.6b (RAG) stay resident together.
+                OLLAMA_MAX_LOADED_MODELS: "2"
                 OLLAMA_NUM_PARALLEL: "1"
                 OLLAMA_KV_CACHE_TYPE: "q8_0"
                 OLLAMA_GPU_OVERHEAD: "536870912"
@@ -119,7 +120,7 @@ spec:
           homepage:
             enabled: true
             name: ollama
-            description: Ollama LLM API (qwen3.6:27b, 64K ctx, GPU)
+            description: Ollama LLM API (qwen3.6:27b + qwen3-embedding:0.6b, 64K ctx, GPU)
             group: ai
             icon: ""
             widget:
