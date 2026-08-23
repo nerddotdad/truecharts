@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - fireflyiii/ks.yaml
-  # - firefly-importer/ks.yaml
+  - firefly-importer/ks.yaml
