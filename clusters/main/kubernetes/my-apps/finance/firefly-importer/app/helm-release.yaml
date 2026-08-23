@@ -78,9 +78,7 @@ spec:
                 FIREFLY_III_URL: "http://fireflyiii.finance.svc.cluster.local:10082"
                 VANITY_URL: "https://firefly.${DOMAIN_0}"
                 TRUSTED_PROXIES: "*"
-                # FIREFLY_III_ACCESS_TOKEN and SIMPLEFIN_TOKEN are entered in the
-                # importer UI after first Firefly login. Add to clusterenv later
-                # if you want them injected (requires clustertool encrypt + genconfig).
+                FIREFLY_III_ACCESS_TOKEN: ${FIREFLY_III_ACCESS_TOKEN}
 
     service:
       main:
