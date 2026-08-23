@@ -38,10 +38,11 @@ spec:
         podSpec:
           containers:
             main:
+              fixedEnv:
+                TZ: America/Los_Angeles
               env:
                 APP_URL: "https://firefly.${DOMAIN_0}"
                 TRUSTED_PROXIES: "*"
-                TZ: America/Los_Angeles
 
     cnpg:
       main:

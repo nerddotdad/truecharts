@@ -71,12 +71,13 @@ spec:
                   port: 8080
                   path: /health
                   periodSeconds: 10
+              fixedEnv:
+                TZ: America/Los_Angeles
               env:
                 APP_URL: "https://firefly-import.${DOMAIN_0}"
                 FIREFLY_III_URL: "http://fireflyiii.finance.svc.cluster.local:10082"
                 VANITY_URL: "https://firefly.${DOMAIN_0}"
                 TRUSTED_PROXIES: "*"
-                TZ: America/Los_Angeles
                 # FIREFLY_III_ACCESS_TOKEN and SIMPLEFIN_TOKEN are entered in the
                 # importer UI after first Firefly login. Add to clusterenv later
                 # if you want them injected (requires clustertool encrypt + genconfig).
