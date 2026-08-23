@@ -1,0 +1,89 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# TrueCharts fireflyiii: CNPG + Valkey + nightly cron + remembered APP_KEY.
+# https://github.com/trueforge-org/truecharts/blob/master/charts/stable/fireflyiii/values.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: fireflyiii
+  namespace: finance
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: fireflyiii
+      version: 33.14.5
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              env:
+                APP_URL: "https://firefly.${DOMAIN_0}"
+                TRUSTED_PROXIES: "*"
+                TZ: America/Los_Angeles
+
+    cnpg:
+      main:
+        enabled: true
+        user: firefly
+        database: firefly
+        cluster:
+          instances: 1
+          singleNode: true
+          storage:
+            size: 10Gi
+            storageClass: longhorn
+
+    persistence:
+      data:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        mountPath: /var/www/html/storage/upload
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: firefly.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Firefly III
+            description: Personal finance ledger
+            group: finance
+            icon: mdi-butterfly
+            widget:
+              enabled: false

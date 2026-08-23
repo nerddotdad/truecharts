@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: firefly-importer
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: clusters/main/kubernetes/my-apps/finance/firefly-importer/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: cluster
+  dependsOn:
+    - name: fireflyiii
