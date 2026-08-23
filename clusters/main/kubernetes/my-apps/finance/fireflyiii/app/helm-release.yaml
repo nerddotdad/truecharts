@@ -33,6 +33,13 @@ spec:
   uninstall:
     keepHistory: false
   values:
+    # Chart still ships 6.2.21; importer 2.3.x requires Firefly >= 6.6.0.
+    image:
+      repository: docker.io/fireflyiii/core
+      pullPolicy: IfNotPresent
+      # renovate: datasource=docker depName=fireflyiii/core
+      tag: version-6.6.6
+
     workload:
       main:
         podSpec:
