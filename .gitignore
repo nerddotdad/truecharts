@@ -12,6 +12,7 @@ kubectl
 
 # Local backups (not tracked in git)
 .backups/
+.venv/
 
 # SSH public key (backed up in .backups/)
 ssh-public-key.txt

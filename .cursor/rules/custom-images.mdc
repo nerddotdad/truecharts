@@ -12,7 +12,8 @@ Homelab custom images are **not** built from this repo. Each image has its own G
 |-------|-------------|------|
 | hearth | [nerddotdad/hearth](https://github.com/nerddotdad/hearth) | `ghcr.io/nerddotdad/hearth` |
 | hearth-sandbox | [nerddotdad/hearth](https://github.com/nerddotdad/hearth) (`sandbox-image/`) | `ghcr.io/nerddotdad/hearth-sandbox` |
-| hearth agent sidecar | upstream [nousresearch/hermes-agent](https://hub.docker.com/r/nousresearch/hermes-agent) (pinned in Hearth Deployment) | Docker Hub |
+| budgeteer | [nerddotdad/budgeteer](https://github.com/nerddotdad/budgeteer) | `ghcr.io/nerddotdad/budgeteer` |
+| hearth agent sidecar | upstream [nousresearch/hermes-agent](https://hub.docker.com/r/nousresearch/hermes-agent) (pinned in the Hearth Deployment) | Docker Hub |
 
 ## truecharts (this repo)
 
