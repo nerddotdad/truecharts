@@ -120,7 +120,7 @@ spec:
           homepage:
             enabled: true
             name: ollama
-            description: Ollama LLM API (qwen3.6:14b/27b + embedding, 32K ctx, 2× parallel, GPU)
+            description: Ollama LLM API (qwen3:14b/27b + embedding, 32K ctx, 2× parallel, GPU)
             group: ai
             icon: ""
             widget:

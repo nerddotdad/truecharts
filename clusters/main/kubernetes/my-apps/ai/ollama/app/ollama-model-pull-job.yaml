@@ -1,5 +1,5 @@
 # One-time model pull for GitOps bootstrap.
-# Active models: qwen3.6:14b (fast agents) + qwen3.6:27b (heavy reasoning) + qwen3-embedding:0.6b (RAG).
+# Active models: qwen3:14b (fast agents) + qwen3.6:27b (heavy reasoning) + qwen3-embedding:0.6b (RAG).
 # Ollama OLLAMA_CONTEXT_LENGTH=32768 matches ~/.hermes/config.yaml and hearth-agent-seed.
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model list:
@@ -25,7 +25,7 @@ spec:
   template:
     metadata:
       annotations:
-        homelab.dev/pull-script-version: "5-qwen3.6-14b-32k"
+        homelab.dev/pull-script-version: "6-qwen3-14b-32k"
     spec:
       restartPolicy: Never
       containers:
@@ -40,7 +40,7 @@ spec:
 
               # Single source of truth — only these models are kept on disk.
               WANTED_MODELS="
-              qwen3.6:14b
+              qwen3:14b
               qwen3.6:27b
               qwen3-embedding:0.6b
               "
@@ -91,7 +91,15 @@ spec:
                   return 0
                 fi
                 echo "pulling $model (this may take a while)..."
-                curl -sf "$OLLAMA_API/api/pull" -d '{"name":"'"$model"'"}'
+                if ! pull_output=$(curl -sf "$OLLAMA_API/api/pull" -d '{"name":"'"$model"'"}'); then
+                  echo "error: curl failed while pulling $model"
+                  return 1
+                fi
+                if echo "$pull_output" | grep -q '"error"'; then
+                  echo "error: pull failed for $model"
+                  echo "$pull_output" | grep '"error"' | tail -1
+                  return 1
+                fi
                 echo "pull complete: $model"
               }
 
