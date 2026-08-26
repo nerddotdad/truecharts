@@ -6,4 +6,5 @@ resources:
   - immichframe/ks.yaml
   - jellyfin/ks.yaml
   - jellyfin-exporter/ks.yaml
-  - owncast/ks.yaml
+  # Temporarily disabled — frees GPU time-slice for Ollama multi-agent workloads.
+  # - owncast/ks.yaml

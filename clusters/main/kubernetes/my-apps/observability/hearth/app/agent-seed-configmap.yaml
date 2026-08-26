@@ -14,10 +14,10 @@ data:
   config.yaml: |
     model:
       # Fallback only when a request omits model / has no model_routes match.
-      default: qwen3.6:27b
+      default: qwen3.6:14b
       provider: custom
       base_url: http://ollama.ai.svc.cluster.local:11434/v1
-      context_length: 64000
+      context_length: 32768
     web:
       search_backend: searxng
     mcp_servers:
@@ -74,10 +74,10 @@ data:
         cfg["model"] = model
     # Keep provider + base_url in sync; do not pin default from Hearth — request model wins via routes.
     if not str(model.get("default") or "").strip():
-        model["default"] = "qwen3.6:27b"
+        model["default"] = "qwen3.6:14b"
     model["provider"] = "custom"
     model["base_url"] = ollama_base
-    model["context_length"] = int(os.environ.get("HEARTH_AGENT_CONTEXT_LENGTH", "64000") or "64000")
+    model["context_length"] = int(os.environ.get("HEARTH_AGENT_CONTEXT_LENGTH", "32768") or "32768")
 
     # Sync model_routes from installed Ollama models so API "model" field selects the LLM.
     routes = {}
