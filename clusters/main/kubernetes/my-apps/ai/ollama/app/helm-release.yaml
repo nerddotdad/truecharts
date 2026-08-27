@@ -75,12 +75,13 @@ spec:
                 OLLAMA_ORIGINS: "*"
                 OLLAMA_FLASH_ATTENTION: "1"
                 OLLAMA_KEEP_ALIVE: "24h"
-                # Hot-set rotates under VRAM pressure: 14b (fast agents) + embedding, or 27b when selected.
+                # Hot-set rotates under VRAM pressure on a 24GB GPU.
                 OLLAMA_MAX_LOADED_MODELS: "2"
+                # 131072 ÷ 2 slots = 65536 tokens/slot — meets Hermes 64K minimum per session.
                 OLLAMA_NUM_PARALLEL: "2"
                 OLLAMA_KV_CACHE_TYPE: "q8_0"
                 OLLAMA_GPU_OVERHEAD: "536870912"
-                OLLAMA_CONTEXT_LENGTH: "32768"
+                OLLAMA_CONTEXT_LENGTH: "131072"
       ui:
         enabled: false
 
@@ -120,7 +121,7 @@ spec:
           homepage:
             enabled: true
             name: ollama
-            description: Ollama LLM API (qwen3:14b/27b + embedding, 32K ctx, 2× parallel, GPU)
+            description: Ollama LLM API (qwen3.5:9b/gemma4:26b/coder-30b + embedding, 64K/slot, GPU)
             group: ai
             icon: ""
             widget:

@@ -1,6 +1,6 @@
 # One-time model pull for GitOps bootstrap.
-# Active models: qwen3:14b (fast agents) + qwen3.6:27b (heavy reasoning) + qwen3-embedding:0.6b (RAG).
-# Ollama OLLAMA_CONTEXT_LENGTH=32768 matches ~/.hermes/config.yaml and hearth-agent-seed.
+# Active models: qwen3.5:9b (fast agents) + gemma4:26b (heavy MoE) + qwen3-coder:30b (code) + qwen3-embedding:0.6b (RAG).
+# Ollama OLLAMA_CONTEXT_LENGTH=131072 with NUM_PARALLEL=2 → 65536 tokens/slot (Hermes minimum: 64000).
 # - Do not use ${VAR} in the script: Flux postBuild substitutes clusterenv keys and breaks shell vars.
 # - Job spec.template is immutable: delete before changing the script or model list:
 #   kubectl delete job -n ai ollama-model-pull-job
@@ -8,8 +8,9 @@
 #   Delete the Job after success so metrics/alerts clear: kubectl delete job ollama-model-pull-job -n ai
 # - Script is idempotent: skips /api/pull when /api/tags already lists the model (avoids false KubeJobFailed).
 # - Unlisted models are deleted before pulls to reclaim disk. Only names in WANTED_MODELS are kept.
-# - qwen3-embedding:0.6b (~639MB, 1024-dim) shares the hot-set with 14b or 27b on a 24GB GPU.
+# - qwen3-embedding:0.6b (~639MB) shares the hot-set with chat models on a 24GB GPU.
 #   Do not pull qwen3-embedding:latest (8b / 4.7GB) — it will evict chat models under OLLAMA_MAX_LOADED_MODELS=2.
+# - Retired: qwen3:14b, qwen3.6:27b (dense 27B — slow on 3090; replaced by MoE lineup below).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -25,7 +26,7 @@ spec:
   template:
     metadata:
       annotations:
-        homelab.dev/pull-script-version: "6-qwen3-14b-32k"
+        homelab.dev/pull-script-version: "7-qwen3.5-9b-gemma4-26b-64k"
     spec:
       restartPolicy: Never
       containers:
@@ -40,8 +41,9 @@ spec:
 
               # Single source of truth — only these models are kept on disk.
               WANTED_MODELS="
-              qwen3:14b
-              qwen3.6:27b
+              qwen3.5:9b
+              gemma4:26b
+              qwen3-coder:30b
               qwen3-embedding:0.6b
               "
 
