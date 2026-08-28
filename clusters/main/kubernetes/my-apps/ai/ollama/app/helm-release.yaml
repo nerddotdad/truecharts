@@ -107,6 +107,13 @@ spec:
         primary: true
         enabled: true
         ingressClassName: external
+        # First OpenCode/Hearth token can exceed nginx's 60s default while Ollama
+        # prefills a 64K–131K prompt (or reloads weights after a model swap).
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
         hosts:
           - host: ollama-api.${DOMAIN_0}
             paths:
