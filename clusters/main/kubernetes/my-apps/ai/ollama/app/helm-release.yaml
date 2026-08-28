@@ -80,7 +80,8 @@ spec:
                 # 131072 ÷ 2 slots = 65536 tokens/slot — meets Hermes 64K minimum per session.
                 OLLAMA_NUM_PARALLEL: "2"
                 OLLAMA_KV_CACHE_TYPE: "q8_0"
-                OLLAMA_GPU_OVERHEAD: "536870912"
+                # 2Gi reserved so Kokoro TTS can share the 3090 (time-slicing does not split VRAM).
+                OLLAMA_GPU_OVERHEAD: "2147483648"
                 OLLAMA_CONTEXT_LENGTH: "131072"
       ui:
         enabled: false

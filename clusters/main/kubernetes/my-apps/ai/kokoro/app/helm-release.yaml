@@ -1,0 +1,145 @@
+# Kokoro-FastAPI — OpenAI-compatible TTS on the 3090 (time-sliced with Ollama).
+# Models are baked into the image. Local Hermes:
+#   tts:
+#     provider: openai
+#     openai:
+#       model: kokoro
+#       voice: af_bella
+#       base_url: https://kokoro.${DOMAIN_0}/v1
+#   VOICE_TOOLS_OPENAI_KEY=not-needed
+# Voices: GET https://kokoro.${DOMAIN_0}/v1/audio/voices  (af_bella, am_michael, …)
+# Use ghcr.io/remsky/kokoro-fastapi-gpu:vX.Y.Z (cu126) — not the -cu128 tag (Blackwell only).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kokoro
+  namespace: ai
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.16.16
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  # CUDA image pull + first GPU context can exceed 5m.
+  timeout: 15m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: ghcr.io/remsky/kokoro-fastapi-gpu
+      pullPolicy: IfNotPresent
+      # renovate: datasource=docker depName=ghcr.io/remsky/kokoro-fastapi-gpu
+      tag: v0.8.1
+
+    securityContext:
+      container:
+        runAsNonRoot: false
+        readOnlyRootFilesystem: false
+        runAsUser: 0
+        runAsGroup: 0
+
+    podOptions:
+      runtimeClassName: "nvidia"
+      tolerations:
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+
+    workload:
+      main:
+        podSpec:
+          runtimeClassName: "nvidia"
+          containers:
+            main:
+              enabled: true
+              env:
+                NVIDIA_DRIVER_CAPABILITIES: compute,utility
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8880
+                  path: /health
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 36
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8880
+                  path: /health
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8880
+                  path: /health
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+              resources:
+                requests:
+                  nvidia.com/gpu: 1
+                  cpu: 250m
+                  memory: 2Gi
+                limits:
+                  nvidia.com/gpu: 1
+                  memory: 8Gi
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 8880
+            protocol: tcp
+            targetPort: 8880
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        annotations:
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+          nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+        hosts:
+          - host: kokoro.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: "domain-0-le-prod"
+          homepage:
+            enabled: true
+            name: kokoro
+            description: Kokoro TTS (OpenAI-compatible, GPU)
+            group: ai
+            icon: mdi-account-voice
+            widget:
+              enabled: false
