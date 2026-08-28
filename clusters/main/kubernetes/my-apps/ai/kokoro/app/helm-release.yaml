@@ -71,8 +71,6 @@ spec:
           containers:
             main:
               enabled: true
-              env:
-                NVIDIA_DRIVER_CAPABILITIES: compute,utility
               probes:
                 startup:
                   enabled: true
