@@ -1,0 +1,114 @@
+# https://truecharts.org/charts/stable/minecraft-bedrock/
+# https://github.com/itzg/docker-minecraft-bedrock-server
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minecraft-bedrock
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: minecraft-bedrock
+      version: 14.14.0
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 20m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
+
+    workload:
+      main:
+        podSpec:
+          containers:
+            main:
+              tty: true
+              stdin: true
+              env:
+                EULA: true
+                ENABLE_LAN_VISIBILITY: true
+                VERSION: "LATEST"
+                SERVER_NAME: "Hoth Bedrock"
+                SERVER_PORT: "{{ .Values.service.main.ports.main.port }}"
+                GAMEMODE: "survival"
+                DIFFICULTY: "normal"
+                LEVEL_TYPE: "DEFAULT"
+                ALLOW_CHEATS: false
+                MAX_PLAYERS: 10
+                ONLINE_MODE: true
+                WHITE_LIST: false
+                # WHITE_LIST_USERS: "USER:XUID,USER:XUID"
+                VIEW_DISTANCE: 32
+                TICK_DISTANCE: 4
+                PLAYER_IDLE_TIMEOUT: 30
+                MAX_THREADS: 8
+                LEVEL_NAME: "Bedrock level"
+                LEVEL_SEED: ""
+                DEFAULT_PLAYER_PERMISSION_LEVEL: "member"
+                TEXTUREPACK_REQUIRED: false
+                # OPS: "XUID,XUID"
+              resources:
+                requests:
+                  memory: "1Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2000m"
+
+    service:
+      main:
+        enabled: true
+        type: LoadBalancer
+        # Reuses the existing Minecraft LB IP (Java is currently disabled).
+        # Add MINECRAFT_BEDROCK_IP to clusterenv.yaml if both should run at once.
+        loadBalancerIP: ${MINECRAFT_1_IP}
+        externalTrafficPolicy: Local
+        integrations:
+          metallb:
+            enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 19132
+            protocol: udp
+
+    persistence:
+      config:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 10Gi
+        mountPath: /data
+        volsync:
+          - name: config
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: false
+            src:
+              enabled: false
