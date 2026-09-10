@@ -45,7 +45,7 @@ spec:
       repository: ghcr.io/remsky/kokoro-fastapi-gpu
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=ghcr.io/remsky/kokoro-fastapi-gpu
-      tag: v0.8.2
+      tag: v0.9.0
 
     securityContext:
       container:
