@@ -38,7 +38,7 @@ spec:
       repository: docker.io/fireflyiii/core
       pullPolicy: IfNotPresent
       # renovate: datasource=docker depName=fireflyiii/core
-      tag: version-6.7.3
+      tag: version-6.7.4
 
     workload:
       main:
