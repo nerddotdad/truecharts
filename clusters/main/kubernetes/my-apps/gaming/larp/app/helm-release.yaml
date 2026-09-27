@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: larp
+  namespace: gaming
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.23.3
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 10m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    credentials:
+      truenas_garage:
+        type: s3
+        url: "${GARAGE_URL}"
+        region: garage
+        bucket: truecharts
+        accessKey: "${GARAGE_ACCESS_KEY_ID}"
+        secretKey: "${GARAGE_SECRET_ACCESS_KEY}"
+        encrKey: "${ADMIN_PASS}"
+
+    image:
+      repository: ghcr.io/nerddotdad/larp-api
+      # Bump this to the commit sha from the Deploy workflow when you want the cluster to roll.
+      # IfNotPresent will keep a node on an old "latest" until the tag string changes.
+      pullPolicy: IfNotPresent
+      tag: latest
+
+    # The chart default is one replica and Recreate. Set both anyway.
+    # Two pods must not open the same SQLite file.
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+      pod:
+        fsGroup: 568
+
+    workload:
+      main:
+        replicas: 1
+        strategy: Recreate
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /api/health
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  failureThreshold: 18
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /api/health
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8787
+                  path: /api/health
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+              env:
+                NODE_ENV: production
+                LARP_DB: /data/larp.sqlite
+                LARP_PLACES: osm
+                PORT: "8787"
+                LARP_SEASON: season-0
+                LARP_OPS_TOKEN: "${LARP_OPS_TOKEN}"
+              resources:
+                requests:
+                  memory: 256Mi
+                  cpu: 100m
+                limits:
+                  memory: 512Mi
+                  cpu: "1"
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 8787
+            protocol: tcp
+            targetPort: 8787
+
+    persistence:
+      data:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        mountPath: /data
+        volsync:
+          - name: data
+            type: restic
+            credentials: truenas_garage
+            dest:
+              enabled: true
+            src:
+              enabled: true
+              trigger:
+                schedule: "30 3 * * *"
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        hosts:
+          - host: larp.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Larp
+            description: Field API
+            group: gaming
+            icon: ""
+            widget:
+              enabled: false
