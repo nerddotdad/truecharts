@@ -24,6 +24,16 @@ curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/nerddotdad/${img}/
 2. Dependency Dashboard → `renovate:reset-cache` or `renovate:retry` (package cache can lag right after a push).
 3. Do **not** add digest pins or `versionCompatibility` regexes — those caused the previous config sprawl.
 
-## GHCR auth (only if lookups fail)
+## Private packages (`ghcr.io/nerddotdad/larpos`)
 
-“Public” packages still need a registry pull token; Renovate handles that unless a broken `hostRules` entry is present. Prefer no `hostRules` for `ghcr.io`. If Mend cannot list tags, add a classic PAT (`read:packages`) as **`password`** (not `token`).
+Anonymous tag listing returns 401. `renovate.json5` authenticates every `ghcr.io` lookup with Mend secret `GHCR_PULL_TOKEN` (same classic PAT the cluster uses: `read:packages` and `repo`).
+
+1. [Mend Developer Portal](https://developer.mend.io) → this repository → Secrets.
+2. Add `GHCR_PULL_TOKEN`. The `hostRules` entry reads it as **`password`**, not `token`.
+3. Dependency Dashboard → `renovate:retry`.
+
+The HelmRelease pin must be bare semver (`tag: 0.1.0`). This image’s workflow only publishes `0.1.0` when a `v*` git tag is pushed; `sha-*` and `latest` are ignored by the semver package rule, so Renovate will not open a PR while the pin is `sha-…`.
+
+## GHCR auth (public packages)
+
+“Public” packages still need a registry pull token; Renovate handles that unless a broken `hostRules` entry is present. The `ghcr.io` `hostRules` entry above also covers public packages, so the Mend secret must stay valid or hearth and the other public GHCR lookups fail too.

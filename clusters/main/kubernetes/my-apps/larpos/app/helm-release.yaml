@@ -43,6 +43,8 @@ spec:
     image:
       repository: ghcr.io/nerddotdad/larpos
       pullPolicy: IfNotPresent
+      # Bare semver only. sha-* and latest are ignored (see .github/RENOVATE-GHCR.md).
+      # renovate: datasource=docker depName=ghcr.io/nerddotdad/larpos
       tag: sha-7b6d46a
 
     # Private GHCR package. Chart creates the dockerconfigjson secret.

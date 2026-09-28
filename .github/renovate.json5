@@ -14,6 +14,16 @@
     '**/resources/**',
     '**/alert-test/**',
   ],
+  // Private GHCR. Mend secret GHCR_PULL_TOKEN must be a classic PAT (read:packages, plus repo
+  // because the package belongs to a private repo). password, not token — see RENOVATE-GHCR.md.
+  hostRules: [
+    {
+      matchHost: 'ghcr.io',
+      hostType: 'docker',
+      username: 'nerddotdad',
+      password: '{{ secrets.GHCR_PULL_TOKEN }}',
+    },
+  ],
   // HelmRelease `tag:` is covered by TrueCharts YAML regex + flux.
   // Deployment `image: repo:tag` needs a tiny regex (preset captures the whole ref).
   customManagers: [
@@ -38,6 +48,7 @@
       matchPackageNames: [
         'ghcr.io/nerddotdad/hearth',
         'ghcr.io/nerddotdad/hearth-sandbox',
+        'ghcr.io/nerddotdad/larpos',
       ],
       versioning: 'semver',
     },
