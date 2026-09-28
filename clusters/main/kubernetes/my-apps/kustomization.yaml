@@ -8,7 +8,7 @@ resources:
   - websites
   - tools
   - communication
-  - finance
+  # - finance
   - smart-home
   - ai
   - infrastructure
