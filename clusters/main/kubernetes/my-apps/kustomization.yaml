@@ -16,3 +16,4 @@ resources:
   # - under_construction
   - external
   - observability
+  - larpos/ks.yaml
