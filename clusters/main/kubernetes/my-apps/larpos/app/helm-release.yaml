@@ -44,10 +44,16 @@ spec:
       repository: ghcr.io/nerddotdad/larpos
       pullPolicy: IfNotPresent
       tag: sha-7b6d46a
-      # Package is private. Uncomment once a dockerconfigjson Secret named
-      # ghcr-larpos exists in this namespace (GitHub PAT with read:packages).
-      # pullSecrets:
-      #   - name: ghcr-larpos
+
+    # Private GHCR package. Chart creates the dockerconfigjson secret.
+    imagePullSecret:
+      ghcr:
+        enabled: true
+        data:
+          registry: ghcr.io
+          username: nerddotdad
+          password: "${GHCR_PULL_TOKEN}"
+          email: "${DOMAIN_0_EMAIL}"
 
     # Image USER is nextjs (uid/gid 1001). One replica: state is a single JSON file.
     securityContext:
