@@ -45,7 +45,7 @@ spec:
       pullPolicy: IfNotPresent
       # Bare semver only. sha-* and latest are ignored (see .github/RENOVATE-GHCR.md).
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/larpos
-      tag: 0.1.2
+      tag: 0.1.4
       
     # Private GHCR package. Chart creates the dockerconfigjson secret.
     imagePullSecret:
