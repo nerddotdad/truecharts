@@ -82,12 +82,14 @@ spec:
             path: /metrics
         targetSelector: main
     persistence:
+      data:
+        enabled: false
       config:
         enabled: true
         type: pvc
         storageClass: longhorn
         accessMode: ReadWriteOnce
-        size: 20Gi
+        size: 50Gi
         mountPath: /config
         volsync:
           - name: config
@@ -98,6 +100,7 @@ spec:
               enabled: true
             src:
               enabled: true
+              cacheCapacity: 40Gi
               trigger:
                 schedule: "20 1 * * *"
       media:
