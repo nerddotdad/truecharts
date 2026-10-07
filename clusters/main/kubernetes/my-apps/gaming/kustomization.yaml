@@ -8,4 +8,5 @@ resources:
   - minecraft-bedrock/ks.yaml
   - hytale/ks.yaml
   - windrose/ks.yaml
+  - dragonwilds/ks.yaml
   - larp/ks.yaml
