@@ -41,7 +41,7 @@ spec:
     image:
       repository: indifferentbroccoli/runescape-dragonwilds-server-docker
       pullPolicy: IfNotPresent
-      tag: v1.0.2
+      tag: v1.0.3
 
     securityContext:
       container:
