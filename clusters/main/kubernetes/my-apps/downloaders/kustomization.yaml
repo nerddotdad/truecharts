@@ -8,4 +8,5 @@ resources:
   - radarr/ks.yaml
   - sonarr/ks.yaml
   - lidarr/ks.yaml
+  - podgrab/ks.yaml
   - wizarr/ks.yaml
