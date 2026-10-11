@@ -66,13 +66,17 @@ spec:
                   type: http
                   port: 8096
                   path: /health
+              # QSV is the fast path. 4K HDR that cannot stay on the Arc (Dolby Vision
+              # profile 7) falls back to CPU decode + tonemap + libx264. 1500m/6Gi
+              # ran that path at ~0.2x and OOM-killed the pod. This node has idle
+              # cores and RAM; give one fallback transcode room to reach realtime.
               resources:
                 requests:
-                  cpu: 250m
-                  memory: 2Gi
+                  cpu: 2000m
+                  memory: 8Gi
                 limits:
-                  cpu: 1500m
-                  memory: 6Gi
+                  cpu: "16"
+                  memory: 32Gi
                   gpu.intel.com/i915: 1
     metrics:
       main:
