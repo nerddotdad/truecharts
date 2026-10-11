@@ -4,7 +4,7 @@ resources:
   - namespace.yaml
   - grafana/ks.yaml
   - ntfy/ks.yaml
-  - alertmanager-ntfy/ks.yaml
+  # - alertmanager-ntfy/ks.yaml
   # - hearth/ks.yaml
   - blackbox-exporter/ks.yaml
   - prometheus-rules/ks.yaml
