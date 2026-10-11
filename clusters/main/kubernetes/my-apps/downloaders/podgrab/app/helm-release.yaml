@@ -71,8 +71,10 @@ spec:
             type: restic
             credentials: truenas_garage
             cleanupTempPVC: true
+            # Fresh install: a restore clone raced with cleanup and left the
+            # Longhorn volume unable to attach. Backups still run via src.
             dest:
-              enabled: true
+              enabled: false
             src:
               enabled: true
               trigger:
