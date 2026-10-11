@@ -9,4 +9,4 @@ resources:
   - hytale/ks.yaml
   - windrose/ks.yaml
   - dragonwilds/ks.yaml
-  - larp/ks.yaml
+  # - larp/ks.yaml

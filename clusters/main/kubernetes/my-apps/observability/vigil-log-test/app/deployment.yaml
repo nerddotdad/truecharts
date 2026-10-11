@@ -1,0 +1,40 @@
+---
+# Prints error lines, then exits. Vigil reads container logs only after the pod
+# is unhealthy, and CrashLoopBackOff is an immediate page.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vigil-log-test
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: vigil-log-test
+    homelab.dev/vigil-test: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vigil-log-test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vigil-log-test
+        homelab.dev/vigil-test: "true"
+    spec:
+      containers:
+        - name: vigil-log-test
+          image: docker.io/library/busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "ERROR vigil-log-test: synthetic failure, refusing to start"
+              echo "ERROR vigil-log-test: could not open /data/state: permission denied"
+              echo "FATAL vigil-log-test: exiting 1"
+              exit 1
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 32Mi

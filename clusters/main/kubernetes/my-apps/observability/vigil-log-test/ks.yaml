@@ -1,0 +1,17 @@
+# Temporary CrashLoop so Vigil opens an incident. Delete this directory and the
+# kustomization entry when the check is done. Vigil resolves the incident once
+# the pod is gone.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: vigil-log-test
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: clusters/main/kubernetes/my-apps/observability/vigil-log-test/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: cluster
+  dependsOn:
+    - name: vigil
