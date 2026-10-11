@@ -34,7 +34,7 @@ spec:
       pullPolicy: IfNotPresent
       # Bare semver only. sha-* tags are ignored (see .github/RENOVATE-GHCR.md).
       # renovate: datasource=docker depName=ghcr.io/nerddotdad/vigil
-      tag: 0.1.0
+      tag: 0.1.1
 
     # Private GHCR package. Chart creates the dockerconfigjson secret.
     imagePullSecret:
