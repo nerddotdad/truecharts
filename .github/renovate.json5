@@ -49,6 +49,7 @@
         'ghcr.io/nerddotdad/hearth',
         'ghcr.io/nerddotdad/hearth-sandbox',
         'ghcr.io/nerddotdad/larpos',
+        'ghcr.io/nerddotdad/vigil',
       ],
       versioning: 'semver',
     },

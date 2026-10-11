@@ -1,0 +1,191 @@
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vigil
+  namespace: observability
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: app-template
+      version: 18.23.5
+      sourceRef:
+        kind: HelmRepository
+        name: truecharts
+        namespace: flux-system
+      interval: 15m
+  timeout: 5m
+  maxHistory: 3
+  driftDetection:
+    mode: warn
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    image:
+      repository: ghcr.io/nerddotdad/vigil
+      pullPolicy: IfNotPresent
+      # Bare semver only. sha-* tags are ignored (see .github/RENOVATE-GHCR.md).
+      # renovate: datasource=docker depName=ghcr.io/nerddotdad/vigil
+      tag: 0.1.0
+
+    # Private GHCR package. Chart creates the dockerconfigjson secret.
+    imagePullSecret:
+      ghcr:
+        enabled: true
+        data:
+          registry: ghcr.io
+          username: nerddotdad
+          password: "${GHCR_PULL_TOKEN}"
+          email: "${DOMAIN_0_EMAIL}"
+
+    # Image USER is node (uid/gid 1000). One replica: state is a single JSON store.
+    securityContext:
+      container:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        allowPrivilegeEscalation: false
+      pod:
+        fsGroup: 1000
+
+    serviceAccount:
+      main:
+        enabled: true
+        primary: true
+
+    podOptions:
+      automountServiceAccountToken: true
+
+    # Read-only cluster view: pods, logs, nodes, events, and workloads.
+    rbac:
+      main:
+        enabled: true
+        primary: true
+        clusterWide: true
+        rules:
+          - apiGroups:
+              - ""
+            resources:
+              - pods
+              - pods/log
+              - nodes
+              - events
+            verbs:
+              - get
+              - list
+              - watch
+          - apiGroups:
+              - apps
+            resources:
+              - deployments
+              - statefulsets
+              - daemonsets
+            verbs:
+              - get
+              - list
+              - watch
+
+    workload:
+      main:
+        replicas: 1
+        strategy: Recreate
+        podSpec:
+          containers:
+            main:
+              enabled: true
+              probes:
+                startup:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /healthz
+                  initialDelaySeconds: 3
+                  periodSeconds: 5
+                  failureThreshold: 12
+                liveness:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /healthz
+                  initialDelaySeconds: 15
+                  periodSeconds: 30
+                readiness:
+                  enabled: true
+                  type: http
+                  port: 8080
+                  path: /healthz
+                  initialDelaySeconds: 3
+                  periodSeconds: 10
+              env:
+                DATA_DIR: /data
+                PORT: "8080"
+                PROMETHEUS_URL: http://kube-prometheus-stack-prometheus.kube-prometheus-stack.svc.cluster.local:9090
+                OLLAMA_URL: http://ollama.ai.svc.cluster.local:11434
+                OLLAMA_MODEL: qwen3.5:9b
+                PUBLIC_URL: "https://vigil.${DOMAIN_0}"
+                POLL_MS: "30000"
+                ANALYST_MS: "120000"
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  memory: 512Mi
+
+    service:
+      main:
+        enabled: true
+        ports:
+          main:
+            enabled: true
+            port: 8080
+            protocol: tcp
+            targetPort: 8080
+
+    persistence:
+      data:
+        enabled: true
+        type: pvc
+        storageClass: longhorn
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        mountPath: /data
+
+    ingress:
+      main:
+        enabled: true
+        ingressClassName: external
+        annotations:
+          # Board uses /events (SSE). Keep the stream open through nginx.
+          nginx.ingress.kubernetes.io/proxy-buffering: "off"
+          nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+          nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+        hosts:
+          - host: vigil.${DOMAIN_0}
+            paths:
+              - path: /
+                pathType: Prefix
+        integrations:
+          traefik:
+            enabled: false
+          certManager:
+            enabled: true
+            certificateIssuer: domain-0-le-prod
+          homepage:
+            enabled: true
+            name: Vigil
+            description: Incident board and phone alerts
+            group: observability
+            icon: ""
+            widget:
+              enabled: false

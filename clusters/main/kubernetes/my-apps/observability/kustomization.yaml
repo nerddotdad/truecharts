@@ -8,5 +8,6 @@ resources:
   # - hearth/ks.yaml
   - blackbox-exporter/ks.yaml
   - prometheus-rules/ks.yaml
+  - vigil/ks.yaml
   # Remove after alert pipeline test — see https://nerd.dad/latest/homelab/kubernetes/my-apps/observability/alert-test/mk_alert-test/
   # - alert-test/ks.yaml
