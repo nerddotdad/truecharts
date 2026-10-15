@@ -42,62 +42,82 @@ spec:
       repository: mornedhels/enshrouded-server
       pullPolicy: IfNotPresent
       tag: stable-wine
-    
+
     securityContext:
       container:
         readOnlyRootFilesystem: false
         runAsNonRoot: false
         runAsUser: 0
         runAsGroup: 0
+        # The image installs UPDATE_CRON with setgid crontab. The chart default
+        # blocks that, so the schedule is never written and the updater runs once.
+        allowPrivilegeEscalation: true
       pod:
         fsGroup: 0
 
     workload:
       main:
         podSpec:
-          initContainers:
-            init-runtime-dir:
-              enabled: true
-              type: init
-              image: docker.io/library/alpine:3.24
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mkdir -p /var/run/enshrouded
-                  chown -R 568:568 /var/run/enshrouded || true
-              securityContext:
-                runAsUser: 0
-                runAsGroup: 0
+          terminationGracePeriodSeconds: 90
           containers:
             main:
               enabled: true
-              # Keep a minimal app-template override footprint while debugging startup.
               securityContext:
                 readOnlyRootFilesystem: false
                 runAsNonRoot: false
                 runAsUser: 0
                 runAsGroup: 0
+                allowPrivilegeEscalation: true
               probes:
                 startup:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      supervisorctl status enshrouded-server 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-updater 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-bootstrap 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-force-update 2>/dev/null | grep -q RUNNING && exit 0
+                      exit 1
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 40
                 liveness:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      supervisorctl status enshrouded-server 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-updater 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-bootstrap 2>/dev/null | grep -q RUNNING && exit 0
+                      supervisorctl status enshrouded-force-update 2>/dev/null | grep -q RUNNING && exit 0
+                      exit 1
+                  periodSeconds: 60
+                  timeoutSeconds: 10
+                  failureThreshold: 3
                 readiness:
-                  enabled: false
+                  enabled: true
+                  type: exec
+                  command:
+                    - /bin/sh
+                    - -c
+                    - supervisorctl status enshrouded-server 2>/dev/null | grep -q RUNNING
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 3
               env:
-                # Enshrouded server environment variables
-                # See: https://hub.docker.com/r/mornedhels/enshrouded-server
-                # See: https://github.com/mornedhels/enshrouded-server/blob/main/docs/SERVER_ROLES.md
-                # Server name
+                # https://hub.docker.com/r/mornedhels/enshrouded-server
+                # https://github.com/mornedhels/enshrouded-server/blob/main/docs/SERVER_ROLES.md
                 SERVER_NAME: "Hoth Enshrouded Server"
                 SERVER_ENABLE_VOICE_CHAT: "true"
                 SERVER_VOICE_CHAT_MODE: "Proximity"
                 SERVER_ENABLE_TEXT_CHAT: "true"
-                # Preset must be set to "Custom" for gameSettings to be applied
                 PRESET: "Custom"
-                # Server Role 0 (Admins role with password)
-                # SERVER_PASSWORD is deprecated - use Server Roles instead
                 SERVER_ROLE_0_NAME: "Admins"
                 SERVER_ROLE_0_PASSWORD: "${ADMIN_PASS}"
                 SERVER_ROLE_0_CAN_KICK_BAN: "true"
@@ -106,7 +126,6 @@ spec:
                 SERVER_ROLE_0_CAN_EDIT_BASE: "true"
                 SERVER_ROLE_0_CAN_EXTEND_BASE: "true"
                 SERVER_ROLE_0_RESERVED_SLOTS: "1"
-                # Server Role 1 (Friends role)
                 SERVER_ROLE_1_NAME: "Friends"
                 SERVER_ROLE_1_PASSWORD: "${ENSHROUDED_MEMBER_PASS}"
                 SERVER_ROLE_1_CAN_ACCESS_INVENTORIES: "true"
@@ -114,14 +133,9 @@ spec:
                 SERVER_ROLE_1_CAN_EDIT_BASE: "true"
                 SERVER_ROLE_1_CAN_EXTEND_BASE: "true"
                 SERVER_ROLE_1_RESERVED_SLOTS: "3"
-                # Auto-update schedule (cron format: minute hour day month weekday)
-                # This runs every 30 minutes to keep server updated
                 UPDATE_CRON: "*/30 * * * *"
                 UPDATE_CHECK_PLAYERS: "true"
-                # Backup schedule (cron format: minute hour day month weekday)
-                # This runs every 6 hours to backup savegame
                 BACKUP_CRON: "0 */6 * * *"
-                # Maximum number of backups to keep
                 BACKUP_MAX_COUNT: "20"
               resources:
                 requests:
@@ -135,7 +149,7 @@ spec:
       main:
         enabled: true
         type: LoadBalancer
-        loadBalancerIP: ${ENSHROUDED_IP}  # Add to clusterenv.yaml if needed
+        loadBalancerIP: ${ENSHROUDED_IP}
         externalTrafficPolicy: Local
         integrations:
           metallb:
@@ -167,4 +181,3 @@ spec:
               enabled: false
             src:
               enabled: false
-
