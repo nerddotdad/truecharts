@@ -25,6 +25,12 @@ alwaysApply: true
 - Let Flux deploy; use kubectl/flux only to **observe**
 - After changes: check HelmRelease status, pods, and events
 
+## VolSync cacheCapacity
+
+Increasing `persistence.*.volsync[].src.cacheCapacity` on a HelmRelease is a normal repo change. Flux applies it. Longhorn on this cluster has `allowVolumeExpansion: true`, and the existing `volsync-src-*-cache` PVC expands in place. Do not delete that cache PVC to make a larger `cacheCapacity` take effect.
+
+Confirmed 2026-09-29 on Jellyfin: `10Gi` → `40Gi` via Helm release `media/jellyfin.v417`, cache claim capacity became `40Gi`, and the restic mover completed successfully.
+
 ## Key paths
 
 - `clusters/main/kubernetes/` — manifests and Helm releases
